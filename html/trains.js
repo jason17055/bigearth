@@ -32,7 +32,12 @@ var mapData = {
 		99: {
 			name: "Harrisburg", offers: ["passengers"]
 			}
-		}
+		},
+	demands: [
+		[ 15, "passengers", 10 ],
+		[ 49, "steel", 2 ],
+		[ 93, "imports", 15 ]
+		]
 	};
 var trainRoute = [
 	17, 10, 11, 12, 13, 21, 30, 38, 46, 45, 44, 43, 34, 33, 26
@@ -285,6 +290,12 @@ function drawRailsHelper(ctx, owner)
 	}
 }
 
+function cityVisible(cityId)
+{
+	return !mapFeatures.filterCities ||
+		mapFeatures.filterCities[cityId];
+}
+
 function repaint()
 {
 	var canvas = document.getElementById('theCanvas');
@@ -317,7 +328,8 @@ function repaint()
 				};
 			drawCell(ctx, pt, c, w, nw, ne);
 
-			if (mapData.cities[getCell(y,x)])
+			var cellIdx = getCell(y,x);
+			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
 			{
 				ctx.fillStyle = "#ff4444";
 				ctx.beginPath();
@@ -326,7 +338,7 @@ function repaint()
 				ctx.fill();
 			}
 
-			drawRails(ctx, pt, getCell(y,x));
+			drawRails(ctx, pt, cellIdx);
 		}
 	}
 
@@ -334,9 +346,12 @@ function repaint()
 	ctx.font = "24px sans-serif";
 	for (var cityLoc in mapData.cities)
 	{
-		var cityName = mapData.cities[cityLoc].name;
-		var p = getCellPoint(cityLoc);
-		ctx.fillText(cityName, p.x, p.y + CELL_ASCENT);
+		if (cityVisible(cityLoc))
+		{
+			var cityName = mapData.cities[cityLoc].name;
+			var p = getCellPoint(cityLoc);
+			ctx.fillText(cityName, p.x, p.y + CELL_ASCENT);
+		}
 	}
 }
 
@@ -375,8 +390,8 @@ function updateTrainPosition(train)
 	var $t = train.el;
 	var origin_pt = $('#theCanvas').position();
 	$t.css({
-		left: (origin_pt.left + CELL_WIDTH/2 - 15 + pt.x) + "px",
-		top: (origin_pt.top + pt.y) + "px"
+		left: (origin_pt.left + pt.x + CELL_WIDTH/2 - 15) + "px",
+		top: (origin_pt.top + pt.y + CELL_ASCENT/2 - 15) + "px"
 		});
 }
 
@@ -577,9 +592,14 @@ function track_addSegment(fromIdx, toIdx)
 	ctx.restore();
 
 	if (isBuilding.erasing)
+	{
 		delete isBuilding.rails[trackIdx];
+	}
 	else
+	{
 		isBuilding.rails[trackIdx] = true;
+		isBuilding.curSegmentCount++;
+	}
 }
 
 $(function() {
@@ -701,4 +721,78 @@ function updateAllTrainPositions()
 	{
 		updateTrainPosition(theTrain);
 	}
+}
+
+function selectDemand($row)
+{
+	var oldDemand = $('#demandsPane').attr('selected-demand');
+	if (oldDemand)
+	{
+		$('.aDemand[demand-index='+oldDemand+']').removeClass('selected');
+	}
+
+	$row.addClass('selected');
+	$('#demandsPane').attr('selected-demand', $row.attr('demand-index'));
+
+	// show only cities that have this resource
+	var filteredCities = {};
+
+	var demand = mapData.demands[$row.attr('demand-index')-1];
+	if (demand)
+	{
+		filteredCities[demand[0]] = true;
+		for (var i in mapData.cities)
+		{
+			var city = mapData.cities[i];
+			var foundResource = false;
+			for (var j in city.offers)
+			{
+				if (city.offers[j] == demand[1])
+					foundResource = true;
+			}
+			if (foundResource)
+				filteredCities[i] = true;
+		}
+	}
+
+	mapFeatures.filterCities = filteredCities;
+	repaint();
+}
+
+function showDemands()
+{
+	$('#demandsPane .insertedRow').remove();
+	var count = 0;
+	for (var i in mapData.demands)
+	{
+		var demand = mapData.demands[i];
+		var $row = $('#demandsPaneTableTemplate').clone();
+		$row.attr('demand-index', parseInt(i) + 1);
+		$row.addClass('insertedRow');
+		$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
+		$('img', $row).attr('src', 'resource_icons/' + demand[1] + '.png');
+		$('img', $row).attr('alt', demand[1]);
+		$('.cityName', $row).text(mapData.cities[demand[0]].name);
+		$('.amount', $row).text(demand[2]);
+		$('#demandsPane table').append($row);
+		$row.hover(
+			function() { $(this).addClass('hover'); },
+			function() { $(this).removeClass('hover'); }
+			);
+		$row.click(
+			function() { selectDemand($(this)); }
+			);
+		$row.show();
+	}
+	$('#demandsPane').fadeIn();
+
+	var h = $('#demandsPane').innerHeight();
+	h -= $('#demandsPane .widgetHeader').outerHeight();
+	h -= $('#demandsPane .widgetFooter').outerHeight();
+	$('#demandsPane .widgetContent').css('height', h + "px");
+}
+
+function dismissDemandsPane()
+{
+	$('#demandsPane').fadeOut();
 }

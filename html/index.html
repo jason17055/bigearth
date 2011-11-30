@@ -11,6 +11,8 @@ body {
 	width: 30px;
 	height: 30px;
 	line-height: 30px;
+	cursor: default;
+	opacity: 0.7;
 }
 .widget {
 	position: absolute;
@@ -23,6 +25,9 @@ body {
 	background-color: white;
 	display: none;
 }
+.widgetContent {
+	overflow: auto;
+}
 .widgetHeader {
 	width: 100%;
 	text-align: center;
@@ -33,6 +38,27 @@ body {
 	font-family: ariel, sans-serif;
 	line-height: 16pt;
 }
+.widgetFooter {
+	width: 100%;
+	text-align: center;
+	background-color: #666666;
+	color: black;
+	position: absolute;
+	bottom: 0;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.aDemand {
+	cursor: default;
+}
+.aDemand.hover {
+	background-color: #88ffff;
+	color: black;
+}
+.aDemand.selected {
+	background-color: #aaaaff;
+	color: black;
+}
 </style>
 <script type="text/javascript" src="js/jquery-1.7.min.js"></script>
 <script type="text/javascript" src="trains.js"></script>
@@ -42,22 +68,34 @@ body {
 <canvas id="theCanvas" width="600" height="600"></canvas>
 </div>
 <div>
-<button type="button" onclick="beginBuilding()">Begin Building</button>
+<button type="button" onclick="showDemands()">Show Demands</button>
+<button type="button" onclick="beginBuilding()">Build Track</button>
 <button type="button" onclick="addLocomotive()">Add Locomotive</button>
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
+<div class="widget" id="demandsPane">
+  <div class="widgetHeader">Current Demands</div>
+  <div class="widgetContent">
+  <table border="0" cellspacing="0">
+    <tr class="aDemand" id="demandsPaneTableTemplate" style="display:none"><td><img src="resource_icons/passengers.png" alt="coal"></td>
+        <td width="100%"><span class="cityName">Erie</span></td>
+        <td align="right">$<span class="amount">10</span></td></tr>
+  </table>
+  </div>
+  <div class="widgetFooter"><button type="button" onclick="dismissDemandsPane()">Dismiss</button></div>
+</div>
 <div class="widget" id="buildTrackInfo">
-<div class="widgetHeader">Build Track</div>
-<div>Click and drag from a city or existing track.</div>
-<p>Cost so far: <span id="buildTrackCost">0</span></p>
-<div><button type="button" onclick="commitBuilding()">Commit</button></div>
-<div><button type="button" onclick="deferBuilding()">Save for Later</button></div>
-<div><button type="button" onclick="abandonBuilding()">Abandon</button></div>
+  <div class="widgetHeader">Build Track</div>
+  <div>Click and drag from a city or existing track.</div>
+  <p>Cost so far: <span id="buildTrackCost">0</span></p>
+  <div><button type="button" onclick="commitBuilding()">Commit</button></div>
+  <div><button type="button" onclick="deferBuilding()">Save for Later</button></div>
+  <div><button type="button" onclick="abandonBuilding()">Abandon</button></div>
 </div>
 <div class="widget" id="trainPlan">
-<div class="widgetHeader">Train Plan</div>
-<div>Click a city to set this locomotive's starting point.</div>
-<div><button type="button" onclick="dismissPlan()">Dismiss</button></div>
+  <div class="widgetHeader">Train Plan</div>
+  <div>Click a city to set this locomotive's starting point.</div>
+  <div><button type="button" onclick="dismissPlan()">Dismiss</button></div>
 </div>
 </body>
 </html>
