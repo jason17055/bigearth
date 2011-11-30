@@ -1,0 +1,63 @@
+<html>
+<head>
+<style type="text/css">
+body {
+}
+.trainSprite {
+	text-align: center;
+	font-family: ariel, sans-serif;
+	font-size: 14pt;
+	text-height: 30px;
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+}
+.widget {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	width: 200px;
+	height: 200px;
+	border: 1px solid black;
+	color: black;
+	background-color: white;
+	display: none;
+}
+.widgetHeader {
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+	background-color: #000066;
+	color: white;
+	font-size: 12pt;
+	font-family: ariel, sans-serif;
+	line-height: 16pt;
+}
+</style>
+<script type="text/javascript" src="js/jquery-1.7.min.js"></script>
+<script type="text/javascript" src="trains.js"></script>
+</head>
+<body>
+<div id="contentArea">
+<canvas id="theCanvas" width="600" height="600"></canvas>
+</div>
+<div>
+<button type="button" onclick="beginBuilding()">Begin Building</button>
+<button type="button" onclick="addLocomotive()">Add Locomotive</button>
+<button type="button" onclick="zoomIn()">Zoom In</button>
+<button type="button" onclick="zoomOut()">Zoom Out</button>
+<div class="widget" id="buildTrackInfo">
+<div class="widgetHeader">Build Track</div>
+<div>Click and drag from a city or existing track.</div>
+<p>Cost so far: <span id="buildTrackCost">0</span></p>
+<div><button type="button" onclick="commitBuilding()">Commit</button></div>
+<div><button type="button" onclick="deferBuilding()">Save for Later</button></div>
+<div><button type="button" onclick="abandonBuilding()">Abandon</button></div>
+</div>
+<div class="widget" id="trainPlan">
+<div class="widgetHeader">Train Plan</div>
+<div>Click a city to set this locomotive's starting point.</div>
+<div><button type="button" onclick="dismissPlan()">Dismiss</button></div>
+</div>
+</body>
+</html>
