@@ -940,6 +940,18 @@ function updateAllTrainPositions()
 	}
 }
 
+function selectWaypoint($row)
+{
+	var oldSelection = $('#trainPlan').attr('selected-waypoint');
+	if (oldSelection)
+	{
+		$('.aWaypoint[waypoint-number='+oldSelection+']').removeClass('selected');
+	}
+
+	$row.addClass('selected');
+	$('#trainPlan').attr('selected-waypoint', $row.attr('waypoint-number'));
+}
+
 function selectDemand($row)
 {
 	var oldDemand = $('#demandsPane').attr('selected-demand');
@@ -994,11 +1006,15 @@ function reloadPlan()
 
 			var $row = $('#aWaypointTemplate').clone();
 			$row.attr('plan-index', i);
+			$row.attr('waypoint-number', waypointNumber);
 			$row.addClass('insertedRow');
 			$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
 			$('.waypointNumber', $row).text(waypointNumber);
 			$('.waypointCity', $row).text(
 				mapData.cities[p.location].name
+				);
+			$row.click(
+				function() { selectWaypoint($(this)); }
 				);
 			$row.show();
 			$('#trainPlan table').append($row);

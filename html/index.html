@@ -69,7 +69,7 @@ body {
 	background-color: #88ffff;
 	color: black;
 }
-.aDemand.selected {
+.aDemand.selected, .aWaypoint.selected {
 	background-color: #aaaaff;
 	color: black;
 }
@@ -107,9 +107,9 @@ body {
   <div><button type="button" onclick="abandonBuilding()">Abandon</button></div>
 </div>
 <div class="widget" id="trainPlan">
-  <div class="widgetHeader">Train Plan</div>
+  <div class="widgetHeader">Train 1</div>
   <div class="widgetContent">
-  <div>Click a city to set this locomotive's starting point.</div>
+  <div id="brandNewInstructions">Click a city to set this locomotive's starting point.</div>
   <table border="0" cellspacing="0">
     <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
         <td class="waypointNumber"></td>
@@ -118,6 +118,9 @@ body {
     </tr>
     <tr class="aManifest" id="aManifestTemplate" style="display:none">
         <td colspan="3">Manifest!</td>
+    </tr>
+    <tr id="aManifestControl" style="display:none">
+        <td align="center" colspan="3"><button type="button">Pick Up</button</td>
     </tr>
   </table>
   </div>
