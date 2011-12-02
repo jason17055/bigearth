@@ -39,6 +39,9 @@ body {
 	background-color: white;
 	display: none;
 }
+#waypointPane {
+	height: 300px;
+}
 .widgetContent {
 	overflow: auto;
 }
@@ -127,6 +130,38 @@ body {
   <div class="widgetFooter">
     <button type="button" id="startTrain_btn" onclick="startTrain()">Go!</button>
     <button type="button" id="stopTrain_btn" style="display:none" onclick="stopTrain()">Stop</button>
+    <button type="button" onclick="dismissPlan()">Dismiss</button>
+  </div>
+</div>
+<div class="widget" id="waypointPane">
+  <div class="widgetHeader">City</div>
+  <div class="widgetContent">
+     <table>
+     <tr><td colspan="2">You will have:</td></tr>
+     <tr><td valign="top" align="center">
+          <div><img src="resource_icons/plastics.png"></div>
+          <div><small>plastics</small></div>
+         </td><td align="right" valign="bottom"><button type="button">Deliver for $10</button></td>
+     </tr>
+     <tr><td colspan="2">Available here:</td></tr>
+     <tr><td valign="top" align="center">
+          <div><img src="resource_icons/steel.png"></div>
+          <div><small>steel</small></div>
+         </td><td align="left" valign="bottom">
+             <small>Wanted in Scranton</small>
+            <span style="float:right"><button type="button">Pick Up</button></span>
+          </td>
+     </tr>
+     <tr><td valign="top" align="center">
+          <div><img src="resource_icons/passengers.png"></div>
+          <div><small>passengers</small></div>
+         </td><td align="left" valign="bottom">
+            <span style="float:right"><button type="button">Pick Up</button></span>
+          </td>
+     </tr>
+     </table>
+  </div>
+  <div class="widgetFooter">
     <button type="button" onclick="dismissPlan()">Dismiss</button>
   </div>
 </div>

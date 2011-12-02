@@ -815,6 +815,14 @@ function abandonBuilding()
 	repaint();
 }
 
+function fixWidgetDimensions($widget)
+{
+	var h = $widget.innerHeight();
+	h -= $('.widgetHeader', $widget).outerHeight();
+	h -= $('.widgetFooter', $widget).outerHeight();
+	$('.widgetContent', $widget).css('height', h + "px");
+}
+
 function onTrainClicked(train)
 {
 	if (isPlanning && isPlanning.train == train)
@@ -826,11 +834,7 @@ function onTrainClicked(train)
 	reloadPlan();
 	$('#trainPlan').fadeIn();
 
-	var $widget = $('#trainPlan');
-	var h = $widget.innerHeight();
-	h -= $('.widgetHeader', $widget).outerHeight();
-	h -= $('.widgetFooter', $widget).outerHeight();
-	$('.widgetContent', $widget).css('height', h + "px");
+	fixWidgetDimensions($('#trainPlan'));
 }
 
 function addLocomotive()
@@ -842,10 +846,7 @@ function addLocomotive()
 	$('#trainPlan').fadeIn();
 
 	var $widget = $('#trainPlan');
-	var h = $widget.innerHeight();
-	h -= $('.widgetHeader', $widget).outerHeight();
-	h -= $('.widgetFooter', $widget).outerHeight();
-	$('.widgetContent', $widget).css('height', h + "px");
+	fixWidgetDimensions($widget);
 }
 
 function dismissPlan()
@@ -950,6 +951,15 @@ function selectWaypoint($row)
 
 	$row.addClass('selected');
 	$('#trainPlan').attr('selected-waypoint', $row.attr('waypoint-number'));
+
+	var cityName = $('.waypointCity', $row).text();
+	var $pw = $('#trainPlan');
+	$('#waypointPane .widgetHeader').text(cityName);
+	$('#waypointPane').fadeIn();
+	$('#waypointPane').css({
+		top: ($pw.position().top + $pw.outerHeight() + 10) + "px"
+		});
+	fixWidgetDimensions($('#waypointPane'));
 }
 
 function selectDemand($row)
@@ -1068,10 +1078,7 @@ function showDemands()
 	$('#demandsPane').fadeIn();
 
 	var $widget = $('#demandsPane');
-	var h = $widget.innerHeight();
-	h -= $('.widgetHeader', $widget).outerHeight();
-	h -= $('.widgetFooter', $widget).outerHeight();
-	$('.widgetContent', $widget).css('height', h + "px");
+	fixWidgetDimensions($widget);
 }
 
 function dismissDemandsPane()
