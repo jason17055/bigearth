@@ -3,7 +3,21 @@
 <style type="text/css">
 body {
 }
+.waypointSprite {
+	position: absolute;
+	text-align: center;
+	font-family: ariel, sans-serif;
+	font-size: 14pt;
+	text-height: 26px;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	cursor: default;
+	background-color: white;
+	border: 1px solid black;
+}
 .trainSprite {
+	position: absolute;
 	text-align: center;
 	font-family: ariel, sans-serif;
 	font-size: 14pt;
@@ -94,8 +108,24 @@ body {
 </div>
 <div class="widget" id="trainPlan">
   <div class="widgetHeader">Train Plan</div>
+  <div class="widgetContent">
   <div>Click a city to set this locomotive's starting point.</div>
-  <div><button type="button" onclick="dismissPlan()">Dismiss</button></div>
+  <table border="0" cellspacing="0">
+    <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
+        <td class="waypointNumber"></td>
+        <td class="waypointCity" width="100%">Erie</td>
+        <td class="waypointEta" align="right">10mn</td>
+    </tr>
+    <tr class="aManifest" id="aManifestTemplate" style="display:none">
+        <td colspan="3">Manifest!</td>
+    </tr>
+  </table>
+  </div>
+  <div class="widgetFooter">
+    <button type="button" id="startTrain_btn" onclick="startTrain()">Go!</button>
+    <button type="button" id="stopTrain_btn" style="display:none" onclick="stopTrain()">Stop</button>
+    <button type="button" onclick="dismissPlan()">Dismiss</button>
+  </div>
 </div>
 </body>
 </html>
