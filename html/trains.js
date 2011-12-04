@@ -39,9 +39,6 @@ var mapData = {
 		[ 93, "imports", 15 ]
 		]
 	};
-var trainRoute = [
-	17, 10, 11, 12, 13, 21, 30, 38, 46, 45, 44, 43, 34, 33, 26
-	];
 var theTrain = null;
 var mapFeatures = {};
 var isBuilding = null;
@@ -75,75 +72,6 @@ function updateMapMetrics()
 	MAP_ORIGIN_Y = CELL_ASCENT/2;
 }
 updateMapMetrics();
-
-function drawCell(ctx, pt, c, w, nw, ne)
-{
-	var getColor = function(cc)
-	{
-		if (mapFeatures.hideTerrain)
-		{
-			return cc == "w" ? "#0000ff" : "#ffffff";
-		}
-
-		return cc == "." ? "#88ff66" :
-			cc == "M" ? "#884400" :
-			cc == "w" ? "#0000ff" :
-			"#ffffff";
-	};
-
-	ctx.fillStyle = getColor(c);
-	if (c != nw || c != ne)
-	{
-		ctx.beginPath();
-		ctx.moveTo(pt.x, pt.y);
-		ctx.lineTo(pt.x + CELL_WIDTH / 2, pt.y - CELL_DESCENT);
-		ctx.lineTo(pt.x + CELL_WIDTH, pt.y);
-		ctx.closePath();
-		ctx.fill();
-	}
-
-	ctx.fillRect(
-		pt.x, pt.y,
-		CELL_WIDTH+1, CELL_HEIGHT+1
-		);
-}
-
-function drawRails(ctx, pt, cellIdx)
-{
-	var t;
-	if (t = hasTrackAtDir(cellIdx, 0)) //West
-	{
-		if (trackVisible(getTrackIndex(cellIdx, 0)))
-		{
-		ctx.save();
-		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
-		drawRailsHelper(ctx, t);
-		ctx.restore();
-		}
-	}
-	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
-	{
-		if (trackVisible(getTrackIndex(cellIdx, 1)))
-		{
-		ctx.save();
-		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
-		ctx.rotate(Math.PI / 3);
-		drawRailsHelper(ctx, t);
-		ctx.restore();
-		}
-	}
-	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
-	{
-		if (trackVisible(getTrackIndex(cellIdx, 2)))
-		{
-		ctx.save();
-		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
-		ctx.rotate(Math.PI * 2 / 3);
-		drawRailsHelper(ctx, t);
-		ctx.restore();
-		}
-	}
-}
 
 function getCellRow(cellIdx)
 {
@@ -293,6 +221,75 @@ function hasTrackAt(cellIdx)
 		hasTrackAtDir(cellIdx, 3) ||
 		hasTrackAtDir(cellIdx, 4) ||
 		hasTrackAtDir(cellIdx, 5);
+}
+
+function drawCell(ctx, pt, c, w, nw, ne)
+{
+	var getColor = function(cc)
+	{
+		if (mapFeatures.hideTerrain)
+		{
+			return cc == "w" ? "#0000ff" : "#ffffff";
+		}
+
+		return cc == "." ? "#88ff66" :
+			cc == "M" ? "#884400" :
+			cc == "w" ? "#0000ff" :
+			"#ffffff";
+	};
+
+	ctx.fillStyle = getColor(c);
+	if (c != nw || c != ne)
+	{
+		ctx.beginPath();
+		ctx.moveTo(pt.x, pt.y);
+		ctx.lineTo(pt.x + CELL_WIDTH / 2, pt.y - CELL_DESCENT);
+		ctx.lineTo(pt.x + CELL_WIDTH, pt.y);
+		ctx.closePath();
+		ctx.fill();
+	}
+
+	ctx.fillRect(
+		pt.x, pt.y,
+		CELL_WIDTH+1, CELL_HEIGHT+1
+		);
+}
+
+function drawRails(ctx, pt, cellIdx)
+{
+	var t;
+	if (t = hasTrackAtDir(cellIdx, 0)) //West
+	{
+		if (trackVisible(getTrackIndex(cellIdx, 0)))
+		{
+		ctx.save();
+		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
+		drawRailsHelper(ctx, t);
+		ctx.restore();
+		}
+	}
+	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
+	{
+		if (trackVisible(getTrackIndex(cellIdx, 1)))
+		{
+		ctx.save();
+		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.rotate(Math.PI / 3);
+		drawRailsHelper(ctx, t);
+		ctx.restore();
+		}
+	}
+	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
+	{
+		if (trackVisible(getTrackIndex(cellIdx, 2)))
+		{
+		ctx.save();
+		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.rotate(Math.PI * 2 / 3);
+		drawRailsHelper(ctx, t);
+		ctx.restore();
+		}
+	}
 }
 
 function drawRailsHelper(ctx, owner)
@@ -556,7 +553,6 @@ function addTrainSprite(trainLoc)
 		brandNew: true
 		};
 	updateTrainPosition(train);
-	//animateTrain(train);
 
 	$t.click(function() { onTrainClicked(train); });
 	return train;
@@ -667,6 +663,7 @@ function onMouseMove(evt)
 		MAP_ORIGIN_X -= (pt.x - isPanning.originX);
 		MAP_ORIGIN_Y -= (pt.y - isPanning.originY);
 		repaint();
+		updateAllSpritePositions();
 
 		isPanning.originX = pt.x;
 		isPanning.originY = pt.y;
@@ -766,7 +763,7 @@ function zoomIn()
 
 	updateMapMetrics();
 	repaint();
-	updateAllTrainPositions();
+	updateAllSpritePositions();
 }
 
 function zoomOut()
@@ -777,7 +774,7 @@ function zoomOut()
 
 	updateMapMetrics();
 	repaint();
-	updateAllTrainPositions();
+	updateAllSpritePositions();
 }
 
 function beginBuilding()
@@ -934,11 +931,15 @@ function addCityToPlan(cellIdx)
 	selectWaypointByIndex(isPlanning.train.plan.length-1);
 }
 
-function updateAllTrainPositions()
+function updateAllSpritePositions()
 {
 	if (theTrain)
 	{
 		updateTrainPosition(theTrain);
+	}
+	for (var i in waypointSprites)
+	{
+		updateWaypointSpritePosition(waypointSprites[i]);
 	}
 }
 
@@ -1177,13 +1178,14 @@ function reloadPlan()
 {
 	$('#trainPlan .insertedRow').remove();
 
-	if (!(isPlanning && isPlanning.train))
+	var train = isPlanning && isPlanning.train;
+	if (!train)
 		return;
 
 	var count = 0;
-	for (var i in isPlanning.train.plan)
+	for (var i in train.plan)
 	{
-		var p = isPlanning.train.plan[i];
+		var p = train.plan[i];
 		if (p.class == "waypoint")
 		{
 			count++;
@@ -1204,7 +1206,7 @@ function reloadPlan()
 			$row.show();
 			$('#trainPlan table').append($row);
 
-			if (p.location == isPlanning.train.loc)
+			if (p.location == train.loc)
 			{
 				removeWaypointSprite(waypointNumber);
 			}
