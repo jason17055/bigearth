@@ -752,9 +752,9 @@ function track_addSegment(fromIdx, toIdx)
 }
 
 $(function() {
-	$('#theCanvas').mousedown(onMouseDown);
-	$('#theCanvas').mouseup(onMouseUp);
-	$('#theCanvas').mousemove(onMouseMove);
+	$('#contentArea').mousedown(onMouseDown);
+	$('#contentArea').mouseup(onMouseUp);
+	$('#contentArea').mousemove(onMouseMove);
 });
 
 function zoomIn()
@@ -931,6 +931,7 @@ function addCityToPlan(cellIdx)
 		};
         isPlanning.train.plan.push(waypoint);
 	reloadPlan();
+	selectWaypointByIndex(isPlanning.train.plan.length-1);
 }
 
 function updateAllTrainPositions()
@@ -939,6 +940,12 @@ function updateAllTrainPositions()
 	{
 		updateTrainPosition(theTrain);
 	}
+}
+
+function selectWaypointByIndex(i)
+{
+	var $row = $('.aWaypoint[plan-index='+i+']');
+	selectWaypoint($row);
 }
 
 function selectWaypoint($row)
@@ -952,10 +959,53 @@ function selectWaypoint($row)
 	$row.addClass('selected');
 	$('#trainPlan').attr('selected-waypoint', $row.attr('waypoint-number'));
 
-	var cityName = $('.waypointCity', $row).text();
-	var $pw = $('#trainPlan');
+        var planIdx = $row.attr('plan-index');
+	var waypoint = isPlanning.train.plan[planIdx];
+
+	var cityName = mapData.cities[waypoint.location].name;
 	$('#waypointPane .widgetHeader').text(cityName);
+
+	$('#waypointPane .insertedRow').remove();
+	var availableHere = mapData.cities[waypoint.location].offers;
+	if (availableHere.length > 0)
+	{
+		$('#availableHeader').show();
+	}
+	for (var i in availableHere)
+	{
+		var resource_type = availableHere[i];
+		var $row = $('#availableTemplate').clone();
+
+		$row.addClass('insertedRow');
+		$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
+		$('.resource_name', $row).text(resource_type);
+
+		var wantedPlaces = new Array();
+		for (var j in mapData.demands)
+		{
+			var dem = mapData.demands[j];
+			if (dem[1] == resource_type)
+			{
+				wantedPlaces.push(mapData.cities[dem[0]].name);
+			}
+		}
+		$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
+			"Wanted in " + wantedPlaces.join(', ') :
+			"");
+
+		$('#availableTemplate').before($row);
+		$row.show();
+
+		with({ resource_type: resource_type })
+		{
+			$('button', $row).click(function() {
+				alert('pick up ' + resource_type);
+				});
+		}
+	}
+
 	$('#waypointPane').fadeIn();
+	var $pw = $('#trainPlan');
 	$('#waypointPane').css({
 		top: ($pw.position().top + $pw.outerHeight() + 10) + "px"
 		});

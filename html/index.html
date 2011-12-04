@@ -117,7 +117,7 @@ body {
     <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
         <td class="waypointNumber"></td>
         <td class="waypointCity" width="100%">Erie</td>
-        <td class="waypointEta" align="right">10mn</td>
+        <td class="waypointEta" align="right">10</td>
     </tr>
     <tr class="aManifest" id="aManifestTemplate" style="display:none">
         <td colspan="3">Manifest!</td>
@@ -136,28 +136,44 @@ body {
 <div class="widget" id="waypointPane">
   <div class="widgetHeader">City</div>
   <div class="widgetContent">
-     <table>
-     <tr><td colspan="2">You will have:</td></tr>
+     <table width="100%">
+     <tr id="deliverHeader"><td colspan="2">You are delivering:</td></tr>
+     <tr id="deliverTemplate" style="display:none">
+       <td valign="top" align="center">
+          <div><img class="resource_icon" src="src"></div>
+          <div><small class="resource_name">resource</small></div>
+       </td>
+       <td valign="bottom" align="right">
+          <button type="button">Keep</button>
+       </td>
+     </tr>
+     <tr id="keepHeader"><td colspan="2">You will have:</td></tr>
      <tr><td valign="top" align="center">
           <div><img src="resource_icons/plastics.png"></div>
           <div><small>plastics</small></div>
          </td><td align="right" valign="bottom"><button type="button">Deliver for $10</button></td>
      </tr>
-     <tr><td colspan="2">Available here:</td></tr>
-     <tr><td valign="top" align="center">
-          <div><img src="resource_icons/steel.png"></div>
-          <div><small>steel</small></div>
-         </td><td align="left" valign="bottom">
-             <small>Wanted in Scranton</small>
-            <span style="float:right"><button type="button">Pick Up</button></span>
-          </td>
+     <tr id="pickupHeader"><td colspan="2">You will pick up:</td></tr>
+     <tr id="pickupTemplate">
+       <td valign="top" align="center">
+          <div><img class="resource_icon" src="resource_icons/steel.png"></div>
+          <div><small class="resource_name">steel</small></div>
+       </td>
+       <td align="left" valign="bottom">
+             <div><small>Wanted in Scranton</small></div>
+            <span style="float:right"><button type="button">Don't Pick Up</button></span>
+       </td>
      </tr>
-     <tr><td valign="top" align="center">
-          <div><img src="resource_icons/passengers.png"></div>
-          <div><small>passengers</small></div>
-         </td><td align="left" valign="bottom">
-            <span style="float:right"><button type="button">Pick Up</button></span>
-          </td>
+     <tr id="availableHeader"><td colspan="2">Available here:</td></tr>
+     <tr id="availableTemplate" style="display:none">
+      <td valign="top" align="center">
+          <div><img class="resource_icon" src="resource_icons/steel.png"></div>
+          <div><small class="resource_name">steel</small></div>
+      </td>
+      <td align="left" valign="bottom">
+          <div><small class="wantedInfo">Wanted in Scranton</small></div>
+          <span style="float:right"><button type="button">Pick Up</button></span>
+      </td>
      </tr>
      </table>
   </div>
