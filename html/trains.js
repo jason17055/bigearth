@@ -920,6 +920,11 @@ function addCityToPlan(cellIdx)
 		mapFeatures.hideTerrain = true;
 		filterMapToReachable(isPlanning.train);
 		repaint();
+
+		// now that a starting point is being selected,
+		// we can remove the "Click city to set this starting point"
+		// instructions.
+		$('#brandNewInstructions').hide();
 	}
 
 	var waypoint = {
@@ -1189,14 +1194,14 @@ function reloadPlan()
 		if (p.class == "waypoint")
 		{
 			count++;
-			var waypointNumber = count;
+			var waypointNumber = i;
 
 			var $row = $('#aWaypointTemplate').clone();
 			$row.attr('plan-index', i);
 			$row.attr('waypoint-number', waypointNumber);
 			$row.addClass('insertedRow');
 			$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
-			$('.waypointNumber', $row).text(waypointNumber);
+			$('.waypointNumber', $row).text(waypointNumber != 0 ? waypointNumber : "Cur");
 			$('.waypointCity', $row).text(
 				mapData.cities[p.location].name
 				);
