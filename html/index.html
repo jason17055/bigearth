@@ -32,8 +32,8 @@ body {
 	position: absolute;
 	right: 10px;
 	top: 10px;
-	width: 200px;
-	height: 200px;
+	width: 220px;
+	height: 220px;
 	border: 1px solid black;
 	color: black;
 	background-color: white;
@@ -148,19 +148,24 @@ body {
        </td>
      </tr>
      <tr id="keepHeader"><td colspan="2">You will have:</td></tr>
-     <tr><td valign="top" align="center">
-          <div><img src="resource_icons/plastics.png"></div>
-          <div><small>plastics</small></div>
-         </td><td align="right" valign="bottom"><button type="button">Deliver for $10</button></td>
+     <tr id="keepTemplate" style="display:none">
+       <td valign="top" align="center">
+          <div><img class="resource_icon" src="resource_icons/plastics.png"></div>
+          <div><small class="resource_name">plastics</small></div>
+       </td>
+       <td align="left" valign="bottom">
+             <div><small class="wantedInfo">Wanted in Scranton</small></div>
+            <span style="float:right"><button type="button">Deliver for <span class="price">$10</span></button></span>
+       </td>
      </tr>
      <tr id="pickupHeader"><td colspan="2">You will pick up:</td></tr>
-     <tr id="pickupTemplate">
+     <tr id="pickupTemplate" style="display:none">
        <td valign="top" align="center">
           <div><img class="resource_icon" src="resource_icons/steel.png"></div>
           <div><small class="resource_name">steel</small></div>
        </td>
        <td align="left" valign="bottom">
-             <div><small>Wanted in Scranton</small></div>
+             <div><small class="wantedInfo">Wanted in Scranton</small></div>
             <span style="float:right"><button type="button">Don't Pick Up</button></span>
        </td>
      </tr>

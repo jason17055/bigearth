@@ -965,44 +965,7 @@ function selectWaypoint($row)
 	var cityName = mapData.cities[waypoint.location].name;
 	$('#waypointPane .widgetHeader').text(cityName);
 
-	$('#waypointPane .insertedRow').remove();
-	var availableHere = mapData.cities[waypoint.location].offers;
-	if (availableHere.length > 0)
-	{
-		$('#availableHeader').show();
-	}
-	for (var i in availableHere)
-	{
-		var resource_type = availableHere[i];
-		var $row = $('#availableTemplate').clone();
-
-		$row.addClass('insertedRow');
-		$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
-		$('.resource_name', $row).text(resource_type);
-
-		var wantedPlaces = new Array();
-		for (var j in mapData.demands)
-		{
-			var dem = mapData.demands[j];
-			if (dem[1] == resource_type)
-			{
-				wantedPlaces.push(mapData.cities[dem[0]].name);
-			}
-		}
-		$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
-			"Wanted in " + wantedPlaces.join(', ') :
-			"");
-
-		$('#availableTemplate').before($row);
-		$row.show();
-
-		with({ resource_type: resource_type })
-		{
-			$('button', $row).click(function() {
-				alert('pick up ' + resource_type);
-				});
-		}
-	}
+	reloadWaypoint(waypoint);
 
 	$('#waypointPane').fadeIn();
 	var $pw = $('#trainPlan');
@@ -1010,6 +973,168 @@ function selectWaypoint($row)
 		top: ($pw.position().top + $pw.outerHeight() + 10) + "px"
 		});
 	fixWidgetDimensions($('#waypointPane'));
+}
+
+function getTrainManifestAtWaypoint(train, targetWaypoint)
+{
+	if (!train)
+	{
+		train = isPlanning.train;
+	}
+
+	var found = new Array();
+	for (var planIdx in train.plan)
+	{
+		var waypoint = train.plan[planIdx];
+		if (waypoint == targetWaypoint)
+			break;
+
+		if (waypoint.pickup)
+		{
+			for (var i in waypoint.pickup)
+			{
+				found.push(waypoint.pickup[i]);
+			}
+		}
+	}
+	return found;
+}
+
+function reloadWaypoint(waypoint)
+{
+	$('#waypointPane .insertedRow').remove();
+
+	var keepHere = getTrainManifestAtWaypoint(null, waypoint);
+	if (keepHere.length > 0)
+	{
+		$('#keepHeader').show();
+		for (var i in keepHere)
+		{
+			var resource_type = keepHere[i];
+			var $row = $('#keepTemplate').clone();
+
+			$row.addClass('insertedRow');
+			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
+			$('.resource_name', $row).text(resource_type);
+
+			var wantedPlaces = new Array();
+			for (var j in mapData.demands)
+			{
+				var dem = mapData.demands[j];
+				if (dem[1] == resource_type)
+				{
+					wantedPlaces.push(mapData.cities[dem[0]].name);
+				}
+			}
+			$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
+				"Wanted in " + wantedPlaces.join(', ') :
+				"");
+
+			$('#keepTemplate').before($row);
+			$row.show();
+
+			with({ resource_type: resource_type })
+			{
+				$('button', $row).click(function() {
+					alert('deliver ' + resource_type);
+					});
+			}
+		}
+	}
+	else
+	{
+		$('#keepHeader').hide();
+	}
+
+	var pickupHere = waypoint.pickup;
+	if (pickupHere && pickupHere.length > 0)
+	{
+		$('#pickupHeader').show();
+		for (var i in pickupHere)
+		{
+			var resource_type = pickupHere[i];
+			var $row = $('#pickupTemplate').clone();
+
+			$row.addClass('insertedRow');
+			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
+			$('.resource_name', $row).text(resource_type);
+
+			var wantedPlaces = new Array();
+			for (var j in mapData.demands)
+			{
+				var dem = mapData.demands[j];
+				if (dem[1] == resource_type)
+				{
+					wantedPlaces.push(mapData.cities[dem[0]].name);
+				}
+			}
+			$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
+				"Wanted in " + wantedPlaces.join(', ') :
+				"");
+
+			$('#pickupTemplate').before($row);
+			$row.show();
+
+			with({ index: i })
+			{
+				$('button', $row).click(function() {
+					waypoint.pickup.splice(index,1);
+					reloadWaypoint(waypoint);
+					});
+			}
+		}
+	}
+	else
+	{
+		$('#pickupHeader').hide();
+	}
+	
+	var availableHere = mapData.cities[waypoint.location].offers;
+	if (availableHere && availableHere.length > 0)
+	{
+		$('#availableHeader').show();
+		for (var i in availableHere)
+		{
+			var resource_type = availableHere[i];
+			var $row = $('#availableTemplate').clone();
+	
+			$row.addClass('insertedRow');
+			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
+			$('.resource_name', $row).text(resource_type);
+
+			var wantedPlaces = new Array();
+			for (var j in mapData.demands)
+			{
+				var dem = mapData.demands[j];
+				if (dem[1] == resource_type)
+				{
+					wantedPlaces.push(mapData.cities[dem[0]].name);
+				}
+			}
+			$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
+				"Wanted in " + wantedPlaces.join(', ') :
+				"");
+
+			$('#availableTemplate').before($row);
+			$row.show();
+
+			with({ resource_type: resource_type })
+			{
+				$('button', $row).click(function() {
+					if (!waypoint.pickup)
+					{
+						waypoint.pickup = new Array();
+					}
+					waypoint.pickup.push(resource_type);
+					reloadWaypoint(waypoint);
+					});
+			}
+		}
+	}
+	else
+	{
+		$('#availableHeader').hide();
+	}
 }
 
 function selectDemand($row)
