@@ -436,7 +436,7 @@ function updateWaypointSpritePosition(sprite)
 		});
 }
 
-function updateTrainPosition(train)
+function updateTrainSpritePosition(train)
 {
 	var pt = getCellPoint(train.loc);
 
@@ -455,25 +455,106 @@ function updateTrainPosition(train)
 		});
 }
 
-function onTrainLocationChanged(train)
+function train_cargoChanged(train)
 {
-	if (train.plan && train.plan[0])
-	{
-		var p = train.plan[0];
-		if (p.location == train.loc)
-		{
-			onWaypointReached(train);
-		}
-	}
-}
-
-function onWaypointReached(train)
-{
-	train.plan.shift();
-	if (isPlanning)
+	if (isPlanning && isPlanning.train == train)
 	{
 		reloadPlan();
 	}
+}
+
+function train_deliver(train, resource_type)
+{
+	if (!train.cargo)
+		return;
+
+	for (var i in train.cargo)
+	{
+		if (train.cargo[i] == resource_type)
+		{
+			train.cargo.splice(i,1);
+			train_cargoChanged(train);
+			return;
+		}
+	}
+	return;
+}
+
+function train_pickup(train, resource_type)
+{
+	if (!train.cargo)
+		train.cargo = new Array();
+	train.cargo.push(resource_type);
+
+	train_cargoChanged(train);
+	return;
+}
+
+// do whatever's next on the train's plan
+function train_next(train)
+{
+	if (train.timer)
+		return;
+	if (!train.plan)
+	{
+		alert("unexpected: train has no plan");
+		return stopTrain(train);
+	}
+
+	var p = train.plan[0];
+	if (!p)
+	{
+		alert("unexpected: train has no plan for current location");
+		return stopTrain(train);
+	}
+
+	reloadPlan();
+
+	if (p.location == train.loc)
+	{
+		if (p.deliver && p.deliver.length)
+		{
+			train.timer = setTimeout(
+				function()
+				{
+					delete train.timer;
+					var resource_type = p.deliver.shift();
+					train_deliver(train, resource_type);
+					train_next(train);
+				}, 500);
+			return;
+		}
+		if (p.pickup && p.pickup.length)
+		{
+			train.timer = setTimeout(
+				function()
+				{
+					delete train.timer;
+					var resource_type = p.pickup.shift();
+					train_pickup(train, resource_type);
+					train_next(train);
+				}, 500);
+			return;
+		}
+
+		if (train.plan.length >= 2)
+		{
+			train.plan.shift();
+			return train_next(train);
+		}
+		else
+		{
+			return stopTrain(train);
+		}
+	}
+
+	train.route = new Array();
+	findBestPath(train.loc, p.location, train.route);
+	animateTrain(train);
+}
+
+function onTrainLocationChanged(train)
+{
 }
 
 function animateTrain(train)
@@ -494,7 +575,7 @@ function animateTrain(train)
 		train.tick -= 12;
 	}
 
-	updateTrainPosition(train);
+	updateTrainSpritePosition(train);
 	if (train.route.length >= 1)
 	{
 		train.timer =
@@ -505,7 +586,7 @@ function animateTrain(train)
 		delete train.timer;
 
 		if (train.running)
-			stopTrain(train);
+			return train_next(train);
 	}
 }
 
@@ -552,7 +633,7 @@ function addTrainSprite(trainLoc)
 		route: new Array(),
 		brandNew: true
 		};
-	updateTrainPosition(train);
+	updateTrainSpritePosition(train);
 
 	$t.click(function() { onTrainClicked(train); });
 	return train;
@@ -933,14 +1014,14 @@ function addCityToPlan(cellIdx)
 		};
         isPlanning.train.plan.push(waypoint);
 	reloadPlan();
-	selectWaypointByIndex(isPlanning.train.plan.length-1);
+	selectWaypoint(isPlanning.train.plan.length-1);
 }
 
 function updateAllSpritePositions()
 {
 	if (theTrain)
 	{
-		updateTrainPosition(theTrain);
+		updateTrainSpritePosition(theTrain);
 	}
 	for (var i in waypointSprites)
 	{
@@ -948,25 +1029,18 @@ function updateAllSpritePositions()
 	}
 }
 
-function selectWaypointByIndex(i)
-{
-	var $row = $('.aWaypoint[plan-index='+i+']');
-	selectWaypoint($row);
-}
-
-function selectWaypoint($row)
+function selectWaypoint(newSelection)
 {
 	var oldSelection = $('#trainPlan').attr('selected-waypoint');
 	if (oldSelection)
 	{
-		$('.aWaypoint[waypoint-number='+oldSelection+']').removeClass('selected');
+		$('#trainPlan tr[waypoint-number='+oldSelection+']').removeClass('selected');
 	}
 
-	$row.addClass('selected');
-	$('#trainPlan').attr('selected-waypoint', $row.attr('waypoint-number'));
+	$('#trainPlan tr[waypoint-number='+newSelection+']').addClass('selected');
+	$('#trainPlan').attr('selected-waypoint', newSelection);
 
-        var planIdx = $row.attr('plan-index');
-	var waypoint = isPlanning.train.plan[planIdx];
+	var waypoint = isPlanning.train.plan[newSelection];
 
 	var cityName = mapData.cities[waypoint.location].name;
 	$('#waypointPane .widgetHeader').text(cityName);
@@ -989,9 +1063,31 @@ function getTrainManifestAtWaypoint(train, targetWaypoint)
 	}
 
 	var found = new Array();
+	for (var i in train.cargo)
+	{
+		found.push(train.cargo[i]);
+	}
+
 	for (var planIdx in train.plan)
 	{
 		var waypoint = train.plan[planIdx];
+
+		if (waypoint.deliver)
+		{
+			for (var i in waypoint.deliver)
+			{
+				var rsrc = waypoint.deliver[i];
+				for (var j in found)
+				{
+					if (found[j] == rsrc)
+					{
+						found.splice(j,1);
+						break;
+					}
+				}
+			}
+		}
+
 		if (waypoint == targetWaypoint)
 			break;
 
@@ -1010,6 +1106,51 @@ function reloadWaypoint(waypoint)
 {
 	$('#waypointPane .insertedRow').remove();
 
+	var deliverHere = waypoint.deliver;
+	if (deliverHere && deliverHere.length > 0)
+	{
+		$('#deliverHeader').show();
+		for (var i in deliverHere)
+		{
+			var resource_type = deliverHere[i];
+			var $row = $('#deliverTemplate').clone();
+
+			$row.addClass('insertedRow');
+			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
+			$('.resource_name', $row).text(resource_type);
+
+			var deliverReward = 0;
+			for (var j in mapData.demands)
+			{
+				var dem = mapData.demands[j];
+				if (dem[1] == resource_type)
+				{
+					if (dem[0] == waypoint.location)
+					{
+						deliverReward = dem[2];
+					}
+				}
+			}
+			$('.wantedInfo', $row).text("Deliver for $" + deliverReward);
+
+			$('#deliverTemplate').before($row);
+			$row.show();
+
+			with({ index: i })
+			{
+				$('button', $row).click(function() {
+					waypoint.deliver.splice(index,1);
+					reloadWaypoint(waypoint);
+					reloadPlan();
+					});
+			}
+		}
+	}
+	else
+	{
+		$('#deliverHeader').hide();
+	}
+
 	var keepHere = getTrainManifestAtWaypoint(null, waypoint);
 	if (keepHere.length > 0)
 	{
@@ -1024,17 +1165,31 @@ function reloadWaypoint(waypoint)
 			$('.resource_name', $row).text(resource_type);
 
 			var wantedPlaces = new Array();
+			var deliverReward = 0;
 			for (var j in mapData.demands)
 			{
 				var dem = mapData.demands[j];
 				if (dem[1] == resource_type)
 				{
 					wantedPlaces.push(mapData.cities[dem[0]].name);
+					if (dem[0] == waypoint.location)
+					{
+						deliverReward = dem[2];
+					}
 				}
 			}
 			$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
 				"Wanted in " + wantedPlaces.join(', ') :
 				"");
+
+			if (deliverReward > 0)
+			{
+				$('button', $row).text("Deliver for $" + deliverReward);
+			}
+			else
+			{
+				$('button', $row).text("Abandon here");
+			}
 
 			$('#keepTemplate').before($row);
 			$row.show();
@@ -1042,7 +1197,11 @@ function reloadWaypoint(waypoint)
 			with({ resource_type: resource_type })
 			{
 				$('button', $row).click(function() {
-					alert('deliver ' + resource_type);
+					if (!waypoint.deliver)
+						waypoint.deliver = new Array();
+					waypoint.deliver.push(resource_type);
+					reloadWaypoint(waypoint);
+					reloadPlan();
 					});
 			}
 		}
@@ -1086,6 +1245,7 @@ function reloadWaypoint(waypoint)
 				$('button', $row).click(function() {
 					waypoint.pickup.splice(index,1);
 					reloadWaypoint(waypoint);
+					reloadPlan();
 					});
 			}
 		}
@@ -1133,6 +1293,7 @@ function reloadWaypoint(waypoint)
 					}
 					waypoint.pickup.push(resource_type);
 					reloadWaypoint(waypoint);
+					reloadPlan();
 					});
 			}
 		}
@@ -1181,51 +1342,88 @@ function selectDemand($row)
 
 function reloadPlan()
 {
+	$('#trainCargo').empty();
 	$('#trainPlan .insertedRow').remove();
 
 	var train = isPlanning && isPlanning.train;
 	if (!train)
 		return;
 
-	var count = 0;
-	for (var i in train.plan)
+	//
+	// train cargo
+	//
+	if (train.cargo && train.cargo.length)
 	{
-		var p = train.plan[i];
-		if (p.class == "waypoint")
+		for (var i in train.cargo)
 		{
-			count++;
-			var waypointNumber = i;
+			var c = train.cargo[i];
+			var $el = $('<img>');
+			$el.attr('src', 'resource_icons/'+c+'.png');
+			$('#trainCargo').append($el);
+		}
+	}
 
-			var $row = $('#aWaypointTemplate').clone();
-			$row.attr('plan-index', i);
+	//
+	// train waypoints
+	//
+	var count = 0;
+	var atFirstWaypoint = train.plan[0] && train.loc == train.plan[0].location;
+	var usedSprites = {};
+	for (var waypointNumber in train.plan)
+	{
+		var p = train.plan[waypointNumber];
+		var waypointLabel =
+			waypointNumber == 0 && atFirstWaypoint ? "At" :
+			atFirstWaypoint ? parseInt(waypointNumber) :
+			parseInt(waypointNumber)+1
+			;
+
+		count++;
+
+		var $row = $('#aWaypointTemplate').clone();
+		$row.attr('waypoint-number', waypointNumber);
+		$row.addClass('insertedRow');
+		$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
+		$('.waypointNumber', $row).text(waypointLabel);
+		$('.waypointCity', $row).text(
+			mapData.cities[p.location].name
+			);
+		var onClick;
+		with ({ waypointNumber: waypointNumber })
+		{
+			onClick = function() { selectWaypoint(waypointNumber); };
+		}
+		$row.click(onClick);
+		$row.show();
+		$('#trainPlan table').append($row);
+
+		if (p.location != train.loc)
+		{
+			usedSprites[waypointLabel] = true;
+			addWaypointSprite(waypointLabel, p.location);
+		}
+
+		if ((p.pickup && p.pickup.length > 0)
+			|| (p.deliver && p.deliver.length > 0))
+		{
+			var $row = $('#aManifestTemplate').clone();
 			$row.attr('waypoint-number', waypointNumber);
 			$row.addClass('insertedRow');
 			$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
-			$('.waypointNumber', $row).text(waypointNumber != 0 ? waypointNumber : "Cur");
-			$('.waypointCity', $row).text(
-				mapData.cities[p.location].name
-				);
-			$row.click(
-				function() { selectWaypoint($(this)); }
-				);
+			$('.pickupSummary', $row).text(p.pickup && p.pickup.length > 0
+				? "Pick up " + p.pickup.join(', ') : "");
+			$('.deliverSummary', $row).text(p.deliver && p.deliver.length > 0 ?
+				"Deliver " + p.deliver.join(', ') : "");
+			$row.click(onClick);
 			$row.show();
 			$('#trainPlan table').append($row);
-
-			if (p.location == train.loc)
-			{
-				removeWaypointSprite(waypointNumber);
-			}
-			else
-			{
-				addWaypointSprite(waypointNumber, p.location);
-			}
 		}
 	}
-	for (var waypointNumber in waypointSprites)
+	for (var waypointLabel in waypointSprites)
 	{
-		if (parseInt(waypointNumber) > count)
+		if (!usedSprites[waypointLabel])
 		{
-			removeWaypointSprite(waypointNumber);
+			removeWaypointSprite(waypointLabel);
 		}
 	}
 }
@@ -1270,7 +1468,7 @@ function dismissDemandsPane()
 	repaint();
 }
 
-function startTrain()
+function startTrainBtn()
 {
 	var train = isPlanning && isPlanning.train;
 	if (!train)
@@ -1278,40 +1476,33 @@ function startTrain()
 	if (train.timer)
 		return;
 
-	var l = train.loc;
-	train.route = new Array();
-	for (var i in train.plan)
-	{
-		var p = train.plan[i];
-		if (p.class == "waypoint")
-		{
-			l = findBestPath(l, p.location, train.route);
-		}
-	}
-
-	train.running = true;
-	delete train.brandNew;
-
-	onTrainLocationChanged(train);
-	animateTrain(train);
+	startTrain(train);
 
 	$('#startTrain_btn').hide();
 	$('#stopTrain_btn').show();
 }
 
-function stopTrain(train)
+function startTrain(train)
 {
-	if (!train && isPlanning)
-	{
-		train = isPlanning.train;
-	}
-	if (!train && theTrain)
-	{
-		train = theTrain;
-	}
-	if (!train)
+	if (train.running)
 		return;
 
+	delete train.brandNew;
+	train.running = true;
+
+	train_next(train);
+}
+
+function stopTrainBtn()
+{
+	if (isPlanning && isPlanning.train)
+	{
+		return stopTrain(isPlanning.train);
+	}
+}
+
+function stopTrain(train)
+{
 	var nextLoc = train.route[0];
 	if (train.route.length > 1)
 	{

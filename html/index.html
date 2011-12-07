@@ -76,6 +76,9 @@ body {
 	background-color: #aaaaff;
 	color: black;
 }
+.aManifest td {
+	padding-left: 1em; font-size: 10pt;
+}
 </style>
 <script type="text/javascript" src="js/jquery-1.7.min.js"></script>
 <script type="text/javascript" src="trains.js"></script>
@@ -113,6 +116,7 @@ body {
   <div class="widgetHeader">Train 1</div>
   <div class="widgetContent">
   <div id="brandNewInstructions">Click a city to set this locomotive's starting point.</div>
+  <div id="trainCargo"></div>
   <table border="0" cellspacing="0">
     <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
         <td class="waypointNumber" align="center"></td>
@@ -120,7 +124,11 @@ body {
         <td class="waypointEta" align="right">10</td>
     </tr>
     <tr class="aManifest" id="aManifestTemplate" style="display:none">
-        <td colspan="3">Manifest!</td>
+        <td></td>
+        <td colspan="2">
+           <div class="deliverSummary"></div>
+           <div class="pickupSummary"></div>
+        </td>
     </tr>
     <tr id="aManifestControl" style="display:none">
         <td align="center" colspan="3"><button type="button">Pick Up</button</td>
@@ -128,8 +136,8 @@ body {
   </table>
   </div>
   <div class="widgetFooter">
-    <button type="button" id="startTrain_btn" onclick="startTrain()">Go!</button>
-    <button type="button" id="stopTrain_btn" style="display:none" onclick="stopTrain()">Stop</button>
+    <button type="button" id="startTrain_btn" onclick="startTrainBtn()">Go!</button>
+    <button type="button" id="stopTrain_btn" style="display:none" onclick="stopTrainBtn()">Stop</button>
     <button type="button" onclick="dismissPlan()">Dismiss</button>
   </div>
 </div>
@@ -143,8 +151,9 @@ body {
           <div><img class="resource_icon" src="src"></div>
           <div><small class="resource_name">resource</small></div>
        </td>
-       <td valign="bottom" align="right">
-          <button type="button">Keep</button>
+       <td align="left" valign="bottom">
+             <div><small class="wantedInfo"></small></div>
+            <span style="float:right"><button type="button">Don't Deliver</button></span>
        </td>
      </tr>
      <tr id="keepHeader"><td colspan="2">You will have:</td></tr>
@@ -155,7 +164,7 @@ body {
        </td>
        <td align="left" valign="bottom">
              <div><small class="wantedInfo">Wanted in Scranton</small></div>
-            <span style="float:right"><button type="button">Deliver for <span class="price">$10</span></button></span>
+            <span style="float:right"><button type="button">Deliver for $10</button></span>
        </td>
      </tr>
      <tr id="pickupHeader"><td colspan="2">You will pick up:</td></tr>
@@ -183,7 +192,7 @@ body {
      </table>
   </div>
   <div class="widgetFooter">
-    <button type="button" onclick="dismissPlan()">Dismiss</button>
+    <button type="button" onclick="dismissWaypoint()">Dismiss</button>
   </div>
 </div>
 </body>
