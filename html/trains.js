@@ -1,44 +1,4 @@
-var mapData = {
-	terrain: [
-		"www          ",
-		"w..          ",
-		"..MM.MM..... ",
-		" ..MM........",
-		"....MM...... ",
-		" ..M..M....M ",
-		"...M.MM...M. ",
-		" ...MM.......",
-		"...M.MM.....w",
-		" .M..M......w",
-		"           ww"
-		],
-	rails: {},
-	cities: {
-		15: {
-			name: "Erie", offers: ["plastics"]
-			},
-		49: {
-			name: "Scranton", offers: ["coal"]
-			},
-		75: {
-			name: "Allentown", offers: ["coal", "steel"]
-			},
-		93: {
-			name: "Pittsburgh", offers: ["steel"]
-			},
-		115: {
-			name: "Philadelphia", offers: ["imports"]
-			},
-		99: {
-			name: "Harrisburg", offers: ["passengers"]
-			}
-		},
-	demands: [
-		[ 15, "passengers", 10 ],
-		[ 49, "steel", 2 ],
-		[ 93, "imports", 15 ]
-		]
-	};
+var mapData;
 var theTrain = null;
 var mapFeatures = {};
 var isBuilding = null;
@@ -343,6 +303,10 @@ function repaint()
 	var ctx = canvas.getContext('2d');
 
 	ctx.clearRect(0,0,canvas.width,canvas.height);
+
+	if (!mapData)
+		return;
+
 	for (var y = 0; y < mapData.terrain.length; y++)
 	{
 		for (var x = 0; x < mapData.terrain[y].length; x++)
@@ -400,11 +364,29 @@ function onResize()
 {
 	var canvas = document.getElementById('theCanvas');
 	canvas.width = window.innerWidth - 0;
-	canvas.height = window.innerHeight - 100;
+	canvas.height = window.innerHeight - $('#buttonBar').outerHeight();
 	repaint();
 }
 window.onresize = onResize;
 $(onResize);
+$(function() {
+	beginLoadMap("pennsylvania");
+});
+
+function beginLoadMap(mapName)
+{
+	var onSuccess = function(data,status)
+	{
+		mapData = data;
+		repaint();
+	};
+
+	$.ajax({
+	url: "maps/"+mapName+".txt",
+	success: onSuccess,
+	dataType: "json"
+	});
+}
 
 function getCellPoint(cellIdx)
 {
@@ -827,6 +809,25 @@ function track_addSegment(fromIdx, toIdx)
 		isBuilding.rails[trackIdx] = true;
 		isBuilding.curSegmentCount++;
 	}
+
+	updateBuildingCost();
+}
+
+function updateBuildingCost()
+{
+	if (!isBuilding)
+		return;
+	if (!isBuilding.rails)
+		return;
+
+	var cost = 0;
+	for (var i in isBuilding.rails)
+	{
+		var trackIdx = isBuilding.rails[i];
+		cost += 1;
+	}
+
+	$('#buildTrackCost').text(cost);
 }
 
 $(function() {
@@ -863,6 +864,7 @@ function beginBuilding()
 	isBuilding = {
 	rails: {}
 	};
+	updateBuildingCost();
 	$('#buildTrackInfo').fadeIn();
 }
 
@@ -870,6 +872,18 @@ function commitBuilding()
 {
 	if (!isBuilding)
 		return;
+
+	var cost = parseFloat($('#buildTrackCost').text());
+	var money = parseFloat($('#cashIndicator').text());
+	money -= cost;
+
+	if (money < 0)
+	{
+		alert("You do not have enough money.");
+		return;
+	}
+
+	$('#cashIndicator').text(money);
 
 	for (var i in isBuilding.rails)
 	{
@@ -910,9 +924,9 @@ function onTrainClicked(train)
 		train: train
 		};
 	reloadPlan();
-	$('#trainPlan').fadeIn();
+	$('#planPane').fadeIn();
 
-	fixWidgetDimensions($('#trainPlan'));
+	fixWidgetDimensions($('#planPane'));
 }
 
 function addLocomotive()
@@ -921,9 +935,9 @@ function addLocomotive()
 		train: theTrain
 		};
 	reloadPlan();
-	$('#trainPlan').fadeIn();
+	$('#planPane').fadeIn();
 
-	var $widget = $('#trainPlan');
+	var $widget = $('#planPane');
 	fixWidgetDimensions($widget);
 }
 
@@ -945,7 +959,8 @@ function dismissPlan()
 	delete mapFeatures.filterTrack;
 	repaint();
 
-	$('#trainPlan').fadeOut();
+	$('#planPane').fadeOut();
+	$('#waypointPane').fadeOut();
 }
 
 function filterMapToReachable(train)
@@ -1031,14 +1046,14 @@ function updateAllSpritePositions()
 
 function selectWaypoint(newSelection)
 {
-	var oldSelection = $('#trainPlan').attr('selected-waypoint');
+	var oldSelection = $('#planPane').attr('selected-waypoint');
 	if (oldSelection)
 	{
-		$('#trainPlan tr[waypoint-number='+oldSelection+']').removeClass('selected');
+		$('#planPane tr[waypoint-number='+oldSelection+']').removeClass('selected');
 	}
 
-	$('#trainPlan tr[waypoint-number='+newSelection+']').addClass('selected');
-	$('#trainPlan').attr('selected-waypoint', newSelection);
+	$('#planPane tr[waypoint-number='+newSelection+']').addClass('selected');
+	$('#planPane').attr('selected-waypoint', newSelection);
 
 	var waypoint = isPlanning.train.plan[newSelection];
 
@@ -1048,7 +1063,7 @@ function selectWaypoint(newSelection)
 	reloadWaypoint(waypoint);
 
 	$('#waypointPane').fadeIn();
-	var $pw = $('#trainPlan');
+	var $pw = $('#planPane');
 	$('#waypointPane').css({
 		top: ($pw.position().top + $pw.outerHeight() + 10) + "px"
 		});
@@ -1343,7 +1358,7 @@ function selectDemand($row)
 function reloadPlan()
 {
 	$('#trainCargo').empty();
-	$('#trainPlan .insertedRow').remove();
+	$('#planPane .insertedRow').remove();
 
 	var train = isPlanning && isPlanning.train;
 	if (!train)
@@ -1395,7 +1410,7 @@ function reloadPlan()
 		}
 		$row.click(onClick);
 		$row.show();
-		$('#trainPlan table').append($row);
+		$('#planPane table').append($row);
 
 		if (p.location != train.loc)
 		{
@@ -1416,7 +1431,7 @@ function reloadPlan()
 				"Deliver " + p.deliver.join(', ') : "");
 			$row.click(onClick);
 			$row.show();
-			$('#trainPlan table').append($row);
+			$('#planPane table').append($row);
 		}
 	}
 	for (var waypointLabel in waypointSprites)
@@ -1568,3 +1583,7 @@ outerLoop:
 		return fromIdx;
 	}
 }
+
+$(function() {
+	$('#cashIndicator').text(50);
+});

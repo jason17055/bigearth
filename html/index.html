@@ -2,6 +2,11 @@
 <head>
 <style type="text/css">
 body {
+	margin: 0;
+	padding: 0;
+}
+#buttonBar {
+	padding: 3pt;
 }
 .waypointSprite {
 	position: absolute;
@@ -87,12 +92,14 @@ body {
 <div id="contentArea">
 <canvas id="theCanvas" width="600" height="600"></canvas>
 </div>
-<div>
+<div id="buttonBar">
 <button type="button" onclick="showDemands()">Show Demands</button>
 <button type="button" onclick="beginBuilding()">Build Track</button>
 <button type="button" onclick="addLocomotive()">Add Locomotive</button>
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
+<span>Cash on hand: <span id="cashIndicator">0</span></span>
+</div>
 <div class="widget" id="demandsPane">
   <div class="widgetHeader">Current Demands</div>
   <div class="widgetContent">
@@ -106,13 +113,16 @@ body {
 </div>
 <div class="widget" id="buildTrackInfo">
   <div class="widgetHeader">Build Track</div>
+  <div class="widgetContent">
   <div>Click and drag from a city or existing track.</div>
   <p>Cost so far: <span id="buildTrackCost">0</span></p>
-  <div><button type="button" onclick="commitBuilding()">Commit</button></div>
-  <div><button type="button" onclick="deferBuilding()">Save for Later</button></div>
-  <div><button type="button" onclick="abandonBuilding()">Abandon</button></div>
+  </div>
+  <div class="widgetFooter">
+    <button type="button" onclick="commitBuilding()">Commit</button>
+    <button type="button" onclick="abandonBuilding()">Abandon</button>
+  </div>
 </div>
-<div class="widget" id="trainPlan">
+<div class="widget" id="planPane">
   <div class="widgetHeader">Train 1</div>
   <div class="widgetContent">
   <div id="brandNewInstructions">Click a city to set this locomotive's starting point.</div>
@@ -194,6 +204,5 @@ body {
   <div class="widgetFooter">
     <button type="button" onclick="dismissWaypoint()">Dismiss</button>
   </div>
-</div>
 </body>
 </html>
