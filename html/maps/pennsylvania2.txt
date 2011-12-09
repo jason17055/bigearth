@@ -1,0 +1,55 @@
+{
+	"terrain": [
+		"www                         ",
+		"w..                         ",
+		".....M....M..MM..........   ",
+		" ....M.M...MM...........M.. ",
+		"......M..MMM....MM.MM...... ",
+		" .......M..M.MMM..M....MMM..",
+		"......MM..MMMM.........MM.. ",
+		" ........MM..M.MM.......... ",
+		".......MM.M.M.MM....MM....  ",
+		" .....MM.MM..MM...........  ",
+		".......MM.MMM.............  ",
+		" ......MMMMM............... ",
+		"......MM..MMMM............. ",
+		" .....MMMMM.................",
+		".....MMM.MM...............w ",
+		"                        www "
+		],
+	"rails": {},
+	"cities": {
+		"29": {
+			"name": "Erie", "offers": ["plastics"]
+			},
+		"162": {
+			"name": "Scranton", "offers": ["coal"]
+			},
+		"189": {
+			"name": "Wilkes-Barre", "offers": []
+			},
+		"275": {
+			"name": "Allentown", "offers": ["coal", "steel"]
+			},
+		"282": {
+			"name": "Pittsburgh", "offers": ["steel"]
+			},
+		"289": {
+			"name": "Altoona", "offers": []
+			},
+		"417": {
+			"name": "Philadelphia", "offers": ["imports"]
+			},
+		"326": {
+			"name": "Harrisburg", "offers": ["passengers"]
+			},
+		"357": {
+			"name": "Lancaster", "offers": []
+			}
+		},
+	"demands": [
+		[ 29, "passengers", 10 ],
+		[ 162, "steel", 2 ],
+		[ 357, "imports", 15 ]
+		]
+}

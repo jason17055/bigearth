@@ -370,7 +370,7 @@ function onResize()
 window.onresize = onResize;
 $(onResize);
 $(function() {
-	beginLoadMap("pennsylvania");
+	beginLoadMap("pennsylvania2");
 });
 
 function beginLoadMap(mapName)
@@ -378,6 +378,7 @@ function beginLoadMap(mapName)
 	var onSuccess = function(data,status)
 	{
 		mapData = data;
+		CELLS_PER_ROW = mapData.terrain[0].length;
 		repaint();
 	};
 
