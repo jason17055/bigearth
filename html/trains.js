@@ -538,6 +538,9 @@ function train_next(train)
 
 function onTrainLocationChanged(train)
 {
+	$('#planPane tr[waypoint-number=0] .waypointEta').text(
+		train.route && train.route.length > 0 ? train.route.length
+		: "");
 }
 
 function animateTrain(train)
@@ -1041,6 +1044,14 @@ function addCityToPlan(cellIdx)
 		class: "waypoint",
 		location: cellIdx
 		};
+	if (isPlanning.train.plan.length >= 1)
+	{
+		var priorWaypoint = isPlanning.train.plan[isPlanning.train.plan.length-1];
+		var r = new Array();
+		findBestPath(priorWaypoint.location, waypoint.location, r);
+		waypoint.distanceHint = r.length;
+	}
+
         isPlanning.train.plan.push(waypoint);
 	reloadPlan();
 	selectWaypoint(isPlanning.train.plan.length-1);
@@ -1417,6 +1428,11 @@ function reloadPlan()
 		$('.waypointCity', $row).text(
 			mapData.cities[p.location].name
 			);
+		$('.waypointEta', $row).text(
+			waypointNumber == 0 && p.location == train.loc ? "" :
+			waypointNumber == 0 && train.route.length > 0 ? train.route.length :
+			p.distanceHint);
+
 		var onClick;
 		with ({ waypointNumber: waypointNumber })
 		{
