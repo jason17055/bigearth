@@ -28,10 +28,10 @@ function updateMapMetrics()
 	CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
 	CELL_ASCENT = Math.round(CELL_HEIGHT * 36/56);
 	CELL_DESCENT = CELL_HEIGHT - CELL_ASCENT;
-	MAP_ORIGIN_X = CELL_WIDTH/2;
-	MAP_ORIGIN_Y = CELL_ASCENT/2;
 }
 updateMapMetrics();
+MAP_ORIGIN_X = CELL_WIDTH/2;
+MAP_ORIGIN_Y = CELL_ASCENT/2;
 
 function getCellRow(cellIdx)
 {
@@ -837,6 +837,19 @@ $(function() {
 	$('#contentArea').mousemove(onMouseMove);
 });
 
+function setZoomLevel(w)
+{
+	CELL_WIDTH = 2*Math.round(w/2);
+	if (CELL_WIDTH > 64)
+		CELL_WIDTH = 64;
+	if (CELL_WIDTH < 12)
+		CELL_WIDTH = 12;
+
+	updateMapMetrics();
+	repaint();
+	updateAllSpritePositions();
+}
+
 function zoomIn()
 {
 	//var canvas = document.getElementById('theCanvas');
@@ -1475,6 +1488,8 @@ function showDemands()
 
 	var $widget = $('#demandsPane');
 	fixWidgetDimensions($widget);
+
+	setZoomLevel(28);
 }
 
 function dismissDemandsPane()
