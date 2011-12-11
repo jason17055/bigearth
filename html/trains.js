@@ -714,7 +714,11 @@ function onMouseUp(evt)
 		repaint();
 		isDragging = null;
 	}
-	isPanning = null;
+	if (isPanning)
+	{
+		repaint();
+		isPanning = null;
+	}
 }
 
 function onMouseMove(evt)
@@ -745,9 +749,26 @@ function onMouseMove(evt)
 	}
 	else if (isPanning)
 	{
-		MAP_ORIGIN_X -= (pt.x - isPanning.originX);
-		MAP_ORIGIN_Y -= (pt.y - isPanning.originY);
-		repaint();
+		var dx = pt.x - isPanning.originX;
+		var dy = pt.y - isPanning.originY;
+
+		var canvas = document.getElementById('theCanvas');
+		var rect = {
+			left: 0 + (dx < 0 ? -dx : 0),
+			right: canvas.width + (dx > 0 ? -dx : 0),
+			top: 0 + (dy < 0 ? -dy : 0),
+			bottom: canvas.height + (dy > 0 ? -dy : 0)
+			};
+
+		var ctx = canvas.getContext('2d');
+		ctx.drawImage(canvas, rect.left, rect.top,
+			(rect.right-rect.left), (rect.bottom-rect.top),
+			rect.left + dx, rect.top + dy,
+			(rect.right-rect.left), (rect.bottom-rect.top)
+			);
+
+		MAP_ORIGIN_X -= dx;
+		MAP_ORIGIN_Y -= dy;
 		updateAllSpritePositions();
 
 		isPanning.originX = pt.x;
