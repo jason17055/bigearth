@@ -554,6 +554,19 @@ function train_next(train)
 		if (train.plan.length >= 2)
 		{
 			train.plan.shift();
+			var oldSelection = $('#planPane').attr('selected-waypoint');
+			if (oldSelection != null)
+			{
+				if (oldSelection >= 1)
+				{
+					$('#planPane').attr('selected-waypoint', oldSelection-1);
+				}
+				else
+				{
+					$('#planPane').attr('selected-waypoint', "");
+					$('#waypointPane').fadeOut();
+				}
+			}
 			return train_next(train);
 		}
 		else
@@ -1514,6 +1527,7 @@ function reloadPlan()
 	//
 	// train waypoints
 	//
+	var selWaypoint = $('#planPane').attr('selected-waypoint');
 	var count = 0;
 	var atFirstWaypoint = train.plan[0] && train.loc == train.plan[0].location;
 	var usedSprites = {};
@@ -1532,6 +1546,10 @@ function reloadPlan()
 		$row.attr('waypoint-number', waypointNumber);
 		$row.addClass('insertedRow');
 		$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
+		if (selWaypoint != null && selWaypoint == waypointNumber)
+		{
+			$row.addClass('selected');
+		}
 		$('.waypointNumber', $row).text(waypointLabel);
 		$('.waypointCity', $row).text(
 			mapData.cities[p.location].name
