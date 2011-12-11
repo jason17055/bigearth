@@ -1706,10 +1706,13 @@ function autoCreateDemands()
 				if (d < best) { best = d; }
 			}
 
-			var value = Math.round(best * 1);
-			mapData.allDemands.push(
-				[cityId, rt, value]
-				);
+			var value = Math.round(best * .5);
+			if (value >= 1)
+			{
+				mapData.allDemands.push(
+					[cityId, rt, value]
+					);
+			}
 		}
 	}
 	shuffleArray(mapData.allDemands);
