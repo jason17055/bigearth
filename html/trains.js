@@ -1134,13 +1134,25 @@ function addCityToPlan(cellIdx)
 		$('#brandNewInstructions').hide();
 	}
 
+	var priorWaypoint = null;
+	if (isPlanning.train.plan.length > 0)
+	{
+		priorWaypoint = isPlanning.train.plan[isPlanning.train.plan.length - 1];
+	}
+
+	if (priorWaypoint && priorWaypoint.location == cellIdx)
+	{
+		// user clicked the city that's the last waypoint
+		selectWaypoint(isPlanning.train.plan.length - 1);
+		return;
+	}
+
 	var waypoint = {
 		class: "waypoint",
 		location: cellIdx
 		};
-	if (isPlanning.train.plan.length >= 1)
+	if (priorWaypoint)
 	{
-		var priorWaypoint = isPlanning.train.plan[isPlanning.train.plan.length-1];
 		var r = new Array();
 		findBestPath(priorWaypoint.location, waypoint.location, r);
 		waypoint.distanceHint = r.length;
