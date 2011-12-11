@@ -378,8 +378,8 @@ function beginLoadMap(mapName)
 	var onSuccess = function(data,status)
 	{
 		mapData = data;
-		autoCreateDemands();
 		CELLS_PER_ROW = mapData.terrain[0].length;
+		autoCreateDemands();
 		repaint();
 	};
 
@@ -452,15 +452,32 @@ function train_deliver(train, resource_type)
 	if (!train.cargo)
 		return;
 
+	var found = false;
 	for (var i in train.cargo)
 	{
 		if (train.cargo[i] == resource_type)
 		{
 			train.cargo.splice(i,1);
 			train_cargoChanged(train);
-			return;
+			found = true;
+			break;
 		}
 	}
+
+	if (found)
+	{
+		for (var i in mapData.demands)
+		{
+			var d = mapData.demands[i];
+			if (d[0] == train.loc && d[1] == resource_type)
+			{
+				adjustPlayerCash(d[2]);
+				mapData.demands.splice(i,1);
+				break;
+			}
+		}
+	}
+
 	return;
 }
 
@@ -884,6 +901,13 @@ function beginBuilding()
 	};
 	updateBuildingCost();
 	$('#buildTrackInfo').fadeIn();
+}
+
+function adjustPlayerCash(delta)
+{
+	var money = parseFloat($('#cashIndicator').text());
+	money += delta;
+	$('#cashIndicator').text(money);
 }
 
 function commitBuilding()
@@ -1589,7 +1613,7 @@ function autoCreateDemands()
 		}
 	}
 
-	mapData.demands = new Array();
+	mapData.allDemands = new Array();
 	for (var cityId in mapData.cities)
 	{
 		var c = mapData.cities[cityId];
@@ -1613,12 +1637,14 @@ function autoCreateDemands()
 			}
 
 			var value = Math.round(best * 1);
-			mapData.demands.push(
+			mapData.allDemands.push(
 				[cityId, rt, value]
 				);
 		}
 	}
-	shuffleArray(mapData.demands);
+	shuffleArray(mapData.allDemands);
+
+	mapData.demands = mapData.allDemands.slice(0,5);
 }
 
 function shuffleArray(arr)
