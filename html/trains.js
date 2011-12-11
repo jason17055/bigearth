@@ -873,46 +873,67 @@ function updateBuildingCost()
 	$('#buildTrackCost').text(cost);
 }
 
+function onMouseWheel(evt)
+{
+	var pt = {
+		x: evt.clientX,
+		y: evt.clientY
+		};
+
+	if (evt.detail)
+	{
+		if (evt.detail > 0)
+			zoomOut(pt);
+		else
+			zoomIn(pt);
+	}
+}
+
 $(function() {
 	$(document).mousedown(onMouseDown);
 	$(document).mouseup(onMouseUp);
 	$(document).mousemove(onMouseMove);
+	document.getElementById('theCanvas').addEventListener('DOMMouseScroll',
+			onMouseWheel, false);
 });
 
-function setZoomLevel(w)
+function setZoomLevel(w, basisPt)
 {
-	CELL_WIDTH = 2*Math.round(w/2);
-	if (CELL_WIDTH > 64)
-		CELL_WIDTH = 64;
-	if (CELL_WIDTH < 12)
-		CELL_WIDTH = 12;
+	if (!basisPt)
+	{
+		var canvas = document.getElementById('theCanvas');
+		basisPt = {
+		x: canvas.width / 2,
+		y: canvas.height / 2
+		};
+	}
+
+	var newCellWidth = 2 * Math.round(w/2);
+	if (newCellWidth > 64)
+		newCellWidth = 64;
+	if (newCellWidth < 12)
+		newCellWidth = 12;
+
+	var relX = (basisPt.x + MAP_ORIGIN_X) / CELL_WIDTH;
+	var relY = (basisPt.y + MAP_ORIGIN_Y) / CELL_WIDTH;
+
+	CELL_WIDTH = newCellWidth;
+	MAP_ORIGIN_X = relX * CELL_WIDTH - basisPt.x;
+	MAP_ORIGIN_Y = relY * CELL_WIDTH - basisPt.y;
 
 	updateMapMetrics();
 	repaint();
 	updateAllSpritePositions();
 }
 
-function zoomIn()
+function zoomIn(basisPt)
 {
-	//var canvas = document.getElementById('theCanvas');
-	CELL_WIDTH = 2*Math.round(CELL_WIDTH*(4/3)/2);
-	if (CELL_WIDTH > 64)
-		CELL_WIDTH = 64;
-
-	updateMapMetrics();
-	repaint();
-	updateAllSpritePositions();
+	setZoomLevel(CELL_WIDTH * 4/3, basisPt);
 }
 
-function zoomOut()
+function zoomOut(basisPt)
 {
-	CELL_WIDTH = 2*Math.round(CELL_WIDTH*(3/4)/2);
-	if (CELL_WIDTH < 12)
-		CELL_WIDTH = 12;
-
-	updateMapMetrics();
-	repaint();
-	updateAllSpritePositions();
+	setZoomLevel(CELL_WIDTH * 3/4, basisPt);
 }
 
 function beginBuilding()
