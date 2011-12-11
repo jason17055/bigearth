@@ -326,7 +326,8 @@ function repaint()
 	var canvas = document.getElementById('theCanvas');
 	var ctx = canvas.getContext('2d');
 
-	ctx.clearRect(0,0,canvas.width,canvas.height);
+	ctx.fillStyle = "#ffffff";
+	ctx.fillRect(0,0,canvas.width,canvas.height);
 
 	if (!mapData)
 		return;
@@ -378,7 +379,9 @@ function repaint()
 		{
 			var cityName = mapData.cities[cityLoc].name;
 			var p = getCellPoint(cityLoc);
-			ctx.fillText(cityName, p.x, p.y + CELL_ASCENT);
+			ctx.fillText(cityName,
+			p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2,
+			p.y + CELL_ASCENT);
 		}
 	}
 }
