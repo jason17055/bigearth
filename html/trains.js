@@ -707,15 +707,15 @@ function onMouseUp(evt)
 {
 	if (evt.which != 1) return;
 
-	evt.preventDefault();
-
 	if (isBuilding)
 	{
+		evt.preventDefault();
 		repaint();
 		isDragging = null;
 	}
 	if (isPanning)
 	{
+		evt.preventDefault();
 		repaint();
 		isPanning = null;
 	}
@@ -890,7 +890,7 @@ function onMouseWheel(evt)
 }
 
 $(function() {
-	$(document).mousedown(onMouseDown);
+	document.getElementById('theCanvas').addEventListener('mousedown', onMouseDown, false);
 	$(document).mouseup(onMouseUp);
 	$(document).mousemove(onMouseMove);
 	document.getElementById('theCanvas').addEventListener('DOMMouseScroll',
