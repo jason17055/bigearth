@@ -378,6 +378,7 @@ function beginLoadMap(mapName)
 	var onSuccess = function(data,status)
 	{
 		mapData = data;
+		autoCreateDemands();
 		CELLS_PER_ROW = mapData.terrain[0].length;
 		repaint();
 	};
@@ -1559,6 +1560,78 @@ function stopTrain(train)
 
 	$('#startTrain_btn').show();
 	$('#stopTrain_btn').hide();
+}
+
+function simpleDistance(cellIdx1, cellIdx2)
+{
+	var row1 = getCellRow(cellIdx1);
+	var col1 = getCellColumn(cellIdx1);
+	var row2 = getCellRow(cellIdx2);
+	var col2 = getCellColumn(cellIdx2);
+
+	var distRows = Math.abs(row2-row1);
+	var distCols = Math.abs(col2-col1);
+	var diag = Math.floor(distRows / 2);
+	return distRows + (distCols > diag ? distCols - diag : 0);
+}
+
+function autoCreateDemands()
+{
+	var allResourceTypes = {};
+	for (var cityId in mapData.cities)
+	{
+		var c = mapData.cities[cityId];
+		for (var i in c.offers)
+		{
+			if (!allResourceTypes[c.offers[i]])
+				allResourceTypes[c.offers[i]] = {};
+			allResourceTypes[c.offers[i]][cityId]=true;
+		}
+	}
+
+	mapData.demands = new Array();
+	for (var cityId in mapData.cities)
+	{
+		var c = mapData.cities[cityId];
+		var here = {};
+		for (var i in c.offers)
+		{
+			here[c.offers[i]] = true;
+		}
+
+		for (var rt in allResourceTypes)
+		{
+			if (here[rt])
+				continue;
+
+			// find nearest source of this resource
+			var best = mapData.terrain.length + CELLS_PER_ROW;
+			for (var s in allResourceTypes[rt])
+			{
+				var d = simpleDistance(cityId, s);
+				if (d < best) { best = d; }
+			}
+
+			var value = Math.round(best * 1);
+			mapData.demands.push(
+				[cityId, rt, value]
+				);
+		}
+	}
+	shuffleArray(mapData.demands);
+}
+
+function shuffleArray(arr)
+{
+	var l = arr.length;
+	for (var i = 0; i < l; i++)
+	{
+		var j = i + Math.floor(Math.random() * (l-i));
+		var t = arr[i];
+		arr[i] = arr[j];
+		arr[j] = t;
+	}
+	return;
 }
 
 function findBestPath(fromIdx, toIdx, route)
