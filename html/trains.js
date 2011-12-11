@@ -380,7 +380,7 @@ function beginLoadMap(mapName)
 		mapData = data;
 		CELLS_PER_ROW = mapData.terrain[0].length;
 		autoCreateDemands();
-		repaint();
+		zoomShowAll();
 	};
 
 	$.ajax({
@@ -934,6 +934,20 @@ function zoomIn(basisPt)
 function zoomOut(basisPt)
 {
 	setZoomLevel(CELL_WIDTH * 3/4, basisPt);
+}
+
+function zoomShowAll()
+{
+	var canvas = document.getElementById('theCanvas');
+	var cw1 = canvas.width / CELLS_PER_ROW;
+	var cw2 = (canvas.height / mapData.terrain.length) * 64/56;
+
+	CELL_WIDTH = 2*Math.round((cw1 < cw2 ? cw1 : cw2) / 2);
+	updateMapMetrics();
+	MAP_ORIGIN_X = CELL_WIDTH/2;
+	MAP_ORIGIN_Y = CELL_ASCENT/2;
+	repaint();
+	updateAllSpritePositions();
 }
 
 function beginBuilding()
@@ -1571,8 +1585,6 @@ function showDemands()
 
 	var $widget = $('#demandsPane');
 	fixWidgetDimensions($widget);
-
-	setZoomLevel(28);
 }
 
 function dismissDemandsPane()
