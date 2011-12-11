@@ -192,9 +192,9 @@ function drawCell(ctx, pt, c, w, nw, ne)
 			return cc == "w" ? "#0000ff" : "#ffffff";
 		}
 
-		return cc == "." ? "#88ff66" :
+		return cc == "." ? "#99dd55" :
 			cc == "M" ? "#884400" :
-			cc == "w" ? "#0000ff" :
+			cc == "w" ? "#1155ff" :
 			"#ffffff";
 	};
 
@@ -310,6 +310,17 @@ function trackVisible(trackId)
 		mapFeatures.filterTrack[trackId];
 }
 
+// pt: the desired *center* point of the dot, in screen coordinates
+//
+function drawCityDot(ctx, pt, cityId)
+{
+	ctx.fillStyle = cityColor(cityId);
+	ctx.beginPath();
+	ctx.arc(pt.x, pt.y, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
+	ctx.closePath();
+	ctx.fill();
+}
+
 function repaint()
 {
 	var canvas = document.getElementById('theCanvas');
@@ -349,11 +360,10 @@ function repaint()
 			var cellIdx = getCell(y,x);
 			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
 			{
-				ctx.fillStyle = cityColor(cellIdx);
-				ctx.beginPath();
-				ctx.arc(pt.x + CELL_WIDTH / 2, pt.y + CELL_ASCENT / 2, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
-				ctx.closePath();
-				ctx.fill();
+				drawCityDot(ctx, {
+				x: pt.x + CELL_WIDTH / 2,
+				y: pt.y + CELL_ASCENT / 2
+				}, cellIdx);
 			}
 
 			drawRails(ctx, pt, cellIdx);
