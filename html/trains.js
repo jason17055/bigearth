@@ -291,6 +291,19 @@ function cityVisible(cityId)
 		mapFeatures.filterCities[cityId];
 }
 
+function cityColor(cityId)
+{
+	if (mapFeatures.highlightCities
+		&& mapFeatures.highlightCities[cityId])
+	{
+		return "#ffff44";
+	}
+	else
+	{
+		return "#ff4444";
+	}
+}
+
 function trackVisible(trackId)
 {
 	return !mapFeatures.filterTrack ||
@@ -336,7 +349,7 @@ function repaint()
 			var cellIdx = getCell(y,x);
 			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
 			{
-				ctx.fillStyle = "#ff4444";
+				ctx.fillStyle = cityColor(cellIdx);
 				ctx.beginPath();
 				ctx.arc(pt.x + CELL_WIDTH / 2, pt.y + CELL_ASCENT / 2, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
 				ctx.closePath();
@@ -1438,11 +1451,13 @@ function selectDemand($row)
 
 	// show only cities that have this resource
 	var filteredCities = {};
+	mapFeatures.highlightCities = {};
 
 	var demand = mapData.demands[$row.attr('demand-index')-1];
 	if (demand)
 	{
 		filteredCities[demand[0]] = true;
+		mapFeatures.highlightCities[demand[0]] = true;
 		for (var i in mapData.cities)
 		{
 			var city = mapData.cities[i];
@@ -1591,6 +1606,7 @@ function dismissDemandsPane()
 {
 	$('#demandsPane').fadeOut();
 	delete mapFeatures.filterCities;
+	delete mapFeatures.highlightCities;
 	repaint();
 }
 
