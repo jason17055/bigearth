@@ -26,7 +26,7 @@
 			"name": "Scranton", "offers": ["coal"]
 			},
 		"189": {
-			"name": "Wilkes-Barre", "offers": []
+			"name": "Wilkes-Barre", "offers": ["coal"]
 			},
 		"275": {
 			"name": "Allentown", "offers": ["coal", "steel"]
@@ -44,7 +44,7 @@
 			"name": "Harrisburg", "offers": ["passengers"]
 			},
 		"357": {
-			"name": "Lancaster", "offers": []
+			"name": "Lancaster", "offers": ["furniture"]
 			}
 		},
 	"demands": [
