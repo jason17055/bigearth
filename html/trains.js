@@ -853,9 +853,9 @@ function updateBuildingCost()
 }
 
 $(function() {
-	$('#contentArea').mousedown(onMouseDown);
-	$('#contentArea').mouseup(onMouseUp);
-	$('#contentArea').mousemove(onMouseMove);
+	$(document).mousedown(onMouseDown);
+	$(document).mouseup(onMouseUp);
+	$(document).mousemove(onMouseMove);
 });
 
 function setZoomLevel(w)
