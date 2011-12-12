@@ -33,6 +33,16 @@ updateMapMetrics();
 MAP_ORIGIN_X = CELL_WIDTH/2;
 MAP_ORIGIN_Y = CELL_ASCENT/2;
 
+var terrainImages = {};
+$(function() {
+	var img = new Image();
+	img.onload = function() {
+			terrainImages.mountain = img;
+			repaint();
+		};
+	img.src = "terrain_mountain.png";
+});
+
 function getCellRow(cellIdx)
 {
 	return Math.floor(cellIdx / CELLS_PER_ROW);
@@ -204,15 +214,28 @@ function drawCell(ctx, pt, c, w, nw, ne)
 		ctx.beginPath();
 		ctx.moveTo(pt.x, pt.y);
 		ctx.lineTo(pt.x + CELL_WIDTH / 2, pt.y - CELL_DESCENT);
-		ctx.lineTo(pt.x + CELL_WIDTH, pt.y);
+		ctx.lineTo(pt.x + CELL_WIDTH + 1, pt.y);
+		ctx.lineTo(pt.x + CELL_WIDTH + 1, pt.y + CELL_HEIGHT + 1);
+		ctx.lineTo(pt.x, pt.y + CELL_HEIGHT + 1);
 		ctx.closePath();
 		ctx.fill();
 	}
+	else
+	{
+		ctx.fillRect(
+			pt.x, pt.y,
+			CELL_WIDTH+1, CELL_HEIGHT+1
+			);
+	}
 
-	ctx.fillRect(
-		pt.x, pt.y,
-		CELL_WIDTH+1, CELL_HEIGHT+1
-		);
+	if (c == "M" && terrainImages.mountain)
+	{
+		var imageSize = CELL_WIDTH * .8;
+		ctx.drawImage(terrainImages.mountain,
+			pt.x + CELL_WIDTH/2 - imageSize/2,
+			pt.y + CELL_ASCENT/2 - imageSize/2,
+			imageSize, imageSize);
+	}
 }
 
 function drawRails(ctx, pt, cellIdx)
