@@ -1198,6 +1198,10 @@ function showPlan(train)
 		filterMapToReachable(isPlanning.train);
 		repaint();
 	}
+	else
+	{
+		$('#brandNewInstructions').show();
+	}
 
 	var $widget = $('#planPane');
 	fixWidgetDimensions($widget);
