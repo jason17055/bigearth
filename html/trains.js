@@ -3,6 +3,9 @@ var theTrain = null;
 var mapFeatures = {};
 var isBuilding = null;
 var isPlanning = null;
+var curPlayer = {
+	demands: new Array()
+	};
 
 // each cell has the following shape
 //                        _
@@ -496,6 +499,22 @@ function train_cargoChanged(train)
 	}
 }
 
+function nextDemand()
+{
+	if (mapData.futureDemands.length == 0)
+	{
+		mapData.futureDemands = mapData.pastDemands;
+		mapData.pastDemands = new Array();
+		shuffleArray(mapData.futureDemands);
+	}
+
+	if (mapData.futureDemands.length > 0)
+	{
+		var d = mapData.futureDemands.shift();
+		curPlayer.demands.push(d);
+	}
+}
+
 function train_deliver(train, resource_type)
 {
 	if (!train.cargo)
@@ -515,13 +534,15 @@ function train_deliver(train, resource_type)
 
 	if (found)
 	{
-		for (var i in mapData.demands)
+		for (var i in curPlayer.demands)
 		{
-			var d = mapData.demands[i];
+			var d = curPlayer.demands[i];
 			if (d[0] == train.loc && d[1] == resource_type)
 			{
 				adjustPlayerCash(d[2]);
-				mapData.demands.splice(i,1);
+				curPlayer.demands.splice(i,1);
+				mapData.pastDemands.push(d);
+				nextDemand();
 				break;
 			}
 		}
@@ -1315,9 +1336,9 @@ function reloadWaypoint(waypoint)
 			$('.resource_name', $row).text(resource_type);
 
 			var deliverReward = 0;
-			for (var j in mapData.demands)
+			for (var j in curPlayer.demands)
 			{
-				var dem = mapData.demands[j];
+				var dem = curPlayer.demands[j];
 				if (dem[1] == resource_type)
 				{
 					if (dem[0] == waypoint.location)
@@ -1361,9 +1382,9 @@ function reloadWaypoint(waypoint)
 
 			var wantedPlaces = new Array();
 			var deliverReward = 0;
-			for (var j in mapData.demands)
+			for (var j in curPlayer.demands)
 			{
-				var dem = mapData.demands[j];
+				var dem = curPlayer.demands[j];
 				if (dem[1] == resource_type)
 				{
 					wantedPlaces.push(mapData.cities[dem[0]].name);
@@ -1420,9 +1441,9 @@ function reloadWaypoint(waypoint)
 			$('.resource_name', $row).text(resource_type);
 
 			var wantedPlaces = new Array();
-			for (var j in mapData.demands)
+			for (var j in curPlayer.demands)
 			{
-				var dem = mapData.demands[j];
+				var dem = curPlayer.demands[j];
 				if (dem[1] == resource_type)
 				{
 					wantedPlaces.push(mapData.cities[dem[0]].name);
@@ -1464,9 +1485,9 @@ function reloadWaypoint(waypoint)
 			$('.resource_name', $row).text(resource_type);
 
 			var wantedPlaces = new Array();
-			for (var j in mapData.demands)
+			for (var j in curPlayer.demands)
 			{
-				var dem = mapData.demands[j];
+				var dem = curPlayer.demands[j];
 				if (dem[1] == resource_type)
 				{
 					wantedPlaces.push(mapData.cities[dem[0]].name);
@@ -1514,7 +1535,7 @@ function selectDemand($row)
 	var filteredCities = {};
 	mapFeatures.highlightCities = {};
 
-	var demand = mapData.demands[$row.attr('demand-index')-1];
+	var demand = curPlayer.demands[$row.attr('demand-index')-1];
 	if (demand)
 	{
 		filteredCities[demand[0]] = true;
@@ -1639,11 +1660,11 @@ function showDemands()
 {
 	$('#demandsPane .insertedRow').remove();
 	var count = 0;
-	for (var i in mapData.demands)
+	for (var i in curPlayer.demands)
 	{
 		count++;
 
-		var demand = mapData.demands[i];
+		var demand = curPlayer.demands[i];
 		var $row = $('#demandsPaneTableTemplate').clone();
 		$row.attr('demand-index', parseInt(i) + 1);
 		$row.addClass('insertedRow');
@@ -1749,7 +1770,8 @@ function autoCreateDemands()
 		}
 	}
 
-	mapData.allDemands = new Array();
+	mapData.futureDemands = new Array();
+	mapData.pastDemands = new Array();
 	for (var cityId in mapData.cities)
 	{
 		var c = mapData.cities[cityId];
@@ -1775,15 +1797,15 @@ function autoCreateDemands()
 			var value = Math.round(best * .5);
 			if (value >= 1)
 			{
-				mapData.allDemands.push(
+				mapData.futureDemands.push(
 					[cityId, rt, value]
 					);
 			}
 		}
 	}
-	shuffleArray(mapData.allDemands);
+	shuffleArray(mapData.futureDemands);
 
-	mapData.demands = mapData.allDemands.slice(0,5);
+	curPlayer.demands = mapData.futureDemands.splice(0,5);
 }
 
 function shuffleArray(arr)
