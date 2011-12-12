@@ -231,7 +231,7 @@ function drawCell(ctx, pt, c, w, nw, ne)
 			);
 	}
 
-	if (c == "M" && terrainImages.mountain)
+	if (c == "M" && terrainImages.mountain && !mapFeatures.hideTerrain)
 	{
 		var imageSize = CELL_WIDTH * .8;
 		ctx.drawImage(terrainImages.mountain,
@@ -721,9 +721,21 @@ function addTrainSprite(trainLoc)
 		brandNew: true
 		};
 	updateTrainSpritePosition(train);
+	updateTrainSpriteSensitivity(train);
 
-	$t.click(function() { onTrainClicked(train); });
 	return train;
+}
+
+function updateTrainSpriteSensitivity(train)
+{
+	if (isBuilding)
+	{
+		train.el.get(0).onclick = null;
+	}
+	else
+	{
+		train.el.get(0).onclick = function() { onTrainClicked(train); };
+	}
 }
 
 var isDragging = null;
@@ -733,6 +745,11 @@ function onMouseDown(evt)
 	if (evt.which != 1) return;
 
 	evt.preventDefault();
+	onTouchStart(evt);
+}
+
+function onTouchStart(evt)
+{
 	var p = $('#theCanvas').position();
 	var pt = {
 		x: evt.clientX - p.left,
@@ -789,16 +806,20 @@ function onMouseDown_build(cellIdx)
 function onMouseUp(evt)
 {
 	if (evt.which != 1) return;
+	onTouchEnd(evt);
+}
 
+function onTouchEnd(evt)
+{
 	if (isBuilding)
 	{
-		evt.preventDefault();
+		if (evt.preventDefault) { evt.preventDefault(); }
 		repaint();
 		isDragging = null;
 	}
 	if (isPanning)
 	{
-		evt.preventDefault();
+		if (evt.preventDefault) { evt.preventDefault(); }
 		repaint();
 		isPanning = null;
 	}
@@ -972,12 +993,50 @@ function onMouseWheel(evt)
 	}
 }
 
+function onTouchStart_r(evt)
+{
+	evt.preventDefault();
+	if (evt.touches && evt.touches.length == 1)
+	{
+		onTouchStart({
+		clientX: evt.touches[0].clientX,
+		clientY: evt.touches[0].clientY
+		});
+	}
+}
+
+function onTouchMove_r(evt)
+{
+	if (evt.touches && evt.touches.length == 1)
+	{
+		onMouseMove({
+		which: 1,
+		clientX: evt.touches[0].clientX,
+		clientY: evt.touches[0].clientY
+		});
+	}
+}
+
+function onTouchEnd_r(evt)
+{
+	if (evt.touches && evt.touches.length == 0)
+	{
+		onTouchEnd({
+		which: 1
+		});
+	}
+}
+
 $(function() {
 	document.getElementById('theCanvas').addEventListener('mousedown', onMouseDown, false);
 	$(document).mouseup(onMouseUp);
 	$(document).mousemove(onMouseMove);
 	document.getElementById('theCanvas').addEventListener('DOMMouseScroll',
 			onMouseWheel, false);
+
+	document.getElementById('theCanvas').addEventListener('touchstart', onTouchStart_r, false);
+	document.addEventListener('touchmove', onTouchMove_r, false);
+	document.addEventListener('touchend', onTouchEnd_r, false);
 });
 
 function setZoomLevel(w, basisPt)
@@ -1040,6 +1099,11 @@ function beginBuilding()
 	};
 	updateBuildingCost();
 	$('#buildTrackInfo').fadeIn();
+
+	if (theTrain)
+	{
+		updateTrainSpriteSensitivity(theTrain);
+	}
 }
 
 function adjustPlayerCash(delta)
@@ -1074,6 +1138,11 @@ function commitBuilding()
 	isBuilding = null;
 	$('#buildTrackInfo').fadeOut();
 
+	if (theTrain)
+	{
+		updateTrainSpriteSensitivity(theTrain);
+	}
+
 	repaint();
 }
 
@@ -1084,6 +1153,11 @@ function abandonBuilding()
 
 	isBuilding = null;
 	$('#buildTrackInfo').fadeOut();
+
+	if (theTrain)
+	{
+		updateTrainSpriteSensitivity(theTrain);
+	}
 
 	repaint();
 }
@@ -1098,6 +1172,16 @@ function fixWidgetDimensions($widget)
 
 function onTrainClicked(train)
 {
+	showPlan(train);
+}
+
+function addLocomotive()
+{
+	showPlan(theTrain);
+}
+
+function showPlan(train)
+{
 	if (isPlanning && isPlanning.train == train)
 		return;
 
@@ -1107,16 +1191,13 @@ function onTrainClicked(train)
 	reloadPlan();
 	$('#planPane').fadeIn();
 
-	fixWidgetDimensions($('#planPane'));
-}
-
-function addLocomotive()
-{
-	isPlanning = {
-		train: theTrain
-		};
-	reloadPlan();
-	$('#planPane').fadeIn();
+	if (train)
+	{
+		// update map for planning
+		mapFeatures.hideTerrain = true;
+		filterMapToReachable(isPlanning.train);
+		repaint();
+	}
 
 	var $widget = $('#planPane');
 	fixWidgetDimensions($widget);
