@@ -46,10 +46,5 @@
 		"357": {
 			"name": "Lancaster", "offers": ["furniture"]
 			}
-		},
-	"demands": [
-		[ 29, "passengers", 10 ],
-		[ 162, "steel", 2 ],
-		[ 357, "imports", 15 ]
-		]
+		}
 }
