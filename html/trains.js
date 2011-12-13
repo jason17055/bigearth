@@ -448,6 +448,58 @@ function beginLoadMap(mapName)
 	});
 }
 
+var serverState;
+function fetchGameState()
+{
+	var fetchBeginTime = new Date().getTime();
+
+	var onSuccess = function(data,status)
+	{
+		var fetchEndTime = new Date().getTime();
+		serverState = data;
+		serverState.basisTime = fetchBeginTime +
+			Math.round((fetchEndTime - fetchBeginTime) / 2) -
+			serverState.serverTime;
+		onGameState();
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		//FIXME, report an error, I suppose
+	};
+
+	$.ajax({
+	url: "/gamestate",
+	success: onSuccess,
+	error: onError,
+	dataType: "json"
+	});
+}
+$(fetchGameState);
+
+function getGameTime()
+{
+	if (serverState)
+		return new Date().getTime() - serverState.basisTime;
+	else
+		return 0;
+}
+
+function onGameState()
+{
+	var curTime = getGameTime();
+	//if (curTime < serverState.startTime)
+	{
+		var f = function() {
+			var curTime = getGameTime();
+			var secs = Math.floor(curTime / 1000);
+			$('#trainStartClock').text(secs);
+			document.title = secs;
+			setTimeout(f, 1000 * (secs+1) - curTime);
+			};
+		f();
+	}
+}
+
 function getCellPoint(cellIdx)
 {
 	var x = getCellColumn(cellIdx);
