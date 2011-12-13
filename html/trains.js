@@ -417,6 +417,12 @@ function onResize()
 	var canvas = document.getElementById('theCanvas');
 	canvas.width = window.innerWidth - 0;
 	canvas.height = window.innerHeight - $('#buttonBar').outerHeight();
+
+	$('#contentArea').css({
+		width: canvas.width+"px",
+		height: canvas.height+"px"
+		});
+
 	repaint();
 }
 window.onresize = onResize;

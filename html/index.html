@@ -6,8 +6,14 @@ body {
 	margin: 0;
 	padding: 0;
 }
+#contentArea {
+	position: absolute;
+	overflow: hidden;
+}
 #buttonBar {
-	padding: 3pt;
+	width: 100%;
+	bottom: 0;
+	position: absolute;
 }
 .waypointSprite {
 	position: absolute;
@@ -97,12 +103,14 @@ body {
 <canvas id="theCanvas" width="600" height="600"></canvas>
 </div>
 <div id="buttonBar">
+<div style="padding:3pt">
 <button type="button" onclick="showDemands()">Show Demands</button>
 <button type="button" onclick="beginBuilding()">Build Track</button>
 <button type="button" onclick="addLocomotive()">Add Locomotive</button>
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
 <span>Cash on hand: <span id="cashIndicator">0</span></span>
+</div>
 </div>
 <div class="widget" id="demandsPane">
   <div class="widgetHeader">Current Demands</div>
