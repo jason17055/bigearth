@@ -484,6 +484,44 @@ function getGameTime()
 		return 0;
 }
 
+var eventsListenerEnabled = false;
+
+function onGameEvent(evt)
+{
+	alert("event " + evt.event);
+}
+
+function startEventsListener()
+{
+	var rdm = new Date().getTime();
+	var counter = 0;
+
+	var fetchNextEvent;
+	var onSuccess = function(data,status)
+	{
+		onGameEvent(data);
+		fetchNextEvent();
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		alert("fetchEvent error " + status + " " + errorThrown);
+	};
+
+	fetchNextEvent = function()
+	{
+		counter++;
+		$.ajax({
+		url: "/event?r="+rdm+"&i="+counter,
+		success: onSuccess,
+		error: onError,
+		dataType: "json"
+		});
+	};
+
+	fetchNextEvent();
+	eventsListenerEnabled = true;
+}
+
 function onGameState()
 {
 	var curTime = getGameTime();
@@ -501,6 +539,11 @@ function onGameState()
 
 	mapData.rails = serverState.rails;
 	repaint();
+
+	if (!eventsListenerEnabled)
+	{
+		startEventsListener();
+	}
 }
 
 function getCellPoint(cellIdx)
