@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use Getopt::Long;
+use URI::Escape;
 
 use MainLoop;
 use Sys::Syslog;
@@ -19,6 +20,9 @@ my $main = MainLoop->new();
 setup_listener();
 
 my $server_start_time = time();
+my $gamestate = {
+	rails => {},
+	};
 
 eval { $main->run };
 my $E = $@;
@@ -99,6 +103,13 @@ print "path=$path\n";
 		$http->write_message($resp);
 		return;
 	}
+	elsif ($path =~ m{^/request/(.*)$}s)
+	{
+		my $verb = $1;
+		my $resp = handle_a_request($req, $verb);
+		$http->write_message($resp);
+		return;
+	}
 
 	if (open my $fh, "<", "../html$path")
 	{
@@ -133,6 +144,7 @@ sub handle_gamestate_request
 	$resp->header("Content-Type", "text/json");
 	my $stat_struct = get_gamestate();
 	my $content = encode_json($stat_struct);
+print STDERR "$content\n";
 	$resp->content($content);
 	return $resp;
 }
@@ -141,6 +153,54 @@ sub get_gamestate
 {
 	return {
 	serverTime => int((time - $server_start_time) * 1000),
-	startTime => 120000
+	startTime => 120000,
+	rails => $gamestate->{rails},
 	};
+}
+
+sub my_unescape
+{
+	my $x = shift;
+	$x =~ s/\+/ /gs;
+	return uri_unescape($x);
+}
+
+sub handle_a_request
+{
+	my ($req, $verb) = @_;
+
+	my @d = split /&/, $req->content;
+		print STDERR map "DATA: $_\n", @d;
+	my %data = map { my ($k,$v) = split /=/, $_; my_unescape($k) => my_unescape($v) } @d;
+
+use Data::Dumper;
+print STDERR Dumper(\%data);
+
+	if ($verb eq "build")
+	{
+		handle_build_request(\%data);
+	}
+	else
+	{
+		print STDERR "VERB: $verb\n";
+		print STDERR map "DATA: $_\n", @d;
+	}
+
+	my $resp = HTTP::Response->new("200", "OK");
+	$resp->header("Content-Type", "text/json");
+	my $content = encode_json({});
+	$resp->content($content);
+	return $resp;
+}
+
+sub handle_build_request
+{
+	my ($args) = @_;
+
+	foreach my $track_idx (split /\s+/, $args->{rails})
+	{
+		$gamestate->{rails}->{$track_idx} = 1;
+	}
+
+	return;
 }

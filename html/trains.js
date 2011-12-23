@@ -498,6 +498,9 @@ function onGameState()
 			};
 		f();
 	}
+
+	mapData.rails = serverState.rails;
+	repaint();
 }
 
 function getCellPoint(cellIdx)
@@ -1171,6 +1174,26 @@ function adjustPlayerCash(delta)
 	$('#cashIndicator').text(money);
 }
 
+function sendRequest(verb, data)
+{
+	var onSuccess = function()
+	{
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		alert("request error " + errorThrown);
+	};
+
+	$.ajax({
+	type: "POST",
+	url: ("/request/" + verb),
+	data: data,
+	success: onSuccess,
+	error: onError,
+	dataType: "json"
+	});
+}
+
 function commitBuilding()
 {
 	if (!isBuilding)
@@ -1186,11 +1209,22 @@ function commitBuilding()
 		return;
 	}
 
+	var a = new Array();
+	for (var i in isBuilding.rails)
+	{
+		a.push(i);
+	}
+	sendRequest("build",
+		{
+		cost: cost,
+		rails: a.join(' ')
+		});
+
 	$('#cashIndicator').text(money);
 
 	for (var i in isBuilding.rails)
 	{
-		mapData.rails[i] = isBuilding.rails[i];
+		//mapData.rails[i] = isBuilding.rails[i];
 	}
 
 	isBuilding = null;
