@@ -95,6 +95,7 @@ sub handle_http_request
 	# TODO- set this global variable to the session identifier,
 	# i.e. something unique that represents this connection
 	local $ENV{SESSION_ID} = "dummysid";
+	local $ENV{REMOTE_ADDR} = $http->{tcp_sd}->peerhost;
 	local $ENV{REMOTE_USER};
 
 	syslog "info", "%s %s %s %s %s",
