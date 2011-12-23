@@ -60,6 +60,8 @@ sub new
 		created => time,
 		numread_total => 0,
 		numsent_total => 0,
+		num_messages_received => 0,
+		num_messages_sent => 0,
 		}, $class;
 
 	$self->{name} = $sd->peerhost . ":" . $sd->peerport;
@@ -124,9 +126,7 @@ sub handle_tcp_command_content
 	if ($conninfo->{content_length} == 0)
 	{
 		$conninfo->{current_request}->content($conninfo->{content});
-		$conninfo->{callbacks}->{on_received}->(
-			$conninfo->{current_request},
-			$conninfo);
+		$conninfo->message_received($conninfo->{current_request});
 		$conninfo->{current_request} = undef;
 		$conninfo->{content} = undef;
 	}
@@ -161,8 +161,17 @@ sub handle_tcp_command_header
 	}
 	else
 	{
-		$conninfo->{callbacks}->{on_received}->($req, $conninfo);
+		$conninfo->message_received($req);
 	}
+}
+
+sub message_received
+{
+	my $conninfo = shift;
+	my ($req) = @_;
+
+	$conninfo->{num_messages_received}++;
+	$conninfo->{callbacks}->{on_received}->($req, $conninfo);
 }
 
 sub http_process_input_buffer
@@ -174,6 +183,7 @@ sub http_process_input_buffer
 	{
 		my $is_outbound_msg = defined($conninfo->{msg_out})
 				&& length($conninfo->{msg_out});
+		$is_outbound_msg ||= ($conninfo->{num_messages_received} > $conninfo->{num_messages_sent});
 		if ($is_outbound_msg && !$conninfo->{duplex})
 		{
 			# there's an outbound message, and this is not a full-duplex
@@ -353,6 +363,8 @@ sub write_message
 {
 	my $self = shift;
 	my ($msg) = @_;
+
+	$self->{num_messages_sent}++;
 
 	if (!$msg->protocol)
 	{
