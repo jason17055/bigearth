@@ -24,6 +24,8 @@ my $server_start_time = time();
 my $gamestate = {
 	rails => {},
 	};
+my %queued_events_by_sid;
+my %waiting_event_listeners_by_sid;
 
 eval { $main->run };
 my $E = $@;
@@ -116,7 +118,7 @@ sub handle_http_request
 		$http->write_message($resp);
 		return;
 	}
-	elsif ($path eq "/event")
+	elsif ($path =~ m{^/event\b})
 	{
 		handle_event_request($req, $http);
 		return;
@@ -220,49 +222,46 @@ sub handle_build_request
 	{
 		$gamestate->{rails}->{$track_idx} = 1;
 	}
+	fire_event($ENV{SESSION_ID},
+		{ event => "track-built" });
 
 	return;
 }
 
-my @events;
-my @pending_event_listeners;
 sub handle_event_request
 {
 	my ($req, $http) = @_;
 
-	if (my $evt = shift @events)
+	my $sid = $ENV{SESSION_ID};
+	if ($queued_events_by_sid{$sid}
+		&& @{$queued_events_by_sid{$sid}})
 	{
+		my $evt = shift @{$queued_events_by_sid{$sid}};
 		send_event($evt, $http);
 		return;
 	}
 	else
 	{
 		# must wait
-		print STDERR "waiting for event to occur\n";
-		MainLoop->add_timer(5,
-			on_timeout => sub {
-				fire_event({x=>"1"});
-			});
-		MainLoop->add_timer(10,
-			on_timeout => sub {
-				fire_event({x=>"2"});
-			});
-		push @pending_event_listeners, $http;
+		$waiting_event_listeners_by_sid{$sid} ||= [];
+		push @{$waiting_event_listeners_by_sid{$sid}}, $http;
 	}
 }
 
 sub fire_event
 {
-	my ($evt) = @_;
+	my ($sid, $evt) = @_;
 
-	if (@pending_event_listeners)
+	if ($waiting_event_listeners_by_sid{$sid}
+		&& @{$waiting_event_listeners_by_sid{$sid}})
 	{
-		my $http = shift @pending_event_listeners;
+		my $http = shift @{$waiting_event_listeners_by_sid{$sid}};
 		send_event($evt, $http);
 	}
 	else
 	{
-		push @events, $evt;
+		$queued_events_by_sid{$sid} ||= [];
+		push @{$queued_events_by_sid{$sid}}, $evt;
 	}
 }
 
@@ -272,9 +271,7 @@ sub send_event
 
 	my $resp = HTTP::Response->new("200","OK");
 	$resp->header("Content-Type", "text/json");
-	my $content = encode_json({
-		event => $evt,
-		});
+	my $content = encode_json($evt);
 	$resp->content($content);
 	$http->write_message($resp);
 	return;
