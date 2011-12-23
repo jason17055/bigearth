@@ -17,6 +17,7 @@ GetOptions(
 	) or exit 2;
 
 my $main = MainLoop->new();
+openlog "trains-server", "cons,pid,perror", "user";
 setup_listener();
 
 my $server_start_time = time();
@@ -88,12 +89,21 @@ sub handle_http_request
 {
 	my ($req, $http) = @_;
 
+	my $method = $req->method;
 	my $path = $req->uri;
-	my $resp;
 
-	local $ENV{SESSION_ID} = "a";
+	# TODO- set this global variable to the session identifier,
+	# i.e. something unique that represents this connection
+	local $ENV{SESSION_ID} = "dummysid";
+	local $ENV{REMOTE_USER};
 
-print "path=$path\n";
+	syslog "info", "%s %s %s %s %s",
+			$ENV{REMOTE_ADDR} || "-",
+			$ENV{SESSION_ID} || "-",
+			$ENV{REMOTE_USER} || "-",
+			$method,
+			$path;
+
 	if ($path eq "/")
 	{
 		$path = "/index.html";
@@ -118,6 +128,7 @@ print "path=$path\n";
 		return;
 	}
 
+	my $resp;
 	if (open my $fh, "<", "../html$path")
 	{
 		$resp = HTTP::Response->new("200", "OK");
