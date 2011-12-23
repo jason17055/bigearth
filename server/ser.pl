@@ -162,7 +162,6 @@ sub handle_gamestate_request
 	$resp->header("Content-Type", "text/json");
 	my $stat_struct = get_gamestate();
 	my $content = encode_json($stat_struct);
-print STDERR "$content\n";
 	$resp->content($content);
 	return $resp;
 }
@@ -188,11 +187,10 @@ sub handle_a_request
 	my ($req, $verb) = @_;
 
 	my @d = split /&/, $req->content;
-		print STDERR map "DATA: $_\n", @d;
 	my %data = map { my ($k,$v) = split /=/, $_; my_unescape($k) => my_unescape($v) } @d;
 
-use Data::Dumper;
-print STDERR Dumper(\%data);
+#use Data::Dumper;
+#print STDERR Dumper(\%data);
 
 	if ($verb eq "build")
 	{
@@ -200,8 +198,10 @@ print STDERR Dumper(\%data);
 	}
 	else
 	{
-		print STDERR "VERB: $verb\n";
-		print STDERR map "DATA: $_\n", @d;
+		syslog "warning", "verb %s not found", $verb;
+		my $resp = HTTP::Response->new("404", "Not found");
+		$resp->content("");
+		return $resp;
 	}
 
 	my $resp = HTTP::Response->new("200", "OK");
