@@ -91,6 +91,8 @@ sub handle_http_request
 	my $path = $req->uri;
 	my $resp;
 
+	local $ENV{SESSION_ID} = "a";
+
 print "path=$path\n";
 	if ($path eq "/")
 	{
@@ -101,6 +103,11 @@ print "path=$path\n";
 	{
 		my $resp = handle_gamestate_request($req);
 		$http->write_message($resp);
+		return;
+	}
+	elsif ($path eq "/event")
+	{
+		handle_event_request($req, $http);
 		return;
 	}
 	elsif ($path =~ m{^/request/(.*)$}s)
@@ -202,5 +209,61 @@ sub handle_build_request
 		$gamestate->{rails}->{$track_idx} = 1;
 	}
 
+	return;
+}
+
+my @events;
+my @pending_event_listeners;
+sub handle_event_request
+{
+	my ($req, $http) = @_;
+
+	if (my $evt = shift @events)
+	{
+		send_event($evt, $http);
+		return;
+	}
+	else
+	{
+		# must wait
+		print STDERR "waiting for event to occur\n";
+		MainLoop->add_timer(5,
+			on_timeout => sub {
+				fire_event({x=>"1"});
+			});
+		MainLoop->add_timer(10,
+			on_timeout => sub {
+				fire_event({x=>"2"});
+			});
+		push @pending_event_listeners, $http;
+	}
+}
+
+sub fire_event
+{
+	my ($evt) = @_;
+
+	if (@pending_event_listeners)
+	{
+		my $http = shift @pending_event_listeners;
+		send_event($evt, $http);
+	}
+	else
+	{
+		push @events, $evt;
+	}
+}
+
+sub send_event
+{
+	my ($evt, $http) = @_;
+
+	my $resp = HTTP::Response->new("200","OK");
+	$resp->header("Content-Type", "text/json");
+	my $content = encode_json({
+		event => $evt,
+		});
+	$resp->content($content);
+	$http->write_message($resp);
 	return;
 }
