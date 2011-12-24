@@ -482,6 +482,10 @@ function beginLoadMap(mapName)
 		{
 			mapData.rivers = {};
 		}
+		if (!mapData.rails)
+		{
+			mapData.rails = {};
+		}
 		CELLS_PER_ROW = mapData.terrain[0].length;
 		autoCreateDemands();
 		zoomShowAll();
@@ -2237,10 +2241,98 @@ $(function() {
 	$('#cashIndicator').text(50);
 });
 
+function spaces(l)
+{
+	var x = "";
+	while (l > 10)
+	{
+		x += "          ";
+		l -= 10;
+	}
+	x += "          ".substr(0,l);
+	return x;
+}
+
+function cropTerrain(offsetx, offsety, cx, cy)
+{
+	var newTerrain = new Array();
+	for (var row = 0; row < cy; row++)
+	{
+		var s = "";
+		if (offsety + row >= 0 && offsety + row < mapData.terrain.length)
+		{
+			var col = offsetx;
+			if (col < 0)
+			{
+				s += spaces(-offsetx);
+				col = 0;
+			}
+			s += mapData.terrain[offsety+row].substr(col);
+			if (s.length < cx)
+				s += spaces(cx - s.length);
+			else
+				s = s.substr(0, cx);
+		}
+		else
+		{
+			s = spaces(cx);
+		}
+		newTerrain.push(s);
+	}
+
+	var convertCellIdx = function(cellIdx)
+	{
+		var row = Math.floor(cellIdx / CELLS_PER_ROW);
+		var col = cellIdx % CELLS_PER_ROW;
+
+		row -= offsety;
+		col -= offsetx;
+
+		if (row >= 0 && row < cy
+			&& col >= 0 && col < cx)
+		{
+			return row * cx + col;
+		}
+		else
+		{
+			return -1;
+		}
+	};
+
+	var newCities = {};
+	for (var cityIdx in mapData.cities)
+	{
+		var newCityIdx = convertCellIdx(cityIdx);
+		if (newCityIdx >= 0)
+		{
+			newCities[newCityIdx] = mapData.cities[cityIdx];
+		}
+	}
+
+	var newRivers = {};
+	for (var edgeIdx in mapData.rivers)
+	{
+		var cellIdx = Math.floor(edgeIdx / 3);
+		var newCellIdx = convertCellIdx(cellIdx);
+		if (newCellIdx >= 0)
+		{
+			newRivers[newCellIdx * 3 + edgeIdx % 3] = mapData.rivers[edgeIdx];
+		}
+	}
+
+	mapData.cities = newCities;
+	mapData.terrain = newTerrain;
+	mapData.rivers = newRivers;
+	CELLS_PER_ROW = cx;
+	repaint();
+}
+
 function showEditMapPane()
 {
 	isEditing = {};
 	$('#editMapPane').fadeIn();
+
+	cropTerrain(-2, -2, 100, 100);
 }
 
 function dismissEditMapPane()
