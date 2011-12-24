@@ -341,6 +341,16 @@ function drawRailsHelper(ctx, owner)
 		ctx.lineWidth = 1;
 	}
 
+	if (CELL_WIDTH < 20)
+	{
+		ctx.lineWidth = 3;
+		ctx.beginPath();
+		ctx.moveTo(-CELL_WIDTH / 2, 0);
+		ctx.lineTo(CELL_WIDTH / 2, 0);
+		ctx.stroke();
+		return;
+	}
+
 	ctx.beginPath();
 	ctx.moveTo(-CELL_WIDTH / 2, -RAIL_WIDTH);
 	ctx.lineTo(CELL_WIDTH / 2, -RAIL_WIDTH);
@@ -446,8 +456,11 @@ function repaint()
 		}
 	}
 
-	ctx.fillStyle = "#000000";
-	ctx.font = "24px sans-serif";
+	ctx.save();
+	ctx.fillStyle = "#333333";
+	ctx.font = CELL_WIDTH >= 24 ?
+		"24px sans-serif" :
+		"16px sans-serif";
 	for (var cityLoc in mapData.cities)
 	{
 		if (cityVisible(cityLoc))
@@ -459,6 +472,7 @@ function repaint()
 			p.y + CELL_ASCENT);
 		}
 	}
+	ctx.restore();
 }
 
 function onResize()
