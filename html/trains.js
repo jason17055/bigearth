@@ -232,7 +232,8 @@ function drawCell(ctx, pt, c, w, nw, ne)
 			);
 	}
 
-	if (c == "M" && terrainImages.mountain && !mapFeatures.hideTerrain)
+	if (c == "M" && terrainImages.mountain && !mapFeatures.hideTerrain
+		&& CELL_WIDTH >= 24)
 	{
 		var imageSize = CELL_WIDTH * .8;
 		ctx.drawImage(terrainImages.mountain,
@@ -244,10 +245,15 @@ function drawCell(ctx, pt, c, w, nw, ne)
 
 function drawRivers(ctx, pt, cellIdx)
 {
+	ctx.save();
+	ctx.strokeStyle = '#1155ff';
+	ctx.lineWidth =
+		CELL_WIDTH >= 48 ? 5 :
+		CELL_WIDTH >= 20 ? 3 :
+		2;
+
 	var drawRiverHelper = function()
 	{
-		ctx.strokeStyle = '#1155ff';
-		ctx.lineWidth = 5;
 		ctx.beginPath();
 		ctx.moveTo(0, -CELL_ASCENT / 2);
 		ctx.lineTo(0, CELL_ASCENT / 2);
@@ -279,6 +285,7 @@ function drawRivers(ctx, pt, cellIdx)
 		ctx.restore();
 	}
 
+	ctx.restore();
 }
 
 function drawRails(ctx, pt, cellIdx)
