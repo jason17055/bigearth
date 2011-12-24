@@ -203,7 +203,7 @@ function drawCell(ctx, pt, c, w, nw, ne)
 	{
 		if (mapFeatures.hideTerrain)
 		{
-			return cc == "w" ? "#0000ff" : "#ffffff";
+			return cc == "w" ? "#1155ff" : "#ffffff";
 		}
 
 		return cc == "." ? "#99dd55" :
@@ -246,8 +246,8 @@ function drawRivers(ctx, pt, cellIdx)
 {
 	var drawRiverHelper = function()
 	{
-		ctx.strokeStyle = '#0000bb';
-		ctx.lineWidth = 4;
+		ctx.strokeStyle = '#1155ff';
+		ctx.lineWidth = 5;
 		ctx.beginPath();
 		ctx.moveTo(0, -CELL_ASCENT / 2);
 		ctx.lineTo(0, CELL_ASCENT / 2);
@@ -470,7 +470,7 @@ function onResize()
 window.onresize = onResize;
 $(onResize);
 $(function() {
-	beginLoadMap("pennsylvania2");
+	beginLoadMap("nippon");
 });
 
 function beginLoadMap(mapName)
