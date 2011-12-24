@@ -9,7 +9,7 @@ use MainLoop;
 use Sys::Syslog;
 use HTTP::Response;
 use Time::HiRes "time";
-use JSON "encode_json";
+use JSON "encode_json", "decode_json";
 
 my $http_port = 2626;
 GetOptions(
