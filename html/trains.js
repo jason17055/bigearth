@@ -3,6 +3,7 @@ var theTrain = null;
 var mapFeatures = {};
 var isBuilding = null;
 var isPlanning = null;
+var isEditing = null;
 var curPlayer = {
 	demands: new Array()
 	};
@@ -241,6 +242,45 @@ function drawCell(ctx, pt, c, w, nw, ne)
 	}
 }
 
+function drawRivers(ctx, pt, cellIdx)
+{
+	var drawRiverHelper = function()
+	{
+		ctx.strokeStyle = '#0000bb';
+		ctx.lineWidth = 4;
+		ctx.beginPath();
+		ctx.moveTo(0, -CELL_ASCENT / 2);
+		ctx.lineTo(0, CELL_ASCENT / 2);
+		ctx.stroke();
+	};
+
+	var t;
+	if (t = mapData.rivers[cellIdx * 3]) //west
+	{
+		ctx.save();
+		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
+		drawRiverHelper(t);
+		ctx.restore();
+	}
+	if (t = mapData.rivers[cellIdx * 3 + 1]) //northwest
+	{
+		ctx.save();
+		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.rotate(Math.PI / 3);
+		drawRiverHelper(t);
+		ctx.restore();
+	}
+	if (t = mapData.rivers[cellIdx * 3 + 2]) //northeast
+	{
+		ctx.save();
+		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.rotate(Math.PI * 2 / 3);
+		drawRiverHelper(t);
+		ctx.restore();
+	}
+
+}
+
 function drawRails(ctx, pt, cellIdx)
 {
 	var t;
@@ -385,6 +425,8 @@ function repaint()
 			drawCell(ctx, pt, c, w, nw, ne);
 
 			var cellIdx = getCell(y,x);
+			drawRivers(ctx, pt, cellIdx);
+
 			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
 			{
 				drawCityDot(ctx, {
@@ -436,6 +478,10 @@ function beginLoadMap(mapName)
 	var onSuccess = function(data,status)
 	{
 		mapData = data;
+		if (!mapData.rivers)
+		{
+			mapData.rivers = {};
+		}
 		CELLS_PER_ROW = mapData.terrain[0].length;
 		autoCreateDemands();
 		zoomShowAll();
@@ -537,7 +583,8 @@ function onGameState()
 		f();
 	}
 
-	mapData.rails = serverState.rails;
+	if (mapData && serverState.rails)
+		mapData.rails = serverState.rails;
 	repaint();
 
 	if (!eventsListenerEnabled)
@@ -557,10 +604,39 @@ function getCellPoint(cellIdx)
 		};
 }
 
+function getEdgeFromPoint(x, y)
+{
+	x += MAP_ORIGIN_X;
+	y += MAP_ORIGIN_Y;
+
+	var iy = Math.floor(y / CELL_HEIGHT);
+	var ia = Math.floor(x / (CELL_WIDTH/2)) - (1 - iy % 2);
+
+	var ry = y - iy * CELL_HEIGHT;
+	if (ry < CELL_ASCENT)
+	{
+		var col = Math.floor((ia+1) / 2);
+		return getCell(iy, col) * 3;
+	}
+	else if (ia % 2 == 0)
+	{
+		var col = Math.floor(ia / 2);
+		return getAdjacentSW(getCell(iy, col)) * 3 + 2;
+	}
+	else
+	{
+		var col = Math.floor(ia / 2);
+		return getAdjacentSE(getCell(iy, col)) * 3 + 1;
+	}
+}
+
 function getCellFromPoint(x, y)
 {
-	var iy = Math.floor((y+MAP_ORIGIN_Y) / CELL_HEIGHT);
-	var ix = Math.floor((x + MAP_ORIGIN_X - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH);
+	x += MAP_ORIGIN_X;
+	y += MAP_ORIGIN_Y;
+
+	var iy = Math.floor(y / CELL_HEIGHT);
+	var ix = Math.floor((x - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH);
 	return getCell(iy, ix);
 }
 
@@ -881,12 +957,73 @@ function onTouchStart(evt)
 		return;
 	}
 
+	if (isEditing && getRadioButtonValue(document.editMapForm.tool) != "hand")
+	{
+		onMouseDown_editTerrain(cellIdx, pt);
+		return;
+	}
+
 	// begin pan of whole map
 	isPanning = {
 		originX: pt.x,
 		originY: pt.y
 		};
 	return;
+}
+
+function getRadioButtonValue(radioObj)
+{
+	var l = radioObj.length;
+	for (var i = 0; i < l; i++)
+	{
+		if (radioObj[i].checked)
+			return radioObj[i].value;
+	}
+}
+
+function onMouseDown_editTerrain(cellIdx, oPt)
+{
+	var r = getCellRow(cellIdx);
+	var col = getCellColumn(cellIdx);
+
+	var t = getRadioButtonValue(document.editMapForm.tool);
+	if (t == "city")
+	{
+		var n = document.editMapForm.cityName.value;
+		if (n == "")
+		{
+			delete mapData.cities[cellIdx];
+		}
+		else
+		{
+			mapData.cities[cellIdx] = {
+				name: n,
+				offers: []
+				};
+			document.editMapForm.cityName.value = "";
+		}
+		repaint();
+		return;
+	}
+	else if (t == "rivers")
+	{
+		var edgeIdx = getEdgeFromPoint(oPt.x, oPt.y);
+		if (mapData.rivers[edgeIdx])
+			delete mapData.rivers[edgeIdx];
+		else
+			mapData.rivers[edgeIdx] = 1;
+		repaint();
+		return;
+	}
+
+	var c = t == "grass" ? "." :
+		t == "mountain" ? "M" :
+		t == "sea" ? "w" :
+		" ";
+
+	var s = mapData.terrain[r];
+	mapData.terrain[r] = s.substr(0,col) + c + s.substr(col+1);
+	repaint();
 }
 
 function onMouseDown_build(cellIdx)
@@ -2099,3 +2236,28 @@ outerLoop:
 $(function() {
 	$('#cashIndicator').text(50);
 });
+
+function showEditMapPane()
+{
+	isEditing = {};
+	$('#editMapPane').fadeIn();
+}
+
+function dismissEditMapPane()
+{
+	isEditing = null;
+	$('#editMapPane').fadeOut();
+
+	var aRivers = new Array();
+	for (var i in mapData.rivers)
+	{
+		aRivers.push(i);
+	}
+
+	sendRequest("editMap",
+		{
+		terrain: mapData.terrain.join("\n"),
+		rivers: aRivers.join(" "),
+		cities: mapData.cities
+		});
+}

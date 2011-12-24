@@ -57,6 +57,9 @@ body {
 #demandsPane {
 	height: 230px;
 }
+#editMapPane {
+	height: 300px;
+}
 .widgetContent {
 	overflow: auto;
 }
@@ -109,9 +112,33 @@ body {
 <button type="button" onclick="addLocomotive()">Add Locomotive</button>
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
+<button type="button" onclick="showEditMapPane()">Edit Map</button>
 <span>Cash on hand: <span id="cashIndicator">0</span></span>
 <span id="trainStartClock">Train movement</span>
 </div>
+</div>
+<div class="widget" id="editMapPane">
+  <div class="widgetHeader">Edit Map</div>
+  <div class="widgetContent">
+    <form name="editMapForm">
+    <div style="float:left; padding: 2pt">
+     <div><b>Terrain Tools</b></div>
+     <div><input type="radio" name="tool" value="grass" id="editTool_grass"><label for="editTool_grass">Grass</label></div>
+     <div><input type="radio" name="tool" value="mountain" id="editTool_mountain"><label for="editTool_mountain">Mountain</label></div>
+     <div><input type="radio" name="tool" value="sea" id="editTool_sea"><label for="editTool_sea">Sea</label></div>
+     <div><input type="radio" name="tool" value="erase" id="editTool_erase"><label for="editTool_erase">Erase</label></div>
+    </div>
+    <div style="float:left; padding: 2pt">
+     <div><b>Misc Tools</b></div>
+     <div><input type="radio" name="tool" value="hand" id="editTool_hand" checked="checked"><label for="editTool_hand">Hand</label></div>
+     <div><input type="radio" name="tool" value="rivers" id="editTool_rivers"><label for="editTool_rivers">Rivers</label></div>
+     <div><input type="radio" name="tool" value="city" id="editTool_city"><label for="editTool_city">City</label></div>
+     <div><label for="cityName_entry">Name:</label>
+       <input type="text" size="9" name="cityName" id="cityName_entry"></div>
+    </div>
+    </form>
+  </div>
+  <div class="widgetFooter"><button type="button" onclick="dismissEditMapPane()">Dismiss</button></div>
 </div>
 <div class="widget" id="demandsPane">
   <div class="widgetHeader">Current Demands</div>

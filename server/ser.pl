@@ -199,6 +199,10 @@ sub handle_a_request
 	{
 		handle_build_request(\%data);
 	}
+	elsif ($verb eq "editMap")
+	{
+		handle_editMap_request(\@d);
+	}
 	else
 	{
 		syslog "warning", "verb %s not found", $verb;
@@ -224,6 +228,54 @@ sub handle_build_request
 	}
 	fire_event($ENV{SESSION_ID},
 		{ event => "track-built" });
+
+	return;
+}
+
+sub handle_editMap_request
+{
+	my ($args_arrayref) = @_;
+
+	my $map = {};
+	if (open my $fh, "<", "map.txt")
+	{
+		local $/;
+		my $data = <$fh>;
+		$map = decode_json($data);
+		close $fh;
+	}
+
+	foreach my $vv (@$args_arrayref)
+	{
+		my ($k, $v) = split /=/, $vv, 2;
+		$k = my_unescape($k);
+		$v = my_unescape($v);
+
+		if ($k eq "terrain")
+		{
+			my @terrain = split /\n/, $v;
+			$map->{terrain} = \@terrain;
+		}
+		elsif ($k eq "rivers")
+		{
+			my %tmp = map { $_ => 1 } split / /, $v;
+			$map->{rivers} = \%tmp;
+		}
+		elsif ($k =~ m{^cities\[(\d+)\]\[name\]$})
+		{
+			$map->{cities} ||= {};
+			$map->{cities}->{$1} ||= {};
+			$map->{cities}->{$1}->{name} = $v;
+		}
+		else
+		{
+			print STDERR "what is $k\n";
+		}
+	}
+
+	open my $fh, ">", "map.txt";
+	print $fh encode_json($map);
+	close $fh;
 
 	return;
 }
