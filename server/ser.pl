@@ -245,6 +245,8 @@ sub handle_editMap_request
 		close $fh;
 	}
 
+	my $old_cities = $map->{cities} || {};
+	$map->{cities} = {};
 	foreach my $vv (@$args_arrayref)
 	{
 		my ($k, $v) = split /=/, $vv, 2;
@@ -263,8 +265,7 @@ sub handle_editMap_request
 		}
 		elsif ($k =~ m{^cities\[(\d+)\]\[name\]$})
 		{
-			$map->{cities} ||= {};
-			$map->{cities}->{$1} ||= {};
+			$map->{cities}->{$1} ||= $old_cities->{$1} || {};
 			$map->{cities}->{$1}->{name} = $v;
 		}
 		else
