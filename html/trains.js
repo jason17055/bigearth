@@ -2324,6 +2324,8 @@ function cropTerrain(offsetx, offsety, cx, cy)
 	mapData.terrain = newTerrain;
 	mapData.rivers = newRivers;
 	CELLS_PER_ROW = cx;
+	MAP_ORIGIN_X -= CELL_WIDTH * offsetx;
+	MAP_ORIGIN_Y -= CELL_HEIGHT * offsety;
 	repaint();
 }
 
@@ -2332,13 +2334,41 @@ function showEditMapPane()
 	isEditing = {};
 	$('#editMapPane').fadeIn();
 
-	cropTerrain(-2, -2, 100, 100);
+	makeMoreRoomOnMap(10);
+}
+
+function makeMoreRoomOnMap(amt)
+{
+	var minX = CELLS_PER_ROW;
+	var maxX = 0;
+	var minY = mapData.terrain.length;
+	var maxY = 0;
+
+	var height = mapData.terrain.length;
+	for (var row = 0; row < height; row++)
+	{
+		for (var col = 0; col < CELLS_PER_ROW; col++)
+		{
+			var c = mapData.terrain[row].charAt(col);
+			if (c && c != " ")
+			{
+				if (col < minX) minX = col;
+				if (col > maxX) maxX = col;
+				if (row < minY) minY = row;
+				if (row > maxY) maxY = row;
+			}
+		}
+	}
+
+	cropTerrain(minX - amt, minY - amt, (maxX+1-minX) + 2*amt, (maxY+1-minY) + 2*amt);
 }
 
 function dismissEditMapPane()
 {
 	isEditing = null;
 	$('#editMapPane').fadeOut();
+
+	makeMoreRoomOnMap(0);
 
 	var aRivers = new Array();
 	for (var i in mapData.rivers)
