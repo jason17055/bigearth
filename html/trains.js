@@ -1017,7 +1017,10 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 		var n = document.editMapForm.cityName.value;
 		if (n == "")
 		{
-			delete mapData.cities[cellIdx];
+			if (mapData.cities[cellIdx])
+			{
+				showEditCityPane(cellIdx);
+			}
 		}
 		else
 		{
@@ -2388,6 +2391,7 @@ function dismissEditMapPane()
 {
 	isEditing = null;
 	$('#editMapPane').fadeOut();
+	$('#editCityPane').fadeOut();
 
 	makeMoreRoomOnMap(0);
 
@@ -2403,4 +2407,90 @@ function dismissEditMapPane()
 		rivers: aRivers.join(" "),
 		cities: mapData.cities
 		});
+}
+
+function editCityAddOffer()
+{
+	var cityId = $('#editCityPane').attr('selected-city');
+	var cityInfo = mapData.cities[cityId];
+	if (!cityInfo)
+		return;
+
+	var rt = document.getElementById('offersChoices');
+	if (rt.value)
+	{
+		if (!cityInfo.offers)
+			cityInfo.offers = new Array();
+		cityInfo.offers.push(rt.value);
+		reloadEditCityPane();
+	}
+}
+
+function reloadEditCityPane()
+{
+	$('#offersList').empty();
+	$('#nullOffersChoice ~ option').remove();
+
+	var cityId = $('#editCityPane').attr('selected-city');
+	var cityInfo = mapData.cities[cityId];
+	if (!cityInfo)
+		return;
+
+	var found = {};
+	if (cityInfo.offers)
+	{
+		for (var i in cityInfo.offers)
+		{
+			var r = cityInfo.offers[i];
+			var $r = $('<div></div>');
+			$r.text(r);
+			$('#offersList').append($r);
+			found[r] = true;
+		}
+	}
+
+	var types = [ "coal", "imports", "furniture", "passengers",
+		"plastics", "steel", "wood" ];
+	for (var i in types)
+	{
+		if (!found[types[i]])
+		{
+			var $o = $('<option></option>');
+			$o.attr('value', types[i]);
+			$o.text(types[i]);
+			$('#offersChoices').append($o);
+		}
+	}
+}
+
+function showEditCityPane(cityId)
+{
+	var cityInfo = mapData.cities[cityId];
+	if (!cityInfo)
+	{
+		cityInfo = {
+		name: "Unnamed City",
+		};
+		mapData.cities[cityId] = cityInfo;
+	}
+
+	var $w = $('#editCityPane');
+	$w.attr('selected-city', cityId);
+
+	$('#editCityNameEntry').attr('value', cityInfo.name);
+
+	reloadEditCityPane();
+
+	$w.fadeIn();
+
+	var $pw = $('#editMapPane');
+	$w.css({
+		top: ($pw.position().top + $pw.outerHeight() + 10) + "px"
+		});
+	fixWidgetDimensions($w);
+}
+
+function dismissEditCityPane()
+{
+	$('#editCityPane').fadeOut();
 }

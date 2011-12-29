@@ -97,6 +97,13 @@ body {
 .aManifest td {
 	padding-left: 1em; font-size: 10pt;
 }
+#offersList {
+	border: 1px solid black;
+	margin-left: 3pt;
+	margin-right: 3pt;
+	padding-left: 2pt;
+	padding-right: 2pt;
+}
 </style>
 <script type="text/javascript" src="js/jquery-1.7.min.js"></script>
 <script type="text/javascript" src="trains.js"></script>
@@ -116,6 +123,16 @@ body {
 <span>Cash on hand: <span id="cashIndicator">0</span></span>
 <span id="trainStartClock">Train movement</span>
 </div>
+</div>
+<div class="widget" id="editCityPane">
+  <div class="widgetHeader">Edit City</div>
+  <div class="widgetContent">
+    <div>Name: <input type="text" size="10" id="editCityNameEntry"></div>
+    <div>Offers: (click to remove)</div>
+    <div id="offersList"></div>
+    <div><select id="offersChoices" onchange="editCityAddOffer()"><option value="" id="nullOffersChoice" selected="selected">--add resource--</option></select></div>
+  </div>
+  <div class="widgetFooter"><button type="button" onclick="dismissEditCityPane()">Dismiss</button></div>
 </div>
 <div class="widget" id="editMapPane">
   <div class="widgetHeader">Edit Map</div>
