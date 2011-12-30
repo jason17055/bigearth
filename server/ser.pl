@@ -265,8 +265,14 @@ sub handle_editMap_request
 		}
 		elsif ($k =~ m{^cities\[(\d+)\]\[name\]$})
 		{
-			$map->{cities}->{$1} ||= $old_cities->{$1} || {};
+			$map->{cities}->{$1} ||= {};
 			$map->{cities}->{$1}->{name} = $v;
+		}
+		elsif ($k =~ m{^cities\[(\d+)\]\[offers\]\[\]$})
+		{
+			$map->{cities}->{$1} ||= {};
+			$map->{cities}->{$1}->{offers} ||= [];
+			push @{$map->{cities}->{$1}->{offers}}, $v;
 		}
 		else
 		{
