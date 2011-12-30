@@ -13,6 +13,7 @@ use JSON "encode_json", "decode_json";
 
 my $http_port = 2626;
 my $map_name = "nippon";
+my $master_url = 'http://jason.long.name/trains';
 GetOptions(
 	"port=i" => \$http_port,
 	"map=s" => \$map_name,
@@ -27,6 +28,7 @@ my $gamestate = {
 	rails => {},
 	map => load_map($map_name),
 	};
+post_gametable_status();
 my %queued_events_by_sid;
 my %waiting_event_listeners_by_sid;
 
@@ -255,17 +257,9 @@ sub handle_editMap_request
 {
 	my ($args_arrayref) = @_;
 
-	my $map = {};
-	if (open my $fh, "<", "map.txt")
-	{
-		local $/;
-		my $data = <$fh>;
-		$map = decode_json($data);
-		close $fh;
-	}
-
-	my $old_cities = $map->{cities} || {};
-	$map->{cities} = {};
+	my $map = {
+		cities => {},
+		};
 	foreach my $vv (@$args_arrayref)
 	{
 		my ($k, $v) = split /=/, $vv, 2;
@@ -353,4 +347,30 @@ sub send_event
 	$resp->content($content);
 	$http->write_message($resp);
 	return;
+}
+
+my $posted_status_url;
+sub post_gametable_status
+{
+	use LWP::UserAgent;
+	use HTTP::Request::Common "POST";
+	use Sys::Hostname;
+
+	my $host = hostname();
+	my $my_url = "http://$host:$http_port";
+
+	my $ua = LWP::UserAgent->new;
+	my $url = $posted_status_url || "$master_url/server-api/new_gametable.php";
+	my $resp = $ua->request(POST $url, [ map => $map_name, url => $my_url ]);
+	if ($resp->is_success)
+	{
+		my @lines = split /\n/, $resp->content;
+		if ($lines[0] eq "ok")
+		{
+			$posted_status_url = $lines[1];
+			print "gametable update url is $posted_status_url\n";
+			return;
+		}
+	}
+	warn "unable to post gametable\n";
 }
