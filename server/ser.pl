@@ -12,8 +12,10 @@ use Time::HiRes "time";
 use JSON "encode_json", "decode_json";
 
 my $http_port = 2626;
+my $map_name = "nippon";
 GetOptions(
 	"port=i" => \$http_port,
+	"map=s" => \$map_name,
 	) or exit 2;
 
 my $main = MainLoop->new();
@@ -23,6 +25,7 @@ setup_listener();
 my $server_start_time = time();
 my $gamestate = {
 	rails => {},
+	map => load_map($map_name),
 	};
 my %queued_events_by_sid;
 my %waiting_event_listeners_by_sid;
@@ -230,6 +233,22 @@ sub handle_build_request
 		{ event => "track-built" });
 
 	return;
+}
+
+sub load_map
+{
+	my ($map_name) = @_;
+
+	my $mapdir = "../html/maps";
+	my $file = "$mapdir/$map_name.txt";
+	open my $fh, "<", $file
+		or die "$file: $!\n";
+	local $/;
+	my $data = <$fh>;
+	close $fh
+		or die "$file: $!\n";
+
+	return decode_json($data);
 }
 
 sub handle_editMap_request
