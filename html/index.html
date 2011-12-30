@@ -128,11 +128,18 @@ body {
   <div class="widgetHeader">Edit City</div>
   <div class="widgetContent">
     <div>Name: <input type="text" size="10" id="editCityNameEntry"></div>
-    <div>Offers: (click to remove)</div>
-    <div id="offersList"></div>
-    <div><select id="offersChoices" onchange="editCityAddOffer()"><option value="" id="nullOffersChoice" selected="selected">--add resource--</option></select></div>
+    <div>Offers:</div>
+    <div><select id="offersList" size="4"></select></div>
+    <div>
+      <select id="offersChoices"><option value="" id="nullOffersChoice" selected="selected">--select--</option></select>
+      <button type="button" onclick="editmap_addCityResource()">Add</button>
+      <button type="button" onclick="editmap_removeCityResource()">Remove</button>
+    </div>
   </div>
-  <div class="widgetFooter"><button type="button" onclick="dismissEditCityPane()">Dismiss</button></div>
+  <div class="widgetFooter">
+      <button type="button" onclick="dismissEditCityPane()">Save</button>
+      <button type="button" onclick="editmap_deleteCity()">Delete</button>
+  </div>
 </div>
 <div class="widget" id="editMapPane">
   <div class="widgetHeader">Edit Map</div>
@@ -150,8 +157,6 @@ body {
      <div><input type="radio" name="tool" value="hand" id="editTool_hand" checked="checked"><label for="editTool_hand">Hand</label></div>
      <div><input type="radio" name="tool" value="rivers" id="editTool_rivers"><label for="editTool_rivers">Rivers</label></div>
      <div><input type="radio" name="tool" value="city" id="editTool_city"><label for="editTool_city">City</label></div>
-     <div><label for="cityName_entry">Name:</label>
-       <input type="text" size="9" name="cityName" id="cityName_entry"></div>
     </div>
     </form>
   </div>

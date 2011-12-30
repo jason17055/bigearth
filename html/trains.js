@@ -1014,23 +1014,7 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 	var t = getRadioButtonValue(document.editMapForm.tool);
 	if (t == "city")
 	{
-		var n = document.editMapForm.cityName.value;
-		if (n == "")
-		{
-			if (mapData.cities[cellIdx])
-			{
-				showEditCityPane(cellIdx);
-			}
-		}
-		else
-		{
-			mapData.cities[cellIdx] = {
-				name: n,
-				offers: []
-				};
-			document.editMapForm.cityName.value = "";
-		}
-		repaint();
+		showEditCityPane(cellIdx);
 		return;
 	}
 	else if (t == "rivers")
@@ -2409,7 +2393,7 @@ function dismissEditMapPane()
 		});
 }
 
-function editCityAddOffer()
+function editmap_addCityResource()
 {
 	var cityId = $('#editCityPane').attr('selected-city');
 	var cityInfo = mapData.cities[cityId];
@@ -2422,11 +2406,34 @@ function editCityAddOffer()
 		if (!cityInfo.offers)
 			cityInfo.offers = new Array();
 		cityInfo.offers.push(rt.value);
-		reloadEditCityPane();
+		editmap_reloadEditCityPane();
 	}
 }
 
-function reloadEditCityPane()
+function editmap_removeCityResource()
+{
+	var cityId = $('#editCityPane').attr('selected-city');
+	var cityInfo = mapData.cities[cityId];
+	if (!cityInfo)
+		return;
+
+	var rt = document.getElementById('offersList');
+	if (rt.value)
+	{
+		if (!cityInfo.offers)
+			cityInfo.offers = new Array();
+		var newList = new Array();
+		for (var i in cityInfo.offers)
+		{
+			if (cityInfo.offers[i] != rt.value)
+				newList.push(cityInfo.offers[i]);
+		}
+		cityInfo.offers = newList;
+		editmap_reloadEditCityPane();
+	}
+}
+
+function editmap_reloadEditCityPane()
 {
 	$('#offersList').empty();
 	$('#nullOffersChoice ~ option').remove();
@@ -2442,7 +2449,8 @@ function reloadEditCityPane()
 		for (var i in cityInfo.offers)
 		{
 			var r = cityInfo.offers[i];
-			var $r = $('<div></div>');
+			var $r = $('<option></option>');
+			$r.attr('value', r);
 			$r.text(r);
 			$('#offersList').append($r);
 			found[r] = true;
@@ -2472,6 +2480,7 @@ function showEditCityPane(cityId)
 		name: "Unnamed City",
 		};
 		mapData.cities[cityId] = cityInfo;
+		repaint();
 	}
 
 	var $w = $('#editCityPane');
@@ -2479,7 +2488,7 @@ function showEditCityPane(cityId)
 
 	$('#editCityNameEntry').attr('value', cityInfo.name);
 
-	reloadEditCityPane();
+	editmap_reloadEditCityPane();
 
 	$w.fadeIn();
 
@@ -2492,5 +2501,25 @@ function showEditCityPane(cityId)
 
 function dismissEditCityPane()
 {
+	var cityId = $('#editCityPane').attr('selected-city');
+	var cityInfo = mapData.cities[cityId];
+
+	if (cityInfo)
+	{
+		cityInfo.name = document.getElementById('editCityNameEntry').value;
+		repaint();
+	}
+
+	$('#editCityPane').fadeOut();
+}
+
+function editmap_deleteCity()
+{
+	if (!confirm("Really delete this city?"))
+		return;
+
+	var cityId = $('#editCityPane').attr('selected-city');
+	delete mapData.cities[cityId];
+
 	$('#editCityPane').fadeOut();
 }
