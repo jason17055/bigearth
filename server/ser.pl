@@ -28,13 +28,15 @@ my $gamestate = {
 	rails => {},
 	map => load_map($map_name),
 	};
-post_gametable_status();
+post_gametable_advertisement();
 my %queued_events_by_sid;
 my %waiting_event_listeners_by_sid;
 
 eval { $main->run };
 my $E = $@;
 die $E if $E && $E !~ /^got (TERM|INT) signal/;
+
+update_gametable_advertisement("D");
 
 my $http_socket;
 my %http_connections;
@@ -99,9 +101,11 @@ sub handle_http_request
 	my $method = $req->method;
 	my $path = $req->uri;
 
-	# TODO- set this global variable to the session identifier,
-	# i.e. something unique that represents this connection
-	local $ENV{SESSION_ID} = "dummysid";
+	# look for and read the "sid" cookie in the request
+	my $cookies = $req->header("Cookie");
+	my $sid = (grep $_, map { /sid=(.*)/ and $1 } split /\s*;\s*/, $cookies)[0];
+
+	local $ENV{SESSION_ID} = $sid;
 	local $ENV{REMOTE_ADDR} = $http->{tcp_sd}->peerhost;
 	local $ENV{REMOTE_USER};
 
@@ -126,6 +130,12 @@ sub handle_http_request
 	elsif ($path =~ m{^/event\b})
 	{
 		handle_event_request($req, $http);
+		return;
+	}
+	elsif ($path =~ m{^/join\b})
+	{
+		my $resp = handle_join_request($req);
+		$http->write_message($resp);
 		return;
 	}
 	elsif ($path =~ m{^/request/(.*)$}s)
@@ -160,6 +170,19 @@ sub handle_http_request
 		$resp->content("<p>Not found</p>\n");
 	}
 	$http->write_message($resp);
+}
+
+sub handle_join_request
+{
+	my ($req) = @_;
+
+	my $path = $req->uri;
+	my $sid = uri_unescape($path =~ /sid=([^&;]*)$/ and $1);
+	
+	my $resp = HTTP::Response->new("303");
+	$resp->header("Set-Cookie", "sid=$sid");
+	$resp->header("Location", "/");
+	return $resp;
 }
 
 sub handle_gamestate_request
@@ -349,28 +372,52 @@ sub send_event
 	return;
 }
 
-my $posted_status_url;
-sub post_gametable_status
+my $gametable_id;
+sub post_gametable_advertisement
 {
 	use LWP::UserAgent;
 	use HTTP::Request::Common "POST";
 	use Sys::Hostname;
+	use IO::Handle;
+
+	print "posting gametable advertisement...";
+	STDOUT->flush;
 
 	my $host = hostname();
 	my $my_url = "http://$host:$http_port";
 
 	my $ua = LWP::UserAgent->new;
-	my $url = $posted_status_url || "$master_url/server-api/new_gametable.php";
+	my $url = "$master_url/server-api/new_gametable.php";
 	my $resp = $ua->request(POST $url, [ map => $map_name, url => $my_url ]);
 	if ($resp->is_success)
 	{
 		my @lines = split /\n/, $resp->content;
 		if ($lines[0] eq "ok")
 		{
-			$posted_status_url = $lines[1];
-			print "gametable update url is $posted_status_url\n";
+			$lines[1] =~ /id=(\d+)/
+			and $gametable_id = $1;
+
+			print "ok, id is $gametable_id\n";
 			return;
 		}
 	}
 	warn "unable to post gametable\n";
+}
+
+sub update_gametable_advertisement
+{
+	my ($status) = @_;
+
+	use LWP::UserAgent;
+	use HTTP::Request::Common "POST";
+	use IO::Handle;
+
+	print "updating gametable advertisement...";
+	STDOUT->flush;
+
+	my $ua = LWP::UserAgent->new;
+	my $url = "$master_url/server-api/gametable.php?id=" . uri_escape($gametable_id);
+	$ua->request(POST $url, [ status => $status ]);
+
+	print "done\n";
 }
