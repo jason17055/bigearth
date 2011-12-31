@@ -28,9 +28,10 @@ our $server_start_time = time();
 my $gamestate = TrainsGame->new();
 $gamestate->load_map($map_name);
 
+use EventStream;
+$gamestate->{events} = EventStream->new();
+
 post_gametable_advertisement();
-my %queued_events_by_sid;
-my %waiting_event_listeners_by_sid;
 
 eval { $main->run };
 my $E = $@;
@@ -123,14 +124,7 @@ sub handle_http_request
 
 	if ($path =~ m{^/event\b})
 	{
-		handle_event_request($req, $http);
-		return;
-	}
-	elsif ($path =~ m{^/request/(.*)$}s)
-	{
-		my $verb = $1;
-		my $resp = handle_a_request($req, $verb);
-		$http->write_message($resp);
+		$gamestate->{events}->handle_event_request($req, $http);
 		return;
 	}
 	elsif ($path =~ m{^/([\w\d-]+)})
@@ -139,6 +133,11 @@ sub handle_http_request
 		if ($gamestate->can($meth))
 		{
 			my $resp = $gamestate->$meth($req);
+			if (!$resp)
+			{
+				$resp = HTTP::Response->new("500");
+				$resp->content("Internal server error\n");
+			}
 			$http->write_message($resp);
 			return;
 		}
@@ -168,156 +167,6 @@ sub handle_http_request
 		$resp->content("<p>Not found</p>\n");
 	}
 	$http->write_message($resp);
-}
-
-sub my_unescape
-{
-	my $x = shift;
-	$x =~ s/\+/ /gs;
-	return uri_unescape($x);
-}
-
-sub handle_a_request
-{
-	my ($req, $verb) = @_;
-
-	my @d = split /&/, $req->content;
-	my %data = map { my ($k,$v) = split /=/, $_; my_unescape($k) => my_unescape($v) } @d;
-
-#use Data::Dumper;
-#print STDERR Dumper(\%data);
-
-	if ($verb eq "build")
-	{
-		handle_build_request(\%data);
-	}
-	elsif ($verb eq "editMap")
-	{
-		handle_editMap_request(\@d);
-	}
-	else
-	{
-		syslog "warning", "verb %s not found", $verb;
-		my $resp = HTTP::Response->new("404", "Not found");
-		$resp->content("");
-		return $resp;
-	}
-
-	my $resp = HTTP::Response->new("200", "OK");
-	$resp->header("Content-Type", "text/json");
-	my $content = encode_json({});
-	$resp->content($content);
-	return $resp;
-}
-
-sub handle_build_request
-{
-	my ($args) = @_;
-
-	foreach my $track_idx (split /\s+/, $args->{rails})
-	{
-		$gamestate->{rails}->{$track_idx} = 1;
-	}
-	fire_event($ENV{SESSION_ID},
-		{ event => "track-built" });
-
-	return;
-}
-
-sub handle_editMap_request
-{
-	my ($args_arrayref) = @_;
-
-	my $map = {
-		cities => {},
-		};
-	foreach my $vv (@$args_arrayref)
-	{
-		my ($k, $v) = split /=/, $vv, 2;
-		$k = my_unescape($k);
-		$v = my_unescape($v);
-
-		if ($k eq "terrain")
-		{
-			my @terrain = split /\n/, $v;
-			$map->{terrain} = \@terrain;
-		}
-		elsif ($k eq "rivers")
-		{
-			my %tmp = map { $_ => 1 } split / /, $v;
-			$map->{rivers} = \%tmp;
-		}
-		elsif ($k =~ m{^cities\[(\d+)\]\[name\]$})
-		{
-			$map->{cities}->{$1} ||= {};
-			$map->{cities}->{$1}->{name} = $v;
-		}
-		elsif ($k =~ m{^cities\[(\d+)\]\[offers\]\[\]$})
-		{
-			$map->{cities}->{$1} ||= {};
-			$map->{cities}->{$1}->{offers} ||= [];
-			push @{$map->{cities}->{$1}->{offers}}, $v;
-		}
-		else
-		{
-			print STDERR "what is $k\n";
-		}
-	}
-
-	open my $fh, ">", "map.txt";
-	print $fh encode_json($map);
-	close $fh;
-
-	return;
-}
-
-sub handle_event_request
-{
-	my ($req, $http) = @_;
-
-	my $sid = $ENV{SESSION_ID};
-	if ($queued_events_by_sid{$sid}
-		&& @{$queued_events_by_sid{$sid}})
-	{
-		my $evt = shift @{$queued_events_by_sid{$sid}};
-		send_event($evt, $http);
-		return;
-	}
-	else
-	{
-		# must wait
-		$waiting_event_listeners_by_sid{$sid} ||= [];
-		push @{$waiting_event_listeners_by_sid{$sid}}, $http;
-	}
-}
-
-sub fire_event
-{
-	my ($sid, $evt) = @_;
-
-	if ($waiting_event_listeners_by_sid{$sid}
-		&& @{$waiting_event_listeners_by_sid{$sid}})
-	{
-		my $http = shift @{$waiting_event_listeners_by_sid{$sid}};
-		send_event($evt, $http);
-	}
-	else
-	{
-		$queued_events_by_sid{$sid} ||= [];
-		push @{$queued_events_by_sid{$sid}}, $evt;
-	}
-}
-
-sub send_event
-{
-	my ($evt, $http) = @_;
-
-	my $resp = HTTP::Response->new("200","OK");
-	$resp->header("Content-Type", "text/json");
-	my $content = encode_json($evt);
-	$resp->content($content);
-	$http->write_message($resp);
-	return;
 }
 
 my $gametable_id;

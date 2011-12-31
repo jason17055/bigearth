@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use JSON;
 use Time::HiRes "time";
+use Sys::Syslog;
+use URI::Escape;
 
 sub new
 {
@@ -33,6 +35,13 @@ sub load_map
 	$self->{map_name} = $map_name;
 	$self->{map} = decode_json($data);
 	return;
+}
+
+sub my_unescape
+{
+	my $x = shift;
+	$x =~ s/\+/ /gs;
+	return uri_unescape($x);
 }
 
 sub handle_join_request
@@ -66,6 +75,103 @@ sub handle_gamestate_request
 	my $content = encode_json($stat_struct);
 	$resp->content($content);
 	return $resp;
+}
+
+sub handle_request_request
+{
+	my $self = shift;
+	my ($req) = @_;
+
+	my $path = $req->uri;
+	my $verb = ($path =~ m{^/request/(.*)$}s and $1)
+		or return;
+
+	my $m = "handle_${verb}_action";
+	if (!$self->can($m))
+	{
+		syslog "warning", "verb %s not found", $verb;
+		my $resp = HTTP::Response->new("404", "Not found");
+		$resp->content("verb $verb not found\n");
+		return $resp;
+	}
+
+	my @data = map {
+		my ($k, $v) = split /=/, $_;
+		my_unescape($k) => my_unescape($v)
+		}
+		split /&/, $req->content;
+
+	my $answer = $self->$m(\@data, $req) || {};
+
+	my $resp = HTTP::Response->new("200", "OK");
+	$resp->header("Content-Type", "text/json");
+	my $content = encode_json($answer);
+	$resp->content($content);
+	return $resp;
+}
+
+sub handle_build_action
+{
+	my $self = shift;
+	my ($args_arrayref) = @_;
+	my %args = @$args_arrayref;
+
+	foreach my $track_idx (split /\s+/, $args{rails})
+	{
+		$self->{rails}->{$track_idx} = 1;
+	}
+	$self->{events}->post_event(
+		{ event => "track-built" }
+		);
+
+	return;
+}
+
+sub handle_editMap_action
+{
+	my $self = shift;
+	my ($args_arrayref) = @_;
+
+	my $map = {
+		cities => {},
+		};
+	for (my $i = 0; $i < @$args_arrayref; $i += 2)
+	{
+		my $k = $args_arrayref->[$i];
+		my $v = $args_arrayref->[$i + 1];
+
+		if ($k eq "terrain")
+		{
+			my @terrain = split /\n/, $v;
+			$map->{terrain} = \@terrain;
+		}
+		elsif ($k eq "rivers")
+		{
+			my %tmp = map { $_ => 1 } split / /, $v;
+			$map->{rivers} = \%tmp;
+		}
+		elsif ($k =~ m{^cities\[(\d+)\]\[name\]$})
+		{
+			$map->{cities}->{$1} ||= {};
+			$map->{cities}->{$1}->{name} = $v;
+		}
+		elsif ($k =~ m{^cities\[(\d+)\]\[offers\]\[\]$})
+		{
+			$map->{cities}->{$1} ||= {};
+			$map->{cities}->{$1}->{offers} ||= [];
+			push @{$map->{cities}->{$1}->{offers}}, $v;
+		}
+		else
+		{
+			print STDERR "what is $k\n";
+		}
+	}
+
+	open my $fh, ">", "map.txt";
+	print $fh encode_json($map);
+	close $fh;
+
+	return;
 }
 
 1;
