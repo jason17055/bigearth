@@ -168,10 +168,12 @@ function isCity(cellIdx)
 function hasTrackAtDir(cellIdx, dir)
 {
 	var trackIdx = getTrackIndex(cellIdx, dir);
-	if (mapData.rails[trackIdx])
+	if (mapData.rails[trackIdx] == getPlayerId())
 		return 1;
 	else if (isBuilding && isBuilding.rails[trackIdx])
 		return 2;
+	else if (mapData.rails[trackIdx])
+		return 3;
 	else
 		return null;
 }
@@ -343,6 +345,11 @@ function drawRailsHelper(ctx, owner)
 	{
 		ctx.strokeStyle = "#009999";
 		ctx.lineWidth = 2;
+	}
+	else if (owner == 3)
+	{
+		ctx.strokeStyle = '#990099';
+		ctx.lineWidth = 1;
 	}
 	else
 	{
