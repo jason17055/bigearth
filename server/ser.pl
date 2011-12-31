@@ -24,7 +24,7 @@ openlog "trains-server", "cons,pid,perror", "user";
 setup_listener();
 
 use TrainsGame;
-my $server_start_time = time();
+our $server_start_time = time();
 my $gamestate = TrainsGame->new();
 $gamestate->load_map($map_name);
 
@@ -121,21 +121,9 @@ sub handle_http_request
 		$path = "/index.html";
 	}
 
-	if ($path eq "/gamestate")
-	{
-		my $resp = handle_gamestate_request($req);
-		$http->write_message($resp);
-		return;
-	}
-	elsif ($path =~ m{^/event\b})
+	if ($path =~ m{^/event\b})
 	{
 		handle_event_request($req, $http);
-		return;
-	}
-	elsif ($path =~ m{^/join\b})
-	{
-		my $resp = handle_join_request($req);
-		$http->write_message($resp);
 		return;
 	}
 	elsif ($path =~ m{^/request/(.*)$}s)
@@ -144,6 +132,16 @@ sub handle_http_request
 		my $resp = handle_a_request($req, $verb);
 		$http->write_message($resp);
 		return;
+	}
+	elsif ($path =~ m{^/([\w\d-]+)})
+	{
+		my $meth = "handle_$1_request";
+		if ($gamestate->can($meth))
+		{
+			my $resp = $gamestate->$meth($req);
+			$http->write_message($resp);
+			return;
+		}
 	}
 
 	my $resp;
@@ -170,41 +168,6 @@ sub handle_http_request
 		$resp->content("<p>Not found</p>\n");
 	}
 	$http->write_message($resp);
-}
-
-sub handle_join_request
-{
-	my ($req) = @_;
-
-	my $path = $req->uri;
-	my $sid = uri_unescape($path =~ /sid=([^&;]*)$/ and $1);
-	
-	my $resp = HTTP::Response->new("303");
-	$resp->header("Set-Cookie", "sid=$sid");
-	$resp->header("Location", "/");
-	return $resp;
-}
-
-sub handle_gamestate_request
-{
-	my ($req) = @_;
-
-	my $resp = HTTP::Response->new("200", "OK");
-	$resp->header("Content-Type", "text/json");
-	my $stat_struct = get_gamestate();
-	my $content = encode_json($stat_struct);
-	$resp->content($content);
-	return $resp;
-}
-
-sub get_gamestate
-{
-	return {
-	serverTime => int((time - $server_start_time) * 1000),
-	startTime => 120000,
-	rails => $gamestate->{rails},
-	map => $gamestate->{map},
-	};
 }
 
 sub my_unescape
