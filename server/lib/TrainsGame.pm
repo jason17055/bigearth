@@ -68,6 +68,7 @@ sub handle_gamestate_request
 		startTime => 120000,
 		rails => $self->{rails},
 		map => $self->{map},
+		nextEvent => $self->{events}->next_id,
 		};
 
 	my $resp = HTTP::Response->new("200", "OK");

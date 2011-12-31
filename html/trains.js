@@ -553,6 +553,7 @@ function getGameTime()
 }
 
 var eventsListenerEnabled = false;
+var nextEventId = null;
 
 function onGameEvent(evt)
 {
@@ -568,6 +569,7 @@ function startEventsListener()
 	var onSuccess = function(data,status)
 	{
 		onGameEvent(data);
+		serverState.nextEvent = data.nextEvent;
 		fetchNextEvent();
 	};
 	var onError = function(xhr, status, errorThrown)
@@ -579,7 +581,7 @@ function startEventsListener()
 	{
 		counter++;
 		$.ajax({
-		url: "/event?r="+rdm+"&i="+counter,
+		url: "/event/" + serverState.nextEvent + "?r="+rdm,
 		success: onSuccess,
 		error: onError,
 		dataType: "json"

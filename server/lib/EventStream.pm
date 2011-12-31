@@ -11,7 +11,7 @@ sub new
 	my $class = shift;
 	return bless {
 		waiting_listeners => [],
-		queued_events => [],
+		sent_events => [],
 		}, $class;
 }
 
@@ -20,9 +20,11 @@ sub handle_event_request
 	my $self = shift;
 	my ($req, $http) = @_;
 
-	if ($self->{queued_events} && @{$self->{queued_events}})
+	my $path = $req->uri;
+	my $req_id = ($path =~ m{^/event/(\d+)} and $1) || $self->next_id;
+
+	if (my $evt = $self->{sent_events}->[$req_id])
 	{
-		my $evt = shift @{$self->{queued_events}};
 		send_event($evt, $http);
 		return;
 	}
@@ -40,16 +42,18 @@ sub post_event
 	my $self = shift;
 	my ($evt) = @_;
 
-	if ($self->{waiting_listeners} && @{$self->{waiting_listeners}})
+	$evt->{id} = $self->next_id;
+	$evt->{nextEvent} = $evt->{id} + 1;
+	push @{$self->{sent_events}}, $evt;
+
+	if (my $wl = delete $self->{waiting_listeners})
 	{
-		my $http = shift @{$self->{waiting_listeners}};
-		send_event($evt, $http);
+		foreach my $http (@$wl)
+		{
+			send_event($evt, $http);
+		}
 	}
-	else
-	{
-		$self->{queued_events} ||= [];
-		push @{$self->{queued_events}}, $evt;
-	}
+
 	return $evt;
 }
 
@@ -63,6 +67,13 @@ sub send_event
 	$resp->content($content);
 	$http->write_message($resp);
 	return;
+}
+
+sub next_id
+{
+	my $self = shift;
+	my $len = @{$self->{sent_events}};
+	return $len;
 }
 
 1;
