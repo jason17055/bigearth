@@ -35,7 +35,71 @@ sub load_map
 
 	$self->{map_name} = $map_name;
 	$self->{map} = decode_json($data);
+	$self->{geometry} = Geometry1->new(length($self->{map}->{terrain}->[0]), scalar(@{$self->{map}->{terrain}}));
+
+	$self->auto_create_demands();
+
 	return;
+}
+
+sub auto_create_demands
+{
+	my $self = shift;
+
+	my %all_resource_types;
+	foreach my $city_id (keys %{$self->{map}->{cities}})
+	{
+		my $c = $self->{map}->{cities}->{$city_id};
+		foreach my $resource (@{$c->{offers}})
+		{
+			$all_resource_types{$resource} ||= {};
+			$all_resource_types{$resource}->{$city_id} = 1;
+		}
+	}
+
+	my @all_demands;
+	foreach my $city_id (keys %{$self->{map}->{cities}})
+	{
+		my $c = $self->{map}->{cities}->{$city_id};
+		foreach my $resource (keys %all_resource_types)
+		{
+			my $r = $all_resource_types{$resource};
+			next if $r->{$city_id};
+
+			my $best = 9 ** 9;
+			foreach my $src (keys %$r)
+			{
+				my $d = $self->{geometry}->simple_distance($city_id, $src);
+				if ($d < $best)
+				{
+					$best = $d;
+				}
+			}
+
+			my $value = int(($best * 0.5)+0.5);
+			if ($value >= 1)
+			{
+				push @all_demands, [ $city_id, $resource, $value ];
+			}
+		}
+	}
+
+	shuffle_array(\@all_demands);
+	$self->{future_demands} = \@all_demands;
+}
+
+sub shuffle_array
+{
+	my ($a) = @_;
+	my $l = @$a;
+	for (my $i = 0; $i < $l; $i++)
+	{
+		my $j = $i + int(rand($l - $i));
+		my $t = $a->[$i];
+		$a->[$i] = $a->[$j];
+		$a->[$j] = $t;
+	}
+	return $a;
 }
 
 sub new_player
@@ -211,6 +275,47 @@ sub handle_editMap_action
 	close $fh;
 
 	return;
+}
+
+package Geometry1;
+
+sub new
+{
+	my $class = shift;
+	my ($width, $height) = @_;
+	return bless { width => $width, height => $height }, $class;
+}
+
+sub simple_distance
+{
+	my $self = shift;
+	my ($cell1, $cell2) = @_;
+
+	my $row1 = $self->get_cell_row($cell1);
+	my $col1 = $self->get_cell_column($cell1);
+	my $row2 = $self->get_cell_row($cell2);
+	my $col2 = $self->get_cell_column($cell2);
+
+	my $dist_rows = abs($row2 - $row1);
+	my $dist_cols = abs($col2 - $col1);
+	my $diag = int($dist_rows / 2);
+	return $dist_rows + ($dist_cols > $diag ? $dist_cols - $diag : 0);
+}
+
+sub get_cell_row
+{
+	my $self = shift;
+	my ($cell_idx) = @_;
+
+	return int($cell_idx / $self->{width});
+}
+
+sub get_cell_column
+{
+	my $self = shift;
+	my ($cell_idx) = @_;
+
+	return $cell_idx % $self->{width};
 }
 
 1;
