@@ -23,11 +23,11 @@ my $main = MainLoop->new();
 openlog "trains-server", "cons,pid,perror", "user";
 setup_listener();
 
+use TrainsGame;
 my $server_start_time = time();
-my $gamestate = {
-	rails => {},
-	map => load_map($map_name),
-	};
+my $gamestate = TrainsGame->new();
+$gamestate->load_map($map_name);
+
 post_gametable_advertisement();
 my %queued_events_by_sid;
 my %waiting_event_listeners_by_sid;
@@ -259,22 +259,6 @@ sub handle_build_request
 		{ event => "track-built" });
 
 	return;
-}
-
-sub load_map
-{
-	my ($map_name) = @_;
-
-	my $mapdir = "../html/maps";
-	my $file = "$mapdir/$map_name.txt";
-	open my $fh, "<", $file
-		or die "$file: $!\n";
-	local $/;
-	my $data = <$fh>;
-	close $fh
-		or die "$file: $!\n";
-
-	return decode_json($data);
 }
 
 sub handle_editMap_request
