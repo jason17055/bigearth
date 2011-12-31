@@ -109,6 +109,7 @@ sub new_player
 
 	$self->{players}->{$pid} = {
 		money => 50,
+		demands => [ splice @{$self->{future_demands}}, 0, 5 ],
 		};
 }
 
@@ -151,6 +152,7 @@ sub handle_gamestate_request
 		my $p = $self->{players}->{$pid};
 		$stat_struct->{players}->{$pid} = {
 			money => $p->{money},
+			demands => $p->{demands},
 			};
 	}
 

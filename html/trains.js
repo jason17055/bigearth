@@ -643,6 +643,17 @@ function onGameState()
 	}
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
+	if (serverState.players)
+	{
+		var p = serverState.players[getPlayerId()];
+		if (p)
+		{
+			if (p.demands)
+			{
+				curPlayer.demands = p.demands;
+			}
+		}
+	}
 
 	if (!eventsListenerEnabled)
 	{
