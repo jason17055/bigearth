@@ -102,8 +102,8 @@ sub handle_http_request
 	my $path = $req->uri;
 
 	# look for and read the "sid" cookie in the request
-	my $cookies = $req->header("Cookie");
-	my $sid = (grep $_, map { /sid=(.*)/ and $1 } split /\s*;\s*/, $cookies)[0];
+	my $cookies = $req->header("Cookie") || "";
+	my $sid = (grep $_, map { /sid=(.*)/ and $1 } split /\s*;\s*/, $cookies)[0] || "-";
 
 	local $ENV{SESSION_ID} = $sid;
 	local $ENV{REMOTE_ADDR} = $http->{tcp_sd}->peerhost;
