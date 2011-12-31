@@ -20,7 +20,7 @@ var curPlayer = {
 //           \  /          20px
 //            \/          _
 
-var CELLS_PER_ROW = 13;
+var CELLS_PER_ROW = 1;
 var CELL_WIDTH = 64;
 var CELL_HEIGHT;
 var CELL_ASCENT;
@@ -490,9 +490,6 @@ function onResize()
 }
 window.onresize = onResize;
 $(onResize);
-$(function() {
-	beginLoadMap("nippon");
-});
 
 function beginLoadMap(mapName)
 {
@@ -608,9 +605,24 @@ function onGameState()
 		f();
 	}
 
+	var firstLoad = (CELLS_PER_ROW == 1);
+
+	if (serverState.map)
+	{
+		mapData = serverState.map;
+		if (!mapData.rivers)
+			mapData.rivers = {};
+		if (!mapData.rails)
+			mapData.rails = {};
+		CELLS_PER_ROW = mapData.terrain[0].length;
+	}
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
-	repaint();
+
+	if (firstLoad)
+		zoomShowAll();
+	else
+		repaint();
 
 	if (!eventsListenerEnabled)
 	{

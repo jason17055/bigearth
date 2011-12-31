@@ -203,6 +203,7 @@ sub get_gamestate
 	serverTime => int((time - $server_start_time) * 1000),
 	startTime => 120000,
 	rails => $gamestate->{rails},
+	map => $gamestate->{map},
 	};
 }
 
