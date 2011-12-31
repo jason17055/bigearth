@@ -27,6 +27,8 @@ use TrainsGame;
 our $server_start_time = time();
 my $gamestate = TrainsGame->new();
 $gamestate->load_map($map_name);
+$gamestate->new_player("1");
+$gamestate->new_player("2");
 
 use EventStream;
 $gamestate->{events} = EventStream->new();

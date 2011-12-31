@@ -47,6 +47,15 @@ $(function() {
 	img.src = "terrain_mountain.png";
 });
 
+function getPlayerId()
+{
+	if (location.hash)
+	{
+		return location.hash.substr(1);
+	}
+	return "1";
+}
+
 function getCellRow(cellIdx)
 {
 	return Math.floor(cellIdx / CELLS_PER_ROW);
@@ -536,11 +545,11 @@ function fetchGameState()
 	};
 
 	$.ajax({
-	url: "/gamestate",
-	success: onSuccess,
-	error: onError,
-	dataType: "json"
-	});
+		url: "/gamestate",
+		success: onSuccess,
+		error: onError,
+		dataType: "json"
+		});
 }
 $(fetchGameState);
 
@@ -557,7 +566,27 @@ var nextEventId = null;
 
 function onGameEvent(evt)
 {
-	alert("event " + evt.event);
+	if (evt.rails)
+	{
+		for (var i in evt.rails)
+		{
+			mapData.rails[i] = evt.rails[i];
+		}
+	}
+	if (evt.playerMoney)
+	{
+		for (var pid in evt.playerMoney)
+		{
+			var p = serverState.players[pid];
+			if (p)
+			{
+				var newBalance = evt.playerMoney[pid];
+				p.money = newBalance;
+			}
+		}
+	}
+
+	onGameState();
 }
 
 function startEventsListener()
@@ -594,19 +623,6 @@ function startEventsListener()
 
 function onGameState()
 {
-	var curTime = getGameTime();
-	//if (curTime < serverState.startTime)
-	{
-		var f = function() {
-			var curTime = getGameTime();
-			var secs = Math.floor(curTime / 1000);
-			$('#trainStartClock').text(secs);
-			document.title = secs;
-			setTimeout(f, 1000 * (secs+1) - curTime);
-			};
-		f();
-	}
-
 	var firstLoad = (CELLS_PER_ROW == 1);
 
 	if (serverState.map)
@@ -621,14 +637,25 @@ function onGameState()
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
 
+	if (!eventsListenerEnabled)
+	{
+		startEventsListener();
+	}
+
 	if (firstLoad)
 		zoomShowAll();
 	else
 		repaint();
 
-	if (!eventsListenerEnabled)
+	var pid = getPlayerId();
+	var p = serverState.players[pid];
+	if (p)
 	{
-		startEventsListener();
+		$('#cashIndicator').text(p.money);
+	}
+	else
+	{
+		$('#cashIndicator').text("");
 	}
 }
 
@@ -1420,18 +1447,13 @@ function commitBuilding()
 	{
 		a.push(i);
 	}
+
 	sendRequest("build",
 		{
+		player: getPlayerId(),
 		cost: cost,
 		rails: a.join(' ')
 		});
-
-	$('#cashIndicator').text(money);
-
-	for (var i in isBuilding.rails)
-	{
-		//mapData.rails[i] = isBuilding.rails[i];
-	}
 
 	isBuilding = null;
 	$('#buildTrackInfo').fadeOut();
@@ -2258,10 +2280,6 @@ outerLoop:
 		return fromIdx;
 	}
 }
-
-$(function() {
-	$('#cashIndicator').text(50);
-});
 
 function spaces(l)
 {

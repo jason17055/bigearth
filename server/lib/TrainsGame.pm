@@ -11,6 +11,7 @@ sub new
 	my $class = shift;
 	my $self = {
 		rails => {},
+		players => {},
 		};
 	return bless $self, $class;
 }
@@ -35,6 +36,16 @@ sub load_map
 	$self->{map_name} = $map_name;
 	$self->{map} = decode_json($data);
 	return;
+}
+
+sub new_player
+{
+	my $self = shift;
+	my ($pid) = @_;
+
+	$self->{players}->{$pid} = {
+		money => 50,
+		};
 }
 
 sub my_unescape
@@ -66,10 +77,18 @@ sub handle_gamestate_request
 	my $stat_struct = {
 		serverTime => int((time - $main::server_start_time) * 1000),
 		startTime => 120000,
+		nextEvent => $self->{events}->next_id,
 		rails => $self->{rails},
 		map => $self->{map},
-		nextEvent => $self->{events}->next_id,
+		players => {},
 		};
+	foreach my $pid (keys %{$self->{players}})
+	{
+		my $p = $self->{players}->{$pid};
+		$stat_struct->{players}->{$pid} = {
+			money => $p->{money},
+			};
+	}
 
 	my $resp = HTTP::Response->new("200", "OK");
 	$resp->header("Content-Type", "text/json");
@@ -117,12 +136,31 @@ sub handle_build_action
 	my ($args_arrayref) = @_;
 	my %args = @$args_arrayref;
 
+	my $pid = $args{player} || 1;
+	my $p = $self->{players}->{$pid}
+		or return;
+
+	syslog "info", "player %s is building %d worth of tracks",
+			$pid, $args{cost};
+
+	my %changes;
 	foreach my $track_idx (split /\s+/, $args{rails})
 	{
-		$self->{rails}->{$track_idx} = 1;
+		if (!$self->{rails}->{$track_idx}
+			|| $self->{rails}->{$track_idx} ne $pid)
+		{
+			$self->{rails}->{$track_idx} = $pid;
+			$changes{$track_idx} = $pid;
+		}
 	}
+
+	$p->{money} -= $args{cost};
 	$self->{events}->post_event(
-		{ event => "track-built" }
+		{
+		event => "track-built",
+		rails => \%changes,
+		playerMoney => { $pid => $p->{money} },
+		}
 		);
 
 	return;
