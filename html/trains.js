@@ -599,23 +599,29 @@ function onGameEvent(evt)
 function startEventsListener()
 {
 	var rdm = new Date().getTime();
-	var counter = 0;
+	var errorCounter = 0;
 
 	var fetchNextEvent;
 	var onSuccess = function(data,status)
 	{
+		errorCounter = 0;
 		onGameEvent(data);
 		serverState.nextEvent = data.nextEvent;
 		fetchNextEvent();
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
+		errorCounter++;
+		if (errorCounter < 3)
+		{
+			fetchNextEvent();
+			return;
+		}
 		alert("fetchEvent error " + status + " " + errorThrown);
 	};
 
 	fetchNextEvent = function()
 	{
-		counter++;
 		$.ajax({
 		url: "/event/" + serverState.nextEvent + "?r="+rdm,
 		success: onSuccess,
