@@ -134,6 +134,19 @@ sub handle_join_request
 	return $resp;
 }
 
+sub enum_resource_types
+{
+	my $iconsdir = "../html/resource_icons";
+	opendir my $dh, $iconsdir
+		or return ();
+	my @found = grep $_,
+		map { /^(.*?)\.png/ and $1 }
+		readdir $dh;
+	closedir $dh
+		or die "$iconsdir: $!\n";
+	return @found;
+}
+
 sub handle_gamestate_request
 {
 	my $self = shift;
@@ -146,6 +159,7 @@ sub handle_gamestate_request
 		rails => $self->{rails},
 		map => $self->{map},
 		players => {},
+		allServerResourceTypes => [ enum_resource_types() ],
 		};
 	foreach my $pid (keys %{$self->{players}})
 	{

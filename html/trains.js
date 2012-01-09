@@ -2513,7 +2513,8 @@ function editmap_reloadEditCityPane()
 		}
 	}
 
-	var types = [ "coal", "imports", "furniture", "passengers",
+	var types = (serverState && serverState.allServerResourceTypes) ||
+		[ "coal", "imports", "furniture", "passengers",
 		"plastics", "steel", "wood" ];
 	for (var i in types)
 	{
