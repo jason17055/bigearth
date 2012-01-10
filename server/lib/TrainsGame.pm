@@ -5,6 +5,7 @@ use JSON;
 use Time::HiRes "time";
 use Sys::Syslog;
 use URI::Escape;
+use Digest::SHA "sha1_hex";
 
 sub new
 {
@@ -12,6 +13,7 @@ sub new
 	my $self = {
 		rails => {},
 		players => {},
+		next_pid => 1,
 		};
 	return bless $self, $class;
 }
@@ -105,12 +107,13 @@ sub shuffle_array
 sub new_player
 {
 	my $self = shift;
-	my ($pid) = @_;
 
+	my $pid = $self->{next_pid}++;
 	$self->{players}->{$pid} = {
 		money => 50,
 		demands => [ splice @{$self->{future_demands}}, 0, 5 ],
 		};
+	return $pid;
 }
 
 sub my_unescape
@@ -120,18 +123,54 @@ sub my_unescape
 	return uri_unescape($x);
 }
 
+sub create_session
+{
+	my $self = shift;
+	my ($id) = @_;
+
+	our $next_unique_session_idx;
+	$next_unique_session_idx++;
+	my $sid = sha1_hex("$ENV{SECRET}.$$.$next_unique_session_idx");
+	my $session = {
+		sid => $sid,
+		id => $id,
+		};
+	$self->{sessions}->{$sid} = $session;
+
+	return $sid;
+}
+
 sub handle_join_request
 {
 	my $self = shift;
 	my ($req) = @_;
 
-	my $path = $req->uri;
-	my $sid = uri_unescape($path =~ /sid=([^&;]*)$/ and $1);
-	
-	my $resp = HTTP::Response->new("303");
-	$resp->header("Set-Cookie", "sid=$sid");
-	$resp->header("Location", "/");
-	return $resp;
+	my ($path, $args) = split /\?/, scalar($req->uri), 2;
+	my %args = map {
+		my ($k, $v) = split /=/, $_, 2;
+		my_unescape($k) => my_unescape($v)
+		}
+		split /&/, $args;
+
+	my $expected_cs = sha1_hex("$ENV{SECRET}.$$.$args{id}");
+	if (lc $expected_cs eq lc $args{cs})
+	{
+		my $sid = $self->create_session($args{id});
+		my $pid = $self->new_player();
+		$self->{players}->{$pid}->{id} = $args{id};
+
+		my $resp = HTTP::Response->new("303");
+		$resp->header("Set-Cookie", "sid=$sid");
+		$resp->header("Location", "/");
+		return $resp;
+	}
+	else
+	{
+		my $resp = HTTP::Response->new("500");
+		$resp->header("Content-Type", "text/plain");
+		$resp->content("Invalid join request; got $args{cs}, expected $expected_cs");
+		return $resp;
+	}
 }
 
 sub enum_resource_types

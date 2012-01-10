@@ -27,12 +27,11 @@ use TrainsGame;
 our $server_start_time = time();
 my $gamestate = TrainsGame->new();
 $gamestate->load_map($map_name);
-$gamestate->new_player("1");
-$gamestate->new_player("2");
 
 use EventStream;
 $gamestate->{events} = EventStream->new();
 
+$ENV{SECRET} ||= localtime;
 post_gametable_advertisement();
 
 eval { $main->run };
@@ -111,10 +110,13 @@ sub handle_http_request
 	local $ENV{SESSION_ID} = $sid;
 	local $ENV{REMOTE_ADDR} = $http->{tcp_sd}->peerhost;
 	local $ENV{REMOTE_USER};
+	if (my $s = $gamestate->{sessions} && $gamestate->{sessions}->{$sid})
+	{
+		$ENV{REMOTE_USER} = $s->{id};
+	}
 
-	syslog "info", "%s %s %s %s %s",
+	syslog "info", "%s %s %s %s",
 			$ENV{REMOTE_ADDR} || "-",
-			$ENV{SESSION_ID} || "-",
 			$ENV{REMOTE_USER} || "-",
 			$method,
 			$path;
@@ -187,7 +189,7 @@ sub post_gametable_advertisement
 
 	my $ua = LWP::UserAgent->new;
 	my $url = "$master_url/server-api/new_gametable.php";
-	my $resp = $ua->request(POST $url, [ map => $map_name, url => $my_url ]);
+	my $resp = $ua->request(POST $url, [ map => $map_name, url => $my_url, secret => "$ENV{SECRET}.$$" ]);
 	if ($resp->is_success)
 	{
 		my @lines = split /\n/, $resp->content;
