@@ -37,15 +37,37 @@ updateMapMetrics();
 MAP_ORIGIN_X = CELL_WIDTH/2;
 MAP_ORIGIN_Y = CELL_ASCENT/2;
 
+var pendingImages = 0;
 var terrainImages = {};
 $(function() {
+	pendingImages++;
 	var img = new Image();
 	img.onload = function() {
 			terrainImages.mountain = img;
-			repaint();
+			if (--pendingImages == 0)
+				repaint();
 		};
 	img.src = "terrain_mountain.png";
 });
+
+var resourceImages = {};
+var resourceImagesFetch = {};
+function loadResourceImage(resourceType)
+{
+	if (resourceImagesFetch[resourceType])
+		return;
+
+	resourceImagesFetch[resourceType] = true;
+	pendingImages++;
+
+	var img = new Image();
+	img.onload = function() {
+		resourceImages[resourceType] = img;
+		if (--pendingImages == 0)
+			repaint();
+		};
+	img.src = "resource_icons/" + resourceType + ".png";
+}
 
 function getPlayerId()
 {
@@ -486,6 +508,24 @@ function repaint()
 			ctx.fillText(cityName,
 			p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2,
 			p.y + CELL_ASCENT);
+
+			var xx = p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2;
+			for (var o in mapData.cities[cityLoc].offers)
+			{
+				var resourceType = mapData.cities[cityLoc].offers[o];
+				if (resourceImages[resourceType])
+				{
+					ctx.drawImage(resourceImages[resourceType],
+					xx,
+					p.y + CELL_ASCENT,
+					16,16);
+					xx += 16;
+				}
+				else
+				{
+					loadResourceImage(resourceType);
+				}
+			}
 		}
 	}
 	ctx.restore();
