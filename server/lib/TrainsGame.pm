@@ -203,9 +203,12 @@ sub handle_gamestate_request
 	foreach my $pid (keys %{$self->{players}})
 	{
 		my $p = $self->{players}->{$pid};
+		my $is_own = $p->{id} && $p->{id} eq $ENV{REMOTE_USER};
+
 		$stat_struct->{players}->{$pid} = {
 			money => $p->{money},
 			demands => $p->{demands},
+			($is_own ? (isOwn => JSON::true) : ()),
 			};
 	}
 

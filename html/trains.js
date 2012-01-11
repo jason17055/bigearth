@@ -49,9 +49,9 @@ $(function() {
 
 function getPlayerId()
 {
-	if (location.hash)
+	if (serverState && serverState.myPlayerId)
 	{
-		return location.hash.substr(1);
+		return serverState.myPlayerId;
 	}
 	return "1";
 }
@@ -651,12 +651,17 @@ function onGameState()
 		mapData.rails = serverState.rails;
 	if (serverState.players)
 	{
-		var p = serverState.players[getPlayerId()];
-		if (p)
+		for (var i in serverState.players)
 		{
-			if (p.demands)
+			var p = serverState.players[i];
+			if (p.isOwn)
 			{
-				curPlayer.demands = p.demands;
+				serverState.myPlayerId = i;
+				document.title = "Trains : Seat " + i;
+				if (p.demands)
+				{
+					curPlayer.demands = p.demands;
+				}
 			}
 		}
 	}
@@ -1402,12 +1407,15 @@ function zoomShowAll()
 	var cw1 = canvas.width / CELLS_PER_ROW;
 	var cw2 = (canvas.height / mapData.terrain.length) * 64/56;
 
-	CELL_WIDTH = 2*Math.round((cw1 < cw2 ? cw1 : cw2) / 2);
+	var mapWidth = CELLS_PER_ROW;
+	var mapHeight = mapData.terrain.length;
+
+	CELL_WIDTH = 12;
 	updateMapMetrics();
-	MAP_ORIGIN_X = CELL_WIDTH/2;
-	MAP_ORIGIN_Y = CELL_ASCENT/2;
-	repaint();
-	updateAllSpritePositions();
+	MAP_ORIGIN_X = -(canvas.width - mapWidth * CELL_WIDTH) / 2;
+	MAP_ORIGIN_Y = -(canvas.height - mapHeight * CELL_HEIGHT) / 2;
+
+	setZoomLevel(cw1 < cw2 ? cw1 : cw2);
 }
 
 function beginBuilding()
