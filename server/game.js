@@ -19,6 +19,7 @@ function setMap(mapName, map)
 {
 	G.mapName = mapName;
 	G.map = map;
+	G.map.geometry = loadGeometry(map.terrain.length, map.terrain[0].length);
 }
 
 function autoCreateDemands()

@@ -11,6 +11,11 @@ function shuffleArray(arr)
 	return;
 }
 
+function loadGeometry(width, height)
+{
+	CELLS_PER_ROW = width;
+}
+
 function getCellRow(cellIdx)
 {
 	return Math.floor(cellIdx / CELLS_PER_ROW);
@@ -180,4 +185,5 @@ if (typeof global !== 'undefined')
 {
 	global.shuffleArray = shuffleArray;
 	global.simpleDistance = simpleDistance;
+	global.loadGeometry = loadGeometry;
 }
