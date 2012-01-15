@@ -2,7 +2,25 @@ var HTTP = require('http');
 var URL = require('url');
 var FS = require('fs');
 
-var TS = require('./trains-server.js');
+var GAME = require('./game.js');
+
+// scan the 'resource_icons' directory to figure out the names of all
+// resources that this server knows about...
+//
+function enumResourceTypes()
+{
+	var filenames = FS.readdirSync('../html/resource_icons');
+	var types = new Array();
+	for (var i in filenames)
+	{
+		if (filenames[i].match(/\.png$/))
+		{
+			var resourceType = filenames[i].substr(0, filenames[i].length - 4);
+			types.push(resourceType);
+		}
+	}
+	return types;
+}
 
 function handleStaticFileRequest(requestPath,request,response)
 {
@@ -40,6 +58,17 @@ function handleStaticFileRequest(requestPath,request,response)
 		});
 }
 
+function handleGameStateRequest(request,response)
+{
+	var gameState = getGameState();
+	gameState.allServerResourceTypes = enumResourceTypes();
+
+	response.writeHead(200, {'Content-Type':'text/plain'});
+	response.end(
+		JSON.stringify(gameState)
+		);
+};
+
 function handleRequest(request,response)
 {
 	var requestPath = URL.parse(request.url);
@@ -54,12 +83,25 @@ function handleRequest(request,response)
 
 	if (requestPath.href == "/gamestate")
 	{
-		return TS.handleGameStateRequest(request,response);
+		return handleGameStateRequest(request,response);
 	}
 
 	// assume it is a request for a file
 	return handleStaticFileRequest(requestPath.href,request,response);
 }
+
+function loadMap(mapName)
+{
+	var mapDir = "../html/maps";
+	var mapFileName = mapDir + '/' + mapName + '.txt';
+	console.log('Loading map data from ' + mapFileName);
+
+	var data = FS.readFileSync(mapFileName);
+	GAME.mapName = mapName;
+	GAME.map = JSON.parse(data);
+	autoCreateDemands();
+};
+loadMap('nippon');
 
 HTTP.createServer(handleRequest).listen(8124);
 console.log('Server running at http://localhost:8124/');

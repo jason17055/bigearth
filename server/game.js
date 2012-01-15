@@ -1,35 +1,72 @@
-var GAME = {};
-(function() {
+require('../html/trains-common.js');
 
-var serverState = {
+var G = {
 	rails: {},
 	map: {},
 	players: {}
 	};
 
-var loadMap = function(mapName)
-{
-	var mapDir = "../html/maps";
-	var data = FS.readFileSync(mapDir+"/"+mapName);
-	serverState.mapName = mapName;
-	serverState.map = JSON.parse(data);
-	autoCreateDemands();
-};
-
-GAME.getGameState = function()
+function getGameState()
 {
 	return {
-	rails: serverState.rails,
-	map: serverState.map,
+	rails: G.rails,
+	map: G.map,
 	players: {}
 	};
-};
-
-// end of scope
-})();
-
-if (!exports)
-{
-	exports = GAME;
 }
-exports.getGameState = GAME.getGameState;
+
+function autoCreateDemands()
+{
+	var allResourceTypes = {};
+	for (var cityId in G.map.cities)
+	{
+		var c = G.map.cities[cityId];
+		for (var i in c.offers)
+		{
+			if (!allResourceTypes[c.offers[i]])
+				allResourceTypes[c.offers[i]] = {};
+			allResourceTypes[c.offers[i]][cityId]=true;
+		}
+	}
+
+	G.map.futureDemands = new Array();
+	G.map.pastDemands = new Array();
+	for (var cityId in G.map.cities)
+	{
+		var c = G.map.cities[cityId];
+		var here = {};
+		for (var i in c.offers)
+		{
+			here[c.offers[i]] = true;
+		}
+
+		for (var rt in allResourceTypes)
+		{
+			if (here[rt])
+				continue;
+
+			// find nearest source of this resource
+			var best = G.map.terrain.length + CELLS_PER_ROW;
+			for (var s in allResourceTypes[rt])
+			{
+				var d = simpleDistance(cityId, s);
+				if (d < best) { best = d; }
+			}
+
+			var value = Math.round(best * .5);
+			if (value >= 1)
+			{
+				G.map.futureDemands.push(
+					[cityId, rt, value]
+					);
+			}
+		}
+	}
+	shuffleArray(G.map.futureDemands);
+}
+
+if (global)
+{
+	global.autoCreateDemands = autoCreateDemands;
+	global.getGameState = getGameState;
+}

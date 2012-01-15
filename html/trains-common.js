@@ -1,3 +1,16 @@
+function shuffleArray(arr)
+{
+	var l = arr.length;
+	for (var i = 0; i < l; i++)
+	{
+		var j = i + Math.floor(Math.random() * (l-i));
+		var t = arr[i];
+		arr[i] = arr[j];
+		arr[j] = t;
+	}
+	return;
+}
+
 function getCellRow(cellIdx)
 {
 	return Math.floor(cellIdx / CELLS_PER_ROW);
@@ -150,3 +163,7 @@ function hasTrackAt(cellIdx)
 		hasTrackAtDir(cellIdx, 5);
 }
 
+if (global)
+{
+	global.shuffleArray = shuffleArray;
+}
