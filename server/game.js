@@ -15,6 +15,12 @@ function getGameState()
 	};
 }
 
+function setMap(mapName, map)
+{
+	G.mapName = mapName;
+	G.map = map;
+}
+
 function autoCreateDemands()
 {
 	var allResourceTypes = {};
@@ -46,7 +52,7 @@ function autoCreateDemands()
 				continue;
 
 			// find nearest source of this resource
-			var best = G.map.terrain.length + CELLS_PER_ROW;
+			var best = 1E10;
 			for (var s in allResourceTypes[rt])
 			{
 				var d = simpleDistance(cityId, s);
@@ -65,8 +71,9 @@ function autoCreateDemands()
 	shuffleArray(G.map.futureDemands);
 }
 
-if (global)
+if (typeof global !== 'undefined')
 {
 	global.autoCreateDemands = autoCreateDemands;
 	global.getGameState = getGameState;
+	global.setMap = setMap;
 }

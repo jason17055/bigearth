@@ -97,8 +97,8 @@ function loadMap(mapName)
 	console.log('Loading map data from ' + mapFileName);
 
 	var data = FS.readFileSync(mapFileName);
-	GAME.mapName = mapName;
-	GAME.map = JSON.parse(data);
+	var map = JSON.parse(data);
+	setMap(mapName, map);
 	autoCreateDemands();
 };
 loadMap('nippon');
