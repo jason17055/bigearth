@@ -3,6 +3,7 @@ var URL = require('url');
 var FS = require('fs');
 
 var GAME = require('./game.js');
+var SESSIONS = require('./sessions.js');
 
 // scan the 'resource_icons' directory to figure out the names of all
 // resources that this server knows about...
@@ -60,14 +61,30 @@ function handleStaticFileRequest(requestPath,request,response)
 
 function handleGameStateRequest(request,response)
 {
+	var s = SESSIONS.getSessionFromCookie(request);
+
 	var gameState = getGameState();
 	gameState.allServerResourceTypes = enumResourceTypes();
+	gameState.identity = s.user;
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
 	response.end(
 		JSON.stringify(gameState)
 		);
-};
+}
+
+function handleJoinRequest(request,response)
+{
+	var sid = SESSIONS.newSession({
+		user: 'jlong'
+		});
+	response.writeHead(303, {
+		'Set-Cookie': SESSIONS.cookieName + "=" + sid,
+		'Content-Type': 'text/plain',
+		'Location': '/index.html'
+		});
+	response.end();
+}
 
 function handleRequest(request,response)
 {
@@ -84,6 +101,10 @@ function handleRequest(request,response)
 	if (requestPath.href == "/gamestate")
 	{
 		return handleGameStateRequest(request,response);
+	}
+	else if (requestPath.href == "/join")
+	{
+		return handleJoinRequest(request,response);
 	}
 
 	// assume it is a request for a file
