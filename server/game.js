@@ -3,7 +3,8 @@ require('../html/trains-common.js');
 var G = {
 	rails: {},
 	map: {},
-	players: {}
+	players: {},
+	nextPlayerId: 1
 	};
 
 function getGameState()
@@ -19,7 +20,7 @@ function setMap(mapName, map)
 {
 	G.mapName = mapName;
 	G.map = map;
-	G.map.geometry = loadGeometry(map.terrain.length, map.terrain[0].length);
+	G.map.geometry = loadGeometry(map.terrain[0].length, map.terrain.length);
 }
 
 function autoCreateDemands()
@@ -70,6 +71,16 @@ function autoCreateDemands()
 		}
 	}
 	shuffleArray(G.map.futureDemands);
+}
+
+function newPlayer()
+{
+	var pid = G.nextPlayerId++;
+	G.players[pid] = {
+		money: 50,
+		demands: G.map.futureDemands.splice(0,5)
+		};
+	return pid;
 }
 
 if (typeof global !== 'undefined')

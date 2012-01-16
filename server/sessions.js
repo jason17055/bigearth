@@ -34,11 +34,7 @@ function getSession(sid)
 
 function newSession(s)
 {
-	var sha1 = CRYPTO.createHash('sha1');
-	var data = CRYPTO.randomBytes(100);
-	sha1.update(data);
-
-	var sid = sha1.digest('hex');
+	var sid = CRYPTO.randomBytes(20).toString('hex');
 	mySessions[sid] = s;
 	return sid;
 }

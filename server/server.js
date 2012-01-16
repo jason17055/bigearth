@@ -1,7 +1,9 @@
 var HTTP = require('http');
 var URL = require('url');
 var FS = require('fs');
-
+var OS = require('os');
+var QS = require('querystring');
+var CRYPTO = require('crypto');
 var GAME = require('./game.js');
 var SESSIONS = require('./sessions.js');
 
@@ -65,7 +67,7 @@ function handleGameStateRequest(request,response)
 
 	var gameState = getGameState();
 	gameState.allServerResourceTypes = enumResourceTypes();
-	gameState.identity = s.user;
+	gameState.identity = s.identity;
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
 	response.end(
@@ -75,21 +77,43 @@ function handleGameStateRequest(request,response)
 
 function handleJoinRequest(request,response)
 {
-	var sid = SESSIONS.newSession({
-		user: 'jlong'
-		});
-	response.writeHead(303, {
-		'Set-Cookie': SESSIONS.cookieName + "=" + sid,
-		'Content-Type': 'text/plain',
-		'Location': '/index.html'
-		});
-	response.end();
+	var requestPath = URL.parse(request.url, true);
+	var args = requestPath.query;
+
+	var b = new Buffer(SECRET + '.' + args.id);
+	console.log('buffer is ' + b.toString());
+
+	var sha1 = CRYPTO.createHash('sha1');
+	sha1.update(b);
+	var expectedChecksum = sha1.digest('hex');
+	
+	if (args.cs == expectedChecksum)
+	{
+		var sid = SESSIONS.newSession({
+			identity: args[id]
+			});
+		response.writeHead(303, {
+			'Set-Cookie': SESSIONS.cookieName + "=" + sid,
+			'Content-Type': 'text/plain',
+			'Location': '/index.html'
+			});
+		response.end();
+	}
+	else
+	{
+		response.writeHead(500, {
+			'Content-Type': 'text/plain'
+			});
+		response.end('Invalid join request');
+		console.log("Invalid join request:");
+		console.log(" got cs=" + args.cs + "; expected " + expectedChecksum);
+	}
 }
 
 function handleRequest(request,response)
 {
 	var requestPath = URL.parse(request.url);
-	if (requestPath.href.match(/\.\.|\.\/|\/\./))
+	if (requestPath.pathname.match(/\.\.|\.\/|\/\./))
 	{
 		// prevent any requests that remotely look like
 		// they are trying to access a directory path with ..
@@ -98,17 +122,17 @@ function handleRequest(request,response)
 		return;
 	}
 
-	if (requestPath.href == "/gamestate")
+	if (requestPath.pathname == "/gamestate")
 	{
 		return handleGameStateRequest(request,response);
 	}
-	else if (requestPath.href == "/join")
+	else if (requestPath.pathname == "/join")
 	{
 		return handleJoinRequest(request,response);
 	}
 
 	// assume it is a request for a file
-	return handleStaticFileRequest(requestPath.href,request,response);
+	return handleStaticFileRequest(requestPath.pathname,request,response);
 }
 
 function loadMap(mapName)
@@ -124,5 +148,91 @@ function loadMap(mapName)
 };
 loadMap('nippon');
 
+function myPost(url, postVars, onSuccess, onError)
+{
+	var urlParsed = URL.parse(url);
+	var req = HTTP.request({
+		host: urlParsed.hostname,
+		port: urlParsed.port || 80,
+		method: 'POST',
+		path: urlParsed.path,
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+			}
+		}, function(resp) {
+			var collected = '';
+			resp.on('data', function(chunk) { collected += chunk; });
+			resp.on('end', function() {
+				if (resp.statusCode == 200)
+				{
+					if (onSuccess)
+					onSuccess(resp, collected);
+				}
+				else
+				{
+					if (onError)
+					onError(resp.statusCode, collected);
+				}
+			});
+		});
+	if (onError)
+		req.on('error', onError);
+	req.write(QS.stringify(postVars));
+	req.end();
+}
+
+var gameId;
+var SECRET = CRYPTO.randomBytes(20).toString('hex');
+function deleteAdvertisement()
+{
+	var onComplete = function()
+	{
+		process.exit(0);
+	};
+
+	if (!gameId)
+		return onComplete();
+
+	console.log("updating gametable advertisement...");
+	var postVars = {
+		status: newStatus
+		};
+	myPost('http://jason.long.name/trains/server-api/gametable.php?id=' + gameId,
+		postVars, onComplete, onComplete);
+}
+
+function postAdvertisement()
+{
+	var selfUrl = 'http://' + OS.hostname() + ':8124';
+	var postVars = {
+		map: 'nippon',
+		url: selfUrl,
+		secret: SECRET
+		};
+
+	var onSuccess = function(resp, data)
+	{
+		var lines = data.split("\n");
+		if (lines[0] == "ok")
+		{
+			var parts = lines[1].split("=");
+			gameId = parts[1];
+			console.log("my game id is " + gameId);
+		}
+	};
+	var onError = function(err)
+	{
+		console.log('problem with request: ' + err.message);
+	};
+	myPost('http://jason.long.name/trains/server-api/new_gametable.php',
+		postVars, onSuccess, onError);
+}
+
+console.log("posting gametable advertisement...");
+postAdvertisement();
+
 HTTP.createServer(handleRequest).listen(8124);
 console.log('Server running at http://localhost:8124/');
+
+//process.on('SIGINT', deleteAdvertisement);
+//process.on('SIGTERM', deleteAdvertisement);
