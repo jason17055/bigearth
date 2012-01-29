@@ -15,14 +15,16 @@ You are <?php echo htmlspecialchars($_SESSION['uid'])?>.
 
 <?php
 
-$sql = "SELECT url, map
+$sql = "SELECT url, map, secret
 	FROM GameTable
 	WHERE status='A'
+	AND created >= SUBTIME(NOW(),'12:00:00')
 	ORDER BY created DESC";
 $result = mysqli_query($database, $sql);
 while ($row = mysqli_fetch_assoc($result))
 {
-	$join_url = $row['url'] . "/join?sid=" . urlencode(session_id());
+	$cs = sha1($row['secret'] . "." . $_SESSION['uid']);
+	$join_url = $row['url'] . "/join?id=" . urlencode($_SESSION['uid']) . "&cs=" . urlencode($cs);
 	?>
 <tr>
 <td><?php echo htmlspecialchars($row['map'])?></td>
