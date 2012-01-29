@@ -6,6 +6,7 @@ var QS = require('querystring');
 var CRYPTO = require('crypto');
 var GAME = require('./game.js');
 var SESSIONS = require('./sessions.js');
+var SECRET = CRYPTO.randomBytes(20).toString('hex');
 
 // scan the 'resource_icons' directory to figure out the names of all
 // resources that this server knows about...
@@ -80,9 +81,8 @@ function handleJoinRequest(request,response)
 	var requestPath = URL.parse(request.url, true);
 	var args = requestPath.query;
 
+	// calculate what the checksum *should* be for this identity
 	var b = new Buffer(SECRET + '.' + args.id);
-	console.log('buffer is ' + b.toString());
-
 	var sha1 = CRYPTO.createHash('sha1');
 	sha1.update(b);
 	var expectedChecksum = sha1.digest('hex');
@@ -90,7 +90,7 @@ function handleJoinRequest(request,response)
 	if (args.cs == expectedChecksum)
 	{
 		var sid = SESSIONS.newSession({
-			identity: args[id]
+			identity: args.id
 			});
 		response.writeHead(303, {
 			'Set-Cookie': SESSIONS.cookieName + "=" + sid,
@@ -182,7 +182,6 @@ function myPost(url, postVars, onSuccess, onError)
 }
 
 var gameId;
-var SECRET = CRYPTO.randomBytes(20).toString('hex');
 function deleteAdvertisement()
 {
 	var onComplete = function()
