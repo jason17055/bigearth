@@ -2410,6 +2410,22 @@ function editmap_deleteCity()
 
 function showPlayers()
 {
+	$('#gameRosterPane .insertedRow').remove();
+	if (serverState && serverState.players)
+	{
+		for (var pid in serverState.players)
+		{
+			var p = serverState.players[pid];
+
+			var $row = $('#gameRosterPaneTableTemplate').clone();
+			$row.addClass('insertedRow');
+			$('.playerId', $row).text(pid);
+			$('.playerName', $row).text(p.identity || 'Anonymous');
+			$('#gameRosterPane table').append($row);
+			$row.show();
+		}
+	}
+
 	$('#gameRosterPane').fadeIn();
 
 	var $widget = $('#gameRosterPane');

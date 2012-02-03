@@ -169,7 +169,6 @@ function handleActionRequest(verb, request, response)
 	}
 
 	var s = SESSIONS.getSessionFromCookie(request);
-	request.remoteUser = s.identity;
 
 	var body = '';
 	request.on('data', function(chunk) {
@@ -181,7 +180,7 @@ function handleActionRequest(verb, request, response)
 		});
 	request.on('end', function() {
 		var requestData = QS.parse(body);
-		var responseData = actionHandlers[verb](requestData, request);
+		var responseData = actionHandlers[verb](requestData, s.identity);
 		if (responseData)
 		{
 			response.writeHead(200, {

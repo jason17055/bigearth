@@ -13,11 +13,7 @@ function getGameState()
 	for (var pid in G.players)
 	{
 		var pp = G.players[pid];
-		p[pid] = {
-			id: pid,
-			money: pp.money,
-			demands: pp.demands
-			};
+		p[pid] = pp;
 	}
 	return {
 	rails: G.rails,
@@ -93,10 +89,11 @@ function newPlayer()
 	return pid;
 }
 
-function doJoin(joinData, request)
+function doJoin(joinData, remoteUser)
 {
 	var pid = newPlayer();
-	G.players[pid].identity = request.remoteUser;
+	G.players[pid].identity = remoteUser;
+	console.log("remote user is " + remoteUser);
 
 	var np = {};
 	np[pid] = G.players[pid];
