@@ -9,10 +9,20 @@ var G = {
 
 function getGameState()
 {
+	var p = {};
+	for (var pid in G.players)
+	{
+		var pp = G.players[pid];
+		p[pid] = {
+			id: pid,
+			money: pp.money,
+			demands: pp.demands
+			};
+	}
 	return {
 	rails: G.rails,
 	map: G.map,
-	players: {}
+	players: p
 	};
 }
 
@@ -83,9 +93,29 @@ function newPlayer()
 	return pid;
 }
 
+function doJoin(joinData, request)
+{
+	var pid = newPlayer();
+	G.players[pid].identity = request.remoteUser;
+
+	var np = {};
+	np[pid] = G.players[pid];
+
+	postEvent({
+		event: "new-player",
+		newPlayers: np
+		});
+	return { pid: pid };
+}
+
+var actionHandlers = {
+	join: doJoin
+	};
+
 if (typeof global !== 'undefined')
 {
 	global.autoCreateDemands = autoCreateDemands;
 	global.getGameState = getGameState;
 	global.setMap = setMap;
+	global.actionHandlers = actionHandlers;
 }

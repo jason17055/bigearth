@@ -468,6 +468,13 @@ function onGameEvent(evt)
 			mapData.rails[i] = evt.rails[i];
 		}
 	}
+	if (evt.newPlayers)
+	{
+		for (var pid in evt.newPlayers)
+		{
+			serverState.players[pid] = evt.newPlayers[pid];
+		}
+	}
 	if (evt.playerMoney)
 	{
 		for (var pid in evt.playerMoney)

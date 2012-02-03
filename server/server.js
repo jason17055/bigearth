@@ -64,7 +64,8 @@ function handleStaticFileRequest(requestPath,request,response)
 
 var EVENTS = {
 	nextEventId: 1,
-	waitingListeners: []
+	waitingListeners: [],
+	sentEvents: {}
 	};
 
 function handleGameStateRequest(request,response)
@@ -139,9 +140,11 @@ function postEvent(evt)
 	}
 	EVENTS.waitingListeners = [];
 }
+global.postEvent = postEvent;
 
 function handleEventRequest(eventId, request, response)
 {
+	console.log('got event request ' + eventId);
 	if (eventId && parseInt(eventId) < EVENTS.nextEventId)
 	{
 		// request for an already sent event
@@ -153,6 +156,45 @@ function handleEventRequest(eventId, request, response)
 		// must wait
 		EVENTS.waitingListeners.push(response);
 	}
+}
+
+function handleActionRequest(verb, request, response)
+{
+	console.log('got request ' + verb);
+	if (!actionHandlers[verb])
+	{
+		response.writeHead(404);
+		response.end('Bad request\n');
+		return;
+	}
+
+	var s = SESSIONS.getSessionFromCookie(request);
+	request.remoteUser = s.identity;
+
+	var body = '';
+	request.on('data', function(chunk) {
+		body += chunk;
+		if (body.length >= 1e6) {
+			// FLOOD ATTACK OR FAULTY CLIENT
+			request.connection.destroy();
+		}
+		});
+	request.on('end', function() {
+		var requestData = QS.parse(body);
+		var responseData = actionHandlers[verb](requestData, request);
+		if (responseData)
+		{
+			response.writeHead(200, {
+				'Content-Type': 'text/json'
+				});
+			response.end(JSON.stringify(responseData));
+		}
+		else
+		{
+			response.writeHead(202);
+			response.end();
+		}
+		});
 }
 
 function handleRequest(request,response)
@@ -178,8 +220,12 @@ function handleRequest(request,response)
 	else if (requestPath.pathname.match(/^\/event\//))
 	{
 		var eventId = requestPath.pathname.substr(7);
-		console.log('got event request ' + eventId);
 		return handleEventRequest(eventId, request, response);
+	}
+	else if (requestPath.pathname.match(/^\/request\//))
+	{
+		var verb = requestPath.pathname.substr(9);
+		return handleActionRequest(verb, request, response);
 	}
 
 	// assume it is a request for a file
