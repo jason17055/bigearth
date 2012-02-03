@@ -7,6 +7,7 @@ var isEditing = null;
 var curPlayer = {
 	demands: new Array()
 	};
+var curDialog = null;
 
 // each cell has the following shape
 //                        _
@@ -2017,18 +2018,8 @@ function showDemands()
 			);
 		$row.show();
 	}
-	$('#demandsPane').fadeIn();
 
-	var $widget = $('#demandsPane');
-	fixWidgetDimensions($widget);
-}
-
-function dismissDemandsPane()
-{
-	$('#demandsPane').fadeOut();
-	delete mapFeatures.filterCities;
-	delete mapFeatures.highlightCities;
-	repaint();
+	popupDialog('demandsPane');
 }
 
 function startTrainBtn()
@@ -2408,6 +2399,43 @@ function editmap_deleteCity()
 	$('#editCityPane').fadeOut();
 }
 
+function popupDialog(dialogName)
+{
+	var andThen = function()
+	{
+		var $widget = $(document.getElementById(dialogName));
+		$widget.fadeIn();
+		fixWidgetDimensions($widget);
+		curDialog = dialogName;
+	};
+
+	if (curDialog && curDialog != dialogName)
+	{
+		dismissCurrentDialog(andThen);
+	}
+	else
+	{
+		andThen();
+	}
+}
+
+function dismissCurrentDialog(andThen)
+{
+	if (curDialog == 'demandsPane')
+	{
+		delete mapFeatures.filterCities;
+		delete mapFeatures.highlightCities;
+		repaint();
+	}
+
+	if (curDialog)
+	{
+		var $widget = $(document.getElementById(curDialog));
+		curDialog = null;
+		$widget.fadeOut(400, andThen);
+	}
+}
+
 function showPlayers()
 {
 	$('#gameRosterPane .insertedRow').remove();
@@ -2426,15 +2454,7 @@ function showPlayers()
 		}
 	}
 
-	$('#gameRosterPane').fadeIn();
-
-	var $widget = $('#gameRosterPane');
-	fixWidgetDimensions($widget);
-}
-
-function dismissPlayers()
-{
-	$('#gameRosterPane').fadeOut();
+	popupDialog('gameRosterPane');
 }
 
 function joinGame()
