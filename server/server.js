@@ -82,7 +82,7 @@ function handleGameStateRequest(request,response)
 		);
 }
 
-function handleJoinRequest(request,response)
+function handleLoginRequest(request,response)
 {
 	var requestPath = URL.parse(request.url, true);
 	var args = requestPath.query;
@@ -110,8 +110,8 @@ function handleJoinRequest(request,response)
 		response.writeHead(500, {
 			'Content-Type': 'text/plain'
 			});
-		response.end('Invalid join request');
-		console.log("Invalid join request:");
+		response.end('Invalid login request');
+		console.log("Invalid login request:");
 		console.log(" got cs=" + args.cs + "; expected " + expectedChecksum);
 	}
 }
@@ -171,9 +171,9 @@ function handleRequest(request,response)
 	{
 		return handleGameStateRequest(request,response);
 	}
-	else if (requestPath.pathname == "/join")
+	else if (requestPath.pathname == "/login")
 	{
-		return handleJoinRequest(request,response);
+		return handleLoginRequest(request,response);
 	}
 	else if (requestPath.pathname.match(/^\/event\//))
 	{
