@@ -2400,3 +2400,16 @@ function editmap_deleteCity()
 
 	$('#editCityPane').fadeOut();
 }
+
+function showPlayers()
+{
+	$('#gameRosterPane').fadeIn();
+
+	var $widget = $('#gameRosterPane');
+	fixWidgetDimensions($widget);
+}
+
+function joinGame()
+{
+	sendRequest('join', {});
+}

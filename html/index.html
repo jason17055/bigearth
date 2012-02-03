@@ -115,6 +115,7 @@ body {
 </div>
 <div id="buttonBar">
 <div style="padding:3pt">
+<button type="button" onclick="showPlayers()">Show Players</button>
 <button type="button" onclick="showDemands()">Show Demands</button>
 <button type="button" onclick="beginBuilding()">Build Track</button>
 <button type="button" onclick="addLocomotive()">Add Locomotive</button>
@@ -267,5 +268,21 @@ body {
   <div class="widgetFooter">
     <button type="button" onclick="dismissWaypoint()">Dismiss</button>
   </div>
+</div>
+<div class="widget" id="gameRosterPane">
+  <div class="widgetHeader">Players</div>
+  <div class="widgetContent">
+  <table border="0" cellspacing="0">
+    <tr id="gameRosterPaneTableTemplate" style="display:none">
+        <td><img src=""></td>
+        <td width="100%"><span class="playerName">Player Name</span></td>
+    </tr>
+  </table>
+  </div>
+  <div class="widgetFooter">
+    <button type="button" onclick="joinGame()">Join</button>
+    <button type="button" onclick="dismissPane()">Dismiss</button>
+  </div>
+</div>
 </body>
 </html>
