@@ -2432,6 +2432,11 @@ function showPlayers()
 	fixWidgetDimensions($widget);
 }
 
+function dismissPlayers()
+{
+	$('#gameRosterPane').fadeOut();
+}
+
 function joinGame()
 {
 	sendRequest('join', {});
