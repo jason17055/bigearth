@@ -62,6 +62,11 @@ function handleStaticFileRequest(requestPath,request,response)
 		});
 }
 
+var EVENTS = {
+	nextEventId: 1,
+	waitingListeners: []
+	};
+
 function handleGameStateRequest(request,response)
 {
 	var s = SESSIONS.getSessionFromCookie(request);
@@ -69,6 +74,7 @@ function handleGameStateRequest(request,response)
 	var gameState = getGameState();
 	gameState.allServerResourceTypes = enumResourceTypes();
 	gameState.identity = s.identity;
+	gameState.nextEvent = EVENTS.nextEventId;
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
 	response.end(
@@ -110,6 +116,45 @@ function handleJoinRequest(request,response)
 	}
 }
 
+function sendEvent(evt, response)
+{
+	response.writeHead(200, {
+		'Content-Type': 'text/json'
+		});
+	response.end(
+		JSON.stringify(evt)
+		);
+}
+
+function postEvent(evt)
+{
+	evt.id = EVENTS.nextEventId++;
+	evt.nextEvent = EVENTS.nextEventId;
+	EVENTS.sentEvents[evt.id] = evt;
+
+	for (var i in EVENTS.waitingListeners)
+	{
+		var l = EVENTS.waitingListeners[i];
+		sendEvent(evt, l);
+	}
+	EVENTS.waitingListeners = [];
+}
+
+function handleEventRequest(eventId, request, response)
+{
+	if (eventId && parseInt(eventId) < EVENTS.nextEventId)
+	{
+		// request for an already sent event
+		var evt = EVENTS.sentEvents[eventId];
+		return sendEvent(evt, response);
+	}
+	else
+	{
+		// must wait
+		EVENTS.waitingListeners.push(response);
+	}
+}
+
 function handleRequest(request,response)
 {
 	var requestPath = URL.parse(request.url);
@@ -129,6 +174,12 @@ function handleRequest(request,response)
 	else if (requestPath.pathname == "/join")
 	{
 		return handleJoinRequest(request,response);
+	}
+	else if (requestPath.pathname.match(/^\/event\//))
+	{
+		var eventId = requestPath.pathname.substr(7);
+		console.log('got event request ' + eventId);
+		return handleEventRequest(eventId, request, response);
 	}
 
 	// assume it is a request for a file
