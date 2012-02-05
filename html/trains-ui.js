@@ -87,6 +87,10 @@ function setPlayerId(pid)
 	window.location.hash = "#pid=" + pid;
 
 	// reload or something?
+	if (curDialog == 'gameRosterPane')
+	{
+		showPlayers();
+	}
 }
 
 function drawCell(ctx, pt, c, w, nw, ne)
@@ -500,6 +504,11 @@ function onGameEvent(evt)
 	}
 
 	onGameState();
+
+	if (evt.newPlayers && curDialog == 'gameRosterPane')
+	{
+		showPlayers();
+	}
 }
 
 function startEventsListener()
@@ -2460,6 +2469,17 @@ function showPlayers()
 			$row.addClass('insertedRow');
 			$('.playerId', $row).text(pid);
 			$('.playerName', $row).text(p.identity || 'Anonymous');
+			with({ pid: pid })
+			{
+				$('button.playAsBtn', $row).click(function() {
+					dismissCurrentDialog();
+					setPlayerId(pid);
+					});
+			}
+			if (pid == getPlayerId())
+			{
+				$('.playAsBtn', $row).hide();
+			}
 			$('#gameRosterPane table').append($row);
 			$row.show();
 		}
