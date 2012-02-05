@@ -199,9 +199,8 @@ function doEditMap(requestData, remoteUser)
 			{
 				var cityId = b[1];
 				if (!map.cities[cityId]) { map.cities[cityId] = {}; }
-				var c = map.cities[cityId];
-				if (!c.offers) { c.offers = new Array(); }
-				c.offers.push(v);
+				map.cities[cityId].offers = (
+					typeof v == 'object' ? v : [v]);
 			}
 		}
 		else
