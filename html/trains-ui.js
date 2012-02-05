@@ -8,6 +8,7 @@ var curPlayer = {
 	demands: new Array()
 	};
 var curDialog = null;
+var noRedraw = 0;
 
 // each cell has the following shape
 //                        _
@@ -1301,8 +1302,11 @@ function setZoomLevel(w, basisPt)
 	MAP_ORIGIN_Y = relY * CELL_WIDTH - basisPt.y;
 
 	updateMapMetrics();
-	repaint();
-	updateAllSpritePositions();
+	if (!noRedraw)
+	{
+		repaint();
+		updateAllSpritePositions();
+	}
 }
 
 function zoomIn(basisPt)
@@ -1330,6 +1334,22 @@ function zoomShowAll()
 	MAP_ORIGIN_Y = -(canvas.height - mapHeight * CELL_HEIGHT) / 2;
 
 	setZoomLevel(cw1 < cw2 ? cw1 : cw2);
+}
+
+function centerMapOn(cellIdx)
+{
+	var cellX = getCellColumn(cellIdx);
+	var cellY = getCellRow(cellIdx);
+
+	var canvas = document.getElementById('theCanvas');
+	MAP_ORIGIN_X = -canvas.width / 2 + cellX * CELL_WIDTH;
+	MAP_ORIGIN_Y = -canvas.height / 2 + cellY * CELL_HEIGHT;
+
+	if (!noRedraw)
+	{
+		repaint();
+		updateAllSpritePositions();
+	}
 }
 
 function beginBuilding()
@@ -1908,7 +1928,17 @@ function selectDemand($row)
 	}
 
 	mapFeatures.filterCities = filteredCities;
-	repaint();
+
+	noRedraw++;
+	centerMapOn(demand[0]);
+	setZoomLevel(12);
+	noRedraw--;
+
+	if (!noRedraw)
+	{
+		repaint();
+		updateAllSpritePositions();
+	}
 }
 
 function reloadPlan()
