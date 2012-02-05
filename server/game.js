@@ -89,6 +89,43 @@ function newPlayer()
 	return pid;
 }
 
+function doBuild(buildData, remoteUser)
+{
+	console.log("in doBuild");
+	console.log(JSON.stringify(buildData));
+
+	var pid = buildData.player;
+	if (!(pid && G.players[pid]))
+	{
+		return { error: 'That player does not exist.' };
+	}
+
+	var changes = {};
+	var trackIndices = buildData.rails.split(' ');
+	for (var i in trackIndices)
+	{
+		var trackIndex = parseInt(trackIndices[i]);
+		if (!G.rails[trackIndex]
+			|| G.rails[trackIndex] != pid)
+		{
+			G.rails[trackIndex] = pid;
+			changes[trackIndex] = pid;
+		}
+	}
+
+	G.players[pid].money -= buildData.cost;
+
+	var pm = {};
+	pm[pid] = G.players[pid].money;
+
+	postEvent({
+		event: "track-built",
+		rails: changes,
+		playerMoney: pm
+		});
+	return {};
+}
+
 function doJoin(joinData, remoteUser)
 {
 	var pid = newPlayer();
@@ -106,6 +143,7 @@ function doJoin(joinData, remoteUser)
 }
 
 var actionHandlers = {
+	build: doBuild,
 	join: doJoin
 	};
 
