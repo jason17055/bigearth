@@ -158,6 +158,72 @@ function handleEventRequest(eventId, request, response)
 	}
 }
 
+function doEditMap(requestData, remoteUser)
+{
+	console.log("in doEditMap");
+
+	var map = {
+	cities: {}
+	};
+	for (var k in requestData)
+	{
+		var v = requestData[k];
+		if (k == 'terrain')
+		{
+			var t = v.split("\n");
+			map.terrain = t;
+		}
+		else if (k == 'rivers')
+		{
+			var t = v.split(" ");
+			var r = {};
+			for (var ii in t)
+			{
+				r[t[ii]] = 1;
+			}
+			map.rivers = r;
+		}
+		else if (k.match(/^cities/))
+		{
+			var re1 = /^cities\[(\d+)\]\[name\]$/;
+			var a = re1.exec(k);
+			if (a)
+			{
+				var cityId = a[1];
+				if (!map.cities[cityId]) { map.cities[cityId] = {}; }
+				map.cities[cityId].name = v;
+			}
+			var re2 = /^cities\[(\d+)\]\[offers\]\[\]$/;
+			var b = re2.exec(k);
+			if (b)
+			{
+				var cityId = b[1];
+				if (!map.cities[cityId]) { map.cities[cityId] = {}; }
+				var c = map.cities[cityId];
+				if (!c.offers) { c.offers = new Array(); }
+				c.offers.push(v);
+			}
+		}
+		else
+		{
+			console.log("in doEditMap, don't know " + k);
+		}
+	}
+
+	FS.writeFile('map.txt', JSON.stringify(map),
+	function(err) {
+		if (err) {
+			console.log(err);
+		} else {
+			console.log('The file was saved!');
+		}
+	});
+
+	return {};
+}
+
+actionHandlers.editMap = doEditMap;
+
 function handleActionRequest(verb, request, response)
 {
 	console.log('got request ' + verb);

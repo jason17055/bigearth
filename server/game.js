@@ -91,9 +91,6 @@ function newPlayer()
 
 function doBuild(buildData, remoteUser)
 {
-	console.log("in doBuild");
-	console.log(JSON.stringify(buildData));
-
 	var pid = buildData.player;
 	if (!(pid && G.players[pid]))
 	{
