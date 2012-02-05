@@ -1338,6 +1338,7 @@ function beginBuilding()
 	rails: {}
 	};
 	updateBuildingCost();
+	dismissCurrentDialog();
 	$('#buildTrackInfo').fadeIn();
 
 	if (theTrain)
