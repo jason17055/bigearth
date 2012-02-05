@@ -84,7 +84,10 @@ function getPlayerId()
 function setPlayerId(pid)
 {
 	playerId = pid;
-	window.location.hash = "#pid=" + pid;
+	location.hash = "#pid=" + pid;
+	document.title = 'Trains : Seat ' + pid;
+
+	curPlayer.demands = serverState.players[pid].demands;
 
 	// reload or something?
 	if (curDialog == 'gameRosterPane')
@@ -566,21 +569,15 @@ function onGameState()
 	}
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
-	if (serverState.players)
+
+	if (playerId && serverState.players[playerId])
 	{
-		for (var i in serverState.players)
-		{
-			var p = serverState.players[i];
-			if (p.isOwn)
-			{
-				serverState.myPlayerId = i;
-				document.title = "Trains : Seat " + i;
-				if (p.demands)
-				{
-					curPlayer.demands = p.demands;
-				}
-			}
-		}
+		curPlayer.demands = serverState.players[playerId].demands;
+		document.title = 'Trains : Seat ' + playerId;
+	}
+	else
+	{
+		curPlayer.demands = new Array();
 	}
 
 	if (!eventsListenerEnabled)
