@@ -70,13 +70,23 @@ function loadResourceImage(resourceType)
 	img.src = "resource_icons/" + resourceType + ".png";
 }
 
+var playerId = "1";
+if (window.location.hash && window.location.hash.match(/^#pid=/))
+{
+	playerId = window.location.hash.substr(5);
+}
+
 function getPlayerId()
 {
-	if (serverState && serverState.myPlayerId)
-	{
-		return serverState.myPlayerId;
-	}
-	return "1";
+	return playerId;
+}
+
+function setPlayerId(pid)
+{
+	playerId = pid;
+	window.location.hash = "#pid=" + pid;
+
+	// reload or something?
 }
 
 function drawCell(ctx, pt, c, w, nw, ne)
@@ -1337,10 +1347,11 @@ function adjustPlayerCash(delta)
 	$('#cashIndicator').text(money);
 }
 
-function sendRequest(verb, data)
+function sendRequest(verb, data, success)
 {
-	var onSuccess = function()
+	var onSuccess = function(data)
 	{
+		if (success) { success(data); }
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
@@ -2459,5 +2470,7 @@ function showPlayers()
 
 function joinGame()
 {
-	sendRequest('join', {});
+	sendRequest('join', {}, function(data) {
+		setPlayerId(data.pid);
+		});
 }
