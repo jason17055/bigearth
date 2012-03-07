@@ -69,8 +69,8 @@ function repaint()
 	ctx.fillStyle = '#ff0';
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
-	var SCALE = 100;
-	var OFFSET = 200;
+	var SCALE = 250;
+	var OFFSET = 280;
 	for (var i in cells)
 	{
 		var sumLen = 0.0;
@@ -93,7 +93,8 @@ function repaint()
 		}
 	}
  
-	if (parseInt(i)+1 < 27){
+	//if (parseInt(i)+1 < 47){
+	if (1==1) {
 
 		ctx.beginPath();
 		var p = applyRotation(c.pts[0]);
@@ -115,6 +116,12 @@ function repaint()
 
 		var p = applyRotation(c.pt);
 		ctx.strokeText(parseInt(i)+1, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
+
+		ctx.save();
+		ctx.fillStyle = '#800';
+		var ri = geometry.getRowIdx(parseInt(i)+1);
+		ctx.fillText(ri.row+','+ri.idx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
+		ctx.restore();
 	}
 }
 
@@ -267,7 +274,7 @@ function getNeighbors(geometry, cellIdx)
 	{
 		return [ 2, 3, 4, 5, 6];
 	}
-	else if (ri.row < sz + 3)
+	else if (ri.row < sz + 2)
 	{
 		var sizePrevRow = (ri.row-2)*5;
 		var sizeThisRow = (ri.row-1)*5;
@@ -284,33 +291,171 @@ function getNeighbors(geometry, cellIdx)
 			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow)
 			];
 		}
-		else if (ri.idx % 2 == 0)
+		else if (ri.idx % (ri.row-1) == 0)
 		{
+			var pri = ri.idx / (ri.row-1); //prev row index
 			return [
-			geometry.getCell(ri.row-1, (ri.idx/2)),
+			geometry.getCell(ri.row-1, ri.idx - pri),
 			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
-			geometry.getCell(ri.row+1, (ri.idx*2+sizeThisRow-1)%sizeNextRow),
-			geometry.getCell(ri.row+1, (ri.idx*2)%sizeNextRow),
-			geometry.getCell(ri.row+1, (ri.idx*2+1)%sizeNextRow),
+			geometry.getCell(ri.row+1, (ri.idx+pri+sizeNextRow-1)%sizeNextRow),
+			geometry.getCell(ri.row+1, (ri.idx+pri)%sizeNextRow),
+			geometry.getCell(ri.row+1, (ri.idx+pri+1)%sizeNextRow),
 			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow)
 			];
 		}
 		else
 		{
+			var pri = Math.floor(ri.idx / (ri.row-1));
 			return [
-			geometry.getCell(ri.row-1, (ri.idx-1)/2),
+			geometry.getCell(ri.row-1, ri.idx-pri-1),
 			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
-			geometry.getCell(ri.row+1, (ri.idx*2+sizeThisRow-1)%sizeNextRow),
-			geometry.getCell(ri.row+1, (ri.idx*2)%sizeNextRow),
+			geometry.getCell(ri.row+1, (ri.idx+pri)%sizeNextRow),
+			geometry.getCell(ri.row+1, (ri.idx+pri+1)%sizeNextRow),
 			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
-			geometry.getCell(ri.row-1, ((ri.idx-1)/2+1)%sizePrevRow)
+			geometry.getCell(ri.row-1, (ri.idx-pri)%sizePrevRow)
+			];
+		}
+	}
+	else if (ri.row == sz + 2)
+	{
+		var sizeThisRow = (sz+1)*5;
+		var sizePrevRow = sizeThisRow - 5;
+
+		if (ri.idx % (sz+1) == 0)
+		{
+			// special cell
+			var pri = Math.floor(ri.idx / (sz+1));
+			return [
+			geometry.getCell(ri.row-1, ri.idx-pri),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row+1, ri.idx),
+			geometry.getCell(ri.row+1, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow)
+			];
+		}
+		else
+		{
+			var pri = Math.floor(ri.idx / (sz+1));
+			return [
+			geometry.getCell(ri.row-1, ri.idx-pri-1),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, (ri.idx)%sizeThisRow),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx-pri)%sizePrevRow)
+			];
+		}
+	}
+	else if (ri.row < sz * 2 + 3)
+	{
+		var sizeThisRow = (sz+1)*5;
+		var rx = ri.row - (sz+2);
+
+		if (rx % 2 == 1)
+		{
+			return [
+			geometry.getCell(ri.row-1, ri.idx),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, ri.idx),
+			geometry.getCell(ri.row+1, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx+1)%sizeThisRow)
+			];
+		}
+		else
+		{
+			return [
+			geometry.getCell(ri.row-1, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, (ri.idx)%sizeThisRow),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx)%sizeThisRow)
+			];
+		}
+	}
+	else if (ri.row == sz * 2 + 3)
+	{
+		var sizeThisRow = (sz+1)*5;
+		var sizeNextRow = sizeThisRow - 5;
+		var rx = ri.row - (sz+2);
+		var rm = (rx % 2 == 1 ? 1 : 0);
+
+		if (ri.idx % (sz+1) == 0)
+		{
+			// special cell
+			var pri = Math.floor(ri.idx / (sz+1));
+			return [
+			geometry.getCell(ri.row-1, (ri.idx+rm+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, ri.idx-pri),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx+rm)%sizeThisRow)
+			];
+		}
+		else
+		{
+			var pri = Math.floor(ri.idx / (sz+1));
+			return [
+			geometry.getCell(ri.row-1, (ri.idx+rm+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, ri.idx-pri-1),
+			geometry.getCell(ri.row+1, (ri.idx-pri)%sizeNextRow),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx+rm)%sizeThisRow)
+			];
+		}
+	}
+	else if (ri.row < sz * 3 + 4)
+	{
+		var rx = sz * 3 + 4 - ri.row;
+		var sizePrevRow = (rx-1)*5;
+		var sizeThisRow = (rx)*5;
+		var sizeNextRow = (rx+1)*5;
+
+		var bx = 2 + 10 * (sz + 1) * (sz + 1);
+		if (rx == 1)
+		{
+			return [
+			geometry.getCell(ri.row-1, (ri.idx*2)%sizeNextRow),
+			geometry.getCell(ri.row-1, (ri.idx*2+sizeNextRow-1)%sizeNextRow),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			bx,
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx*2+1)%sizeNextRow)
+			];
+		}
+		else if (ri.idx % (rx) == 0)
+		{
+			var pri = ri.idx / (rx); //prev row index
+			return [
+			geometry.getCell(ri.row-1, (ri.idx+pri)%sizeNextRow),
+			geometry.getCell(ri.row-1, (ri.idx+pri+sizeNextRow-1)%sizeNextRow),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, ri.idx - pri),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx+pri+1)%sizeNextRow)
+			];
+		}
+		else
+		{
+			var pri = Math.floor(ri.idx / (rx));
+			return [
+			geometry.getCell(ri.row-1, (ri.idx+pri)%sizeNextRow),
+			geometry.getCell(ri.row, (ri.idx+sizeThisRow-1)%sizeThisRow),
+			geometry.getCell(ri.row+1, ri.idx-pri-1),
+			geometry.getCell(ri.row+1, (ri.idx-pri)%sizePrevRow),
+			geometry.getCell(ri.row, (ri.idx+1)%sizeThisRow),
+			geometry.getCell(ri.row-1, (ri.idx+pri+1)%sizeNextRow)
 			];
 		}
 	}
 	else
 	{
-		//lazy
-		return [ 2, 3, 4, 5, 6];
+		var bx = 2 + 10 * (sz + 1) * (sz + 1);
+		return [
+			bx-5, bx-4, bx-3, bx-2, bx-1
+			];
 	}
 }
 
@@ -388,12 +533,14 @@ function SphereGeometry(size)
 		}
 		else if (row < this.numRows)
 		{
-		//TODO
-			return 0;
+			var bx = 2 + 10 * (size + 1) * (size + 1);
+			var rx = this.numRows - row;
+			var b = bx - 5 * (rx) * (rx + 1) / 2;
+			return b + idx;
 		}
 		else if (row == this.numRows)
 		{
-			return 2 + 10 * (sz + 1) * (sz + 1);		
+			return 2 + 10 * (size + 1) * (size + 1);		
 		}
 		else
 		{
@@ -438,6 +585,6 @@ function testBtnClicked()
 
 function nextSizeClicked()
 {
-	geometry = new SphereGeometry((geometry.size+1)%3);
+	geometry = new SphereGeometry((geometry.size+1)%6);
 	cells = makeCells(geometry);
 }
