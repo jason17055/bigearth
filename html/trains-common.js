@@ -11,169 +11,119 @@ function shuffleArray(arr)
 	return;
 }
 
-function loadGeometry(width, height)
+function Geometry(width, height)
 {
-	CELLS_PER_ROW = width;
+	this.width = width;
+	this.height = height;
 }
 
-function getCellRow(cellIdx)
+Geometry.prototype.getCellRow = function(cellIdx)
 {
-	return Math.floor(cellIdx / CELLS_PER_ROW);
+	return Math.floor(cellIdx / this.width);
 }
 
-function getCellColumn(cellIdx)
+Geometry.prototype.getCellColumn = function(cellIdx)
 {
-	return cellIdx % CELLS_PER_ROW;
+	return cellIdx % this.width;
 }
 
-function getCell(row, column)
+Geometry.prototype.getCell = function(row, column)
 {
-	return row * CELLS_PER_ROW + column;
+	return row * this.width + column;
 }
 
-function isCellAdjacent(cell1, cell2)
+Geometry.prototype.isCellAdjacent = function(cell1, cell2)
 {
-	return cell2 == getAdjacentW(cell1) ||
-		cell2 == getAdjacentNW(cell1) ||
-		cell2 == getAdjacentNE(cell1) ||
-		cell2 == getAdjacentE(cell1) ||
-		cell2 == getAdjacentSE(cell1) ||
-		cell2 == getAdjacentSW(cell1);
+	return cell2 == this.getAdjacentW(cell1) ||
+		cell2 == this.getAdjacentNW(cell1) ||
+		cell2 == this.getAdjacentNE(cell1) ||
+		cell2 == this.getAdjacentE(cell1) ||
+		cell2 == this.getAdjacentSE(cell1) ||
+		cell2 == this.getAdjacentSW(cell1);
 }
 
-function getAdjacentCell(cellIdx, dir)
+Geometry.prototype.getAdjacentCell = function(cellIdx, dir)
 {
 	switch (dir)
 	{
-	case 0: return getAdjacentW(cellIdx);
-	case 1: return getAdjacentNW(cellIdx);
-	case 2: return getAdjacentNE(cellIdx);
-	case 3: return getAdjacentE(cellIdx);
-	case 4: return getAdjacentSE(cellIdx);
-	case 5: return getAdjacentSW(cellIdx);
+	case 0: return this.getAdjacentW(cellIdx);
+	case 1: return this.getAdjacentNW(cellIdx);
+	case 2: return this.getAdjacentNE(cellIdx);
+	case 3: return this.getAdjacentE(cellIdx);
+	case 4: return this.getAdjacentSE(cellIdx);
+	case 5: return this.getAdjacentSW(cellIdx);
 	}
 	return null;
 }
 
-function getAdjacentW(cellIdx)
+Geometry.prototype.getAdjacentW = function(cellIdx)
 {
 	return cellIdx - 1;
 }
 
-function getAdjacentNW(cellIdx)
+Geometry.prototype.getAdjacentNW = function(cellIdx)
 {
-	var origRow = getCellRow(cellIdx);
+	var origRow = this.getCellRow(cellIdx);
 	if (origRow % 2 == 0)
 	{
-		return cellIdx - CELLS_PER_ROW;
+		return cellIdx - this.width;
 	}
 	else
 	{
-		return cellIdx - CELLS_PER_ROW - 1;
+		return cellIdx - this.width - 1;
 	}
 }
 
-function getAdjacentNE(cellIdx)
+Geometry.prototype.getAdjacentNE = function(cellIdx)
 {
-	var origRow = getCellRow(cellIdx);
+	var origRow = this.getCellRow(cellIdx);
 	if (origRow % 2 == 0)
 	{
-		return cellIdx - CELLS_PER_ROW + 1;
+		return cellIdx - this.width + 1;
 	}
 	else
 	{
-		return cellIdx - CELLS_PER_ROW;
+		return cellIdx - this.width;
 	}
 }
 
-function getAdjacentE(cellIdx)
+Geometry.prototype.getAdjacentE = function(cellIdx)
 {
 	return cellIdx + 1;
 }
 
-function getAdjacentSE(cellIdx)
+Geometry.prototype.getAdjacentSE = function(cellIdx)
 {
-	var origRow = getCellRow(cellIdx);
+	var origRow = this.getCellRow(cellIdx);
 	if (origRow % 2 == 0)
 	{
-		return cellIdx + CELLS_PER_ROW + 1;
+		return cellIdx + this.width + 1;
 	}
 	else
 	{
-		return cellIdx + CELLS_PER_ROW;
+		return cellIdx + this.width;
 	}
 }
 
-function getAdjacentSW(cellIdx)
+Geometry.prototype.getAdjacentSW = function(cellIdx)
 {
-	var origRow = getCellRow(cellIdx);
+	var origRow = this.getCellRow(cellIdx);
 	if (origRow % 2 == 0)
 	{
-		return cellIdx + CELLS_PER_ROW;
+		return cellIdx + this.width;
 	}
 	else
 	{
-		return cellIdx + CELLS_PER_ROW - 1;
+		return cellIdx + this.width - 1;
 	}
 }
 
-function isCity(cellIdx)
+Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2)
 {
-	return mapData.cities[cellIdx];
-}
-
-// dir: 0 == west, 1 == northwest, 2 == northeast,
-//      3 == east, 4 == southeast, 5 == southwest
-//
-function hasTrackAtDir(cellIdx, dir)
-{
-	var trackIdx = getTrackIndex(cellIdx, dir);
-	if (mapData.rails[trackIdx] == getPlayerId())
-		return 1;
-	else if (isBuilding && isBuilding.rails[trackIdx])
-		return 2;
-	else if (mapData.rails[trackIdx])
-		return 3;
-	else
-		return null;
-}
-
-function getTrackIndex(cellIdx, dir)
-{
-	if (dir == 3)
-	{
-		return getTrackIndex(getAdjacentE(cellIdx), 0);
-	}
-	else if (dir == 4)
-	{
-		return getTrackIndex(getAdjacentSE(cellIdx), 1);
-	}
-	else if (dir == 5)
-	{
-		return getTrackIndex(getAdjacentSW(cellIdx), 2);
-	}
-	else
-	{
-		return cellIdx * 3 + (dir + 1);
-	}
-}
-
-function hasTrackAt(cellIdx)
-{
-	return hasTrackAtDir(cellIdx, 0) ||
-		hasTrackAtDir(cellIdx, 1) ||
-		hasTrackAtDir(cellIdx, 2) ||
-		hasTrackAtDir(cellIdx, 3) ||
-		hasTrackAtDir(cellIdx, 4) ||
-		hasTrackAtDir(cellIdx, 5);
-}
-
-function simpleDistance(cellIdx1, cellIdx2)
-{
-	var row1 = getCellRow(cellIdx1);
-	var col1 = getCellColumn(cellIdx1);
-	var row2 = getCellRow(cellIdx2);
-	var col2 = getCellColumn(cellIdx2);
+	var row1 = this.getCellRow(cellIdx1);
+	var col1 = this.getCellColumn(cellIdx1);
+	var row2 = this.getCellRow(cellIdx2);
+	var col2 = this.getCellColumn(cellIdx2);
 
 	var distRows = Math.abs(row2-row1);
 	var distCols = Math.abs(col2-col1);
@@ -181,9 +131,53 @@ function simpleDistance(cellIdx1, cellIdx2)
 	return distRows + (distCols > diag ? distCols - diag : 0);
 }
 
+Geometry.prototype.getTrackIndex = function(cellIdx, dir)
+{
+	if (dir == 3)
+	{
+		return this.getTrackIndex(this.getAdjacentE(cellIdx), 0);
+	}
+	else if (dir == 4)
+	{
+		return this.getTrackIndex(this.getAdjacentSE(cellIdx), 1);
+	}
+	else if (dir == 5)
+	{
+		return this.getTrackIndex(this.getAdjacentSW(cellIdx), 2);
+	}
+	else
+	{
+		return cellIdx * 3 + (dir + 1);
+	}
+}
+
+function Map(rawData)
+{
+	var w = rawData.terrain[0].length;
+	var h = rawData.terrain.length;
+
+	this.geometry = new Geometry(w,h);
+	this.rivers = rawData.rivers;
+	this.rails = rawData.rails;
+	this.terrain = rawData.terrain;
+	this.cities = rawData.cities;
+
+	if (!this.rivers)
+		this.rivers = {};
+	if (!this.rails)
+		this.rails = {};
+	if (!this.cities)
+		this.cities = {};
+}
+
+Map.prototype.isCity = function(cellIdx)
+{
+	return this.cities[cellIdx];
+}
+
 if (typeof global !== 'undefined')
 {
 	global.shuffleArray = shuffleArray;
-	global.simpleDistance = simpleDistance;
-	global.loadGeometry = loadGeometry;
+	global.Geometry = Geometry;
+	global.Map = Map;
 }

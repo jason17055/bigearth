@@ -22,7 +22,6 @@ var noRedraw = 0;
 //           \  /          20px
 //            \/          _
 
-var CELLS_PER_ROW = 1;
 var CELL_WIDTH = 64;
 var CELL_HEIGHT;
 var CELL_ASCENT;
@@ -273,6 +272,32 @@ function drawRailsHelper(ctx, owner)
 	}
 }
 
+// dir: 0 == west, 1 == northwest, 2 == northeast,
+//      3 == east, 4 == southeast, 5 == southwest
+//
+function hasTrackAtDir(cellIdx, dir)
+{
+	var trackIdx = mapData.geometry.getTrackIndex(cellIdx, dir);
+	if (mapData.rails[trackIdx] == getPlayerId())
+		return 1;
+	else if (isBuilding && isBuilding.rails[trackIdx])
+		return 2;
+	else if (mapData.rails[trackIdx])
+		return 3;
+	else
+		return null;
+}
+
+function hasTrackAt(cellIdx)
+{
+	return hasTrackAtDir(cellIdx, 0) ||
+		hasTrackAtDir(cellIdx, 1) ||
+		hasTrackAtDir(cellIdx, 2) ||
+		hasTrackAtDir(cellIdx, 3) ||
+		hasTrackAtDir(cellIdx, 4) ||
+		hasTrackAtDir(cellIdx, 5);
+}
+
 function cityVisible(cityId)
 {
 	return !mapFeatures.filterCities ||
@@ -346,7 +371,7 @@ function repaint()
 				};
 			drawCell(ctx, pt, c, w, nw, ne);
 
-			var cellIdx = getCell(y,x);
+			var cellIdx = mapData.geometry.getCell(y,x);
 			drawRivers(ctx, pt, cellIdx);
 
 			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
@@ -418,16 +443,7 @@ function beginLoadMap(mapName)
 {
 	var onSuccess = function(data,status)
 	{
-		mapData = data;
-		if (!mapData.rivers)
-		{
-			mapData.rivers = {};
-		}
-		if (!mapData.rails)
-		{
-			mapData.rails = {};
-		}
-		CELLS_PER_ROW = mapData.terrain[0].length;
+		mapData = new Map(data);
 		autoCreateDemands();
 		zoomShowAll();
 	};
@@ -438,6 +454,7 @@ function beginLoadMap(mapName)
 	dataType: "json"
 	});
 }
+beginLoadMap("nippon");
 
 var serverState;
 function fetchGameState()
@@ -555,18 +572,13 @@ function startEventsListener()
 
 function onGameState()
 {
-	var firstLoad = (CELLS_PER_ROW == 1);
+	var firstLoad = !mapData;
 
 	if (serverState.map)
 	{
-		mapData = serverState.map;
-		if (!mapData.rivers)
-			mapData.rivers = {};
-		if (!mapData.rails)
-			mapData.rails = {};
+		mapData = new Map(serverState.map);
 		if (!mapData.terrain)
 			alert("Oops, map does not have terrain");
-		CELLS_PER_ROW = mapData.terrain[0].length;
 	}
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
@@ -647,7 +659,7 @@ function getCellFromPoint(x, y)
 
 	var iy = Math.floor(y / CELL_HEIGHT);
 	var ix = Math.floor((x - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH);
-	return getCell(iy, ix);
+	return mapData.geometry.getCell(iy, ix);
 }
 
 function updateWaypointSpritePosition(sprite)
@@ -1322,11 +1334,11 @@ function zoomOut(basisPt)
 function zoomShowAll()
 {
 	var canvas = document.getElementById('theCanvas');
-	var cw1 = canvas.width / CELLS_PER_ROW;
-	var cw2 = (canvas.height / mapData.terrain.length) * 64/56;
+	var cw1 = canvas.width / mapData.geometry.width;
+	var cw2 = (canvas.height / mapData.geometry.height) * 64/56;
 
-	var mapWidth = CELLS_PER_ROW;
-	var mapHeight = mapData.terrain.length;
+	var mapWidth = mapData.geometry.width;
+	var mapHeight = mapData.geometry.height;
 
 	CELL_WIDTH = 12;
 	updateMapMetrics();
@@ -2212,8 +2224,8 @@ function cropTerrain(offsetx, offsety, cx, cy)
 
 	var convertCellIdx = function(cellIdx)
 	{
-		var row = Math.floor(cellIdx / CELLS_PER_ROW);
-		var col = cellIdx % CELLS_PER_ROW;
+		var row = Math.floor(cellIdx / mapData.geometry.width);
+		var col = cellIdx % mapData.geometry.width;
 
 		row -= offsety;
 		col -= offsetx;
@@ -2250,10 +2262,10 @@ function cropTerrain(offsetx, offsety, cx, cy)
 		}
 	}
 
+	mapData.geometry = new Geometry(cx, cy);
 	mapData.cities = newCities;
 	mapData.terrain = newTerrain;
 	mapData.rivers = newRivers;
-	CELLS_PER_ROW = cx;
 	MAP_ORIGIN_X -= CELL_WIDTH * offsetx;
 	MAP_ORIGIN_Y -= CELL_HEIGHT * offsety;
 	repaint();
@@ -2269,15 +2281,16 @@ function showEditMapPane()
 
 function makeMoreRoomOnMap(amt)
 {
-	var minX = CELLS_PER_ROW;
+	var minX = mapData.geometry.width;
 	var maxX = 0;
-	var minY = mapData.terrain.length;
+	var minY = mapData.geometry.height;
 	var maxY = 0;
 
-	var height = mapData.terrain.length;
+	var width = mapData.geometry.width;
+	var height = mapData.geometry.height;
 	for (var row = 0; row < height; row++)
 	{
-		for (var col = 0; col < CELLS_PER_ROW; col++)
+		for (var col = 0; col < width; col++)
 		{
 			var c = mapData.terrain[row].charAt(col);
 			if (c && c != " ")
