@@ -20,17 +20,17 @@ function Geometry(width, height)
 Geometry.prototype.getCellRow = function(cellIdx)
 {
 	return Math.floor(cellIdx / this.width);
-}
+};
 
 Geometry.prototype.getCellColumn = function(cellIdx)
 {
 	return cellIdx % this.width;
-}
+};
 
 Geometry.prototype.getCell = function(row, column)
 {
 	return row * this.width + column;
-}
+};
 
 Geometry.prototype.isCellAdjacent = function(cell1, cell2)
 {
@@ -40,7 +40,7 @@ Geometry.prototype.isCellAdjacent = function(cell1, cell2)
 		cell2 == this.getAdjacentE(cell1) ||
 		cell2 == this.getAdjacentSE(cell1) ||
 		cell2 == this.getAdjacentSW(cell1);
-}
+};
 
 Geometry.prototype.getAdjacentCell = function(cellIdx, dir)
 {
@@ -54,12 +54,12 @@ Geometry.prototype.getAdjacentCell = function(cellIdx, dir)
 	case 5: return this.getAdjacentSW(cellIdx);
 	}
 	return null;
-}
+};
 
 Geometry.prototype.getAdjacentW = function(cellIdx)
 {
 	return cellIdx - 1;
-}
+};
 
 Geometry.prototype.getAdjacentNW = function(cellIdx)
 {
@@ -72,7 +72,7 @@ Geometry.prototype.getAdjacentNW = function(cellIdx)
 	{
 		return cellIdx - this.width - 1;
 	}
-}
+};
 
 Geometry.prototype.getAdjacentNE = function(cellIdx)
 {
@@ -85,12 +85,12 @@ Geometry.prototype.getAdjacentNE = function(cellIdx)
 	{
 		return cellIdx - this.width;
 	}
-}
+};
 
 Geometry.prototype.getAdjacentE = function(cellIdx)
 {
 	return cellIdx + 1;
-}
+};
 
 Geometry.prototype.getAdjacentSE = function(cellIdx)
 {
@@ -103,7 +103,7 @@ Geometry.prototype.getAdjacentSE = function(cellIdx)
 	{
 		return cellIdx + this.width;
 	}
-}
+};
 
 Geometry.prototype.getAdjacentSW = function(cellIdx)
 {
@@ -116,7 +116,7 @@ Geometry.prototype.getAdjacentSW = function(cellIdx)
 	{
 		return cellIdx + this.width - 1;
 	}
-}
+};
 
 Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2)
 {
@@ -129,7 +129,7 @@ Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2)
 	var distCols = Math.abs(col2-col1);
 	var diag = Math.floor(distRows / 2);
 	return distRows + (distCols > diag ? distCols - diag : 0);
-}
+};
 
 Geometry.prototype.getTrackIndex = function(cellIdx, dir)
 {
@@ -149,7 +149,48 @@ Geometry.prototype.getTrackIndex = function(cellIdx, dir)
 	{
 		return cellIdx * 3 + (dir + 1);
 	}
-}
+};
+
+Geometry.prototype.getEdgeBetween = function(fromIdx, toIdx)
+{
+	var cellIdx;
+	var dir;
+	if (fromIdx == this.getAdjacentW(toIdx))
+	{
+		cellIdx = toIdx;
+		dir = 0;
+	}
+	else if (fromIdx == this.getAdjacentNW(toIdx))
+	{
+		cellIdx = toIdx;
+		dir = 1;
+	}
+	else if (fromIdx == this.getAdjacentNE(toIdx))
+	{
+		cellIdx = toIdx;
+		dir = 2;
+	}
+	else if (fromIdx == this.getAdjacentE(toIdx))
+	{
+		cellIdx = fromIdx;
+		dir = 0;
+	}
+	else if (fromIdx == this.getAdjacentSE(toIdx))
+	{
+		cellIdx = fromIdx;
+		dir = 1;
+	}
+	else if (fromIdx == this.getAdjacentSW(toIdx))
+	{
+		cellIdx = fromIdx;
+		dir = 2;
+	}
+	else
+	{
+		return 0;
+	}
+	return cellIdx * 3 + dir + 1;
+};
 
 function Map(rawData)
 {
@@ -173,7 +214,7 @@ function Map(rawData)
 Map.prototype.isCity = function(cellIdx)
 {
 	return this.cities[cellIdx];
-}
+};
 
 if (typeof global !== 'undefined')
 {

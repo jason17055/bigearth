@@ -1095,7 +1095,7 @@ function onMouseMove(evt)
 		if (cellIdx != isDragging.start
 			&& Math.abs(cellCenterPt.x - pt.x) < 16
 			&& Math.abs(cellCenterPt.y - pt.y) < 16
-			&& isCellAdjacent(isDragging.start, cellIdx))
+			&& mapData.geometry.isCellAdjacent(isDragging.start, cellIdx))
 		{
 			track_addSegment(isDragging.start, cellIdx);
 			isDragging.start = cellIdx;
@@ -1133,43 +1133,9 @@ function onMouseMove(evt)
 function track_addSegment(fromIdx, toIdx)
 {
 	// is this track already in the plan?
-	var cellIdx;
-	var dir;
-	if (fromIdx == getAdjacentW(toIdx))
-	{
-		cellIdx = toIdx;
-		dir = 0;
-	}
-	else if (fromIdx == getAdjacentNW(toIdx))
-	{
-		cellIdx = toIdx;
-		dir = 1;
-	}
-	else if (fromIdx == getAdjacentNE(toIdx))
-	{
-		cellIdx = toIdx;
-		dir = 2;
-	}
-	else if (fromIdx == getAdjacentE(toIdx))
-	{
-		cellIdx = fromIdx;
-		dir = 0;
-	}
-	else if (fromIdx == getAdjacentSE(toIdx))
-	{
-		cellIdx = fromIdx;
-		dir = 1;
-	}
-	else if (fromIdx == getAdjacentSW(toIdx))
-	{
-		cellIdx = fromIdx;
-		dir = 2;
-	}
-	else
-	{
+	var trackIdx = mapData.geometry.getEdgeBetween(fromIdx, toIdx);
+	if (!trackIdx)
 		return;
-	}
-	var trackIdx = cellIdx * 3 + dir + 1;
 
 	// check if this track is already build
 	if (mapData.rails[trackIdx])
