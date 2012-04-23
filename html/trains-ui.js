@@ -192,7 +192,7 @@ function drawRails(ctx, pt, cellIdx)
 	var t;
 	if (t = hasTrackAtDir(cellIdx, 0)) //West
 	{
-		if (trackVisible(getTrackIndex(cellIdx, 0)))
+		if (trackVisible(mapData.geometry.getTrackIndex(cellIdx, 0)))
 		{
 		ctx.save();
 		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
@@ -202,7 +202,7 @@ function drawRails(ctx, pt, cellIdx)
 	}
 	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
 	{
-		if (trackVisible(getTrackIndex(cellIdx, 1)))
+		if (trackVisible(mapData.geometry.getTrackIndex(cellIdx, 1)))
 		{
 		ctx.save();
 		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
@@ -213,7 +213,7 @@ function drawRails(ctx, pt, cellIdx)
 	}
 	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
 	{
-		if (trackVisible(getTrackIndex(cellIdx, 2)))
+		if (trackVisible(mapData.geometry.getTrackIndex(cellIdx, 2)))
 		{
 		ctx.save();
 		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
@@ -1516,11 +1516,11 @@ function filterMapToReachable(train)
 
 		for (var dir = 0; dir < 6; dir++)
 		{
-			var ti = getTrackIndex(l, dir);
+			var ti = mapData.geometry.getTrackIndex(l, dir);
 			if (mapData.rails[ti])
 			{
 				reachableTrack[ti] = true;
-				var adjCellIdx = getAdjacentCell(l, dir);
+				var adjCellIdx = mapData.geometry.getAdjacentCell(l, dir);
 				if (adjCellIdx && !visited[adjCellIdx])
 				{
 					queue.push(adjCellIdx);
