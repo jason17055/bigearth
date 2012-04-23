@@ -617,8 +617,8 @@ function onGameState()
 
 function getCellPoint(cellIdx)
 {
-	var x = getCellColumn(cellIdx);
-	var y = getCellRow(cellIdx);
+	var x = mapData.geometry.getCellColumn(cellIdx);
+	var y = mapData.geometry.getCellRow(cellIdx);
 
 	return {
 		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * x - MAP_ORIGIN_X,
@@ -963,14 +963,14 @@ function onTouchStart(evt)
 		return;
 	var cellP = getCellPoint(cellIdx);
 
-	if (isCity(cellIdx) && isPlanning)
+	if (mapData.isCity(cellIdx) && isPlanning)
 	{
 		addCityToPlan(cellIdx);
 		return;
 	}
 
 	var canBuild = false;
-	if (isCity(cellIdx) || hasTrackAt(cellIdx))
+	if (mapData.isCity(cellIdx) || hasTrackAt(cellIdx))
 		canBuild = true;
 
 	if (isBuilding && canBuild)
@@ -1005,8 +1005,8 @@ function getRadioButtonValue(radioObj)
 
 function onMouseDown_editTerrain(cellIdx, oPt)
 {
-	var r = getCellRow(cellIdx);
-	var col = getCellColumn(cellIdx);
+	var r = mapData.geometry.getCellRow(cellIdx);
+	var col = mapData.geometry.getCellColumn(cellIdx);
 
 	var t = getRadioButtonValue(document.editMapForm.tool);
 	if (t == "city")
@@ -1350,8 +1350,8 @@ function zoomShowAll()
 
 function centerMapOn(cellIdx)
 {
-	var cellX = getCellColumn(cellIdx);
-	var cellY = getCellRow(cellIdx);
+	var cellX = mapData.geometry.getCellColumn(cellIdx);
+	var cellY = mapData.geometry.getCellRow(cellIdx);
 
 	var canvas = document.getElementById('theCanvas');
 	MAP_ORIGIN_X = -canvas.width / 2 + cellX * CELL_WIDTH;
