@@ -1,4 +1,7 @@
+if (typeof require !== 'undefined')
+{
 require('../html/trains-common.js');
+}
 
 var G = {
 	rails: {},
@@ -22,11 +25,10 @@ function getGameState()
 	};
 }
 
-function setMap(mapName, map)
+function setMap(mapName, data)
 {
 	G.mapName = mapName;
-	G.map = map;
-	G.map.geometry = loadGeometry(map.terrain[0].length, map.terrain.length);
+	G.map = new Map(data);
 }
 
 function autoCreateDemands()

@@ -443,9 +443,9 @@ function beginLoadMap(mapName)
 {
 	var onSuccess = function(data,status)
 	{
-		mapData = new Map(data);
-		autoCreateDemands();
-		zoomShowAll();
+		setMap(mapName,data);
+		serverState = getGameState();
+		onGameState();
 	};
 
 	$.ajax({
@@ -454,7 +454,6 @@ function beginLoadMap(mapName)
 	dataType: "json"
 	});
 }
-beginLoadMap("nippon");
 
 var serverState;
 function fetchGameState()
@@ -482,7 +481,17 @@ function fetchGameState()
 		dataType: "json"
 		});
 }
-$(fetchGameState);
+$(function() {
+
+	if (typeof G !== 'undefined')
+	{
+		beginLoadMap("nippon");
+	}
+	else
+	{
+		fetchGameState();
+	}
+});
 
 function getGameTime()
 {
@@ -595,7 +604,10 @@ function onGameState()
 
 	if (!eventsListenerEnabled)
 	{
-		startEventsListener();
+		if (typeof G === 'undefined')
+		{
+			startEventsListener();
+		}
 	}
 
 	if (firstLoad)
