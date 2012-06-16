@@ -1,19 +1,3 @@
-//      *     *
-//     * *   * *
-//    * * * * * *
-//   * * * * * * *
-//  * * * * * * *
-//
-function fromPolar(lgt, lat)
-{
-	var zz = Math.cos(lat);
-	return {
-	x: Math.cos(lgt) * zz,
-	y: Math.sin(lgt) * zz,
-	z: Math.sin(lat)
-	};
-}
-
 var curLatitude = 0.0;
 var curLongitude = 0.0;
 
@@ -140,84 +124,25 @@ window.onresize = onResize;
 $(onResize);
 
 
-/**
- * sz=0 ; 4 rows, 12 cells
- *        /-----1-----\
- *       /   /  |  \   \
- *      2   3   4   5   6
- *       \ / \ / \ / \ / \
- *        7   8   9  10  11
- *         \   \  |  /  /
- *          \----12----/
- *
- * sz=1 ; 7 rows, 42 cells
- *  row 1: 1 cell (pentagon)
- *  row 2: 5 cells (hexagons)
- *  row 3: 10 cells (alternating pentagon/hexagon)
- *  row 4: 10 cells (hexagons)
- *  row 5: 10 cells (alternating pentagon/hexagon)
- *  row 6: 5 cells (hexagons)
- *  row 7: 1 cell (pentagon)
- *
- * sz=2 ; 10 rows, 92 cells
- *  row 1: 1 cell
- *  row 2: 5 cells     1   \
- *  row 3: 10 cells    2    = 6
- *  row 4: 15 cells    3   /
- *  row 5: 15 cells    3
- *  row 6: 15 cells    3
- *  row 7: 15 cells    3   \
- *  row 8: 10 cells    2    = 6
- *  row 9: 5 cells     1   /
- *  row 10: 1 cell
- *
- * 1+2+3+...+n = n(n+1)/2
- * (sz+1)(sz+2) + sz(sz+1)
- * (sz+1)(sz+2+sz)
- * 2(sz+1)(sz+1)
- * 2(sz+1)^2
- *
- * in general, numCells = 2 + 10 * (sz+1)^2
- */
 function makeCells(geometry)
 {
 	var cells = new Array();
-	var c;
-	var sz = geometry.size;
 
-	var numRows = 3*sz + 4;
-
-	for (var row = 1; row <= numRows; row++)
+	var numCells = geometry.getCellCount();
+	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
 	{
-		var lat = Math.PI / 2 - Math.PI * (row-1) / (numRows-1);
-		var numCellsInRow = geometry.getNumCellsInRow(row);
-		var offset = 0;
-		if (row > (sz+1) && row <= 2*(sz+1))
-		{
-			if ((row - (sz+1)) % 2 == 0)
-				offset = 0.5;
-		}
-		else if (row > (sz+1) && row < numRows)
-		{
-			if (sz % 2 == 0)
-				offset = 0.5;
-		}
-
-		for (var i = 0; i < numCellsInRow; i++)
-		{
-			var lgt = Math.PI*2 * (i+offset) / numCellsInRow;
-			c = {
-			pt: fromPolar(lgt, lat)
+		var c = {
+			pt: geometry.getSpherePoint(cellIdx)
 			};
-			cells.push(c);
-		}
+		cells.push(c);
 	}
 
 	for (var i in cells)
 	{
+		var cellIdx = parseInt(i)+1;
 		var c = cells[i];
 
-		var adj = geometry.getNeighbors(parseInt(i)+1);
+		var adj = geometry.getNeighbors(cellIdx);
 		c.adjacent = new Array();
 		for (var j = 0; j < adj.length; j++)
 		{

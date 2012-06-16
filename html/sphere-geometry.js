@@ -1,3 +1,42 @@
+/**
+ * sz=0 ; 4 rows, 12 cells
+ *        /-----1-----\
+ *       /   /  |  \   \
+ *      2   3   4   5   6
+ *       \ / \ / \ / \ / \
+ *        7   8   9  10  11
+ *         \   \  |  /  /
+ *          \----12----/
+ *
+ * sz=1 ; 7 rows, 42 cells
+ *  row 1: 1 cell (pentagon)
+ *  row 2: 5 cells (hexagons)
+ *  row 3: 10 cells (alternating pentagon/hexagon)
+ *  row 4: 10 cells (hexagons)
+ *  row 5: 10 cells (alternating pentagon/hexagon)
+ *  row 6: 5 cells (hexagons)
+ *  row 7: 1 cell (pentagon)
+ *
+ * sz=2 ; 10 rows, 92 cells
+ *  row 1: 1 cell
+ *  row 2: 5 cells     1   \
+ *  row 3: 10 cells    2    = 6
+ *  row 4: 15 cells    3   /
+ *  row 5: 15 cells    3
+ *  row 6: 15 cells    3
+ *  row 7: 15 cells    3   \
+ *  row 8: 10 cells    2    = 6
+ *  row 9: 5 cells     1   /
+ *  row 10: 1 cell
+ *
+ * 1+2+3+...+n = n(n+1)/2
+ * (sz+1)(sz+2) + sz(sz+1)
+ * (sz+1)(sz+2+sz)
+ * 2(sz+1)(sz+1)
+ * 2(sz+1)^2
+ *
+ * in general, numCells = 2 + 10 * (sz+1)^2
+ */
 function SphereGeometry(size)
 {
 	this.size = size;
@@ -73,6 +112,12 @@ function SphereGeometry(size)
 		}
 	};
 }
+
+SphereGeometry.prototype.getCellCount = function()
+{
+	var sz = this.size;
+	return 2 + 10 * (sz+1) * (sz+1);
+};
 
 SphereGeometry.prototype.getNeighbors = function(cellIdx)
 {
@@ -287,4 +332,39 @@ SphereGeometry.prototype.getNeighbors = function(cellIdx)
 			bx-5, bx-4, bx-3, bx-2, bx-1
 			];
 	}
+};
+
+function fromPolar(lgt, lat)
+{
+	var zz = Math.cos(lat);
+	return {
+	x: Math.cos(lgt) * zz,
+	y: Math.sin(lgt) * zz,
+	z: Math.sin(lat)
+	};
+}
+
+SphereGeometry.prototype.getSpherePoint = function(cellIdx)
+{
+	var sz = this.size;
+	var numRows = 3*sz + 4;
+	var cell = this.getRowIdx(cellIdx);
+	var row = cell.row;
+	var lat = Math.PI / 2 - Math.PI * (row-1) / (numRows-1);
+	var numCellsInRow = this.getNumCellsInRow(row);
+
+	var offset = 0;
+	if (row > (sz+1) && row <= 2*(sz+1))
+	{
+		if ((row - (sz+1)) % 2 == 0)
+			offset = 0.5;
+	}
+	else if (row > (sz+1) && row < numRows)
+	{
+		if (sz % 2 == 0)
+			offset = 0.5;
+	}
+	
+	var lgt = Math.PI*2 * (cell.idx+offset) / numCellsInRow;
+	return fromPolar(lgt, lat);
 };
