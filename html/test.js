@@ -43,24 +43,35 @@ function applyRotation(pt)
 }
 
 var geometry;
+var map = {
+	vertices: {}
+	};
 var cells = new Array();
-var edges = {};
-var corners = {};
+
+var SCALE = 250;
+var OFFSET = 280;
+
+function toScreenPoint(pt)
+{
+	var p = applyRotation(pt);
+	return {
+	x: p.x * SCALE + OFFSET,
+	y: p.y * SCALE + OFFSET,
+	z: p.z };
+}
 
 function repaint()
 {
 	var canvas = document.getElementById('theCanvas');
 	var ctx = canvas.getContext('2d');
 
-	ctx.fillStyle = '#ff0';
+	ctx.fillStyle = '#444';
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
-	var SCALE = 250;
-	var OFFSET = 280;
 	for (var i in cells)
 	{
-		var sumLen = 0.0;
 		var c = cells[i];
+		var cellIdx = parseInt(i)+1;
 		if (applyRotation(c.pt).z < 0)
 			continue;
 
@@ -68,11 +79,22 @@ function repaint()
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = '#000';
 		ctx.fillStyle =
-			c.height < -3 ? '#05a' :
-			c.height < 0 ? '#8af' :
-			c.height < 3 ? '#8f8' :
-			c.height < 7 ? '#f80' :
-			'#eee';
+			c.height < -3 ? '#730' :
+			c.height < 0 ? '#940' :
+			c.height < 3 ? '#e70' :
+			c.height < 7 ? '#fa3' :
+			'#fe8';
+			
+		if (c.water && c.water > 0)
+		{
+			ctx.fillStyle = c.water < 3 ? '#8af' : '#05a';
+		}
+
+		//	c.height < -3 ? '#05a' :
+		//	c.height < 0 ? '#8af' :
+		//	c.height < 3 ? '#8f8' :
+		//	c.height < 7 ? '#f80' :
+		//	'#eee';
  
 		ctx.beginPath();
 		var p = applyRotation(c.pts[0]);
@@ -84,7 +106,6 @@ function repaint()
 				+ Math.pow(c.pts[j].y - c.pts[(j+1)%l].y, 2.0)
 				+ Math.pow(c.pts[j].z - c.pts[(j+1)%l].z, 2.0)
 				);
-			sumLen += d;
 
 			var p = applyRotation(c.pts[(j+1)%l]);
 			ctx.lineTo(p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
@@ -93,8 +114,14 @@ function repaint()
 		ctx.stroke();
 
 		var p = applyRotation(c.pt);
-		ctx.fillStyle = '#800';
-		ctx.fillText(c.height, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
+
+	// SHOW HEIGHTS
+	//	ctx.fillStyle = '#800';
+	//	ctx.fillText(c.height, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
+
+	// SHOW CELL IDS
+		ctx.fillStyle = '#fff';
+		ctx.fillText(cellIdx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
 
 		if (Math.floor(c.water) != 0)
 		{
@@ -104,6 +131,65 @@ function repaint()
 		//var ri = geometry.getRowIdx(parseInt(i)+1);
 		//ctx.fillText(ri.row+','+ri.idx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
 		ctx.restore();
+	}
+
+	for (var vId in map.vertices)
+	{
+		var v = map.vertices[vId];
+		var p = applyRotation(v.pt);
+		if (p.z < 0)
+			continue;
+
+
+		p = {
+		x: p.x * SCALE + OFFSET,
+		y: p.y * SCALE + OFFSET
+		};
+
+		if (Math.random() < 0)
+		{
+			ctx.save();
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = '#c0c';
+
+			var nn = geometry.getVerticesAdjacentToVertex(vId);
+			for (var i = 0, l = nn.length; i < l; i++)
+			{
+				var u = map.vertices[nn[i]];
+				var q = applyRotation(u.pt);
+				if (q.z < 0) continue;
+
+				q = {
+				x: q.x * SCALE + OFFSET,
+				y: q.y * SCALE + OFFSET
+				};
+
+			ctx.beginPath();
+			ctx.moveTo(p.x, p.y);
+			ctx.lineTo(q.x, q.y);
+			ctx.stroke();
+			}
+
+			ctx.restore();
+		}
+
+		if (!v.water)
+			continue;
+		if (Math.floor(v.water) == 0)
+			continue;
+
+		ctx.save();
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = '#000';
+		ctx.fillStyle = '#00c';
+ 
+		ctx.fillRect(p.x-4,p.y-4,8,8);
+
+		ctx.fillStyle = '#ffc';
+		ctx.fillText(Math.floor(v.water), p.x-4, p.y+4);
+
+		ctx.restore();
+
 	}
 }
 
@@ -122,9 +208,10 @@ window.onresize = onResize;
 $(onResize);
 
 
-function makeCells(geometry)
+function makeMap(geometry)
 {
 	var cells = new Array();
+	var vertices = {};
 
 	var numCells = geometry.getCellCount();
 	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
@@ -160,11 +247,23 @@ function makeCells(geometry)
 			y: (c.pt.y + d.pt.y + e.pt.y) / 3,
 			z: (c.pt.z + d.pt.z + e.pt.z) / 3
 			};
-			pts.push(normalize(avg));
+			avg = normalize(avg);
+			pts.push(avg);
+
+			var vId = geometry._makeVertex(cellIdx,adj[j],adj[(j+1)%l]);
+			if (!(vId in vertices))
+			{
+				vertices[vId] = {
+				pt: avg
+				};
+			}
 		}
 		c.pts = pts;
 	}
-	return cells;
+	return {
+	cells: cells,
+	vertices: vertices
+	};
 }
 
 function normalize(pt)
@@ -182,7 +281,8 @@ function normalize(pt)
 }
 
 geometry = new SphereGeometry(3);
-cells = makeCells(geometry);
+map = makeMap(geometry);
+cells = map.cells;
 
 var rotateTimer;
 var keepGoing = true;
@@ -245,59 +345,168 @@ function bumpMapBtnClicked()
 function nextSizeClicked()
 {
 	geometry = new SphereGeometry((geometry.size+1)%10);
-	cells = makeCells(geometry);
+	map = makeMap(geometry);
+	cells = map.cells;
 
 	document.title = 'Big Earth ' + geometry.size;
+	repaint();
 }
 
 function addWaterClicked()
 {
-	for (var i in cells)
+	for (var vId in map.vertices)
 	{
-		cells[i].water++;
+		var v = map.vertices[vId];
+		if (!v.water)
+			v.water = 0;
+		v.water += 1;
 	}
 	repaint();
 }
 
 function flowWaterClicked()
 {
-	var deltaWater = {};
-	for (var i in cells)
+	var getVertexHeight = function(vId)
 	{
-		var c = cells[i];
-		var cellIdx = parseInt(i)+1;
-		var adj = geometry.getNeighbors(cellIdx);
+		var cc = geometry.getCellsAdjacentToVertex(vId);
+		return (
+			map.cells[cc[0]-1].height +
+			map.cells[cc[1]-1].height +
+			map.cells[cc[2]-1].height) / 3;
+	};
+
+	var deltaWater = {};
+	for (var vId in map.vertices)
+	{
+		var v = map.vertices[vId];
+		var v_h = getVertexHeight(vId);
+		var v_w = v.water ? v.water : 0;
+
+		var adj = geometry.getVerticesAdjacentToVertex(vId);
 		var sumFlow = 0;
 		for (var j in adj)
 		{
-			var d = cells[adj[j]-1];
-			var flow = (c.height + c.water) - (d.height + d.water);
+			var u = map.vertices[adj[j]];
+			var u_h = getVertexHeight(adj[j]);
+			var u_w = u.water ? u.water : 0;
+
+			var flow = (v_h + v_w) - (u_h + u_w);
 			if (flow > 0)
 			{
 				sumFlow += flow;
 			}
 		}
-		var amt = c.water > sumFlow ? sumFlow : c.water;
+		var amt = v_w > sumFlow ? sumFlow : v_w;
 		for (var j in adj)
 		{
-			var d = cells[adj[j]-1];
-			var flow = (c.height + c.water) - (d.height + d.water);
+			var u = map.vertices[adj[j]];
+			var u_h = getVertexHeight(adj[j]);
+			var u_w = u.water ? u.water : 0;
+
+			var flow = (v_h + v_w) - (u_h + u_w);
 			if (flow > 0)
 			{
 				flow *= amt / sumFlow;
 
-				if (!(cellIdx in deltaWater)) { deltaWater[cellIdx] = 0; }
+				if (!(vId in deltaWater)) { deltaWater[vId] = 0; }
 				if (!(adj[j] in deltaWater)) { deltaWater[adj[j]] = 0; }
-				deltaWater[cellIdx] -= flow;
+				deltaWater[vId] -= flow;
 				deltaWater[adj[j]] += flow;
 			}
 		}
 	}
 
-	for (var cellIdx in deltaWater)
+	for (var vId in deltaWater)
 	{
-		var c = cells[cellIdx-1];
-		c.water += deltaWater[cellIdx];
+		var v = map.vertices[vId];
+		if (!v.water) { v.water = 0; }
+		v.water += deltaWater[vId];
 	}
 	repaint();
 }
+
+function onMouseDown(evt)
+{
+	if (evt.which != 1) return;
+	evt.preventDefault();
+
+	var orig = $('#theCanvas').position();
+	var screenPt = {
+		x: evt.clientX - orig.left,
+		y: evt.clientY - orig.top
+		};
+	var xx = getNearestFeatureFromScreen(screenPt);
+	if (xx.type == 'vertex')
+	{
+		var vId = xx.id;
+		$('#infoPane .featureType').text('Vertex');
+		$('#vId').text(vId);
+		$('#infoPane .adjacentCells').text(geometry.getCellsAdjacentToVertex(vId).join('; '));
+		$('#infoPane .adjacentVertices').text(geometry.getVerticesAdjacentToVertex(vId).join('; '));
+		$('#infoPane').show();
+	}
+	else if (xx.type == 'cell')
+	{
+		$('#infoPane .featureType').text('Cell');
+		$('#vId').text(xx.id);
+		$('#infoPane .adjacentCells').text(geometry.getNeighbors(xx.id).join('; '));
+		$('#infoPane .adjacentVertices').text(geometry.getVerticesAdjacentToCell(xx.id).join('; '));
+		$('#infoPane').show();
+	}
+}
+
+function getNearestFeatureFromScreen(screenPt)
+{
+	var bestvertex = getVertexFromScreen(screenPt);
+	var p = toScreenPoint(map.vertices[bestvertex].pt);
+
+	var bestDist = Math.sqrt(Math.pow(screenPt.x-p.x,2)+Math.pow(screenPt.y-p.y,2));
+	var best = {
+	type: "vertex",
+	id: bestvertex
+	};
+
+	for (var i in map.cells)
+	{
+		var cellIdx = parseInt(i)+1;
+		var c = map.cells[i];
+
+		var p = toScreenPoint(c.pt);
+		var d = Math.sqrt(Math.pow(p.x-screenPt.x,2)+Math.pow(p.y-screenPt.y,2));
+		if (d<bestDist)
+		{
+			best = {
+			type: "cell",
+			id: cellIdx
+			};
+			bestDist = d;
+		}
+	}
+	return best;
+}
+
+function getVertexFromScreen(screenPt)
+{
+	var best = null;
+	var bestDist = Infinity;
+
+	for (var vId in map.vertices)
+	{
+		var p = toScreenPoint(map.vertices[vId].pt);
+		if (p.z < 0)
+			continue;
+
+		var d = Math.sqrt(Math.pow(p.x-screenPt.x,2)+Math.pow(p.y-screenPt.y,2));
+		if (d < bestDist)
+		{
+			best = vId;
+			bestDist = d;
+		}
+	}
+	return best;
+}
+
+$(function() {
+	var canvas = document.getElementById('theCanvas');
+	canvas.addEventListener('mousedown', onMouseDown, false);
+});
