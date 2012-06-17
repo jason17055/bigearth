@@ -108,12 +108,6 @@ function repaint()
 		ctx.moveTo(p.x, p.y);
 		for (var j = 0, l = co.pts.length; j < l; j++)
 		{
-			var d = Math.sqrt(
-				Math.pow(c.pts[j].x - c.pts[(j+1)%l].x, 2.0)
-				+ Math.pow(c.pts[j].y - c.pts[(j+1)%l].y, 2.0)
-				+ Math.pow(c.pts[j].z - c.pts[(j+1)%l].z, 2.0)
-				);
-
 			var p = toScreenPoint(co.pts[(j+1)%l]);
 			ctx.lineTo(p.x, p.y);
 		}
@@ -247,7 +241,7 @@ function testBtnClicked()
 
 function bumpMapBtnClicked()
 {
-	bumpMap(map);
+	bumpMap(map, coords);
 	repaint();
 
 	numBumps++;
@@ -445,7 +439,7 @@ function onMouseDown(evt)
 function getNearestFeatureFromScreen(screenPt)
 {
 	var bestvertex = getVertexFromScreen(screenPt);
-	var p = toScreenPoint(map.vertices[bestvertex].pt);
+	var p = toScreenPoint(coords.vertices[bestvertex].pt);
 
 	var bestDist = Math.sqrt(Math.pow(screenPt.x-p.x,2)+Math.pow(screenPt.y-p.y,2));
 	var best = {
@@ -453,18 +447,17 @@ function getNearestFeatureFromScreen(screenPt)
 	id: bestvertex
 	};
 
-	for (var i in map.cells)
+	for (var cid in coords.cells)
 	{
-		var cellIdx = parseInt(i)+1;
-		var c = map.cells[i];
+		var co = coords.cells[cid];
 
-		var p = toScreenPoint(c.pt);
+		var p = toScreenPoint(co.pt);
 		var d = Math.sqrt(Math.pow(p.x-screenPt.x,2)+Math.pow(p.y-screenPt.y,2));
 		if (d<bestDist)
 		{
 			best = {
 			type: "cell",
-			id: cellIdx
+			id: parseInt(cid)
 			};
 			bestDist = d;
 		}
@@ -479,7 +472,7 @@ function getVertexFromScreen(screenPt)
 
 	for (var vId in map.vertices)
 	{
-		var p = toScreenPoint(map.vertices[vId].pt);
+		var p = toScreenPoint(coords.vertices[vId].pt);
 		if (p.z < 0)
 			continue;
 

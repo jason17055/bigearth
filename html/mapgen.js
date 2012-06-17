@@ -69,56 +69,32 @@ function makeMap(geometry)
 	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
 	{
 		var c = {
-			pt: geometry.getSpherePoint(cellIdx),
 			height: 0,
 			water: 0
 			};
 		cells.push(c);
-	}
-
-	for (var i in cells)
-	{
-		var cellIdx = parseInt(i)+1;
-		var c = cells[i];
 
 		var adj = geometry.getNeighbors(cellIdx);
-		c.adjacent = new Array();
-		for (var j = 0; j < adj.length; j++)
+		for (var j = 0, l = adj.length; j < l; j++)
 		{
-			c.adjacent.push(cells[adj[j]-1]);
-		}
+			var other1 = adj[j];
+			var other2 = adj[(j+1)%l];
 
-		var pts = new Array();
-		for (var j = 0, l = c.adjacent.length; j < l; j++)
-		{
-			var d = c.adjacent[j];
-			var e = c.adjacent[(j+1)%l];
-
-			var avg = {
-			x: (c.pt.x + d.pt.x + e.pt.x) / 3,
-			y: (c.pt.y + d.pt.y + e.pt.y) / 3,
-			z: (c.pt.z + d.pt.z + e.pt.z) / 3
-			};
-			avg = normalize(avg);
-			pts.push(avg);
-
-			var vId = geometry._makeVertex(cellIdx,adj[j],adj[(j+1)%l]);
+			var vId = geometry._makeVertex(cellIdx,other1,other2);
 			if (!(vId in vertices))
 			{
-				vertices[vId] = {
-				pt: avg
-				};
+				vertices[vId] = {};
 			}
 		}
-		c.pts = pts;
 	}
+
 	return {
 	cells: cells,
 	vertices: vertices
 	};
 }
 
-function bumpMap(map)
+function bumpMap(map, coords)
 {
 	var M = Math.sqrt(1/3);
 	var v = {
@@ -131,10 +107,11 @@ function bumpMap(map)
 	for (var i in map.cells)
 	{
 		var c = map.cells[i];
+		var co = coords.cells[parseInt(i)+1];
 		var u = {
-		x: c.pt.x - v.x,
-		y: c.pt.y - v.y,
-		z: c.pt.z - v.z
+		x: co.pt.x - v.x,
+		y: co.pt.y - v.y,
+		z: co.pt.z - v.z
 		};
 		var dp = u.x * v.x + u.y * v.y + u.z * v.z;
 		if (dp > 0)
