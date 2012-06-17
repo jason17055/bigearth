@@ -46,7 +46,6 @@ var geometry;
 var map = {
 	vertices: {}
 	};
-var cells = new Array();
 var coords = {};
 var pawn = null;
 
@@ -67,9 +66,9 @@ function repaint()
 	ctx.fillStyle = '#444';
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
-	for (var i in cells)
+	for (var i in map.cells)
 	{
-		var c = cells[i];
+		var c = map.cells[i];
 		var cellIdx = parseInt(i)+1;
 
 		var co = coords.cells[cellIdx];
@@ -197,7 +196,6 @@ $(onResize);
 function resetMap()
 {
 	map = makeMap(geometry);
-	cells = map.cells;
 	coords = makeCoords(geometry);
 	numBumps = 0;
 	pawn = null;
