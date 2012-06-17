@@ -47,6 +47,7 @@ var map = {
 	vertices: {}
 	};
 var cells = new Array();
+var coords = {};
 var pawn = null;
 
 var SCALE = 250;
@@ -73,7 +74,10 @@ function repaint()
 	{
 		var c = cells[i];
 		var cellIdx = parseInt(i)+1;
-		if (applyRotation(c.pt).z < 0)
+
+		var co = coords.cells[cellIdx];
+		var centerP = toScreenPoint(co.pt);
+		if (centerP.z < 0)
 			continue;
 
 		ctx.save();
@@ -100,9 +104,9 @@ function repaint()
 		//	'#eee';
  
 		ctx.beginPath();
-		var p = applyRotation(c.pts[0]);
-		ctx.moveTo(p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
-		for (var j = 0, l = c.pts.length; j < l; j++)
+		var p = toScreenPoint(co.pts[0]);
+		ctx.moveTo(p.x, p.y);
+		for (var j = 0, l = co.pts.length; j < l; j++)
 		{
 			var d = Math.sqrt(
 				Math.pow(c.pts[j].x - c.pts[(j+1)%l].x, 2.0)
@@ -110,71 +114,34 @@ function repaint()
 				+ Math.pow(c.pts[j].z - c.pts[(j+1)%l].z, 2.0)
 				);
 
-			var p = applyRotation(c.pts[(j+1)%l]);
-			ctx.lineTo(p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
+			var p = toScreenPoint(co.pts[(j+1)%l]);
+			ctx.lineTo(p.x, p.y);
 		}
 		ctx.fill();
 		ctx.stroke();
 
-		var p = applyRotation(c.pt);
-
 	// SHOW HEIGHTS
 	//	ctx.fillStyle = '#800';
-	//	ctx.fillText(c.height, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
+	//	ctx.fillText(c.height, centerP.x, centerP.y-8);
 
 	// SHOW CELL IDS
 	//	ctx.fillStyle = '#fff';
-	//	ctx.fillText(cellIdx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
+	//	ctx.fillText(cellIdx, centerP.x, centerP.y-8);
 
 		if (Math.floor(c.water) != 0)
 		{
 		ctx.fillStyle = '#ff0';
-		ctx.fillText(Math.floor(c.water), p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
+		ctx.fillText(Math.floor(c.water), centerP.x, centerP.y);
 		}
-		//var ri = geometry.getRowIdx(parseInt(i)+1);
-		//ctx.fillText(ri.row+','+ri.idx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
 		ctx.restore();
 	}
 
 	for (var vId in map.vertices)
 	{
 		var v = map.vertices[vId];
-		var p = applyRotation(v.pt);
+		var p = toScreenPoint(coords.vertices[vId].pt);
 		if (p.z < 0)
 			continue;
-
-
-		p = {
-		x: p.x * SCALE + OFFSET,
-		y: p.y * SCALE + OFFSET
-		};
-
-		if (Math.random() < 0)
-		{
-			ctx.save();
-			ctx.lineWidth = 2;
-			ctx.strokeStyle = '#c0c';
-
-			var nn = geometry.getVerticesAdjacentToVertex(vId);
-			for (var i = 0, l = nn.length; i < l; i++)
-			{
-				var u = map.vertices[nn[i]];
-				var q = applyRotation(u.pt);
-				if (q.z < 0) continue;
-
-				q = {
-				x: q.x * SCALE + OFFSET,
-				y: q.y * SCALE + OFFSET
-				};
-
-			ctx.beginPath();
-			ctx.moveTo(p.x, p.y);
-			ctx.lineTo(q.x, q.y);
-			ctx.stroke();
-			}
-
-			ctx.restore();
-		}
 
 		if (!v.water)
 			continue;
@@ -197,7 +164,7 @@ function repaint()
 	if (pawn && pawn.locationType == 'vertex')
 	{
 		var v = map.vertices[pawn.location];
-		var p = toScreenPoint(v.pt);
+		var p = toScreenPoint(coords.vertices[pawn.location].pt);
 		if (p.z >= 0)
 		{
 		ctx.save();
@@ -207,7 +174,7 @@ function repaint()
 		var adj = geometry.getVerticesAdjacentToVertex(pawn.location);
 		for (var i = 0; i < adj.length; i++)
 		{
-			var q = toScreenPoint(map.vertices[adj[i]].pt);
+			var q = toScreenPoint(coords.vertices[adj[i]].pt);
 			if (q.z < 0) continue;
 
 			ctx.fillStyle = '#fff';
@@ -235,9 +202,17 @@ function onResize()
 window.onresize = onResize;
 $(onResize);
 
+function resetMap()
+{
+	map = makeMap(geometry);
+	cells = map.cells;
+	coords = makeCoords(geometry);
+	numBumps = 0;
+	pawn = null;
+}
+
 geometry = new SphereGeometry(3);
-map = makeMap(geometry);
-cells = map.cells;
+resetMap();
 
 var rotateTimer;
 var keepGoing = true;
@@ -283,10 +258,7 @@ var numBumps = 0;
 function nextSizeClicked()
 {
 	geometry = new SphereGeometry((geometry.size+1)%14);
-	map = makeMap(geometry);
-	cells = map.cells;
-	numBumps = 0;
-	pawn = null;
+	resetMap();
 
 	document.title = 'Big Earth ' + geometry.size;
 	repaint();

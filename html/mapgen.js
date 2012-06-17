@@ -12,6 +12,54 @@ function normalize(pt)
 	};
 }
 
+function makeCoords(geometry)
+{
+	var cellCoords = {};
+	var vertexCoords = {};
+
+	var numCells = geometry.getCellCount();
+	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
+	{
+		cellCoords[cellIdx] = {
+		pt: geometry.getSpherePoint(cellIdx)
+		};
+	}
+
+	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
+	{
+		var c = cellCoords[cellIdx];
+		var adj = geometry.getNeighbors(cellIdx);
+		var pts = new Array();
+		for (var j = 0, l = adj.length; j < l; j++)
+		{
+			var d = cellCoords[adj[j]];
+			var e = cellCoords[adj[(j+1)%l]];
+
+			var avg = {
+			x: (c.pt.x + d.pt.x + e.pt.x) / 3,
+			y: (c.pt.y + d.pt.y + e.pt.y) / 3,
+			z: (c.pt.z + d.pt.z + e.pt.z) / 3
+			};
+			avg = normalize(avg);
+			pts.push(avg);
+
+			var vId = geometry._makeVertex(cellIdx,adj[j],adj[(j+1)%l]);
+			if (!(vId in vertexCoords))
+			{
+				vertexCoords[vId] = {
+				pt: avg
+				};
+			}
+		}
+		cellCoords[cellIdx].pts = pts;
+	}
+
+	return {
+	cells: cellCoords,
+	vertices: vertexCoords
+	};
+}
+
 function makeMap(geometry)
 {
 	var cells = new Array();
@@ -99,5 +147,6 @@ function bumpMap(map)
 if (typeof exports !== 'undefined')
 {
 	exports.makeMap = makeMap;
+	exports.makeCoords = makeCoords;
 	exports.bumpMap = bumpMap;
 }
