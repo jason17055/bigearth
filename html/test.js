@@ -44,6 +44,8 @@ function applyRotation(pt)
 
 var geometry;
 var cells = new Array();
+var edges = {};
+var corners = {};
 
 function repaint()
 {
@@ -70,7 +72,7 @@ function repaint()
 			c.height < 0 ? '#8af' :
 			c.height < 3 ? '#8f8' :
 			c.height < 7 ? '#f80' :
-			'#ddb';
+			'#eee';
  
 		ctx.beginPath();
 		var p = applyRotation(c.pts[0]);
@@ -94,6 +96,11 @@ function repaint()
 		ctx.fillStyle = '#800';
 		ctx.fillText(c.height, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
 
+		if (Math.floor(c.water) != 0)
+		{
+		ctx.fillStyle = '#008';
+		ctx.fillText(Math.floor(c.water), p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
+		}
 		//var ri = geometry.getRowIdx(parseInt(i)+1);
 		//ctx.fillText(ri.row+','+ri.idx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
 		ctx.restore();
@@ -124,7 +131,8 @@ function makeCells(geometry)
 	{
 		var c = {
 			pt: geometry.getSpherePoint(cellIdx),
-			height: 0
+			height: 0,
+			water: 0
 			};
 		cells.push(c);
 	}
@@ -173,7 +181,7 @@ function normalize(pt)
 	};
 }
 
-geometry = new SphereGeometry(0);
+geometry = new SphereGeometry(3);
 cells = makeCells(geometry);
 
 var rotateTimer;
@@ -240,4 +248,56 @@ function nextSizeClicked()
 	cells = makeCells(geometry);
 
 	document.title = 'Big Earth ' + geometry.size;
+}
+
+function addWaterClicked()
+{
+	for (var i in cells)
+	{
+		cells[i].water++;
+	}
+	repaint();
+}
+
+function flowWaterClicked()
+{
+	var deltaWater = {};
+	for (var i in cells)
+	{
+		var c = cells[i];
+		var cellIdx = parseInt(i)+1;
+		var adj = geometry.getNeighbors(cellIdx);
+		var sumFlow = 0;
+		for (var j in adj)
+		{
+			var d = cells[adj[j]-1];
+			var flow = (c.height + c.water) - (d.height + d.water);
+			if (flow > 0)
+			{
+				sumFlow += flow;
+			}
+		}
+		var amt = c.water > sumFlow ? sumFlow : c.water;
+		for (var j in adj)
+		{
+			var d = cells[adj[j]-1];
+			var flow = (c.height + c.water) - (d.height + d.water);
+			if (flow > 0)
+			{
+				flow *= amt / sumFlow;
+
+				if (!(cellIdx in deltaWater)) { deltaWater[cellIdx] = 0; }
+				if (!(adj[j] in deltaWater)) { deltaWater[adj[j]] = 0; }
+				deltaWater[cellIdx] -= flow;
+				deltaWater[adj[j]] += flow;
+			}
+		}
+	}
+
+	for (var cellIdx in deltaWater)
+	{
+		var c = cells[cellIdx-1];
+		c.water += deltaWater[cellIdx];
+	}
+	repaint();
 }
