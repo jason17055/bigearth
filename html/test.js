@@ -157,25 +157,37 @@ function repaint()
 		var p = toScreenPoint(coords.vertices[pawn.location].pt);
 		if (p.z >= 0)
 		{
-		ctx.save();
-		ctx.fillStyle = '#c0c';
-		ctx.fillRect(p.x-4,p.y-4,8,8);
-
-		var adj = geometry.getVerticesAdjacentToVertex(pawn.location);
-		for (var i = 0; i < adj.length; i++)
-		{
-			var q = toScreenPoint(coords.vertices[adj[i]].pt);
-			if (q.z < 0) continue;
-
-			ctx.fillStyle = '#fff';
-			ctx.strokeStyle = '#c0c';
-			ctx.lineWidth = 2;
-			ctx.fillRect(q.x-3,q.y-3,6,6);
-		}
-
-		ctx.restore();
+			drawPawn(ctx, p);
 		}
 	}
+	else if (pawn && pawn.locationType == 'cell')
+	{
+		var p = toScreenPoint(coords.cells[pawn.location].pt);
+		if (p.z >= 0)
+		{
+			drawPawn(ctx, p);
+		}
+	}
+	else if (pawn && pawn.locationType == 'edge')
+	{
+		var p = toScreenPoint(coords.edges[pawn.location].pt);
+		if (p.z >= 0)
+		{
+			drawPawn(ctx, p);
+		}
+	}
+}
+
+function drawPawn(ctx, p)
+{
+	ctx.save();
+	ctx.lineWidth = 4;
+	ctx.strokeStyle = '#c0c';
+	ctx.beginPath();
+	ctx.arc(p.x, p.y, 12, 0, Math.PI*2, true);
+	ctx.closePath();
+	ctx.stroke();
+	ctx.restore();
 }
 
 function onResize()
@@ -430,6 +442,19 @@ function onMouseDown(evt)
 		pawn.location = xx.id;
 		repaint();
 	}
+	else if (xx.type == 'edge')
+	{
+		$('#infoPane .featureType').text('Edge');
+		$('#vId').text(xx.id);
+		$('#infoPane .adjacentCells').text("");
+		$('#infoPane .adjacentVertices').text("");
+		$('#infoPane').show();
+
+		if (!pawn) { pawn = {}; }
+		pawn.locationType = xx.type;
+		pawn.location = xx.id;
+		repaint();
+	}
 }
 
 function getNearestFeatureFromScreen(screenPt)
@@ -448,6 +473,8 @@ function getNearestFeatureFromScreen(screenPt)
 		var co = coords.cells[cid];
 
 		var p = toScreenPoint(co.pt);
+		if (p.z < 0)
+			continue;
 		var d = Math.sqrt(Math.pow(p.x-screenPt.x,2)+Math.pow(p.y-screenPt.y,2));
 		if (d<bestDist)
 		{
@@ -458,6 +485,25 @@ function getNearestFeatureFromScreen(screenPt)
 			bestDist = d;
 		}
 	}
+
+	for (var eid in coords.edges)
+	{
+		var eco = coords.edges[eid];
+		var p = toScreenPoint(eco.pt);
+		if (p.z < 0)
+			continue;
+		var d = Math.sqrt(Math.pow(p.x-screenPt.x,2)+Math.pow(p.y-screenPt.y,2));
+
+		if (d<bestDist)
+		{
+			best = {
+			type: "edge",
+			id: eid
+			};
+			bestDist = d;
+		}
+	}
+
 	return best;
 }
 

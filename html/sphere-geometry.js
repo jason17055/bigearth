@@ -317,6 +317,22 @@ SphereGeometry.prototype.getNeighbors = function(cellIdx)
 	}
 };
 
+// Edges are identified as <C1,C2>, i.e. the ids of the
+// two adjoining cells. The lexigraphically smallest cell id
+// is listed first.
+//
+SphereGeometry.prototype._makeEdge = function(cell1, cell2)
+{
+	if (cell1 < cell2)
+	{
+		return cell1+"-"+cell2;
+	}
+	else
+	{
+		return cell2+"-"+cell1;
+	}
+};
+
 // Vertices are always identified as <C1,C2,C3>, i.e. the ids of
 // the three adjoining cells. The lexigraphically smallest cell id
 // is first. The other two are chosen so that the three cells are

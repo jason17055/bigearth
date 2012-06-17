@@ -16,6 +16,7 @@ function makeCoords(geometry)
 {
 	var cellCoords = {};
 	var vertexCoords = {};
+	var edgeCoords = {};
 
 	var numCells = geometry.getCellCount();
 	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
@@ -43,6 +44,18 @@ function makeCoords(geometry)
 			avg = normalize(avg);
 			pts.push(avg);
 
+			var eId = geometry._makeEdge(cellIdx,adj[j]);
+			if (!(eId in edgeCoords))
+			{
+				var a1 = {
+				x: (c.pt.x + d.pt.x) / 2,
+				y: (c.pt.y + d.pt.y) / 2,
+				z: (c.pt.z + d.pt.z) / 2
+				};
+				a1 = normalize(a1);
+				edgeCoords[eId] = { pt: a1 };
+			}
+
 			var vId = geometry._makeVertex(cellIdx,adj[j],adj[(j+1)%l]);
 			if (!(vId in vertexCoords))
 			{
@@ -56,7 +69,8 @@ function makeCoords(geometry)
 
 	return {
 	cells: cellCoords,
-	vertices: vertexCoords
+	vertices: vertexCoords,
+	edges: edgeCoords
 	};
 }
 
