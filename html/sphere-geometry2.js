@@ -358,9 +358,9 @@ SphereGeometry.prototype.getVerticesAdjacentToVertex = function(vertexId)
 		var f = null;
 		for (var j = 0, l = n.length; j < l; j++)
 		{
-			if (n[j] == x)
+			if (n[(j+1)%l] == x)
 			{
-				f = this._makeVertex(cc[i],x,n[(j+1)%l]);
+				f = this._makeVertex(cc[i],n[j],x);
 			}
 		}
 		rv.push(f);
