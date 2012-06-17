@@ -62,24 +62,16 @@ function repaint()
 		if (applyRotation(c.pt).z < 0)
 			continue;
 
+		ctx.save();
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = '#000';
-	if (2 == 1) {
-		for (var j = 0, l = c.adjacent.length; j < l; j++)
-		{
-			var d = c.adjacent[j];
-			ctx.beginPath();
-			var p = applyRotation(c.pt);
-			var q = applyRotation(d.pt);
-			ctx.moveTo(p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
-			ctx.lineTo(q.x*SCALE+OFFSET, q.y*SCALE+OFFSET);
-			ctx.stroke();
-		}
-	}
+		ctx.fillStyle =
+			c.height < -3 ? '#05a' :
+			c.height < 0 ? '#8af' :
+			c.height < 3 ? '#8f8' :
+			c.height < 7 ? '#f80' :
+			'#ddb';
  
-	//if (parseInt(i)+1 < 47){
-	if (1==1) {
-
 		ctx.beginPath();
 		var p = applyRotation(c.pts[0]);
 		ctx.moveTo(p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
@@ -95,16 +87,15 @@ function repaint()
 			var p = applyRotation(c.pts[(j+1)%l]);
 			ctx.lineTo(p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
 		}
+		ctx.fill();
 		ctx.stroke();
-	}
 
 		var p = applyRotation(c.pt);
-		ctx.strokeText(parseInt(i)+1, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
-
-		ctx.save();
 		ctx.fillStyle = '#800';
-		var ri = geometry.getRowIdx(parseInt(i)+1);
-		ctx.fillText(ri.row+','+ri.idx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
+		ctx.fillText(c.height, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
+
+		//var ri = geometry.getRowIdx(parseInt(i)+1);
+		//ctx.fillText(ri.row+','+ri.idx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
 		ctx.restore();
 	}
 }
@@ -132,7 +123,8 @@ function makeCells(geometry)
 	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
 	{
 		var c = {
-			pt: geometry.getSpherePoint(cellIdx)
+			pt: geometry.getSpherePoint(cellIdx),
+			height: 0
 			};
 		cells.push(c);
 	}
@@ -210,13 +202,42 @@ function pauseClicked()
 
 function testBtnClicked()
 {
-	var x = document.getElementById('numEntry').value;
+	var x = parseInt(document.getElementById('numEntry').value);
 	var adj = geometry.getNeighbors(x);
 	alert('adjacent to ' + x + ' is ' + adj.join(', '));
 }
 
+function bumpMapBtnClicked()
+{
+	var M = Math.sqrt(1/3);
+	var v = {
+	x: Math.random() * 2 * M - M,
+	y: Math.random() * 2 * M - M,
+	z: Math.random() * 2 * M - M
+	};
+	var d = Math.random() >= 0.5 ? 1 : -1;
+
+	for (var i in cells)
+	{
+		var c = cells[i];
+		var u = {
+		x: c.pt.x - v.x,
+		y: c.pt.y - v.y,
+		z: c.pt.z - v.z
+		};
+		var dp = u.x * v.x + u.y * v.y + u.z * v.z;
+		if (dp > 0)
+		{
+			c.height += d;
+		}
+	}
+	repaint();
+}
+
 function nextSizeClicked()
 {
-	geometry = new SphereGeometry((geometry.size+1)%6);
+	geometry = new SphereGeometry((geometry.size+1)%10);
 	cells = makeCells(geometry);
+
+	document.title = 'Big Earth ' + geometry.size;
 }
