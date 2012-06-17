@@ -47,6 +47,7 @@ var map = {
 	vertices: {}
 	};
 var cells = new Array();
+var pawn = null;
 
 var SCALE = 250;
 var OFFSET = 280;
@@ -120,8 +121,8 @@ function repaint()
 	//	ctx.fillText(c.height, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
 
 	// SHOW CELL IDS
-		ctx.fillStyle = '#fff';
-		ctx.fillText(cellIdx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
+	//	ctx.fillStyle = '#fff';
+	//	ctx.fillText(cellIdx, p.x*SCALE+OFFSET, p.y*SCALE+OFFSET-8);
 
 		if (Math.floor(c.water) != 0)
 		{
@@ -189,7 +190,32 @@ function repaint()
 		ctx.fillText(Math.floor(v.water), p.x-4, p.y+4);
 
 		ctx.restore();
+	}
 
+	if (pawn)
+	{
+		var v = map.vertices[pawn.location];
+		var p = toScreenPoint(v.pt);
+		if (p.z >= 0)
+		{
+		ctx.save();
+		ctx.fillStyle = '#c0c';
+		ctx.fillRect(p.x-4,p.y-4,8,8);
+
+		var adj = geometry.getVerticesAdjacentToVertex(pawn.location);
+		for (var i = 0; i < adj.length; i++)
+		{
+			var q = toScreenPoint(map.vertices[adj[i]].pt);
+			if (q.z < 0) continue;
+
+			ctx.fillStyle = '#fff';
+			ctx.strokeStyle = '#c0c';
+			ctx.lineWidth = 2;
+			ctx.fillRect(q.x-3,q.y-3,6,6);
+		}
+
+		ctx.restore();
+		}
 	}
 }
 
@@ -444,6 +470,12 @@ function onMouseDown(evt)
 		$('#infoPane .adjacentCells').text(geometry.getCellsAdjacentToVertex(vId).join('; '));
 		$('#infoPane .adjacentVertices').text(geometry.getVerticesAdjacentToVertex(vId).join('; '));
 		$('#infoPane').show();
+
+	pawn = {
+	locationType: "vertex",
+	location: vId
+	};
+	repaint();
 	}
 	else if (xx.type == 'cell')
 	{
