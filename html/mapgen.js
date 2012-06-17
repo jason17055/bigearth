@@ -96,3 +96,8 @@ function bumpMap(map)
 	}
 }
 
+if (typeof exports !== 'undefined')
+{
+	exports.makeMap = makeMap;
+	exports.bumpMap = bumpMap;
+}
