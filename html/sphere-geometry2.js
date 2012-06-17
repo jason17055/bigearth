@@ -303,6 +303,72 @@ SphereGeometry.prototype.getNeighbors = function(cellIdx)
 	}
 };
 
+// Vertices are always identified as <C1,C2,C3>, i.e. the ids of
+// the three adjoining cells. The lexigraphically smallest cell id
+// is first. The other two are chosen so that the three cells are
+// in clockwise order around the vertex being represented.
+//
+SphereGeometry.prototype._makeVertex = function(cell1, cell2, cell3)
+{
+	if (cell1 < cell2 && cell1 < cell3)
+	{
+		return cell1+","+cell2+","+cell3;
+	}
+	else if (cell2 < cell1 && cell2 < cell3)
+	{
+		return cell2+","+cell3+","+cell1;
+	}
+	else // cell3 is smallest
+	{
+		return cell3+","+cell1+","+cell2;
+	}
+};
+
+SphereGeometry.prototype.getVerticesAdjacentToCell = function(cellIdx)
+{
+	var n = this.getNeighbors(cellIdx);
+	var a = new Array();
+
+	var l = n.length;
+	for (var i = 0; i < l; i++)
+	{
+		a.push(this._makeVertex(cellIdx, n[i], n[(i+1)%l]));
+	}
+	return a;
+};
+
+SphereGeometry.prototype.getCellsAdjacentToVertex = function(vertexId)
+{
+	var a = vertexId.split(',');
+	return [
+		parseInt(a[0]),
+		parseInt(a[1]),
+		parseInt(a[2])
+		];
+};
+
+SphereGeometry.prototype.getVerticesAdjacentToVertex = function(vertexId)
+{
+	var cc = this.getCellsAdjacentToVertex(vertexId);
+	var rv = new Array();
+	for (var i = 0; i < 3; i++)
+	{
+		var x = cc[(i+1)%3];
+		var n = this.getNeighbors(cc[i]);
+		var f = null;
+		for (var j = 0, l = n.length; j < l; j++)
+		{
+			if (n[j] == x)
+			{
+				f = this._makeVertex(cc[i],x,n[(j+1)%l]);
+			}
+		}
+		rv.push(f);
+	}
+
+	return rv;
+};
+
 function fromPolar(lgt, lat)
 {
 	var zz = Math.cos(lat);
@@ -433,27 +499,3 @@ function dotProduct(v1, v2)
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-SphereGeometry.prototype.getSpherePointX = function(cellIdx)
-{
-	var sz = this.size;
-	var numRows = 3*sz + 4;
-	var cell = this.getRowIdx(cellIdx);
-	var row = cell.row;
-	var lat = Math.PI / 2 - Math.PI * (row-1) / (numRows-1);
-	var numCellsInRow = this.getNumCellsInRow(row);
-
-	var offset = 0;
-	if (row > (sz+1) && row <= 2*(sz+1))
-	{
-		if ((row - (sz+1)) % 2 == 0)
-			offset = 0.5;
-	}
-	else if (row > (sz+1) && row < numRows)
-	{
-		if (sz % 2 == 0)
-			offset = 0.5;
-	}
-	
-	var lgt = Math.PI*2 * (cell.idx+offset) / numCellsInRow;
-	return fromPolar(lgt, lat);
-};
