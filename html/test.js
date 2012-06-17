@@ -88,7 +88,9 @@ function repaint()
 			
 		if (c.water && c.water > 0)
 		{
-			ctx.fillStyle = c.water < 3 ? '#8af' : '#05a';
+			ctx.fillStyle = c.water <= 3 ? '#68f' :
+				c.water <= 6 ? '#05a' :
+				'#028';
 		}
 
 		//	c.height < -3 ? '#05a' :
@@ -126,7 +128,7 @@ function repaint()
 
 		if (Math.floor(c.water) != 0)
 		{
-		ctx.fillStyle = '#008';
+		ctx.fillStyle = '#ff0';
 		ctx.fillText(Math.floor(c.water), p.x*SCALE+OFFSET, p.y*SCALE+OFFSET);
 		}
 		//var ri = geometry.getRowIdx(parseInt(i)+1);
@@ -192,7 +194,7 @@ function repaint()
 		ctx.restore();
 	}
 
-	if (pawn)
+	if (pawn && pawn.locationType == 'vertex')
 	{
 		var v = map.vertices[pawn.location];
 		var p = toScreenPoint(v.pt);
@@ -386,17 +388,81 @@ function nextSizeClicked()
 
 function addWaterClicked()
 {
-	for (var vId in map.vertices)
+	for (var i in map.cells)
 	{
-		var v = map.vertices[vId];
-		if (!v.water)
-			v.water = 0;
-		v.water += 1;
+		var cellIdx = parseInt(i)+1;
+		var c = map.cells[i];
+		if (!c.water)
+			c.water = 0;
+		c.water += 1;
 	}
 	repaint();
 }
 
 function flowWaterClicked()
+{
+	if (!map.vertexHeightsDone)
+		calculateVertexHeights();
+	
+	// pick a random cell as a starting point.
+	// the cell should have water, and its height+water should
+	// be greater than at least one of its adjacent vertices
+
+	var candidates = new Array();
+	for (var i in map.cells)
+	{
+		var c = map.cells[i];
+		var cellIdx = parseInt(i)+1;
+
+		if (c.water <= 0) continue;
+
+		var waterLevel = c.height + c.water;
+		var foundAny = false;
+		var adj = geometry.getNeighbors(cellIdx);
+		for (var j = 0, l = adj.length; j < l; j++)
+		{
+			var d = map.cells[adj[j]];
+			if (waterLevel > d.height + d.water)
+				foundAny = true;
+		}
+
+		if (!foundAny)
+			continue;
+
+		candidates.push(cellIdx);
+	}
+
+	if (candidates.length)
+	{
+		var i = Math.floor(Math.random() * candidates.length);
+		var cellIdx = candidates[i];
+
+		var adj = geometry.getVerticesAdjacentToCell(cellIdx);
+		var best = null;
+		var bestL = Infinity;
+		for (var j = 0; j < adj.length; j++)
+		{
+			if (map.vertices[adj[j]].height < bestL)
+			{
+				best = adj[j];
+				bestL = map.vertices[adj[j]].height;
+			}
+		}
+
+		var amt = map.cells[cellIdx-1].water;
+		if (amt > 1) amt = 1;
+		map.cells[cellIdx-1].water -= amt;
+
+		pawn = {
+		locationType: 'vertex',
+		location: best,
+		water: amt
+		};
+		repaint();
+	}
+}
+
+function flowWaterClickedOld()
 {
 	var getVertexHeight = function(vId)
 	{
@@ -478,11 +544,10 @@ function onMouseDown(evt)
 		$('#infoPane .adjacentVertices').text(geometry.getVerticesAdjacentToVertex(vId).join('; '));
 		$('#infoPane').show();
 
-	pawn = {
-	locationType: "vertex",
-	location: vId
-	};
-	repaint();
+		if (!pawn) { pawn = {}; }
+		pawn.locationType = "vertex";
+		pawn.location = xx.id;
+		repaint();
 	}
 	else if (xx.type == 'cell')
 	{
@@ -491,6 +556,11 @@ function onMouseDown(evt)
 		$('#infoPane .adjacentCells').text(geometry.getNeighbors(xx.id).join('; '));
 		$('#infoPane .adjacentVertices').text(geometry.getVerticesAdjacentToCell(xx.id).join('; '));
 		$('#infoPane').show();
+
+		if (!pawn) { pawn = {}; }
+		pawn.locationType = "cell";
+		pawn.location = xx.id;
+		repaint();
 	}
 }
 
@@ -607,4 +677,13 @@ function flowPawnClicked()
 	if (chosen)
 		pawn.location = chosen;
 	repaint();
+}
+
+function addWaterAtPawn()
+{
+	if (pawn && pawn.locationType == 'cell')
+	{
+		map.cells[pawn.location-1].water++;
+		repaint();
+	}
 }
