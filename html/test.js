@@ -1,5 +1,10 @@
-var curLatitude = 0.0;
-var curLongitude = 0.0;
+var VIEWPORT = {
+	latitude: 0.0,
+	longitude: 0.0,
+	scale: 300,
+	offsetX: 280,
+	offsetY: 280
+	};
 
 function rotateX(pt, a)
 {
@@ -37,11 +42,6 @@ function rotateZ(pt, a)
 	};
 }
 
-function applyRotation(pt)
-{
-	return rotateX(rotateZ(pt, curLongitude), curLatitude);
-}
-
 var geometry;
 var map = {
 	vertices: {}
@@ -50,15 +50,12 @@ var cells = new Array();
 var coords = {};
 var pawn = null;
 
-var SCALE = 250;
-var OFFSET = 280;
-
 function toScreenPoint(pt)
 {
-	var p = applyRotation(pt);
+	var p = rotateX(rotateZ(pt, VIEWPORT.longitude), VIEWPORT.latitude);
 	return {
-	x: p.x * SCALE + OFFSET,
-	y: p.y * SCALE + OFFSET,
+	x: p.x * VIEWPORT.scale + VIEWPORT.offsetX,
+	y: p.y * VIEWPORT.scale + VIEWPORT.offsetY,
 	z: p.z };
 }
 
@@ -187,6 +184,7 @@ function onResize()
 	var canvas = document.getElementById('theCanvas');
 	canvas.width = window.innerWidth - 0;
 	canvas.height = window.innerHeight - $('#buttonBar').outerHeight();
+	VIEWPORT.offsetY = Math.round(canvas.height/2);
 	$('#contentArea').css({
 		width: canvas.width+"px",
 		height: canvas.height+"px"
@@ -215,8 +213,8 @@ function doRotation()
 {
 	rotationIdx++;
 
-	curLongitude += 0.08;
-	curLatitude = -Math.sin(0.05*rotationIdx) + Math.PI/2;
+	VIEWPORT.longitude += 0.08;
+	VIEWPORT.latitude = -Math.sin(0.05*rotationIdx) + Math.PI/2;
 	repaint();
 
 	if (keepGoing)
