@@ -60,7 +60,7 @@ SphereGeometry.prototype.EDGE_INFO = {
 	22: [ 8, 9, 17, 9 ],
 	23: [ 9, 10, 18, 11 ],
 	24: [ 10, 11, 19, 13 ],
-	25: [ 7, 11, 20, 15 ],
+	25: [ 7, 11, 15, 20 ],
 	26: [ 8, 12, 16, 17 ],
 	27: [ 9, 12, 17, 18 ],
 	28: [ 10, 12, 18, 19 ],
@@ -68,28 +68,31 @@ SphereGeometry.prototype.EDGE_INFO = {
 	30: [ 7, 12, 20, 16 ]
 	};
 
-// order is BASEPT, BASEALT, TOPPT, BASEEDGE, ASCEDGE, FAREDGE
+// For each triangular face, these are the Pentagon cells that make
+// up its corners, and the edges that make the sides. The
+// lexigraphically-smallest pentagon cell is designated the first
+// corner. Order is counter-clockwise.
 SphereGeometry.prototype.FACE_INFO = {
-	1: [ 1,2,3,      1,  2, 6 ],
-	2: [ 1,3,4,      2,  3, 7 ],
-	3: [ 1,4,5,      3,  4, 8 ],
-	4: [ 1,5,6,      4,  5, 9 ],
-	5: [ 1,2,6,      1,  5, 10 ],
-	6: [ 2,3,7,      6, 11, 12 ],
-	7: [ 3,7,8,     12, 13, 21 ],
-	8: [ 3,4,8,      7, 13, 14 ],
-	9: [ 4,8,9,     14, 15, 22 ],
-	10: [ 4,5,9,     8, 15, 16 ],
-	11: [ 5,9,10,   16, 17, 23 ],
-	12: [ 5,6,10,    9, 17, 18 ],
-	13: [ 6,10,11,  18, 19, 24 ],
-	14: [ 2,6,11,   10, 20, 19 ],
-	15: [ 2,7,11,   11, 20, 25 ],
-	16: [ 7,8,12,   21, 30, 26 ],
-	17: [ 8,9,12,   22, 26, 27 ],
-	18: [ 9,10,12,  23, 27, 28 ],
-	19: [ 10,11,12, 24, 28, 29 ],
-	20: [ 7,11,12,  25, 30, 29 ]
+	1: [ 1,2,3,      1,  6,  2 ],
+	2: [ 1,3,4,      2,  7,  3 ],
+	3: [ 1,4,5,      3,  8,  4 ],
+	4: [ 1,5,6,      4,  9,  5 ],
+	5: [ 1,6,2,      5, 10,  1 ],
+	6: [ 2,7,3,     11, 12,  6 ],
+	7: [ 3,7,8,     12, 21, 13 ],
+	8: [ 3,8,4,     13, 14,  7 ],
+	9: [ 4,8,9,     14, 22, 15 ],
+	10: [ 4,9,5,    15, 16,  8 ],
+	11: [ 5,9,10,   16, 23, 17 ],
+	12: [ 5,10,6,   17, 18,  9 ],
+	13: [ 6,10,11,  18, 24, 19 ],
+	14: [ 2,6,11,   10, 19, 20 ],
+	15: [ 2,11,7,   20, 25, 11 ],
+	16: [ 7,12,8,   30, 26, 21 ],
+	17: [ 8,12,9,   26, 27, 22 ],
+	18: [ 9,12,10,  27, 28, 23 ],
+	19: [ 10,12,11, 28, 29, 24 ],
+	20: [ 7,11,12,  25, 29, 30 ]
 	};
 
 SphereGeometry.prototype.getEdgeCell = function(edgeId, idx)
@@ -109,20 +112,23 @@ SphereGeometry.prototype.getEdgeCell = function(edgeId, idx)
 SphereGeometry.prototype.getFaceCell = function(faceId, row, idx)
 {
 	var sz = this.size;
+	var fi = this.FACE_INFO[faceId];
 	if (row == 0)
 	{
-		var baseEdge = this.FACE_INFO[faceId][3];
+		var baseEdge = fi[3];
 		return this.getEdgeCell(baseEdge, idx);
 	}
 	else if (idx == 0)
 	{
-		var ascEdge = this.FACE_INFO[faceId][4];
-		return this.getEdgeCell(ascEdge, row);
+		var leftEdge = fi[5];
+		var ei = this.EDGE_INFO[leftEdge];
+		return this.getEdgeCell(leftEdge, ei[0]==fi[0] ? row : (sz+1-row));
 	}
 	else if (idx == sz + 1 - row)
 	{
-		var farEdge = this.FACE_INFO[faceId][5];
-		return this.getEdgeCell(farEdge, row);
+		var rightEdge = fi[4];
+		var ei = this.EDGE_INFO[rightEdge];
+		return this.getEdgeCell(rightEdge, ei[0]==fi[1] ? row : (sz+1-row));
 	}
 	else
 	{
@@ -241,39 +247,47 @@ SphereGeometry.prototype.getNeighbors = function(cellIdx)
 			0,
 			0 ];
 
-		var faceR = this.EDGE_INFO[edgeId][2];
-		if (this.FACE_INFO[faceR][2] > this.EDGE_INFO[edgeId][1])
+		var ei = this.EDGE_INFO[edgeId];
+		var faceR = ei[2];
+		var faceRI = this.FACE_INFO[faceR];
+		if (faceRI[3] == edgeId)
 		{
-			// face "base" is along this edge
-			rv[1] = this.getFaceCell(faceR, 1, idx);
-			rv[2] = this.getFaceCell(faceR, 1, idx-1);
+			// this edge is the face's "base" side
+			rv[1] = this.getFaceCell(faceR, 1, sz-idx);
+			rv[2] = this.getFaceCell(faceR, 1, sz+1-idx);
 		}
-		else if (this.FACE_INFO[faceR][0] < this.EDGE_INFO[edgeId][0])
+		else if (faceRI[4] == edgeId)
 		{
-			rv[1] = this.getFaceCell(faceR, idx, sz-idx);
-			rv[2] = this.getFaceCell(faceR, idx-1, sz-(idx-1));
+			// this edge is the face's "right" side
+			rv[1] = this.getFaceCell(faceR, sz-idx, idx);
+			rv[2] = this.getFaceCell(faceR, sz+1-idx, idx-1);
 		}
 		else
 		{
+			// this edge is the face's "left" side
 			rv[1] = this.getFaceCell(faceR, idx, 1);
 			rv[2] = this.getFaceCell(faceR, idx-1, 1);
 		}
 
-		var faceL = this.EDGE_INFO[edgeId][3];
-		if (this.FACE_INFO[faceL][2] > this.EDGE_INFO[edgeId][1])
+		var faceL = ei[3];
+		var faceLI = this.FACE_INFO[faceL];
+		if (faceLI[3] == edgeId)
 		{
+			// this edge is the face's "base" side
 			rv[4] = this.getFaceCell(faceL, 1, idx-1);
 			rv[5] = this.getFaceCell(faceL, 1, idx);
 		}
-		else if (this.FACE_INFO[faceL][0] < this.EDGE_INFO[edgeId][0])
+		else if (faceLI[4] == edgeId)
 		{
+			// this edge is the face's "right" side
 			rv[4] = this.getFaceCell(faceL, idx-1, sz-(idx-1));
 			rv[5] = this.getFaceCell(faceL, idx, sz-idx);
 		}
 		else
 		{
-			rv[4] = this.getFaceCell(faceL, idx-1, 1);
-			rv[5] = this.getFaceCell(faceL, idx, 1);
+			// this edge is the face's "left" side
+			rv[4] = this.getFaceCell(faceL, sz+1-idx, 1);
+			rv[5] = this.getFaceCell(faceL, sz-idx, 1);
 		}
 		return rv;
 	}
@@ -433,11 +447,8 @@ SphereGeometry.prototype.getSpherePoint = function(cellIdx)
 		var b = (sz * (sz-1) - n * (n+1)) / 2;
 		var idx = i - b + 1;
 		
-		var ascEdge = this.FACE_INFO[faceId][4];
-		var farEdge = this.FACE_INFO[faceId][5];
-
-		var refCell1 = this.getEdgeCell(ascEdge, row);
-		var refCell2 = this.getEdgeCell(farEdge, row);
+		var refCell1 = this.getFaceCell(faceId, row, 0);
+		var refCell2 = this.getFaceCell(faceId, row, sz+1-row);
 
 		var beginPt = this.getSpherePoint(refCell1);
 		var endPt = this.getSpherePoint(refCell2);
