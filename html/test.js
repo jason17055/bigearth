@@ -366,13 +366,19 @@ function bumpMapBtnClicked()
 		}
 	}
 	repaint();
+
+	numBumps++;
+	$('#bumpMapBtn').text('Bump Map ('+numBumps+')');
 }
 
+var numBumps = 0;
 function nextSizeClicked()
 {
-	geometry = new SphereGeometry((geometry.size+1)%10);
+	geometry = new SphereGeometry((geometry.size+1)%14);
 	map = makeMap(geometry);
 	cells = map.cells;
+	numBumps = 0;
+	pawn = null;
 
 	document.title = 'Big Earth ' + geometry.size;
 	repaint();
