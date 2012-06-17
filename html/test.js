@@ -429,6 +429,7 @@ function flowWaterClicked()
 			}
 		}
 		var amt = v_w > sumFlow ? sumFlow : v_w;
+		amt = amt * (.5+Math.random()*.5);
 		for (var j in adj)
 		{
 			var u = map.vertices[adj[j]];
@@ -548,3 +549,62 @@ $(function() {
 	var canvas = document.getElementById('theCanvas');
 	canvas.addEventListener('mousedown', onMouseDown, false);
 });
+
+function calculateVertexHeights()
+{
+	for (var vId in map.vertices)
+	{
+		var v = map.vertices[vId];
+		var adj = geometry.getCellsAdjacentToVertex(vId);
+		var sum = 0;
+		for (var i = 0; i < adj.length; i++)
+		{
+			sum += map.cells[adj[i]-1].height;
+		}
+		v.height = sum/adj.length;
+	}
+
+	map.vertexHeightsDone = true;
+}
+
+function flowPawnClicked()
+{
+	if (!pawn) return;
+	if (pawn.locationType != 'vertex') return;
+
+	if (!map.vertexHeightsDone)
+		calculateVertexHeights();
+
+	var h = map.vertices[pawn.location].height;
+
+	var adj = geometry.getVerticesAdjacentToVertex(pawn.location);
+	var sumFitness = 0;
+	var rouletteWheel = new Array();
+	for (var i = 0; i < adj.length; i++)
+	{
+		var other_height = map.vertices[adj[i]].height;
+		if (other_height > h+1) continue;
+
+		var f = (h+1-other_height);
+		rouletteWheel.push([f, adj[i]]);
+		sumFitness += f;
+	}
+
+	if (sumFitness == 0) return;
+
+	var choice = Math.random() * sumFitness;
+	var chosen = null;
+	for (var i = 0, l = rouletteWheel.length; i < l; i++)
+	{
+		choice -= rouletteWheel[i][0];
+		if (choice < 0)
+		{
+			chosen = rouletteWheel[i][1];
+			break;
+		}
+	}
+
+	if (chosen)
+		pawn.location = chosen;
+	repaint();
+}
