@@ -354,6 +354,27 @@ SphereGeometry.prototype._makeVertex = function(cell1, cell2, cell3)
 	}
 };
 
+SphereGeometry.prototype.getVerticesAdjacentToEdge = function(edgeId)
+{
+	var cc = edgeId.split(/-/);
+	var c = parseInt(cc[0]);
+	var d = parseInt(cc[1]);
+
+	var adj = this.getNeighbors(c);
+	for (var i = 0, l = adj.length; i < l; i++)
+	{
+		if (adj[i] == d)
+		{
+			return [
+			this._makeVertex(c,d,adj[(i+1)%l]),
+			this._makeVertex(d,c,adj[(i+l-1)%l])
+			];
+		}
+	}
+	//unexpected
+	return null;
+};
+
 SphereGeometry.prototype.getVerticesAdjacentToCell = function(cellIdx)
 {
 	var n = this.getNeighbors(cellIdx);

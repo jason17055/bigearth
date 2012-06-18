@@ -126,6 +126,31 @@ function repaint()
 		ctx.restore();
 	}
 
+	for (var eId in map.edges)
+	{
+		var ed = map.edges[eId];
+		var p = toScreenPoint(coords.edges[eId].pt);
+		if (p.z < 0)
+			continue;
+
+		if (!ed.feature)
+			continue;
+
+		if (ed.feature == 'river')
+		{
+			var vv = geometry.getVerticesAdjacentToEdge(eId);
+			var p1 = toScreenPoint(coords.vertices[vv[0]].pt);
+			var p2 = toScreenPoint(coords.vertices[vv[1]].pt);
+			ctx.save();
+			ctx.lineWidth = 4;
+			ctx.strokeStyle = '#00f';
+			ctx.moveTo(p1.x,p1.y);
+			ctx.lineTo(p2.x,p2.y);
+			ctx.stroke();
+			ctx.restore();
+		}
+	}
+
 	for (var vId in map.vertices)
 	{
 		var v = map.vertices[vId];
@@ -686,6 +711,19 @@ function addWaterAtPawn()
 	if (pawn && pawn.locationType == 'cell')
 	{
 		map.cells[pawn.location-1].water++;
+		repaint();
+	}
+}
+
+function setEdgeFeature(feat)
+{
+	if (pawn && pawn.locationType == 'edge')
+	{
+		var edge = map.edges[pawn.location];
+		if (feat)
+			edge.feature = feat;
+		else
+			delete edge.feature;
 		repaint();
 	}
 }

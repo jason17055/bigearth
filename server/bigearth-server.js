@@ -288,6 +288,7 @@ function loadMap(mapName)
 	var _map = JSON.parse(data);
 	var map = {
 	cells: _map.cells,
+	edges: _map.edges,
 	vertices: _map.vertices,
 	geometry: new SphereGeometry(_map.size)
 	};
@@ -302,6 +303,7 @@ function saveMap(map, mapName)
 	_map.geometry = "sphere";
 	_map.size = map.geometry.size;
 	_map.cells = map.cells;
+	_map.edges = map.edges;
 	_map.vertices = map.vertices;
 
 	FS.writeFile(mapName, JSON.stringify(_map),
