@@ -97,6 +97,11 @@ function repaint()
 				c.water <= 6 ? '#05a' :
 				'#028';
 		}
+		if (("waterLevel" in map) && c.height < map.waterLevel)
+		{
+			var hh = map.waterLevel - c.height;
+			ctx.fillStyle = hh <= 2 ? '#68f' : '#05a';
+		}
 
 		//	c.height < -3 ? '#05a' :
 		//	c.height < 0 ? '#8af' :
@@ -570,4 +575,40 @@ function makeRiversClicked()
 	var R = new RiverFactory();
 	while (!R.step());
 	repaint();
+}
+
+function greatFloodClicked()
+{
+	var $btn = $(this);
+	$btn.attr('disabled','disabled');
+
+	var maxHeight = -Infinity;
+	var minHeight = Infinity;
+	for (var i in map.cells)
+	{
+		var h = map.cells[i].height;
+		if (h > maxHeight)
+			maxHeight = h;
+		if (h < minHeight)
+			minHeight = h;
+	}
+
+	map.waterLevel = maxHeight+1;
+	repaint();
+
+	var nextStep;
+	nextStep = function()
+	{
+		map.waterLevel--;
+		repaint();
+		if (map.waterLevel > minHeight)
+		{
+			setTimeout(nextStep, 2000);
+		}
+		else
+		{
+			$btn.removeAttr('disabled');
+		}
+	};
+	setTimeout(nextStep, 2000);
 }
