@@ -43,10 +43,8 @@ function rotateZ(pt, a)
 }
 
 var geometry;
-var map = {
-	vertices: {}
-	};
-var coords = {};
+var map;
+var coords;
 var pawn = null;
 
 function toScreenPoint(pt)
@@ -65,6 +63,8 @@ function repaint()
 
 	ctx.fillStyle = '#444';
 	ctx.fillRect(0,0,canvas.width,canvas.height);
+	if (!map)
+		return;
 
 	for (var i in map.cells)
 	{
@@ -202,8 +202,6 @@ function onResize()
 		});
 	repaint();
 }
-window.onresize = onResize;
-$(onResize);
 
 function resetMap()
 {
@@ -213,11 +211,37 @@ function resetMap()
 	pawn = null;
 }
 
-geometry = new SphereGeometry(3);
-resetMap();
+function fetchGameState()
+{
+	var onSuccess = function(data,status)
+	{
+		map = data.map;
+		geometry = new SphereGeometry(map.size);
+		coords = makeCoords(geometry);
+		numBumps = 0;
+		pawn = null;
+		repaint();
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		//TODO- throw an error
+	};
+
+	$.ajax({
+	url: "/gamestate",
+	success: onSuccess,
+	error: onError,
+	dataType: "json"
+	});
+}
+
+$(fetchGameState);
+
+window.onresize = onResize;
+$(onResize);
 
 var rotateTimer;
-var keepGoing = true;
+var keepGoing = false;
 var rotationIdx = 0;
 function doRotation()
 {
@@ -232,7 +256,6 @@ function doRotation()
 	else
 	rotateTimer = null;
 }
-$(doRotation);
 
 function pauseClicked()
 {
