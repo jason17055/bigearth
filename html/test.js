@@ -1,7 +1,7 @@
 var VIEWPORT = {
 	latitude: 0.0,
 	longitude: 0.0,
-	scale: 300,
+	scale: 450,
 	offsetX: 280,
 	offsetY: 280
 	};
@@ -196,6 +196,7 @@ function onResize()
 	canvas.width = window.innerWidth - 0;
 	canvas.height = window.innerHeight - $('#buttonBar').outerHeight();
 	VIEWPORT.offsetY = Math.round(canvas.height/2);
+	VIEWPORT.offsetX = Math.round(canvas.width*2/5);
 	$('#contentArea').css({
 		width: canvas.width+"px",
 		height: canvas.height+"px"
@@ -289,21 +290,26 @@ function nextSizeClicked()
 	repaint();
 }
 
-function addWaterClicked()
+function beginFlowAt(cellIdx)
 {
-	for (var i in map.cells)
-	{
-		var cellIdx = parseInt(i)+1;
-		var c = map.cells[i];
-		if (!c.water)
-			c.water = 0;
-		c.water += 1;
-	}
+	if (!pawn) { pawn = {}; }
+
+	var w = map.cells[cellIdx-1].water;
+	if (w <= 0) return;
+	if (w > 1) { w = 1; }
+
+	pawn.locationType = 'cell';
+	pawn.location = cellIdx;
+	pawn.water = w;
+	map.cells[cellIdx-1].water -= w;
 	repaint();
 }
 
-function flowWaterClicked()
+function beginFlowClicked()
 {
+	if (pawn && pawn.locationType == 'cell')
+		return beginFlowAt(pawn.location);
+
 	if (!map.vertexHeightsDone)
 		calculateVertexHeights();
 	
@@ -324,7 +330,7 @@ function flowWaterClicked()
 		var adj = geometry.getNeighbors(cellIdx);
 		for (var j = 0, l = adj.length; j < l; j++)
 		{
-			var d = map.cells[adj[j]];
+			var d = map.cells[adj[j]-1];
 			if (waterLevel > d.height + d.water)
 				foundAny = true;
 		}
@@ -339,29 +345,7 @@ function flowWaterClicked()
 	{
 		var i = Math.floor(Math.random() * candidates.length);
 		var cellIdx = candidates[i];
-
-		var adj = geometry.getVerticesAdjacentToCell(cellIdx);
-		var best = null;
-		var bestL = Infinity;
-		for (var j = 0; j < adj.length; j++)
-		{
-			if (map.vertices[adj[j]].height < bestL)
-			{
-				best = adj[j];
-				bestL = map.vertices[adj[j]].height;
-			}
-		}
-
-		var amt = map.cells[cellIdx-1].water;
-		if (amt > 1) amt = 1;
-		map.cells[cellIdx-1].water -= amt;
-
-		pawn = {
-		locationType: 'vertex',
-		location: best,
-		water: amt
-		};
-		repaint();
+		return beginFlowAt(cellIdx);
 	}
 }
 
@@ -573,25 +557,71 @@ function calculateVertexHeights()
 	map.vertexHeightsDone = true;
 }
 
-function flowPawnClicked()
+function stepFlowClicked()
 {
 	if (!pawn) return;
+	if (pawn.locationType == 'cell')
+	{
+		var c = map.cells[pawn.location-1];
+		var h = c.height + c.water + (pawn.water||0);
+		var adjCells = geometry.getNeighbors(pawn.location);
+		var sumFitness = 0;
+		var rouletteWheel = new Array();
+		for (var j = 0, l = adjCells.length; j < l; j++)
+		{
+			var d = map.cells[adjCells[j]-1];
+			var e = map.cells[adjCells[(j+1)%l]-1];
+			var hh = (d.height + d.water + e.height + e.water) / 2;
+
+			var f = h-hh;
+			if (f <= 0) continue;
+
+			rouletteWheel.push([f, geometry._makeVertex(pawn.location,adjCells[j],adjCells[(j+1)%l])]);
+			sumFitness += f;
+		}
+
+		if (sumFitness <= 0) return;
+		var choice = Math.random() * sumFitness;
+		for (var j = 0, l = rouletteWheel.length; j < l; j++)
+		{
+			choice -= rouletteWheel[j][0];
+			if (choice < 0)
+			{
+				pawn.locationType = 'vertex';
+				pawn.location = rouletteWheel[j][1];
+				break;
+			}
+		}
+		repaint();
+		return;
+	}
+
 	if (pawn.locationType != 'vertex') return;
 
 	if (!map.vertexHeightsDone)
 		calculateVertexHeights();
 
-	var h = map.vertices[pawn.location].height;
+	var getVertexWaterLevel = function(vId) {
+		var cc = geometry.getCellsAdjacentToVertex(vId);
+		var c = map.cells[cc[0]-1];
+		var d = map.cells[cc[1]-1];
+		var e = map.cells[cc[2]-1];
+		return (
+		c.height + c.water +
+		d.height + d.water +
+		e.height + e.water) / 3;
+	};
 
+	var h = getVertexWaterLevel(pawn.location) + (pawn.water||0);
 	var adj = geometry.getVerticesAdjacentToVertex(pawn.location);
 	var sumFitness = 0;
 	var rouletteWheel = new Array();
 	for (var i = 0; i < adj.length; i++)
 	{
-		var other_height = map.vertices[adj[i]].height;
-		if (other_height > h+1) continue;
+		var other_height = getVertexWaterLevel(adj[i]);
 
-		var f = (h+1-other_height);
+		var f = h - other_height;
+		if (f <= 0) continue;
 		rouletteWheel.push([f, adj[i]]);
 		sumFitness += f;
 	}
@@ -612,6 +642,42 @@ function flowPawnClicked()
 
 	if (chosen)
 		pawn.location = chosen;
+	repaint();
+}
+
+function endFlowClicked()
+{
+	if (!pawn) return;
+	if (pawn.locationType == 'vertex')
+	{
+		// pick an adjacent cell with lowest water level
+		var adj = geometry.getCellsAdjacentToVertex(pawn.location);
+		var best = adj[0];
+		var bestV = Infinity;
+		for (var i = 0, l = adj.length; i < l; i++)
+		{
+			var c = map.cells[adj[i]-1];
+			var h = c.height + c.water;
+			if (h < bestV) {
+				best = adj[i];
+				bestV = h;
+			}
+		}
+		pawn.location = best;
+		pawn.locationType = 'cell';
+	}
+
+	if (pawn.locationType != 'cell')
+		return;
+
+	if (!pawn.water) {
+		pawn = null;
+		repaint();
+		return;
+	}
+	var c = map.cells[pawn.location-1];
+	c.water += pawn.water;
+	pawn = null;
 	repaint();
 }
 

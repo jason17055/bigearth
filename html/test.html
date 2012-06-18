@@ -31,16 +31,18 @@ body {
 <button type="button" id="bumpMapBtn" onclick="bumpMapBtnClicked()">Bump Map</button>
 <button type="button" onclick="pauseClicked()">Pause</button>
 <button type="button" onclick="nextSizeClicked()">Next Size</button>
-<button type="button" onclick="addWaterClicked()">Add Water</button>
-<button type="button" onclick="flowWaterClicked()">Flow Water</button>
-<button type="button" onclick="flowPawnClicked()">Flow Pawn</button>
+<button type="button" onclick="beginFlowClicked()">Begin Flow</button>
+<button type="button" onclick="stepFlowClicked()">Step Flow</button>
+<button type="button" onclick="endFlowClicked()">End Flow</button>
 </div>
 </div>
 
 <div id="infoPane" style="display:none; position: absolute; right: 4em; top: 1em; width: 3in; height: 3in; font-family: sans-serif; color: black; background-color: white">
 <div><span class="featureType">Vertex</span>: <span class="featureId" id="vId"></span></div>
+<!--
 <div>Adjacent Cells: <span class="adjacentCells"></span></div>
 <div>Adjacent Vertices: <span class="adjacentVertices"></span></div>
+-->
 <div>
 <button type="button" onclick="addWaterAtPawn()">Add Water Here</button>
 </div>

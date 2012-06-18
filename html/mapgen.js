@@ -78,6 +78,7 @@ function makeMap(geometry)
 {
 	var cells = new Array();
 	var vertices = {};
+	var edges = {};
 
 	var numCells = geometry.getCellCount();
 	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
@@ -94,6 +95,12 @@ function makeMap(geometry)
 			var other1 = adj[j];
 			var other2 = adj[(j+1)%l];
 
+			var eId = geometry._makeEdge(cellIdx,other1);
+			if (!(eId in edges))
+			{
+				edges[eId] = {};
+			}
+
 			var vId = geometry._makeVertex(cellIdx,other1,other2);
 			if (!(vId in vertices))
 			{
@@ -104,7 +111,8 @@ function makeMap(geometry)
 
 	return {
 	cells: cells,
-	vertices: vertices
+	vertices: vertices,
+	edges: edges
 	};
 }
 
