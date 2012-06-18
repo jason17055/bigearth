@@ -430,6 +430,30 @@ function fromPolar(lgt, lat)
 	};
 }
 
+SphereGeometry.prototype.makeEdgeFromEndpoints = function(vertex1, vertex2)
+{
+	var cc = this.getCellsAdjacentToVertex(vertex1);
+	var dd = this.getCellsAdjacentToVertex(vertex2);
+
+	// assumption- two of the cell ids in cc match two of
+	// the cell ids in dd. We will look for the cell id in
+	// cc that does not match any in dd, and conclude that the
+	// other two ids in cc are the matching ones.
+
+	if (cc[0] != dd[0] && cc[0] != dd[1] && cc[0] != dd[2])
+	{
+		return this._makeEdge(cc[1],cc[2]);
+	}
+	else if (cc[1] != dd[0] && cc[1] != dd[1] && cc[1] != dd[2])
+	{
+		return this._makeEdge(cc[0],cc[2]);
+	}
+	else
+	{
+		return this._makeEdge(cc[0],cc[1]);
+	}
+};
+
 SphereGeometry.prototype.getSpherePoint = function(cellIdx)
 {
 	var sz = this.size;
