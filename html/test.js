@@ -1,46 +1,46 @@
 var VIEWPORT = {
-	latitude: 0.0,
-	longitude: 0.0,
+	latitude: Math.PI/2,
+	longitude: 0,
 	scale: 450,
 	offsetX: 280,
 	offsetY: 280
 	};
 
-function rotateX(pt, a)
+function matrixMultiply(A, B)
 {
-	var r = Math.sqrt(pt.y*pt.y + pt.z*pt.z);
-	var t = Math.atan2(pt.z, pt.y);
-	t += a;
-	return {
-	x: pt.x,
-	y: r*Math.cos(t),
-	z: r*Math.sin(t)
-	};
+	return [
+	[ A[0][0]*B[0][0] + A[0][1]*B[1][0] + A[0][2]*B[2][0],
+	  A[0][0]*B[0][1] + A[0][1]*B[1][1] + A[0][2]*B[2][1],
+	  A[0][0]*B[0][2] + A[0][1]*B[1][2] + A[0][2]*B[2][2] ],
+
+	[ A[1][0]*B[0][0] + A[1][1]*B[1][0] + A[1][2]*B[2][0],
+	  A[1][0]*B[0][1] + A[1][1]*B[1][1] + A[1][2]*B[2][1],
+	  A[1][0]*B[0][2] + A[1][1]*B[1][2] + A[1][2]*B[2][2] ],
+
+	[ A[2][0]*B[0][0] + A[2][1]*B[1][0] + A[2][2]*B[2][0],
+	  A[2][0]*B[0][1] + A[2][1]*B[1][1] + A[2][2]*B[2][1],
+	  A[2][0]*B[0][2] + A[2][1]*B[1][2] + A[2][2]*B[2][2] ]
+
+	];
 }
 
-function rotateY(pt, a)
+function updateTransformMatrix()
 {
-	var r = Math.sqrt(pt.x*pt.x + pt.z*pt.z);
-	var t = Math.atan2(pt.z, pt.x);
-	t += a;
-	return {
-	x: r*Math.cos(t),
-	y: pt.y,
-	z: r*Math.sin(t)
-	};
-}
+	var aZ = VIEWPORT.longitude;
+	var rZ = [[ Math.cos(aZ), -Math.sin(aZ), 0 ],
+		[ Math.sin(aZ), Math.cos(aZ), 0 ],
+		[ 0, 0, 1 ]
+		];
 
-function rotateZ(pt, a)
-{
-	var r = Math.sqrt(pt.x*pt.x + pt.y*pt.y);
-	var t = Math.atan2(pt.y, pt.x);
-	t += a;
-	return {
-	x: r*Math.cos(t),
-	y: r*Math.sin(t),
-	z: pt.z
-	};
+	var aX = VIEWPORT.latitude;
+	var rX = [[ 1, 0, 0 ],
+		[ 0, Math.cos(aX), -Math.sin(aX) ],
+		[ 0, Math.sin(aX), Math.cos(aX) ]
+		];
+
+	VIEWPORT.rotMatrix = matrixMultiply(rX, rZ);
 }
+updateTransformMatrix();
 
 var geometry;
 var map;
@@ -49,7 +49,12 @@ var pawn = null;
 
 function toScreenPoint(pt)
 {
-	var p = rotateX(rotateZ(pt, VIEWPORT.longitude), VIEWPORT.latitude);
+	var M = VIEWPORT.rotMatrix;
+	var p = {
+	x: M[0][0]*pt.x + M[0][1]*pt.y + M[0][2]*pt.z,
+	y: M[1][0]*pt.x + M[1][1]*pt.y + M[1][2]*pt.z,
+	z: M[2][0]*pt.x + M[2][1]*pt.y + M[2][2]*pt.z
+	};
 	return {
 	x: p.x * VIEWPORT.scale + VIEWPORT.offsetX,
 	y: p.y * VIEWPORT.scale + VIEWPORT.offsetY,
@@ -275,6 +280,7 @@ function doRotation()
 
 	VIEWPORT.longitude += 0.08;
 	VIEWPORT.latitude = -Math.sin(0.05*rotationIdx) + Math.PI/2;
+	updateTransformMatrix();
 	repaint();
 
 	if (keepGoing)
