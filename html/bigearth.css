@@ -1,0 +1,14 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+#contentArea {
+	position: absolute;
+	overflow: hidden;
+	background-color: black;
+}
+#buttonBar {
+	width: 100%;
+	bottom: 0;
+	position: absolute;
+}

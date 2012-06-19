@@ -611,3 +611,19 @@ function greatFloodClicked()
 	};
 	setTimeout(nextStep, 2000);
 }
+
+function testPanClicked()
+{
+	$('#theCanvas').css('position','absolute');
+	var i = 0;
+	$('#theCanvas').css('left',i);
+
+	var helper = function()
+	{
+		i += 10;
+		$('#theCanvas').css('left', i + 'px');
+		if (i < 800)
+		setTimeout(helper, 150);
+	};
+	setTimeout(helper,150);
+}
