@@ -118,7 +118,6 @@ function repaint()
 			ctx.lineTo(p.x, p.y);
 		}
 		ctx.fill();
-		ctx.stroke();
 
 	// SHOW HEIGHTS
 	//	ctx.fillStyle = '#800';
@@ -573,7 +572,7 @@ RiverFactory.prototype.step = function()
 function makeRiversClicked()
 {
 	var R = new RiverFactory();
-	while (!R.step());
+	while (R.step());
 	repaint();
 }
 
