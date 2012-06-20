@@ -492,7 +492,7 @@ $(function() {
 		for (var j = 0; j < 3; j++)
 		{
 			var $c = $('<canvas class="aCanvas" width="400" height="400"></canvas>');
-			$('#contentArea').append($c);
+			$('#scrollPanel').append($c);
 			//$c.addEventListener('mousedown', onMouseDown, false);
 			cArray.push($c.get(0));
 		}
@@ -660,6 +660,17 @@ function greatFloodClicked()
 
 function testPanClicked()
 {
+	//TODO- consider using requestAnimationFrame
+
+	var $sp = $('#scrollPanel');
+	if ($sp.hasClass('testPan'))
+	{
+		$sp.css({ '-moz-transform': 'translateX(0)' });
+	}
+	else
+		$sp.addClass('testPan');
+	return;
+
 	var i = 0;
 	var $c = $(CANVASES[0][0]);
 	$c.css('left',i);

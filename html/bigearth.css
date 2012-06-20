@@ -7,6 +7,10 @@ body {
 	overflow: hidden;
 	background-color: black;
 }
+#scrollPanel {
+	position: absolute;
+	background-color: black;
+}
 #buttonBar {
 	width: 100%;
 	bottom: 0;
@@ -14,4 +18,9 @@ body {
 }
 .aCanvas {
 	position: absolute;
+}
+
+.testPan {
+	-moz-transition: all 2s ease-out 0s;
+	-moz-transform: translateX(600px);
 }
