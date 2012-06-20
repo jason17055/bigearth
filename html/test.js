@@ -6,6 +6,8 @@ var VIEWPORT = {
 	offsetY: 280
 	};
 
+var CANVASES = [];
+
 function matrixMultiply(A, B)
 {
 	return [
@@ -61,9 +63,12 @@ function toScreenPoint(pt)
 	z: p.z };
 }
 
-function repaint()
+function repaintOne(canvasRow, canvasCol)
 {
-	var canvas = document.getElementById('theCanvas');
+	if (!CANVASES[canvasRow]) return;
+
+	var canvas = CANVASES[canvasRow][canvasCol];
+	if (!canvas) return;
 	var ctx = canvas.getContext('2d');
 
 	ctx.fillStyle = '#444';
@@ -71,13 +76,22 @@ function repaint()
 	if (!map)
 		return;
 
+	var myScreenPoint = function(pt)
+	{
+		var p = toScreenPoint(pt);
+		return {
+		x: p.x - (400*canvasCol),
+		y: p.y - (400*canvasRow),
+		z: p.z };
+	};
+
 	for (var i in map.cells)
 	{
 		var c = map.cells[i];
 		var cellIdx = parseInt(i)+1;
 
 		var co = coords.cells[cellIdx];
-		var centerP = toScreenPoint(co.pt);
+		var centerP = myScreenPoint(co.pt);
 		if (centerP.z < 0)
 			continue;
 
@@ -110,11 +124,11 @@ function repaint()
 		//	'#eee';
  
 		ctx.beginPath();
-		var p = toScreenPoint(co.pts[0]);
+		var p = myScreenPoint(co.pts[0]);
 		ctx.moveTo(p.x, p.y);
 		for (var j = 0, l = co.pts.length; j < l; j++)
 		{
-			var p = toScreenPoint(co.pts[(j+1)%l]);
+			var p = myScreenPoint(co.pts[(j+1)%l]);
 			ctx.lineTo(p.x, p.y);
 		}
 		ctx.fill();
@@ -138,7 +152,7 @@ function repaint()
 	for (var eId in map.edges)
 	{
 		var ed = map.edges[eId];
-		var p = toScreenPoint(coords.edges[eId].pt);
+		var p = myScreenPoint(coords.edges[eId].pt);
 		if (p.z < 0)
 			continue;
 
@@ -148,8 +162,8 @@ function repaint()
 		if (ed.feature == 'river')
 		{
 			var vv = geometry.getVerticesAdjacentToEdge(eId);
-			var p1 = toScreenPoint(coords.vertices[vv[0]].pt);
-			var p2 = toScreenPoint(coords.vertices[vv[1]].pt);
+			var p1 = myScreenPoint(coords.vertices[vv[0]].pt);
+			var p2 = myScreenPoint(coords.vertices[vv[1]].pt);
 			ctx.save();
 			ctx.lineWidth = 4;
 			ctx.strokeStyle = '#00f';
@@ -163,7 +177,7 @@ function repaint()
 	for (var vId in map.vertices)
 	{
 		var v = map.vertices[vId];
-		var p = toScreenPoint(coords.vertices[vId].pt);
+		var p = myScreenPoint(coords.vertices[vId].pt);
 		if (p.z < 0)
 			continue;
 
@@ -188,7 +202,7 @@ function repaint()
 	if (pawn && pawn.locationType == 'vertex')
 	{
 		var v = map.vertices[pawn.location];
-		var p = toScreenPoint(coords.vertices[pawn.location].pt);
+		var p = myScreenPoint(coords.vertices[pawn.location].pt);
 		if (p.z >= 0)
 		{
 			drawPawn(ctx, p);
@@ -196,7 +210,7 @@ function repaint()
 	}
 	else if (pawn && pawn.locationType == 'cell')
 	{
-		var p = toScreenPoint(coords.cells[pawn.location].pt);
+		var p = myScreenPoint(coords.cells[pawn.location].pt);
 		if (p.z >= 0)
 		{
 			drawPawn(ctx, p);
@@ -204,10 +218,21 @@ function repaint()
 	}
 	else if (pawn && pawn.locationType == 'edge')
 	{
-		var p = toScreenPoint(coords.edges[pawn.location].pt);
+		var p = myScreenPoint(coords.edges[pawn.location].pt);
 		if (p.z >= 0)
 		{
 			drawPawn(ctx, p);
+		}
+	}
+}
+
+function repaint()
+{
+	for (var cr = 0; cr < CANVASES.length; cr++)
+	{
+		for (var cc = 0; cc < CANVASES[cr].length; cc++)
+		{
+			repaintOne(cr,cc);
 		}
 	}
 }
@@ -226,15 +251,25 @@ function drawPawn(ctx, p)
 
 function onResize()
 {
-	var canvas = document.getElementById('theCanvas');
-	canvas.width = window.innerWidth - 0;
-	canvas.height = window.innerHeight - $('#buttonBar').outerHeight();
-	VIEWPORT.offsetY = Math.round(canvas.height/2);
-	VIEWPORT.offsetX = Math.round(canvas.width*2/5);
+	VIEWPORT.screenWidth = window.innerWidth - 0;
+	VIEWPORT.screenHeight = window.innerHeight - $('#buttonBar').outerHeight();
+	VIEWPORT.offsetY = Math.round(VIEWPORT.screenHeight/2);
+	VIEWPORT.offsetX = Math.round(VIEWPORT.screenWidth*2/5);
 	$('#contentArea').css({
-		width: canvas.width+"px",
-		height: canvas.height+"px"
+		width: VIEWPORT.screenWidth+"px",
+		height: VIEWPORT.screenHeight+"px"
 		});
+
+	for (var canvasRow = 0; canvasRow < CANVASES.length; canvasRow++)
+	{
+		for (var canvasCol = 0; canvasCol < CANVASES[canvasRow].length; canvasCol++)
+		{
+			$(CANVASES[canvasRow][canvasCol]).css({
+				left: (canvasCol*400)+"px",
+				top: (canvasRow*400)+"px"
+				});
+		}
+	}
 	repaint();
 }
 
@@ -255,6 +290,7 @@ function fetchGameState()
 		coords = makeCoords(geometry);
 		numBumps = 0;
 		pawn = null;
+		onResize();
 		repaint();
 	};
 	var onError = function(xhr, status, errorThrown)
@@ -450,8 +486,18 @@ function getVertexFromScreen(screenPt)
 }
 
 $(function() {
-	var canvas = document.getElementById('theCanvas');
-	canvas.addEventListener('mousedown', onMouseDown, false);
+	for (var i = 0; i < 2; i++)
+	{
+		var cArray = new Array();
+		for (var j = 0; j < 3; j++)
+		{
+			var $c = $('<canvas class="aCanvas" width="400" height="400"></canvas>');
+			$('#contentArea').append($c);
+			//$c.addEventListener('mousedown', onMouseDown, false);
+			cArray.push($c.get(0));
+		}
+		CANVASES.push(cArray);
+	}
 });
 
 function addWaterAtPawn()
@@ -614,16 +660,18 @@ function greatFloodClicked()
 
 function testPanClicked()
 {
-	$('#theCanvas').css('position','absolute');
 	var i = 0;
-	$('#theCanvas').css('left',i);
+	var $c = $(CANVASES[0][0]);
+	$c.css('left',i);
 
 	var helper = function()
 	{
 		i += 10;
-		$('#theCanvas').css('left', i + 'px');
-		if (i < 800)
-		setTimeout(helper, 150);
+		$c.css('left', i + 'px');
+		if (i < 400)
+		setTimeout(helper, 100);
+		else
+		$c.css('left',0);
 	};
-	setTimeout(helper,150);
+	setTimeout(helper,100);
 }
