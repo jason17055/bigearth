@@ -26,6 +26,11 @@ function matrixMultiply(A, B)
 	];
 }
 
+var geometry;
+var map;
+var coords;
+var pawn = null;
+
 function updateTransformMatrix()
 {
 	var aZ = VIEWPORT.longitude;
@@ -40,14 +45,14 @@ function updateTransformMatrix()
 		[ 0, Math.sin(aX), Math.cos(aX) ]
 		];
 
+	if (geometry)
+	{
+		// desired size of hex : 32px
+		VIEWPORT.scale = Math.round(geometry.size * 5 * 32 / Math.PI / 2);
+	}
 	VIEWPORT.rotMatrix = matrixMultiply(rX, rZ);
 }
 updateTransformMatrix();
-
-var geometry;
-var map;
-var coords;
-var pawn = null;
 
 function toScreenPoint(pt)
 {
@@ -290,6 +295,7 @@ function fetchGameState()
 		coords = makeCoords(geometry);
 		numBumps = 0;
 		pawn = null;
+		updateTransformMatrix();
 		onResize();
 		repaint();
 	};
