@@ -3,7 +3,9 @@ var VIEWPORT = {
 	longitude: 0,
 	scale: 450,
 	offsetX: 280,
-	offsetY: 280
+	offsetY: 280,
+	translateX: 0,
+	translateY: 0
 	};
 
 var CANVASES = [];
@@ -371,16 +373,35 @@ function nextSizeClicked()
 	repaint();
 }
 
+function panToCoords(pt)
+{
+	var p = toScreenPoint(pt);
+	var dx = -Math.round(p.x - VIEWPORT.screenWidth / 2);
+	var dy = -Math.round(p.y - VIEWPORT.screenHeight / 2);
+
+	VIEWPORT.translateX = dx;
+	VIEWPORT.translateY = dy;
+
+	var $sp = $('#scrollPanel');
+	$sp.css({
+		'-moz-transition': 'all 1.0s ease-out',
+		'-moz-transform': 'translate('+dx+','+dy+')'
+		});
+}
+
 function onMouseDown(evt)
 {
 	if (evt.which != 1) return;
 	evt.preventDefault();
 
-	var orig = $('#theCanvas').position();
+	var canvas = this;
+	//var $canv = $(canvas);
+	//var orig = $canv.position();
 	var screenPt = {
-		x: evt.clientX - orig.left,
-		y: evt.clientY - orig.top
+		x: evt.clientX - VIEWPORT.translateX,
+		y: evt.clientY - VIEWPORT.translateY
 		};
+
 	var xx = getNearestFeatureFromScreen(screenPt);
 	if (xx.type == 'vertex')
 	{
@@ -398,6 +419,8 @@ function onMouseDown(evt)
 	}
 	else if (xx.type == 'cell')
 	{
+		return panToCoords(coords.cells[xx.id].pt);
+
 		$('#infoPane .featureType').text('Cell');
 		$('#vId').text(xx.id);
 		$('#infoPane .adjacentCells').text(geometry.getNeighbors(xx.id).join('; '));
@@ -503,8 +526,10 @@ $(function() {
 		{
 			var $c = $('<canvas class="aCanvas" width="400" height="400"></canvas>');
 			$('#scrollPanel').append($c);
-			//$c.addEventListener('mousedown', onMouseDown, false);
-			cArray.push($c.get(0));
+
+			var canvas = $c.get(0);
+			canvas.addEventListener('mousedown', onMouseDown, false);
+			cArray.push(canvas);
 		}
 		CANVASES.push(cArray);
 	}
