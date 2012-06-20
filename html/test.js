@@ -259,10 +259,14 @@ function onResize()
 	VIEWPORT.screenWidth = window.innerWidth - 0;
 	VIEWPORT.screenHeight = window.innerHeight - $('#buttonBar').outerHeight();
 	VIEWPORT.offsetY = Math.round(VIEWPORT.screenHeight/2);
-	VIEWPORT.offsetX = Math.round(VIEWPORT.screenWidth*2/5);
+	VIEWPORT.offsetX = Math.round(VIEWPORT.screenWidth/2);
 	$('#contentArea').css({
 		width: VIEWPORT.screenWidth+"px",
 		height: VIEWPORT.screenHeight+"px"
+		});
+	$('#crossHairs').css({
+		left: (Math.round(VIEWPORT.screenWidth/2)-16)+"px",
+		top: (Math.round(VIEWPORT.screenHeight/2)-16)+"px"
 		});
 
 	for (var canvasRow = 0; canvasRow < CANVASES.length; canvasRow++)

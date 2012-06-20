@@ -24,3 +24,10 @@ body {
 	-moz-transition: all 2s ease-out 0s;
 	-moz-transform: translateX(600px);
 }
+
+#crossHairs {
+	position: absolute;
+	width: 32px;
+	height: 32px;
+	border: solid 2px #006;
+}
