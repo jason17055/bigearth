@@ -454,6 +454,8 @@ SphereGeometry.prototype.makeEdgeFromEndpoints = function(vertex1, vertex2)
 	}
 };
 
+SphereGeometry.ATAN12 = Math.atan(0.5);
+
 SphereGeometry.prototype.getSpherePoint = function(cellIdx)
 {
 	var sz = this.size;
@@ -465,9 +467,9 @@ SphereGeometry.prototype.getSpherePoint = function(cellIdx)
 		if (cellIdx == 1)
 			return fromPolar(0, Math.PI/2);
 		else if (cellIdx <= 6)
-			return fromPolar(Math.PI * 2 / 5 * (cellIdx-1), Math.PI/6);
+			return fromPolar(Math.PI * 2 / 5 * (cellIdx-1), SphereGeometry.ATAN12);
 		else if (cellIdx <= 11)
-			return fromPolar(Math.PI * 2 / 5 * (cellIdx-5.5), -Math.PI/6);
+			return fromPolar(Math.PI * 2 / 5 * (cellIdx-5.5), -SphereGeometry.ATAN12);
 		else
 			return fromPolar(0, -Math.PI/2);
 	}
