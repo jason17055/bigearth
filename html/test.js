@@ -52,7 +52,9 @@ function updateTransformMatrix()
 		// desired size of hex : 32px
 		VIEWPORT.scale = Math.round(geometry.size * 5 * 32 / Math.PI / 2);
 	}
-	VIEWPORT.rotMatrix = matrixMultiply(rX, rZ);
+
+	var I = [[ VIEWPORT.scale,0,0 ], [ 0,VIEWPORT.scale,0 ], [ 0,0,1 ]];
+	VIEWPORT.rotMatrix = matrixMultiply(I, matrixMultiply(rX, rZ));
 }
 updateTransformMatrix();
 
@@ -65,8 +67,8 @@ function toScreenPoint(pt)
 	z: M[2][0]*pt.x + M[2][1]*pt.y + M[2][2]*pt.z
 	};
 	return {
-	x: p.x * VIEWPORT.scale + VIEWPORT.offsetX,
-	y: p.y * VIEWPORT.scale + VIEWPORT.offsetY,
+	x: p.x + VIEWPORT.offsetX,
+	y: p.y + VIEWPORT.offsetY,
 	z: p.z };
 }
 
