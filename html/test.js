@@ -373,8 +373,8 @@ function nextSizeClicked()
 function panToCoords(pt)
 {
 	var p = toScreenPoint(pt);
-	var dx = -Math.round(p.x - VIEWPORT.screenWidth / 2);
-	var dy = -Math.round(p.y - VIEWPORT.screenHeight / 2);
+	var dx = -Math.round(p.x + VIEWPORT.offsetX - VIEWPORT.screenWidth / 2);
+	var dy = -Math.round(p.y + VIEWPORT.offsetY - VIEWPORT.screenHeight / 2);
 
 	VIEWPORT.translateX = dx;
 	VIEWPORT.translateY = dy;
@@ -392,11 +392,9 @@ function onMouseDown(evt)
 	evt.preventDefault();
 
 	var canvas = this;
-	//var $canv = $(canvas);
-	//var orig = $canv.position();
 	var screenPt = {
-		x: evt.clientX - VIEWPORT.translateX,
-		y: evt.clientY - VIEWPORT.translateY
+		x: evt.clientX - (VIEWPORT.offsetX + VIEWPORT.translateX),
+		y: evt.clientY - (VIEWPORT.offsetY + VIEWPORT.translateY)
 		};
 
 	var xx = getNearestFeatureFromScreen(screenPt);
