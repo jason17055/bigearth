@@ -61,15 +61,11 @@ updateTransformMatrix();
 function toScreenPoint(pt)
 {
 	var M = VIEWPORT.rotMatrix;
-	var p = {
+	return {
 	x: M[0][0]*pt.x + M[0][1]*pt.y + M[0][2]*pt.z,
 	y: M[1][0]*pt.x + M[1][1]*pt.y + M[1][2]*pt.z,
 	z: M[2][0]*pt.x + M[2][1]*pt.y + M[2][2]*pt.z
 	};
-	return {
-	x: p.x + VIEWPORT.offsetX,
-	y: p.y + VIEWPORT.offsetY,
-	z: p.z };
 }
 
 function repaintOne(canvasRow, canvasCol)
@@ -85,14 +81,11 @@ function repaintOne(canvasRow, canvasCol)
 	if (!map)
 		return;
 
-	var myScreenPoint = function(pt)
-	{
-		var p = toScreenPoint(pt);
-		return {
-		x: p.x - (400*canvasCol),
-		y: p.y - (400*canvasRow),
-		z: p.z };
-	};
+	ctx.save();
+	ctx.translate(
+		VIEWPORT.offsetX-(400*canvasCol),
+		VIEWPORT.offsetY-(400*canvasRow)
+		);
 
 	for (var i in map.cells)
 	{
@@ -100,7 +93,7 @@ function repaintOne(canvasRow, canvasCol)
 		var cellIdx = parseInt(i)+1;
 
 		var co = coords.cells[cellIdx];
-		var centerP = myScreenPoint(co.pt);
+		var centerP = toScreenPoint(co.pt);
 		if (centerP.z < 0)
 			continue;
 
@@ -133,11 +126,11 @@ function repaintOne(canvasRow, canvasCol)
 		//	'#eee';
  
 		ctx.beginPath();
-		var p = myScreenPoint(co.pts[0]);
+		var p = toScreenPoint(co.pts[0]);
 		ctx.moveTo(p.x, p.y);
 		for (var j = 0, l = co.pts.length; j < l; j++)
 		{
-			var p = myScreenPoint(co.pts[(j+1)%l]);
+			var p = toScreenPoint(co.pts[(j+1)%l]);
 			ctx.lineTo(p.x, p.y);
 		}
 		ctx.fill();
@@ -161,7 +154,7 @@ function repaintOne(canvasRow, canvasCol)
 	for (var eId in map.edges)
 	{
 		var ed = map.edges[eId];
-		var p = myScreenPoint(coords.edges[eId].pt);
+		var p = toScreenPoint(coords.edges[eId].pt);
 		if (p.z < 0)
 			continue;
 
@@ -171,8 +164,8 @@ function repaintOne(canvasRow, canvasCol)
 		if (ed.feature == 'river')
 		{
 			var vv = geometry.getVerticesAdjacentToEdge(eId);
-			var p1 = myScreenPoint(coords.vertices[vv[0]].pt);
-			var p2 = myScreenPoint(coords.vertices[vv[1]].pt);
+			var p1 = toScreenPoint(coords.vertices[vv[0]].pt);
+			var p2 = toScreenPoint(coords.vertices[vv[1]].pt);
 			ctx.save();
 			ctx.lineWidth = 4;
 			ctx.strokeStyle = '#00f';
@@ -186,7 +179,7 @@ function repaintOne(canvasRow, canvasCol)
 	for (var vId in map.vertices)
 	{
 		var v = map.vertices[vId];
-		var p = myScreenPoint(coords.vertices[vId].pt);
+		var p = toScreenPoint(coords.vertices[vId].pt);
 		if (p.z < 0)
 			continue;
 
@@ -211,7 +204,7 @@ function repaintOne(canvasRow, canvasCol)
 	if (pawn && pawn.locationType == 'vertex')
 	{
 		var v = map.vertices[pawn.location];
-		var p = myScreenPoint(coords.vertices[pawn.location].pt);
+		var p = toScreenPoint(coords.vertices[pawn.location].pt);
 		if (p.z >= 0)
 		{
 			drawPawn(ctx, p);
@@ -219,7 +212,7 @@ function repaintOne(canvasRow, canvasCol)
 	}
 	else if (pawn && pawn.locationType == 'cell')
 	{
-		var p = myScreenPoint(coords.cells[pawn.location].pt);
+		var p = toScreenPoint(coords.cells[pawn.location].pt);
 		if (p.z >= 0)
 		{
 			drawPawn(ctx, p);
@@ -227,12 +220,14 @@ function repaintOne(canvasRow, canvasCol)
 	}
 	else if (pawn && pawn.locationType == 'edge')
 	{
-		var p = myScreenPoint(coords.edges[pawn.location].pt);
+		var p = toScreenPoint(coords.edges[pawn.location].pt);
 		if (p.z >= 0)
 		{
 			drawPawn(ctx, p);
 		}
 	}
+
+	ctx.restore();
 }
 
 function repaint()
