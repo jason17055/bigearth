@@ -2,8 +2,8 @@ var VIEWPORT = {
 	latitude: Math.PI/2,
 	longitude: 0,
 	scale: 450,
-	offsetX: 280,
-	offsetY: 280,
+	offsetX: 0,
+	offsetY: 0,
 	translateX: 0,
 	translateY: 0
 	};
@@ -83,8 +83,8 @@ function repaintOne(canvasRow, canvasCol)
 
 	ctx.save();
 	ctx.translate(
-		VIEWPORT.offsetX-(400*canvasCol),
-		VIEWPORT.offsetY-(400*canvasRow)
+		-(VIEWPORT.offsetX + 400*canvasCol),
+		-(VIEWPORT.offsetY + 400*canvasRow)
 		);
 
 	for (var i in map.cells)
@@ -257,8 +257,6 @@ function onResize()
 {
 	VIEWPORT.screenWidth = window.innerWidth - 0;
 	VIEWPORT.screenHeight = window.innerHeight - $('#buttonBar').outerHeight();
-	VIEWPORT.offsetY = Math.round(VIEWPORT.screenHeight/2);
-	VIEWPORT.offsetX = Math.round(VIEWPORT.screenWidth/2);
 	$('#contentArea').css({
 		width: VIEWPORT.screenWidth+"px",
 		height: VIEWPORT.screenHeight+"px"
@@ -268,17 +266,7 @@ function onResize()
 		top: (Math.round(VIEWPORT.screenHeight/2)-16)+"px"
 		});
 
-	for (var canvasRow = 0; canvasRow < CANVASES.length; canvasRow++)
-	{
-		for (var canvasCol = 0; canvasCol < CANVASES[canvasRow].length; canvasCol++)
-		{
-			$(CANVASES[canvasRow][canvasCol]).css({
-				left: (canvasCol*400)+"px",
-				top: (canvasRow*400)+"px"
-				});
-		}
-	}
-	repaint();
+	exposeCanvases();
 }
 
 function resetMap()
@@ -373,17 +361,81 @@ function nextSizeClicked()
 function panToCoords(pt)
 {
 	var p = toScreenPoint(pt);
-	var dx = -Math.round(p.x + VIEWPORT.offsetX - VIEWPORT.screenWidth / 2);
-	var dy = -Math.round(p.y + VIEWPORT.offsetY - VIEWPORT.screenHeight / 2);
+	var dx = -Math.round(p.x - VIEWPORT.screenWidth / 2);
+	var dy = -Math.round(p.y - VIEWPORT.screenHeight / 2);
 
 	VIEWPORT.translateX = dx;
 	VIEWPORT.translateY = dy;
+	exposeCanvases();
 
 	var $sp = $('#scrollPanel');
 	$sp.css({
 		'-moz-transition': 'all 1.0s ease-out',
 		'-moz-transform': 'translate('+dx+','+dy+')'
 		});
+}
+
+function exposeCanvases()
+{
+	function newCanvas(row,col)
+	{
+		var $c = $('<canvas class="aCanvas" width="400" height="400"></canvas>');
+		$c.css({
+			left: (400*col+VIEWPORT.offsetX) + "px",
+			top: (400*row+VIEWPORT.offsetY) + "px"
+			});
+		$('#scrollPanel').append($c);
+
+		var canvas = $c.get(0);
+		canvas.addEventListener('mousedown', onMouseDown, false);
+		return canvas;
+	}
+
+	var topY = VIEWPORT.offsetY + VIEWPORT.translateY;
+	while (topY > 0)
+	{
+		// add another row of canvases above the current
+		CANVASES.unshift([]);
+		VIEWPORT.offsetY -= 400;
+		topY -= 400;
+	}
+
+	var bottomY = topY + 400 * CANVASES.length;
+	while (bottomY <= VIEWPORT.screenHeight)
+	{
+		CANVASES.push([]);
+		bottomY += 400;
+	}
+
+	var leftX = VIEWPORT.offsetX + VIEWPORT.translateX;
+	while (leftX > 0)
+	{
+		VIEWPORT.offsetX -= 400;
+		leftX -= 400;
+
+		for (var row = 0; row < CANVASES.length; row++)
+		{
+			var C = CANVASES[row];
+			var canvas = newCanvas(row, 0);
+			C.unshift(canvas);
+			repaintOne(row, 0);
+		}
+	}
+
+	for (var row = 0; row < CANVASES.length; row++)
+	{
+		var C = CANVASES[row];
+
+		var rightX = leftX + 400*CANVASES[row].length;
+		while (rightX <= VIEWPORT.screenWidth)
+		{
+			rightX += 400;
+
+			var canvas = newCanvas(row, C.length);
+			C.push(canvas);
+			repaintOne(row,C.length-1);
+		}
+	}
 }
 
 function onMouseDown(evt)
@@ -393,8 +445,8 @@ function onMouseDown(evt)
 
 	var canvas = this;
 	var screenPt = {
-		x: evt.clientX - (VIEWPORT.offsetX + VIEWPORT.translateX),
-		y: evt.clientY - (VIEWPORT.offsetY + VIEWPORT.translateY)
+		x: evt.clientX - VIEWPORT.translateX,
+		y: evt.clientY - VIEWPORT.translateY
 		};
 
 	var xx = getNearestFeatureFromScreen(screenPt);
@@ -512,23 +564,6 @@ function getVertexFromScreen(screenPt)
 	}
 	return best;
 }
-
-$(function() {
-	for (var i = 0; i < 2; i++)
-	{
-		var cArray = new Array();
-		for (var j = 0; j < 3; j++)
-		{
-			var $c = $('<canvas class="aCanvas" width="400" height="400"></canvas>');
-			$('#scrollPanel').append($c);
-
-			var canvas = $c.get(0);
-			canvas.addEventListener('mousedown', onMouseDown, false);
-			cArray.push(canvas);
-		}
-		CANVASES.push(cArray);
-	}
-});
 
 function addWaterAtPawn()
 {
