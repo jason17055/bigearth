@@ -360,6 +360,52 @@ function nextSizeClicked()
 
 function panToCoords(pt)
 {
+	var ptLgt = Math.atan2(pt.y, pt.x);
+	var ptLat = Math.asin(pt.z);
+
+	var latInterval = Math.PI/12;
+	var curLat = Math.PI/2 - VIEWPORT.latitude;
+	if (Math.abs(curLat - ptLat) > latInterval)
+	{
+		var desiredLat = Math.round(ptLat/latInterval) * latInterval;
+		if (desiredLat > 5*latInterval)
+			desiredLat = 5*latInterval;
+		else if (desiredLat < -5*latInterval)
+			desiredLat = -5*latInterval;
+
+		if (Math.abs(desiredLat - curLat) > 0.001)
+		{
+			$('#numEntry').attr('value',
+			"at " + (curLat * 180/Math.PI) +
+				", want to be at " + (desiredLat * 180/Math.PI));
+
+			// force re-orientation
+			CANVASES = [];
+			$('.aCanvas').remove();
+
+			curLat = desiredLat;
+			VIEWPORT.latitude = Math.PI/2 - desiredLat;
+			updateTransformMatrix();
+		}
+	}
+
+	var lgtInterval = Math.PI/6;
+	var curLgt = Math.PI/2 - VIEWPORT.longitude;
+	if (Math.abs(curLgt - ptLgt) > lgtInterval &&
+		Math.abs(curLgt + 2*Math.PI - ptLgt) > lgtInterval &&
+		Math.abs(curLgt - (ptLgt + 2*Math.PI)) > lgtInterval)
+	{
+		var desiredLgt = Math.round(ptLgt/lgtInterval) * lgtInterval;
+		
+		// force re-orientation
+		CANVASES = [];
+		$('.aCanvas').remove();
+
+		curLgt = desiredLgt;
+		VIEWPORT.longitude = Math.PI/2 - desiredLgt;
+		updateTransformMatrix();
+	}
+
 	var p = toScreenPoint(pt);
 	var dx = -Math.round(p.x - VIEWPORT.screenWidth / 2);
 	var dy = -Math.round(p.y - VIEWPORT.screenHeight / 2);
