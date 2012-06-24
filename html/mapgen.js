@@ -85,7 +85,8 @@ function makeMap(geometry)
 	{
 		var c = {
 			height: 0,
-			water: 0
+			water: 0,
+			moisture: 0
 			};
 		cells.push(c);
 
@@ -116,7 +117,7 @@ function makeMap(geometry)
 	};
 }
 
-function bumpMap(map, coords)
+function bumpMap(map, coords, d, attrName)
 {
 	var M = Math.sqrt(1/3);
 	var v = {
@@ -124,7 +125,14 @@ function bumpMap(map, coords)
 	y: Math.random() * 2 * M - M,
 	z: Math.random() * 2 * M - M
 	};
-	var d = Math.random() >= 0.5 ? 1 : -1;
+
+	if (!d) {
+		d = Math.random() >= 0.5 ? 1 : -1;
+	}
+
+	if (!attrName) {
+		attrName = 'height';
+	}
 
 	for (var i in map.cells)
 	{
@@ -138,7 +146,7 @@ function bumpMap(map, coords)
 		var dp = u.x * v.x + u.y * v.y + u.z * v.z;
 		if (dp > 0)
 		{
-			c.height += d;
+			c[attrName] += d;
 		}
 	}
 }

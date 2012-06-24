@@ -119,6 +119,14 @@ function repaintOne(canvasRow, canvasCol)
 			ctx.fillStyle = hh <= 2 ? '#68f' : '#05a';
 		}
 
+		if (c.terrain)
+		{
+			ctx.fillStyle = c.terrain == 'ocean' ? '#05a' :
+				c.terrain == 'glacier' ? '#fff' :
+				c.terrain == 'desert' ? '#fd4' :
+				c.terrain == 'tundra' ? '#bbe' : '#f0f';
+		}
+
 		//	c.height < -3 ? '#05a' :
 		//	c.height < 0 ? '#8af' :
 		//	c.height < 3 ? '#8f8' :
