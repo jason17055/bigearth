@@ -363,6 +363,8 @@ function panToCoords(pt)
 	var ptLgt = Math.atan2(pt.y, pt.x);
 	var ptLat = Math.asin(pt.z);
 
+	var needsAttitudeChange = null;
+
 	var latInterval = Math.PI/12;
 	var curLat = Math.PI/2 - VIEWPORT.latitude;
 	if (Math.abs(curLat - ptLat) > latInterval)
@@ -375,17 +377,11 @@ function panToCoords(pt)
 
 		if (Math.abs(desiredLat - curLat) > 0.001)
 		{
-			$('#numEntry').attr('value',
-			"at " + (curLat * 180/Math.PI) +
-				", want to be at " + (desiredLat * 180/Math.PI));
-
-			// force re-orientation
-			CANVASES = [];
-			$('.aCanvas').remove();
-
+			needsAttitudeChange = {
+			latitude: Math.PI/2 - desiredLat,
+			longitude: VIEWPORT.longitude
+			};
 			curLat = desiredLat;
-			VIEWPORT.latitude = Math.PI/2 - desiredLat;
-			updateTransformMatrix();
 		}
 	}
 
@@ -398,12 +394,9 @@ function panToCoords(pt)
 		var desiredLgt = Math.round(ptLgt/lgtInterval) * lgtInterval;
 		
 		// force re-orientation
-		CANVASES = [];
-		$('.aCanvas').remove();
-
-		curLgt = desiredLgt;
-		VIEWPORT.longitude = Math.PI/2 - desiredLgt;
-		updateTransformMatrix();
+		if (!needsAttitudeChange)
+			needsAttitudeChange = { latitude: VIEWPORT.latitude };
+		needsAttitudeChange.longitude = Math.PI/2 - desiredLgt;
 	}
 
 	var p = toScreenPoint(pt);
@@ -412,13 +405,40 @@ function panToCoords(pt)
 
 	VIEWPORT.translateX = dx;
 	VIEWPORT.translateY = dy;
-	exposeCanvases();
+	if (!needsAttitudeChange)
+		exposeCanvases();
 
 	var $sp = $('#scrollPanel');
 	$sp.css({
 		'-moz-transition': 'all 1.0s ease-out',
 		'-moz-transform': 'translate('+dx+','+dy+')'
 		});
+
+	if (needsAttitudeChange)
+	{
+		setTimeout(function() {
+
+			// force re-orientation
+			CANVASES = [];
+			$('.aCanvas').remove();
+
+			VIEWPORT.latitude = needsAttitudeChange.latitude;
+			VIEWPORT.longitude = needsAttitudeChange.longitude;
+			updateTransformMatrix();
+
+			var p = toScreenPoint(pt);
+			var dx = -Math.round(p.x - VIEWPORT.screenWidth / 2);
+			var dy = -Math.round(p.y - VIEWPORT.screenHeight / 2);
+			VIEWPORT.translateX = dx;
+			VIEWPORT.translateY = dy;
+			exposeCanvases();
+
+			$sp.css({
+				'-moz-transition': 'none',
+				'-moz-transform': 'translate('+dx+','+dy+')'
+				});
+		}, 1000);
+	}
 }
 
 function exposeCanvases()
