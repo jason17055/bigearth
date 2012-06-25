@@ -8,6 +8,20 @@ var VIEWPORT = {
 	translateY: 0
 	};
 
+var TERRAIN_IMAGES = {};
+function loadTerrainImage(terrainType)
+{
+	var imageObj = new Image();
+	imageObj.onload = function() {
+		TERRAIN_IMAGES[terrainType] = imageObj;
+		};
+	imageObj.src = "terrain_textures/"+terrainType+".png";
+}
+loadTerrainImage("ocean");
+loadTerrainImage("desert");
+loadTerrainImage("glacier");
+loadTerrainImage("tundra");
+
 var CANVASES = [];
 
 function matrixMultiply(A, B)
@@ -87,6 +101,7 @@ function repaintOne(canvasRow, canvasCol)
 		-(VIEWPORT.offsetY + 400*canvasRow)
 		);
 
+	var myPatterns = {};
 	for (var i in map.cells)
 	{
 		var c = map.cells[i];
@@ -119,7 +134,17 @@ function repaintOne(canvasRow, canvasCol)
 			ctx.fillStyle = hh <= 2 ? '#68f' : '#05a';
 		}
 
-		if (c.terrain)
+		if (c.terrain && TERRAIN_IMAGES[c.terrain])
+		{
+			if (!myPatterns[c.terrain])
+			{
+				var imageObj = TERRAIN_IMAGES[c.terrain];
+				var pattern = ctx.createPattern(imageObj,"repeat");
+				myPatterns[c.terrain] = pattern;
+			}
+			ctx.fillStyle = myPatterns[c.terrain];
+		}
+		else if (c.terrain)
 		{
 			ctx.fillStyle = c.terrain == 'ocean' ? '#05a' :
 				c.terrain == 'glacier' ? '#fff' :
