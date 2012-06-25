@@ -548,7 +548,7 @@ function onMouseDown(evt)
 		y: evt.clientY - VIEWPORT.translateY
 		};
 
-	var xx = getNearestFeatureFromScreen(screenPt);
+	var xx = getNearestFeatureFromScreen(screenPt, false, true, true);
 	if (xx.type == 'vertex')
 	{
 		var vId = xx.id;
@@ -593,17 +593,26 @@ function onMouseDown(evt)
 	}
 }
 
-function getNearestFeatureFromScreen(screenPt)
+function getNearestFeatureFromScreen(screenPt, noCells, noEdges, noVertices)
 {
-	var bestvertex = getVertexFromScreen(screenPt);
-	var p = toScreenPoint(coords.vertices[bestvertex].pt);
+	var best = null;
+	var bestDist = Infinity;
 
-	var bestDist = Math.sqrt(Math.pow(screenPt.x-p.x,2)+Math.pow(screenPt.y-p.y,2));
-	var best = {
-	type: "vertex",
-	id: bestvertex
-	};
+	if (!noVertices)
+	{
+		var bestvertex = getVertexFromScreen(screenPt);
+		var p = toScreenPoint(coords.vertices[bestvertex].pt);
 
+		bestDist = Math.sqrt(Math.pow(screenPt.x-p.x,2)+
+				Math.pow(screenPt.y-p.y,2));
+		best = {
+		type: "vertex",
+		id: bestvertex
+		};
+	}
+
+	if (!noCells)
+	{
 	for (var cid in coords.cells)
 	{
 		var co = coords.cells[cid];
@@ -621,7 +630,10 @@ function getNearestFeatureFromScreen(screenPt)
 			bestDist = d;
 		}
 	}
+	}
 
+	if (!noEdges)
+	{
 	for (var eid in coords.edges)
 	{
 		var eco = coords.edges[eid];
@@ -638,6 +650,7 @@ function getNearestFeatureFromScreen(screenPt)
 			};
 			bestDist = d;
 		}
+	}
 	}
 
 	return best;
