@@ -324,38 +324,9 @@ function newMap()
 	var geometry = new SG.SphereGeometry(15);
 	var map = MG.makeMap(geometry);
 	var coords = MG.makeCoords(geometry);
-	for (var i = 0; i < 100; i++)
-		MG.bumpMap(map, coords);
-	for (var i = 0; i < 30; i++)
-		MG.bumpMap(map, coords, i%2 ? 1 : -1, "moisture");
-	for (var i = 1, l = geometry.getCellCount(); i <= l; i++)
-	{
-		var lat = Math.asin(coords.cells[i].pt.z);
-		map.cells[i-1].temperature = 24 - 20 * Math.pow(lat,2);
-	}
-	for (var i = 0; i < 30; i++)
-		MG.bumpMap(map, coords, i%2 ? 2 : -2, "temperature");
 	map.geometry = geometry;
 	map.size = geometry.size;
-
-	for (var i = 1, l = geometry.getCellCount(); i <= l; i++)
-	{
-		var c = map.cells[i-1];
-		if (c.height < 1)
-			c.terrain = "ocean";
-		else if (c.temperature < 0)
-			c.terrain = "glacier";
-		else if (c.moisture < -2 && c.temperature > 15)
-			c.terrain = "desert";
-		else if (c.moisture < -2)
-			c.terrain = "tundra";
-		else if (c.moisture < 2)
-			c.terrain = "plains";
-		else if (c.moisture < 6)
-			c.terrain = "grassland";
-		else
-			c.terrain = "swamp";
-	}
+	MG.generateTerrain(map, coords);
 
 	return map;
 }

@@ -879,31 +879,7 @@ function greatFloodClicked()
 	setTimeout(nextStep, 2000);
 }
 
-function testPanClicked()
+function testSeaLevelClicked()
 {
-	//TODO- consider using requestAnimationFrame
-
-	var $sp = $('#scrollPanel');
-	if ($sp.hasClass('testPan'))
-	{
-		$sp.css({ '-moz-transform': 'translateX(0)' });
-	}
-	else
-		$sp.addClass('testPan');
-	return;
-
-	var i = 0;
-	var $c = $(CANVASES[0][0]);
-	$c.css('left',i);
-
-	var helper = function()
-	{
-		i += 10;
-		$c.css('left', i + 'px');
-		if (i < 400)
-		setTimeout(helper, 100);
-		else
-		$c.css('left',0);
-	};
-	setTimeout(helper,100);
+	findSeaLevel(map, 0.6);
 }
