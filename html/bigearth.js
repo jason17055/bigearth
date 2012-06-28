@@ -449,6 +449,41 @@ function panToCoords(pt)
 
 	if (needsAttitudeChange)
 	{
+		var a_pt = fromPolar(Math.PI/2-VIEWPORT.longitude,
+				Math.PI/2-VIEWPORT.latitude);
+		var a_p = toScreenPoint(a_pt);
+		var b_p = p;
+
+		var oldAtt_lat = VIEWPORT.latitude;
+		var oldAtt_lgt = VIEWPORT.longitude;
+		VIEWPORT.latitude = needsAttitudeChange.latitude;
+		VIEWPORT.longitude = needsAttitudeChange.longitude;
+		updateTransformMatrix();
+
+		var a_q = toScreenPoint(a_pt);
+		var b_q = toScreenPoint(pt);
+
+		VIEWPORT.latitude = oldAtt_lat;
+		VIEWPORT.longitude = oldAtt_lgt;
+		updateTransformMatrix();
+
+		var a_v = { x: a_q.x-a_p.x, y: a_q.y-a_p.y };
+		var b_v = { x: b_q.x-b_p.x, y: b_q.y-b_p.y };
+		var a_len = Math.sqrt(Math.pow(a_v.x,2)+Math.pow(a_v.y,2));
+		var b_len = Math.sqrt(Math.pow(b_v.x,2)+Math.pow(b_v.y,2));
+		var intAngle = Math.acos((a_v.x * b_v.x + a_v.y * b_v.y) / (a_len * b_len));
+		var crossProd = a_v.x*b_v.y - a_v.y*b_v.x;
+		if (intAngle >= 10*Math.PI/180)
+		{
+			// apply some sort of rotation effect
+			var rotateAmt = (crossProd > 0 ? "-" : "") +
+				Math.round(intAngle*180/Math.PI) + "deg";
+			$sp.css({
+				'-moz-transform': 'translate('+dx+','+dy+') rotate('+rotateAmt+')',
+				'-moz-transform-origin': Math.round(b_p.x)+'px '+Math.round(b_p.y)+'px'
+				});
+		}
+
 		setTimeout(function() {
 
 			// force re-orientation
@@ -468,7 +503,8 @@ function panToCoords(pt)
 
 			$sp.css({
 				'-moz-transition': 'none',
-				'-moz-transform': 'translate('+dx+','+dy+')'
+				'-moz-transform': 'translate('+dx+','+dy+')',
+				'-moz-transform-origin': '50% 50%'
 				});
 		}, 1000);
 	}
