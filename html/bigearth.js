@@ -26,6 +26,9 @@ loadTerrainImage("ocean");
 loadTerrainImage("desert");
 loadTerrainImage("glacier");
 loadTerrainImage("tundra");
+loadTerrainImage("plains");
+loadTerrainImage("grassland");
+loadTerrainImage("swamp");
 
 var CANVASES = [];
 

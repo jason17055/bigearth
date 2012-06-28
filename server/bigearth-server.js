@@ -349,6 +349,12 @@ function newMap()
 			c.terrain = "desert";
 		else if (c.moisture < -2)
 			c.terrain = "tundra";
+		else if (c.moisture < 2)
+			c.terrain = "plains";
+		else if (c.moisture < 6)
+			c.terrain = "grassland";
+		else
+			c.terrain = "swamp";
 	}
 
 	return map;
