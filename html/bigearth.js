@@ -9,11 +9,16 @@ var VIEWPORT = {
 	};
 
 var TERRAIN_IMAGES = {};
+var terrainImagesToLoad = 0;
 function loadTerrainImage(terrainType)
 {
+	terrainImagesToLoad++;
 	var imageObj = new Image();
 	imageObj.onload = function() {
 		TERRAIN_IMAGES[terrainType] = imageObj;
+		terrainImagesToLoad--;
+		if (terrainImagesToLoad == 0)
+			repaint();
 		};
 	imageObj.src = "terrain_textures/"+terrainType+".png";
 }
