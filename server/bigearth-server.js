@@ -321,7 +321,7 @@ function newMap()
 	var SG = require('../html/sphere-geometry.js');
 	var MG = require('../html/mapgen.js');
 
-	var geometry = new SG.SphereGeometry(15);
+	var geometry = new SG.SphereGeometry(22);
 	var map = MG.makeMap(geometry);
 	var coords = MG.makeCoords(geometry);
 	map.geometry = geometry;
@@ -333,6 +333,8 @@ function newMap()
 G.globalMap = newMap();
 
 saveMap(G.globalMap, '1.map');
+
+addTraveler();
 
 HTTP.createServer(handleRequest).listen(8124);
 console.log('Server running at http://localhost:8124/');

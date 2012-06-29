@@ -74,8 +74,9 @@ function updateTransformMatrix()
 
 	if (geometry)
 	{
-		// desired size of hex : 32px
-		VIEWPORT.scale = Math.round(geometry.size * 5 * 32 / Math.PI / 2);
+		// desired size of hex in pixels
+		var DESIRED_SIZE = 40;
+		VIEWPORT.scale = Math.round(geometry.size * 5 * DESIRED_SIZE / Math.PI / 2);
 	}
 
 	var I = [[ VIEWPORT.scale,0,0 ], [ 0,VIEWPORT.scale,0 ], [ 0,0,1 ]];
@@ -322,18 +323,59 @@ function resetMap()
 	pawn = null;
 }
 
+var gameState;
+
+function onGameState()
+{
+	map = gameState.map;
+	geometry = new SphereGeometry(map.size);
+	coords = makeCoords(geometry);
+	numBumps = 0;
+	pawn = null;
+	updateTransformMatrix();
+	onResize();
+	repaint();
+	recreateFleetIcons();
+}
+
+function recreateFleetIcons()
+{
+	$('.fleetIcon').remove();
+
+	if (gameState.fleets)
+	{
+		for (var fid in gameState.fleets)
+		{
+			var f = gameState.fleets[fid];
+			addFleetImage(f);
+		}
+	}
+}
+
+function addFleetImage(fleet)
+{
+	var $i = $('<img>');
+	$i.attr('src', 'unit_images/'+fleet.type+'.png');
+	$i.addClass('fleetIcon');
+
+	var p = toScreenPoint(coords.cells[fleet.location].pt);
+	if (p.z < 0.5)
+		return;
+
+	$i.css({
+		left: (p.x - 32)+"px",
+		top: (p.y - 24)+"px"
+		});
+	$i.attr('virtual-location', fleet.location);
+	$('#scrollPanel').append($i);
+}
+
 function fetchGameState()
 {
 	var onSuccess = function(data,status)
 	{
-		map = data.map;
-		geometry = new SphereGeometry(map.size);
-		coords = makeCoords(geometry);
-		numBumps = 0;
-		pawn = null;
-		updateTransformMatrix();
-		onResize();
-		repaint();
+		gameState = data;
+		onGameState();
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
@@ -364,6 +406,7 @@ function doRotation()
 	VIEWPORT.latitude = -Math.sin(0.05*rotationIdx) + Math.PI/2;
 	updateTransformMatrix();
 	repaint();
+	recreateFleetIcons();
 
 	if (keepGoing)
 	rotateTimer = setTimeout(doRotation,250);
@@ -505,6 +548,7 @@ function panToCoords(pt)
 			VIEWPORT.latitude = needsAttitudeChange.latitude;
 			VIEWPORT.longitude = needsAttitudeChange.longitude;
 			updateTransformMatrix();
+			recreateFleetIcons();
 
 			var p = toScreenPoint(pt);
 			var dx = -Math.round(p.x - VIEWPORT.screenWidth / 2);

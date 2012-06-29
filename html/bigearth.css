@@ -31,3 +31,8 @@ body {
 	height: 32px;
 	border: solid 2px #006;
 }
+
+.fleetIcon {
+	position: absolute;
+	z-index: 1;
+}

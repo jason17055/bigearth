@@ -9,6 +9,15 @@ var G = {
 	nextPlayerId: 1
 	};
 
+function addTraveler()
+{
+	G.fleets = {};
+	G.fleets[1] = {
+		location: 1,
+		type: 'explorer'
+		};
+}
+
 function getGameState()
 {
 	var p = {};
@@ -19,6 +28,7 @@ function getGameState()
 	}
 	return {
 	map: G.globalMap,
+	fleets: G.fleets,
 	players: p
 	};
 }
@@ -41,4 +51,5 @@ if (typeof global !== 'undefined')
 	global.G = G;
 	global.getGameState = getGameState;
 	global.actionHandlers = actionHandlers;
+	global.addTraveler = addTraveler;
 }
