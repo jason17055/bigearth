@@ -9,6 +9,23 @@ var G = {
 	nextPlayerId: 1
 	};
 
+function moveFleetRandomly(fleetId)
+{
+	var fleet = G.fleets[fleetId];
+	var nn = G.globalMap.geometry.getNeighbors(fleet.location);
+	var newLoc = nn[Math.floor(Math.random()*nn.length)];
+
+	var oldLoc = fleet.location;
+	fleet.location = newLoc;
+
+	postEvent({
+		event: 'fleet-movement',
+		fleet: fleetId,
+		fromLocation: oldLoc,
+		toLocation: newLoc
+		});
+}
+
 function addTraveler()
 {
 	G.fleets = {};
@@ -16,6 +33,14 @@ function addTraveler()
 		location: 1,
 		type: 'explorer'
 		};
+
+	var moveTraveler;
+	moveTraveler = function() {
+		console.log("traveler moves!");
+		moveFleetRandomly(1);
+		setTimeout(moveTraveler, 600);
+		};
+	setTimeout(moveTraveler, 600);
 }
 
 function getGameState()

@@ -298,6 +298,8 @@ function onGameState()
 	onResize();
 	repaint();
 	recreateFleetIcons();
+
+	fetchNextEvent();
 }
 
 function recreateFleetIcons()
@@ -309,27 +311,90 @@ function recreateFleetIcons()
 		for (var fid in gameState.fleets)
 		{
 			var f = gameState.fleets[fid];
-			addFleetImage(f);
+			updateFleetIcon(fid, f);
 		}
 	}
 }
 
-function addFleetImage(fleet)
+function updateFleetIcon(fleetId, fleetInfo)
 {
-	var $i = $('<img>');
-	$i.attr('src', 'unit_images/'+fleet.type+'.png');
-	$i.addClass('fleetIcon');
+	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]');
 
-	var p = toScreenPoint(coords.cells[fleet.location].pt);
+	var p = toScreenPoint(coords.cells[fleetInfo.location].pt);
 	if (p.z < 0.5)
+	{
+		$f.remove();
 		return;
+	}
 
-	$i.css({
+	if ($f.length == 0)
+	{
+		$f = $('<img>');
+		$f.addClass('fleetIcon');
+		$f.attr('fleet-id', fleetId);
+		$('#scrollPanel').append($f);
+	}
+
+	$f.attr('src', 'unit_images/'+fleetInfo.type+'.png');
+	$f.attr('virtual-location', fleetInfo.location);
+	$f.css({
 		left: (p.x - 32)+"px",
 		top: (p.y - 24)+"px"
 		});
-	$i.attr('virtual-location', fleet.location);
-	$('#scrollPanel').append($i);
+}
+
+function onFleetMovement(eventData)
+{
+	var fleetId = eventData.fleet;
+	if (gameState.fleets[fleetId])
+	{
+		gameState.fleets[fleetId].location = eventData.toLocation;
+		updateFleetIcon(fleetId, gameState.fleets[fleetId]);
+	}
+}
+
+function onEvent(eventData)
+{
+	if (eventData.event == 'fleet-movement')
+	{
+		return onFleetMovement(eventData);
+	}
+	else
+	{
+		window.title = "event " + eventData.event;
+	}
+}
+
+var nextEventFetcher = null;
+function fetchNextEvent()
+{
+	if (!gameState || !gameState.nextEventUrl)
+		return;
+
+	var thisEventFetcher = {};
+	nextEventFetcher = thisEventFetcher;
+
+	var onSuccess = function(data,status)
+	{
+		if (thisEventFetcher == nextEventFetcher)
+		{
+			gameState.nextEventUrl = data.nextEventUrl;
+			if (data.event)
+				onEvent(data);
+			return fetchNextEvent();
+		}
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		//TODO- handle the error
+	};
+	
+	$.ajax({
+	url: gameState.nextEventUrl,
+	success: onSuccess,
+	error: onError,
+	dataType: "json"
+	});
 }
 
 function fetchGameState()

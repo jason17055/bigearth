@@ -57,7 +57,7 @@ function handleGameStateRequest(request,response)
 
 	var gameState = getGameState();
 	gameState.identity = s.identity;
-	gameState.nextEvent = EVENTS.nextEventId;
+	gameState.nextEventUrl = '/event/' + EVENTS.nextEventId;
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
 	response.end(
@@ -112,7 +112,7 @@ function sendEvent(evt, response)
 function postEvent(evt)
 {
 	evt.id = EVENTS.nextEventId++;
-	evt.nextEvent = EVENTS.nextEventId;
+	evt.nextEventUrl = '/event/'+EVENTS.nextEventId;
 	EVENTS.sentEvents[evt.id] = evt;
 
 	for (var i in EVENTS.waitingListeners)
