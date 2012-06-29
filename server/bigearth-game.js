@@ -8,10 +8,36 @@ var G = {
 	players: {},
 	nextPlayerId: 1
 	};
-G.players[1] = { primaryMap: {} };
+G.players[1] = { primaryMap: { cells: [], edges: {}, vertices: {} } };
 
-function discoverLocation(playerId, location)
+function discoverCell(playerId, location)
 {
+	var map = G.players[playerId].primaryMap;
+	var isNew = false;
+
+	if (!map.cells[location-1])
+	{
+		map.cells[location-1] = {};
+		isNew = true;
+	}
+	map.cells[location-1].terrain = G.globalMap.cells[location-1].terrain;
+
+	if (isNew)
+	{
+		postEvent({
+			event: 'map-update',
+			location: location,
+			locationType: 'cell',
+			data: map.cells[location-1]
+			});
+	}
+
+	var ee = G.globalMap.geometry.getEdgesAdjacentToCell(location);
+	for (var i = 0; i < ee.length; i++)
+	{
+		var eId = ee[i];
+		
+	}
 }
 
 function moveFleetRandomly(fleetId)
@@ -23,7 +49,7 @@ function moveFleetRandomly(fleetId)
 	var oldLoc = fleet.location;
 	fleet.location = newLoc;
 
-	discoverLocation(1, newLoc);
+	discoverCell(1, newLoc);
 		
 	postEvent({
 		event: 'fleet-movement',
@@ -60,7 +86,7 @@ function getGameState()
 	}
 
 	return {
-	map: G.globalMap,
+	map: G.players[1].primaryMap,
 	mapSize: G.globalMap.size,
 	fleets: G.fleets,
 	players: p

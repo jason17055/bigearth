@@ -117,6 +117,9 @@ function repaintOne(canvasRow, canvasCol)
 	for (var i in map.cells)
 	{
 		var c = map.cells[i];
+		if (!c)
+			continue;
+
 		var cellIdx = parseInt(i)+1;
 
 		var co = coords.cells[cellIdx];
@@ -125,7 +128,7 @@ function repaintOne(canvasRow, canvasCol)
 			continue;
 
 		ctx.save();
-		ctx.lineWidth = 1;
+		ctx.lineWidth = 0;
 		ctx.strokeStyle = '#000';
 		ctx.fillStyle =
 			c.height < -3 ? '#730' :
@@ -188,11 +191,6 @@ function repaintOne(canvasRow, canvasCol)
 	//	ctx.fillStyle = '#fff';
 	//	ctx.fillText(cellIdx, centerP.x, centerP.y-8);
 
-		if (Math.floor(c.water) != 0)
-		{
-		ctx.fillStyle = '#ff0';
-		ctx.fillText(Math.floor(c.water), centerP.x, centerP.y);
-		}
 		ctx.restore();
 	}
 
@@ -203,7 +201,7 @@ function repaintOne(canvasRow, canvasCol)
 		if (p.z < .4)
 			continue;
 
-		if (!ed.feature)
+		if (!(ed && ed.feature))
 			continue;
 
 		if (ed.feature == 'river')
@@ -229,7 +227,7 @@ function repaintOne(canvasRow, canvasCol)
 		if (p.z < 0)
 			continue;
 
-		if (!v.water)
+		if (!v || !v.water)
 			continue;
 		if (Math.floor(v.water) == 0)
 			continue;
@@ -354,11 +352,31 @@ function onFleetMovement(eventData)
 	}
 }
 
+var repaintTriggered = null;
+function triggerRepaint()
+{
+	if (!repaintTriggered)
+	{
+		repaintTriggered = setTimeout(function() {
+				repaintTriggered = null;
+				repaint();
+			}, 1000);
+	}
+}
+
 function onEvent(eventData)
 {
 	if (eventData.event == 'fleet-movement')
 	{
 		return onFleetMovement(eventData);
+	}
+	else if (eventData.event == 'map-update')
+	{
+		if (eventData.locationType == 'cell')
+		{
+			gameState.map.cells[eventData.location-1] = eventData.data;
+			triggerRepaint();
+		}
 	}
 	else
 	{
