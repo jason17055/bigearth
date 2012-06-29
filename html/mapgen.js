@@ -290,9 +290,10 @@ function generateTerrain(map, coords)
 	var RF = new RiverFactory(map);
 	RF.generateRivers();
 
-	for (var i = 0; i < 10; i++)
+	var numRivers = 0;
+	var cellCount = map.geometry.getCellCount();
+	while (numRivers < 180)
 	{
-		var cellCount = map.geometry.getCellCount();
 		var cellIdx = 1+Math.floor(Math.random()*cellCount);
 		var vv = map.geometry.getVerticesAdjacentToCell(cellIdx);
 		var vId = vv[Math.floor(Math.random()*vv.length)];
@@ -303,7 +304,17 @@ function generateTerrain(map, coords)
 				break;
 
 			var eId = map.geometry.makeEdgeFromEndpoints(vId, nextVId);
+			if (map.edges[eId].feature)
+				break;
+
+			var cc = map.geometry.getCellsAdjacentToEdge(eId);
+			if (map.cells[cc[0]-1].height < 1)
+				break;
+			if (map.cells[cc[1]-1].height < 1)
+				break;
+
 			map.edges[eId].feature = "river";
+			numRivers++;
 			vId = nextVId;
 		}
 	}
@@ -363,7 +374,6 @@ RiverFactory.prototype.addRiverAt = function(vId)
 	this.visitedCount++;
 	this.todo.push(otherV);
 	var eId = this.map.geometry.makeEdgeFromEndpoints(vId, otherV);
-	//this.map.edges[eId].feature = 'river';
 
 	this.rivers[eId] = true;
 	this.nextVertex[otherV] = vId;
