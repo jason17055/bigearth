@@ -354,6 +354,15 @@ SphereGeometry.prototype._makeVertex = function(cell1, cell2, cell3)
 	}
 };
 
+SphereGeometry.prototype.getCellsAdjacentToEdge = function(edgeId)
+{
+	var cc = edgeId.split(/-/);
+	return [
+		+cc[0],
+		+cc[1]
+		];
+};
+
 SphereGeometry.prototype.getVerticesAdjacentToEdge = function(edgeId)
 {
 	var cc = edgeId.split(/-/);
