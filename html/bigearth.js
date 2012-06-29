@@ -210,6 +210,7 @@ function repaintOne(canvasRow, canvasCol)
 			ctx.save();
 			ctx.lineWidth = 4;
 			ctx.strokeStyle = '#00f';
+			ctx.beginPath();
 			ctx.moveTo(p1.x,p1.y);
 			ctx.lineTo(p2.x,p2.y);
 			ctx.stroke();
