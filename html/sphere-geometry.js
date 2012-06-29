@@ -397,6 +397,19 @@ SphereGeometry.prototype.getVerticesAdjacentToCell = function(cellIdx)
 	return a;
 };
 
+SphereGeometry.prototype.getEdgesAdjacentToCell = function(cellIdx)
+{
+	var n = this.getNeighbors(cellIdx);
+	var a = [];
+
+	var l = n.length;
+	for (var i = 0; i < l; i++)
+	{
+		a.push(this._makeEdge(cellIdx, n[i]));
+	}
+	return a;
+};
+
 SphereGeometry.prototype.getCellsAdjacentToVertex = function(vertexId)
 {
 	var a = vertexId.split(',');
