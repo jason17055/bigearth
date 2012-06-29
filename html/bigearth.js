@@ -338,6 +338,7 @@ function updateFleetIcon(fleetId, fleetInfo)
 	$f.attr('src', 'unit_images/'+fleetInfo.type+'.png');
 	$f.attr('virtual-location', fleetInfo.location);
 	$f.css({
+		'-moz-transition': 'all 0.5s ease-out',
 		left: (p.x - 32)+"px",
 		top: (p.y - 24)+"px"
 		});
