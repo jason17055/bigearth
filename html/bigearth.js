@@ -196,7 +196,7 @@ function repaintOne(canvasRow, canvasCol)
 	{
 		var ed = map.edges[eId];
 		var p = toScreenPoint(coords.edges[eId].pt);
-		if (p.z < 0)
+		if (p.z < .4)
 			continue;
 
 		if (!ed.feature)
