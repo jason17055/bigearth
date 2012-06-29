@@ -247,32 +247,6 @@ function repaintOne(canvasRow, canvasCol)
 		ctx.restore();
 	}
 
-	if (pawn && pawn.locationType == 'vertex')
-	{
-		var v = map.vertices[pawn.location];
-		var p = toScreenPoint(coords.vertices[pawn.location].pt);
-		if (p.z >= 0)
-		{
-			drawPawn(ctx, p);
-		}
-	}
-	else if (pawn && pawn.locationType == 'cell')
-	{
-		var p = toScreenPoint(coords.cells[pawn.location].pt);
-		if (p.z >= 0)
-		{
-			drawPawn(ctx, p);
-		}
-	}
-	else if (pawn && pawn.locationType == 'edge')
-	{
-		var p = toScreenPoint(coords.edges[pawn.location].pt);
-		if (p.z >= 0)
-		{
-			drawPawn(ctx, p);
-		}
-	}
-
 	ctx.restore();
 }
 
@@ -285,18 +259,6 @@ function repaint()
 			repaintOne(cr,cc);
 		}
 	}
-}
-
-function drawPawn(ctx, p)
-{
-	ctx.save();
-	ctx.lineWidth = 4;
-	ctx.strokeStyle = '#c0c';
-	ctx.beginPath();
-	ctx.arc(p.x, p.y, 12, 0, Math.PI*2, true);
-	ctx.closePath();
-	ctx.stroke();
-	ctx.restore();
 }
 
 function onResize()
