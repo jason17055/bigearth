@@ -8,6 +8,11 @@ var G = {
 	players: {},
 	nextPlayerId: 1
 	};
+G.players[1] = { primaryMap: {} };
+
+function discoverLocation(playerId, location)
+{
+}
 
 function moveFleetRandomly(fleetId)
 {
@@ -18,6 +23,8 @@ function moveFleetRandomly(fleetId)
 	var oldLoc = fleet.location;
 	fleet.location = newLoc;
 
+	discoverLocation(1, newLoc);
+		
 	postEvent({
 		event: 'fleet-movement',
 		fleet: fleetId,
@@ -51,8 +58,10 @@ function getGameState()
 		var pp = G.players[pid];
 		p[pid] = pp;
 	}
+
 	return {
 	map: G.globalMap,
+	mapSize: G.globalMap.size,
 	fleets: G.fleets,
 	players: p
 	};

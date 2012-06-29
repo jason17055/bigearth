@@ -290,7 +290,7 @@ var gameState;
 function onGameState()
 {
 	map = gameState.map;
-	geometry = new SphereGeometry(map.size);
+	geometry = new SphereGeometry(gameState.mapSize);
 	coords = makeCoords(geometry);
 	numBumps = 0;
 	pawn = null;
