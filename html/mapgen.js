@@ -267,24 +267,52 @@ function generateTerrain(map, coords)
 	}
 	for (var i = 0; i < 50; i++)
 		blurMoisture(map);
+	for (var i = 0; i < 10; i++)
+		bumpMap(map, coords, i%2 ? 1 : -1, "moisture");
+
+	for (var cid in map.cells)
+	{
+		map.cells[cid].soil = 0;
+	}
+	for (var i = 0; i < 21; i++)
+		bumpMap(map, coords, i%2 ? 1 : -1, "soil");
+	for (var cid in map.cells)
+	{
+		map.cells[cid].soil = LogisticFunction(map.cells[cid].soil);
+	}
 
 	for (var i = 1, l = map.geometry.getCellCount(); i <= l; i++)
 	{
 		var c = map.cells[i-1];
+		var nn = map.geometry.getNeighbors(i);
+		var sumVar = 0;
+		for (var j = 0; j < nn.length; j++)
+		{
+			var n = map.cells[nn[j]-1];
+			sumVar += Math.pow(n.height-c.height,2);
+		}
+		sumVar /= nn.length;
+
 		if (c.height < 1)
 			c.terrain = "ocean";
 		else if (c.temperature < 0)
 			c.terrain = "glacier";
-		else if (c.moisture < -2 && c.temperature > 15)
+		else if (sumVar - c.soil >= 3.5)
+			c.terrain = "mountains";
+		else if (sumVar >= 2)
+			c.terrain = "hills";
+		else if (c.moisture < 0.5 && c.temperature > 15)
 			c.terrain = "desert";
-		else if (c.moisture < -2)
+		else if (c.moisture < 0.5)
 			c.terrain = "tundra";
+		else if (c.moisture >= 6 && c.height >= 2 && c.soil >= 0.65)
+			c.terrain = "swamp";
+		else if (c.soil >= 0.65)
+			c.terrain = "forest";
 		else if (c.moisture < 2)
 			c.terrain = "plains";
-		else if (c.moisture < 6)
-			c.terrain = "grassland";
 		else
-			c.terrain = "swamp";
+			c.terrain = "grassland";
 	}
 
 	var RF = new RiverFactory(map);
