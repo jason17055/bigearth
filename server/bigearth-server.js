@@ -4,7 +4,7 @@ var FS = require('fs');
 var OS = require('os');
 var QS = require('querystring');
 var CRYPTO = require('crypto');
-var GAME = require('./bigearth.js');
+var GAME = require('./bigearth-game.js');
 var SESSIONS = require('./sessions.js');
 var SECRET = CRYPTO.randomBytes(20).toString('hex');
 
