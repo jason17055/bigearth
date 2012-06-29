@@ -286,24 +286,50 @@ function generateTerrain(map, coords)
 		else
 			c.terrain = "swamp";
 	}
+
+	var RF = new RiverFactory(map);
+	RF.generateRivers();
+
+	for (var i = 0; i < 10; i++)
+	{
+		var cellCount = map.geometry.getCellCount();
+		var cellIdx = 1+Math.floor(Math.random()*cellCount);
+		var vv = map.geometry.getVerticesAdjacentToCell(cellIdx);
+		var vId = vv[Math.floor(Math.random()*vv.length)];
+		while (vId)
+		{
+			var nextVId = RF.nextVertex[vId];
+			if (!nextVId)
+				break;
+
+			var eId = map.geometry.makeEdgeFromEndpoints(vId, nextVId);
+			map.edges[eId].feature = "river";
+			vId = nextVId;
+		}
+	}
 }
 
-function RiverFactory()
+function RiverFactory(map)
 {
+	this.map = map;
 	this.todo = new Array();
 	this.visitedCount = 0;
 
 	var r = {};
-	for (var vId in map.vertices)
+	for (var vId in this.map.vertices)
 	{
 		r[vId] = true;
 	}
 	this.remaining = r;
+
+	this.nextVertex = {}; //indexed by vertex id
+	this.rivers = {};     //indexed by edge id
 }
 
 RiverFactory.prototype.getVertexHeight = function(vId)
 {
-	var cc = geometry.getCellsAdjacentToVertex(vId);
+	var map = this.map;
+	var cc = map.geometry.getCellsAdjacentToVertex(vId);
 	return (
 		map.cells[cc[0]-1].height +
 		map.cells[cc[1]-1].height +
@@ -313,7 +339,7 @@ RiverFactory.prototype.getVertexHeight = function(vId)
 RiverFactory.prototype.addRiverAt = function(vId)
 {
 	var h = this.getVertexHeight(vId);
-	var vv = geometry.getVerticesAdjacentToVertex(vId);
+	var vv = this.map.geometry.getVerticesAdjacentToVertex(vId);
 	var candidates = new Array();
 	for (var i = 0, l = vv.length; i < l; i++)
 	{
@@ -336,8 +362,12 @@ RiverFactory.prototype.addRiverAt = function(vId)
 	delete this.remaining[otherV];
 	this.visitedCount++;
 	this.todo.push(otherV);
-	var eId = geometry.makeEdgeFromEndpoints(vId, otherV);
-	map.edges[eId].feature = 'river';
+	var eId = this.map.geometry.makeEdgeFromEndpoints(vId, otherV);
+	//this.map.edges[eId].feature = 'river';
+
+	this.rivers[eId] = true;
+	this.nextVertex[otherV] = vId;
+
 	return true;
 };
 
@@ -379,6 +409,11 @@ RiverFactory.prototype.step = function()
 
 		this.todo.splice(i,1);
 	}
+};
+
+RiverFactory.prototype.generateRivers = function()
+{
+	while (this.step());
 };
 
 if (typeof exports !== 'undefined')
