@@ -7,6 +7,8 @@ var VIEWPORT = {
 	translateX: 0,
 	translateY: 0
 	};
+var VIEWPORT_TILE_SIZE = 400;
+var VIEWPORT_TILE_OVERFLOW = 30;
 
 var TERRAIN_IMAGES = {};
 var terrainImagesToLoad = 0;
@@ -109,8 +111,8 @@ function repaintOne(canvasRow, canvasCol)
 
 	ctx.save();
 	ctx.translate(
-		-(VIEWPORT.offsetX + 400*canvasCol),
-		-(VIEWPORT.offsetY + 400*canvasRow)
+		-(VIEWPORT.offsetX + VIEWPORT_TILE_SIZE*canvasCol),
+		-(VIEWPORT.offsetY + VIEWPORT_TILE_SIZE*canvasRow)
 		);
 
 	var myPatterns = {};
@@ -352,16 +354,54 @@ function onFleetMovement(eventData)
 	}
 }
 
+var RepaintInfo = { todo: {} };
 var repaintTriggered = null;
-function triggerRepaint()
+function doDeferredRepaint()
 {
-	if (!repaintTriggered)
+	for (var k in RepaintInfo.todo)
 	{
-		repaintTriggered = setTimeout(function() {
-				repaintTriggered = null;
-				repaint();
-			}, 1000);
+		var kk = k.split(/,/);
+		var ix = +kk[0];
+		var iy = +kk[1];
+		repaintOne(iy, ix);
 	}
+	RepaintInfo.todo = {};
+	RepaintInfo.timer = null;
+}
+
+function triggerRepaintCanvasTile(x, y)
+{
+	RepaintInfo.todo[x+','+y] = true;
+	if (!RepaintInfo.timer)
+	{
+		RepaintInfo.timer = setTimeout(doDeferredRepaint, 1000);
+	}
+}
+
+function triggerRepaintCell(cellIdx)
+{
+	var p = toScreenPoint(coords.cells[cellIdx-1].pt);
+	if (p.z <= 0) return;
+
+	if (p.x < VIEWPORT.offsetX)
+		return;
+	if (p.y < VIEWPORT.offsetY)
+		return;
+
+	var ix = Math.floor((p.x - VIEWPORT.offsetX) / VIEWPORT_TILE_SIZE);
+	var iy = Math.floor((p.y - VIEWPORT.offsetY) / VIEWPORT_TILE_SIZE);
+	var ox = (p.x - VIEWPORT.offsetX) - VIEWPORT_TILE_SIZE * ix;
+	var oy = (p.y - VIEWPORT.offsetY) - VIEWPORT_TILE_SIZE * iy;
+
+	triggerRepaintCanvasTile(ix, iy);
+	if (ox < VIEWPORT_TILE_OVERFLOW)
+		triggerRepaintCanvasTile(ix-1, iy);
+	else if (ox >= VIEWPORT_TILE_SIZE - VIEWPORT_TILE_OVERFLOW)
+		triggerRepaintCanvasTile(ix+1, iy);
+	if (oy < VIEWPORT_TILE_OVERFLOW)
+		triggerRepaintCanvasTile(ix, iy-1);
+	else if (oy >= VIEWPORT_TILE_SIZE - VIEWPORT_TILE_OVERFLOW)
+		triggerRepaintCanvasTile(ix, iy+1);
 }
 
 function onEvent(eventData)
@@ -375,7 +415,7 @@ function onEvent(eventData)
 		if (eventData.locationType == 'cell')
 		{
 			gameState.map.cells[eventData.location-1] = eventData.data;
-			triggerRepaint();
+			triggerRepaintCell(eventData.location);
 		}
 	}
 	else
@@ -616,10 +656,12 @@ function exposeCanvases()
 {
 	function newCanvas(row,col)
 	{
-		var $c = $('<canvas class="aCanvas" width="400" height="400"></canvas>');
+		var $c = $('<canvas class="aCanvas"></canvas>');
+		$c.attr('width', VIEWPORT_TILE_SIZE);
+		$c.attr('height', VIEWPORT_TILE_SIZE);
 		$c.css({
-			left: (400*col+VIEWPORT.offsetX) + "px",
-			top: (400*row+VIEWPORT.offsetY) + "px"
+			left: (VIEWPORT_TILE_SIZE*col+VIEWPORT.offsetX) + "px",
+			top: (VIEWPORT_TILE_SIZE*row+VIEWPORT.offsetY) + "px"
 			});
 		$('#scrollPanel').append($c);
 
@@ -633,22 +675,22 @@ function exposeCanvases()
 	{
 		// add another row of canvases above the current
 		CANVASES.unshift([]);
-		VIEWPORT.offsetY -= 400;
-		topY -= 400;
+		VIEWPORT.offsetY -= VIEWPORT_TILE_SIZE;
+		topY -= VIEWPORT_TILE_SIZE;
 	}
 
-	var bottomY = topY + 400 * CANVASES.length;
+	var bottomY = topY + VIEWPORT_TILE_SIZE * CANVASES.length;
 	while (bottomY <= VIEWPORT.screenHeight)
 	{
 		CANVASES.push([]);
-		bottomY += 400;
+		bottomY += VIEWPORT_TILE_SIZE;
 	}
 
 	var leftX = VIEWPORT.offsetX + VIEWPORT.translateX;
 	while (leftX > 0)
 	{
-		VIEWPORT.offsetX -= 400;
-		leftX -= 400;
+		VIEWPORT.offsetX -= VIEWPORT_TILE_SIZE;
+		leftX -= VIEWPORT_TILE_SIZE;
 
 		for (var row = 0; row < CANVASES.length; row++)
 		{
@@ -663,10 +705,10 @@ function exposeCanvases()
 	{
 		var C = CANVASES[row];
 
-		var rightX = leftX + 400*CANVASES[row].length;
+		var rightX = leftX + VIEWPORT_TILE_SIZE*CANVASES[row].length;
 		while (rightX <= VIEWPORT.screenWidth)
 		{
-			rightX += 400;
+			rightX += VIEWPORT_TILE_SIZE;
 
 			var canvas = newCanvas(row, C.length);
 			C.push(canvas);
