@@ -132,9 +132,9 @@ function addTraveler()
 	moveTraveler = function() {
 		console.log("traveler moves!");
 		moveFleetRandomly(1);
-		setTimeout(moveTraveler, 600);
+		setTimeout(moveTraveler, 1200);
 		};
-	setTimeout(moveTraveler, 600);
+	setTimeout(moveTraveler, 3000);
 }
 
 function getGameState()
@@ -164,7 +164,18 @@ function newPlayer()
 	return pid;
 }
 
+function doExpose(requestData, remoteUser)
+{
+	console.log("in doExpose");
+
+	if (requestData.cell)
+	{
+		discoverCell(1, requestData.cell);
+	}
+}
+
 var actionHandlers = {
+	expose: doExpose
 	};
 
 if (typeof global !== 'undefined')

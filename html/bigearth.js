@@ -296,7 +296,15 @@ function onGameState()
 	pawn = null;
 	updateTransformMatrix();
 	onResize();
-	repaint();
+	VIEWPORT.translateX = -Math.round(-VIEWPORT.screenWidth/2);
+	VIEWPORT.translateY = -Math.round(-VIEWPORT.screenHeight/2);
+	$('#scrollPanel').css({
+		'-moz-transition':'none',
+		'-moz-transform':'translate('+VIEWPORT.translateX+','+VIEWPORT.translateY+')'
+		});
+	CANVASES = [];
+	$('.aCanvas').remove();
+	exposeCanvases();
 	recreateFleetIcons();
 
 	fetchNextEvent();
@@ -371,9 +379,6 @@ function doDeferredRepaint()
 
 function triggerRepaintCanvasTile(x, y)
 {
-setTimeout(function() {
-	throw new Error("repainting "+x+","+y);
-	}, 0);
 	RepaintInfo.todo[x+','+y] = true;
 	if (!RepaintInfo.timer)
 	{
@@ -383,7 +388,7 @@ setTimeout(function() {
 
 function triggerRepaintCell(cellIdx)
 {
-	var p = toScreenPoint(coords.cells[cellIdx-1].pt);
+	var p = toScreenPoint(coords.cells[cellIdx].pt);
 	if (p.z <= 0) return;
 
 	if (p.x < VIEWPORT.offsetX)
@@ -396,10 +401,6 @@ function triggerRepaintCell(cellIdx)
 	var ox = (p.x - VIEWPORT.offsetX) - VIEWPORT_TILE_SIZE * ix;
 	var oy = (p.y - VIEWPORT.offsetY) - VIEWPORT_TILE_SIZE * iy;
 
-setTimeout(function() {
-	throw new Error("for ("+(p.x-VIEWPORT.offsetX)+","+
-		(p.y-VIEWPORT.offsetY)+") repainting "+ix+","+iy);
-	}, 0);
 	triggerRepaintCanvasTile(ix, iy);
 	if (ox < VIEWPORT_TILE_OVERFLOW)
 		triggerRepaintCanvasTile(ix-1, iy);
@@ -726,6 +727,21 @@ function exposeCanvases()
 			repaintOne(row,C.length-1);
 		}
 	}
+}
+
+function doOneExpose(cellIdx)
+{
+	var onSuccess = function(data)
+	{
+		return;
+	};
+	$.ajax({
+	type: "POST",
+	url: "/request/expose",
+	data: { cell: cellIdx },
+	success: onSuccess,
+	dataType: "json"
+	});
 }
 
 function onMouseDown(evt)
