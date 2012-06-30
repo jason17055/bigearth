@@ -8,7 +8,7 @@ var VIEWPORT = {
 	translateY: 0
 	};
 var VIEWPORT_TILE_SIZE = 400;
-var VIEWPORT_TILE_OVERFLOW = 30;
+var VIEWPORT_TILE_OVERFLOW = 40;
 
 var TERRAIN_IMAGES = {};
 var terrainImagesToLoad = 0;
@@ -337,14 +337,12 @@ function updateFleetIcon(fleetId, fleetInfo)
 
 	if ($f.length == 0)
 	{
-		$f = $('<img>');
-		$f.addClass('fleetIcon');
+		$f = $('<div class="fleetIcon"><img></div>');
 		$f.attr('fleet-id', fleetId);
 		$('#scrollPanel').append($f);
 	}
 
-	$f.attr('src', 'unit_images/'+fleetInfo.type+'.png');
-	$f.attr('virtual-location', fleetInfo.location);
+	$('img',$f).attr('src', 'unit_images/'+fleetInfo.type+'.png');
 	$f.css({
 		'-moz-transition': 'all 0.5s ease-out',
 		left: (p.x - 32)+"px",
