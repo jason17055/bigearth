@@ -371,6 +371,9 @@ function doDeferredRepaint()
 
 function triggerRepaintCanvasTile(x, y)
 {
+setTimeout(function() {
+	throw new Error("repainting "+x+","+y);
+	}, 0);
 	RepaintInfo.todo[x+','+y] = true;
 	if (!RepaintInfo.timer)
 	{
@@ -393,6 +396,10 @@ function triggerRepaintCell(cellIdx)
 	var ox = (p.x - VIEWPORT.offsetX) - VIEWPORT_TILE_SIZE * ix;
 	var oy = (p.y - VIEWPORT.offsetY) - VIEWPORT_TILE_SIZE * iy;
 
+setTimeout(function() {
+	throw new Error("for ("+(p.x-VIEWPORT.offsetX)+","+
+		(p.y-VIEWPORT.offsetY)+") repainting "+ix+","+iy);
+	}, 0);
 	triggerRepaintCanvasTile(ix, iy);
 	if (ox < VIEWPORT_TILE_OVERFLOW)
 		triggerRepaintCanvasTile(ix-1, iy);
@@ -416,6 +423,10 @@ function onEvent(eventData)
 		{
 			gameState.map.cells[eventData.location-1] = eventData.data;
 			triggerRepaintCell(eventData.location);
+		}
+		else if (eventData.locationType == 'edge')
+		{
+			gameState.map.edges[eventData.location] = eventData.data;
 		}
 	}
 	else
