@@ -324,6 +324,17 @@ function recreateFleetIcons()
 	}
 }
 
+function onFleetClicked(fleetId)
+{
+	var fleet = gameState.fleets[fleetId];
+	if (!fleet)
+		return;
+
+	$('#infoPane img.icon').attr('src','unit_images/'+fleet.type+'.png');
+	$('#infoPane .featureType').text(fleet.type);
+	$('#infoPane').show();
+}
+
 function updateFleetIcon(fleetId, fleetInfo)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]');
@@ -343,6 +354,9 @@ function updateFleetIcon(fleetId, fleetInfo)
 	}
 
 	$('img',$f).attr('src', 'unit_images/'+fleetInfo.type+'.png');
+	$('img',$f).click(function() {
+		onFleetClicked(fleetId)
+		});
 	$f.css({
 		'-moz-transition': 'all 0.5s ease-out',
 		left: (p.x - 32)+"px",
