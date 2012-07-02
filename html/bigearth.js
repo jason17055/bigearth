@@ -330,6 +330,7 @@ function onFleetClicked(fleetId)
 	if (!fleet)
 		return;
 
+	$('#infoPane').attr('fleet-id', fleetId);
 	$('#infoPane img.icon').attr('src','unit_images/'+fleet.type+'.png');
 	$('#infoPane .featureType').text(fleet.type);
 	$('#infoPane').show();
@@ -964,4 +965,30 @@ function greatFloodClicked()
 function testSeaLevelClicked()
 {
 	findSeaLevel(map, 0.6);
+}
+
+function orderStop()
+{
+	var fleetId = $('#infoPane').attr('fleet-id');
+	$.ajax({
+	type: "POST",
+	url: "/request/order",
+	data: { fleet: fleetId,
+		order: "stop"
+		},
+	dataType: "json"
+	});
+}
+
+function orderWander()
+{
+	var fleetId = $('#infoPane').attr('fleet-id');
+	$.ajax({
+	type: "POST",
+	url: "/request/order",
+	data: { fleet: fleetId,
+		order: "wander"
+		},
+	dataType: "json"
+	});
 }

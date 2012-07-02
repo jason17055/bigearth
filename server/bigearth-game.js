@@ -128,29 +128,55 @@ function addTraveler()
 	discoverCell(1,1);
 	discoverCellBorder(1,1);
 
-	var moveTraveler;
-	moveTraveler = function() {
+	setFleetOrder(1, "wander");
+}
+
+function setFleetOrder(fleetId, newOrder)
+{
+	var fleet = G.fleets[fleetId];
+	fleet.currentOrder = newOrder;
+	fleetActivity(fleetId);
+}
+
+function fleetActivity(fleetId)
+{
+	var fleet = G.fleets[fleetId];
+	if (!fleet) return;
+	if (fleet.coolDownTimer) return;
+
+	if (fleet.currentOrder == 'wander')
+	{
 		console.log("traveler moves!");
-		moveFleetRandomly(1);
-		setTimeout(moveTraveler, 1200);
-		};
-	setTimeout(moveTraveler, 3000);
+		moveFleetRandomly(fleetId);
+		fleet.coolDownTimer = setTimeout(function() {
+			fleet.coolDownTimer = null;
+			fleetActivity(fleetId);
+			}, 1200);
+	}
 }
 
 function getGameState()
 {
-	var p = {};
+	var pp = {};
 	for (var pid in G.players)
 	{
-		var pp = G.players[pid];
-		p[pid] = pp;
+		pp[pid] = G.players[pid];
+	}
+
+	var ff = {};
+	for (var fid in G.fleets)
+	{
+		ff[fid] = {
+		location: fid,
+		type: G.fleets[fid].type
+		};
 	}
 
 	return {
 	map: G.players[1].primaryMap,
 	mapSize: G.globalMap.size,
-	fleets: G.fleets,
-	players: p
+	fleets: ff,
+	players: pp
 	};
 }
 
@@ -174,8 +200,20 @@ function doExpose(requestData, remoteUser)
 	}
 }
 
+function doOrder(requestData, remoteUser)
+{
+	console.log("in doOrder");
+
+	var fleetId = +(requestData.fleet);
+	if (!G.fleets[fleetId])
+		return;
+
+	setFleetOrder(fleetId, requestData.order);
+}
+
 var actionHandlers = {
-	expose: doExpose
+	expose: doExpose,
+	order: doOrder
 	};
 
 if (typeof global !== 'undefined')
