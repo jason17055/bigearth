@@ -277,14 +277,6 @@ function onResize()
 	exposeCanvases();
 }
 
-function resetMap()
-{
-	map = makeMap(geometry);
-	coords = makeCoords(geometry);
-	numBumps = 0;
-	pawn = null;
-}
-
 var gameState;
 
 function onGameState()
@@ -292,7 +284,6 @@ function onGameState()
 	map = gameState.map;
 	geometry = new SphereGeometry(gameState.mapSize);
 	coords = makeCoords(geometry);
-	numBumps = 0;
 	pawn = null;
 	updateTransformMatrix();
 	onResize();
@@ -536,25 +527,6 @@ function testBtnClicked()
 	var x = parseInt(document.getElementById('numEntry').value);
 	var adj = geometry.getNeighbors(x);
 	alert('adjacent to ' + x + ' is ' + adj.join(', '));
-}
-
-function bumpMapBtnClicked()
-{
-	bumpMap(map, coords);
-	repaint();
-
-	numBumps++;
-	$('#bumpMapBtn').text('Bump Map ('+numBumps+')');
-}
-
-var numBumps = 0;
-function nextSizeClicked()
-{
-	geometry = new SphereGeometry((geometry.size+1)%14);
-	resetMap();
-
-	document.title = 'Big Earth ' + geometry.size;
-	repaint();
 }
 
 function panToCoords(pt)
