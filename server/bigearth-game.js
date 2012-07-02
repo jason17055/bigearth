@@ -47,7 +47,7 @@ function discoverEdge(playerId, eId)
 	if (!map.edges[eId])
 	{
 		map.edges[eId] = {};
-		map.edges[eId].river = G.globalMap.edges[eId].river;
+		map.edges[eId].feature = G.globalMap.edges[eId].feature;
 
 		postEvent({
 			event: 'map-update',
