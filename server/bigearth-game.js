@@ -160,15 +160,21 @@ function getGameState()
 	var pp = {};
 	for (var pid in G.players)
 	{
-		pp[pid] = G.players[pid];
+		var P = G.players[pid];
+
+		pp[pid] = {
+		};
 	}
 
 	var ff = {};
 	for (var fid in G.fleets)
 	{
+		var F = G.fleets[fid];
+
 		ff[fid] = {
-		location: fid,
-		type: G.fleets[fid].type
+		location: F.location,
+		type: F.type,
+		currentOrder: F.currentOrder
 		};
 	}
 
