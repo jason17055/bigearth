@@ -320,7 +320,7 @@ function generateTerrain(map, coords)
 
 	var numRivers = 0;
 	var cellCount = map.geometry.getCellCount();
-	while (numRivers < 180)
+	while (numRivers < 380)
 	{
 		var cellIdx = 1+Math.floor(Math.random()*cellCount);
 		var vv = map.geometry.getVerticesAdjacentToCell(cellIdx);
