@@ -772,8 +772,10 @@ function hideDragTargetIndicator()
 function onFleetDragStart(fleetId, evt)
 {
 	evt.dataTransfer.effectAllowed = 'move';
-	//evt.dataTransfer.setData('applicaton/bigearth+fleet', fleetId);
-	evt.dataTransfer.setData('text/html', 'fleet'+fleetId);
+	evt.dataTransfer.setData('applicaton/bigearth+fleet', fleetId);
+	evt.dataTransfer.setDragImage(
+		document.getElementById('cursorGotoImg'),
+		9, 32);
 
 	var dragEnterHandler = function(evvt) {
 		evvt.preventDefault();

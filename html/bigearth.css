@@ -53,3 +53,7 @@ body {
 	display: none;
 	z-index: 2;
 }
+
+#cursorGotoImg {
+	display: none;
+}
