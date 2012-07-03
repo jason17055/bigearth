@@ -14,7 +14,10 @@
    id="svg3813"
    version="1.1"
    inkscape:version="0.48.1 r9760"
-   sodipodi:docname="New document 6">
+   sodipodi:docname="cursor_goto.svg"
+   inkscape:export-filename="/home/jason/src/trains/html/cursor_goto.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs3815" />
   <sodipodi:namedview
@@ -24,13 +27,13 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="7.9195959"
-     inkscape:cx="27.563665"
-     inkscape:cy="18.224004"
+     inkscape:zoom="11.2"
+     inkscape:cx="22.560073"
+     inkscape:cy="12.4795"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="651"
+     inkscape:window-width="757"
      inkscape:window-height="728"
      inkscape:window-x="415"
      inkscape:window-y="42"
@@ -53,12 +56,12 @@
      id="layer1"
      transform="translate(0,-1020.3622)">
     <rect
-       style="color:#000000;fill:#999999;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.85000002;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+       style="color:#000000;fill:#a02c2c;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.85000002;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        id="rect3821"
-       width="5.0507627"
-       height="29.420692"
-       x="6.6922607"
-       y="1021.8051" />
+       width="5"
+       height="29.421"
+       x="6.5"
+       y="1022.9412" />
     <rect
        style="color:#000000;fill:#ffff00;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.85000002;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        id="rect3823"
