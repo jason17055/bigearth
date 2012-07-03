@@ -551,6 +551,16 @@ SphereGeometry.prototype.getSpherePoint = function(cellIdx)
 	}
 };
 
+SphereGeometry.prototype.distanceBetween = function(a, b)
+{
+	var a_pt = this.getSpherePoint(a);
+	var b_pt = this.getSpherePoint(b);
+
+	var dp = dotProduct(a_pt, b_pt);
+	var angl = Math.acos(dp);
+	return angl;
+};
+
 function subtractVector(v1, v2)
 {
 	return {

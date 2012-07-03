@@ -355,9 +355,6 @@ function updateFleetIcon(fleetId, fleetInfo)
 			function(evt) {
 				return onFleetDragStart(fleetId, evt);
 			}, false);
-//	imgEl.addEventListener('mousedown',
-//		function(evt) { return onFleetMouseDown(fleetId, evt); },
-//		false);
 	}
 	$f.css({
 		'-moz-transition': 'all 0.5s ease-out',
@@ -747,13 +744,6 @@ function doOneExpose(cellIdx)
 	});
 }
 
-function onFleetMouseDown(fleetId, evt)
-{
-	if (evt.which != 1) return;
-	evt.preventDefault();
-
-}
-
 function showDragTargetIndicator(location)
 {
 	var p = toScreenPoint(coords.cells[location].pt);
@@ -777,13 +767,8 @@ function onFleetDragStart(fleetId, evt)
 		document.getElementById('cursorGotoImg'),
 		9, 32);
 
-	var dragEnterHandler = function(evvt) {
-		evvt.preventDefault();
-		return false;
-	};
 	var dragHandler = function(evvt) {
 		evvt.preventDefault();
-		document.title = 'drag '+ evvt.clientX + ', ' + evvt.clientY;
 		var screenPt = {
 		x: evvt.clientX - VIEWPORT.translateX,
 		y: evvt.clientY - VIEWPORT.translateY
@@ -794,18 +779,22 @@ function onFleetDragStart(fleetId, evt)
 	};
 	var dropHandler = function(evvt) {
 		evvt.preventDefault();
-		alert('drop pane ' + evvt.clientX + ', ' + evvt.clientY);
+		var screenPt = {
+		x: evvt.clientX - VIEWPORT.translateX,
+		y: evvt.clientY - VIEWPORT.translateY
+		};
+		var xx = getNearestFeatureFromScreen(screenPt, false, true, true);
+		orderGoTo(fleetId, xx.id);
+		return false;
 	};
 
 	var spEl = document.getElementById('scrollPanel');
-	spEl.addEventListener('dragenter', dragEnterHandler, false);
 	spEl.addEventListener('dragover', dragHandler, false);
 	spEl.addEventListener('drop', dropHandler, false);
 
 	var iconEl = this;
 	var dragEndHandler;
 	dragEndHandler = function() {
-		spEl.removeEventListener('dragenter', dragEnterHandler);
 		spEl.removeEventListener('dragover',dragHandler);
 		spEl.removeEventListener('drop', dropHandler);
 		iconEl.removeEventListener('dragend', dragEndHandler);
@@ -1047,6 +1036,20 @@ function orderWander()
 	url: "/request/order",
 	data: { fleet: fleetId,
 		order: "wander"
+		},
+	dataType: "json"
+	});
+}
+
+function orderGoTo(fleetId, location)
+{
+	$.ajax({
+	type: "POST",
+	url: "/request/order",
+	data: { fleet: fleetId,
+		order: "goto",
+		location: location,
+		locationType: "cell"
 		},
 	dataType: "json"
 	});

@@ -83,6 +83,32 @@ function discoverCellBorder(playerId, cellIdx)
 	}
 }
 
+function moveFleetTowards(fleetId, targetLocation)
+{
+	var fleet = G.fleets[fleetId];
+	var oldLoc = fleet.location;
+	if (oldLoc == targetLocation)
+	{
+		return setFleetOrder(fleetId, "stop");
+	}
+
+	var nn = G.globalMap.geometry.getNeighbors(oldLoc);
+	var best = nn[0];
+	var bestDist = Infinity;
+	for (var i = 0, l = nn.length; i < l; i++)
+	{
+		var candidateLoc = nn[i];
+		var d = G.globalMap.geometry.distanceBetween(candidateLoc, targetLocation);
+		if (d < bestDist)
+		{
+			best = candidateLoc;
+			bestDist = d;
+		}
+	}
+
+	return moveFleetOneStep(fleetId, best);
+}
+
 function moveFleetRandomly(fleetId)
 {
 	var fleet = G.fleets[fleetId];
@@ -112,19 +138,30 @@ function moveFleetRandomly(fleetId)
 	if (candidates1.length > 0)
 	{
 		var newLoc = candidates1[Math.floor(Math.random()*candidates1.length)];
-		fleet.location = newLoc;
 		fleet.recent[newLoc] = true;
-
-		discoverCell(1, newLoc);
-		discoverCellBorder(1, newLoc);
-		
-		postEvent({
-			event: 'fleet-movement',
-			fleet: fleetId,
-			fromLocation: oldLoc,
-			toLocation: newLoc
-			});
+		moveFleetOneStep(fleetId, newLoc);
 	}
+}
+
+function moveFleetOneStep(fleetId, newLoc)
+{
+	var fleet = G.fleets[fleetId];
+	var oldLoc = fleet.location;
+	fleet.location = newLoc;
+
+	discoverCell(1, newLoc);
+	discoverCellBorder(1, newLoc);
+		
+	postEvent({
+		event: 'fleet-movement',
+		fleet: fleetId,
+		fromLocation: oldLoc,
+		toLocation: newLoc
+		});
+	fleet.coolDownTimer = setTimeout(function() {
+		fleet.coolDownTimer = null;
+		fleetActivity(fleetId);
+		}, 1200);
 }
 
 function addTraveler()
@@ -141,10 +178,14 @@ function addTraveler()
 	setFleetOrder(1, "wander");
 }
 
-function setFleetOrder(fleetId, newOrder)
+function setFleetOrder(fleetId, newOrder, extraInfo)
 {
 	var fleet = G.fleets[fleetId];
 	fleet.currentOrder = newOrder;
+	if (newOrder == 'goto')
+	{
+		fleet.targetLocation = extraInfo.location;
+	}
 	fleetActivity(fleetId);
 }
 
@@ -157,11 +198,11 @@ function fleetActivity(fleetId)
 	if (fleet.currentOrder == 'wander')
 	{
 		console.log("traveler moves!");
-		moveFleetRandomly(fleetId);
-		fleet.coolDownTimer = setTimeout(function() {
-			fleet.coolDownTimer = null;
-			fleetActivity(fleetId);
-			}, 1200);
+		return moveFleetRandomly(fleetId);
+	}
+	if (fleet.currentOrder == 'goto')
+	{
+		return moveFleetTowards(fleetId, fleet.targetLocation);
 	}
 }
 
@@ -224,7 +265,7 @@ function doOrder(requestData, remoteUser)
 	if (!G.fleets[fleetId])
 		return;
 
-	setFleetOrder(fleetId, requestData.order);
+	setFleetOrder(fleetId, requestData.order, requestData);
 }
 
 var actionHandlers = {
