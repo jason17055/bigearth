@@ -446,7 +446,7 @@ function fetchNextEvent()
 	if (!gameState || !gameState.nextEventUrl)
 		return;
 
-	var thisEventFetcher = {};
+	var thisEventFetcher = { startTime: new Date().getTime() };
 	nextEventFetcher = thisEventFetcher;
 
 	var onSuccess = function(data,status)
@@ -461,7 +461,15 @@ function fetchNextEvent()
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
-		//TODO- handle the error
+		var elapsed = new Date().getTime() - thisEventFetcher.startTime;
+		if (elapsed > 30000 && thisEventFetcher == nextEventFetcher)
+			return fetchNextEvent();
+
+		var oldTitle = document.title;
+		document.title = "Lost connection to server";
+		$('#lostConnectionMessage').show();
+
+		setTimeout(fetchNextEvent, 30000);
 	};
 	
 	$.ajax({
