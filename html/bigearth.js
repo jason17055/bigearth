@@ -349,6 +349,16 @@ function updateFleetIcon(fleetId, fleetInfo)
 	$('img',$f).click(function() {
 		onFleetClicked(fleetId)
 		});
+	{
+		var imgEl = $('img',$f).get(0);
+		imgEl.addEventListener('dragstart',
+			function(evt) {
+				return onFleetDragStart(fleetId, evt);
+			}, false);
+//	imgEl.addEventListener('mousedown',
+//		function(evt) { return onFleetMouseDown(fleetId, evt); },
+//		false);
+	}
 	$f.css({
 		'-moz-transition': 'all 0.5s ease-out',
 		left: (p.x - 32)+"px",
@@ -735,6 +745,51 @@ function doOneExpose(cellIdx)
 	success: onSuccess,
 	dataType: "json"
 	});
+}
+
+function onFleetMouseDown(fleetId, evt)
+{
+	if (evt.which != 1) return;
+	evt.preventDefault();
+
+}
+
+function onFleetDragStart(fleetId, evt)
+{
+	evt.dataTransfer.effectAllowed = 'move';
+	//evt.dataTransfer.setData('applicaton/bigearth+fleet', fleetId);
+	evt.dataTransfer.setData('text/html', 'fleet'+fleetId);
+
+	var dragEnterHandler = function(evvt) {
+		evvt.preventDefault();
+		return false;
+	};
+	var dragHandler = function(evvt) {
+		evvt.preventDefault();
+		document.title = 'drag '+ evvt.clientX + ', ' + evvt.clientY;
+		return false;
+	};
+	var dropHandler = function(evvt) {
+		evvt.preventDefault();
+		alert('drop pane ' + evvt.clientX + ', ' + evvt.clientY);
+	};
+
+	var spEl = document.getElementById('scrollPanel');
+	spEl.addEventListener('dragenter', dragEnterHandler, false);
+	spEl.addEventListener('dragover', dragHandler, false);
+	spEl.addEventListener('drop', dropHandler, false);
+
+	var iconEl = this;
+	var dragEndHandler;
+	dragEndHandler = function() {
+		spEl.removeEventListener('dragenter', dragEnterHandler);
+		spEl.removeEventListener('dragover',dragHandler);
+		spEl.removeEventListener('drop', dropHandler);
+		iconEl.removeEventListener('dragend', dragEndHandler);
+		};
+	iconEl.addEventListener('dragend', dragEndHandler, false);
+
+	return false;
 }
 
 function onMouseDown(evt)
