@@ -557,6 +557,9 @@ SphereGeometry.prototype.distanceBetween = function(a, b)
 	var b_pt = this.getSpherePoint(b);
 
 	var dp = dotProduct(a_pt, b_pt);
+	if (dp >= 1)
+		return 0;
+
 	var angl = Math.acos(dp);
 	return angl;
 };

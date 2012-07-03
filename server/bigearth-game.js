@@ -87,6 +87,9 @@ function moveFleetTowards(fleetId, targetLocation)
 {
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
+
+console.log("moving fleet "+fleetId+" from " + oldLoc + " to " + targetLocation);
+
 	if (oldLoc == targetLocation)
 	{
 		return setFleetOrder(fleetId, "stop");
@@ -105,6 +108,7 @@ function moveFleetTowards(fleetId, targetLocation)
 			bestDist = d;
 		}
 	}
+console.log("  chose " + best);
 
 	return moveFleetOneStep(fleetId, best);
 }
