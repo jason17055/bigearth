@@ -37,6 +37,16 @@ function discoverCell(playerId, location)
 			data: map.cells[location-1]
 			});
 	}
+
+	var nn = G.globalMap.geometry.getNeighbors(location);
+	for (var i = 0; i < nn.length; i++)
+	{
+		if (map.cells[nn[i]-1])
+		{
+			var eId = G.globalMap.geometry._makeEdge(location, nn[i]);
+			discoverEdge(playerId, eId);
+		}
+	}
 }
 
 function discoverEdge(playerId, eId)
