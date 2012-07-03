@@ -1,0 +1,7 @@
+Preliminaries:
+
+ 1. Install node.js
+ 2. Add 'node' to your PATH or setup an alias
+ 3. cd server
+ 4. mkdir node_modules
+ 5. npm install cradle
