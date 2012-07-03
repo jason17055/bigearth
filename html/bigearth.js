@@ -754,6 +754,21 @@ function onFleetMouseDown(fleetId, evt)
 
 }
 
+function showDragTargetIndicator(location)
+{
+	var p = toScreenPoint(coords.cells[location].pt);
+	$('#dragTargetIndicator').css({
+		left: p.x-10,
+		top: p.y-10
+		});
+	$('#dragTargetIndicator').show();
+}
+
+function hideDragTargetIndicator()
+{
+	$('#dragTargetIndicator').hide();
+}
+
 function onFleetDragStart(fleetId, evt)
 {
 	evt.dataTransfer.effectAllowed = 'move';
@@ -767,6 +782,12 @@ function onFleetDragStart(fleetId, evt)
 	var dragHandler = function(evvt) {
 		evvt.preventDefault();
 		document.title = 'drag '+ evvt.clientX + ', ' + evvt.clientY;
+		var screenPt = {
+		x: evvt.clientX - VIEWPORT.translateX,
+		y: evvt.clientY - VIEWPORT.translateY
+		};
+		var xx = getNearestFeatureFromScreen(screenPt, false, true, true);
+		showDragTargetIndicator(xx.id);
 		return false;
 	};
 	var dropHandler = function(evvt) {
@@ -786,6 +807,7 @@ function onFleetDragStart(fleetId, evt)
 		spEl.removeEventListener('dragover',dragHandler);
 		spEl.removeEventListener('drop', dropHandler);
 		iconEl.removeEventListener('dragend', dragEndHandler);
+		hideDragTargetIndicator();
 		};
 	iconEl.addEventListener('dragend', dragEndHandler, false);
 

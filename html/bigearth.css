@@ -47,3 +47,9 @@ body {
 	color: black;
 	background-color: white
 }
+
+#dragTargetIndicator {
+	position: absolute;
+	display: none;
+	z-index: 2;
+}
