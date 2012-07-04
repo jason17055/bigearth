@@ -58,3 +58,18 @@ body {
 #cursorGotoImg {
 	display: none;
 }
+
+.activityIcon {
+	display: none;
+	position: absolute;
+	border: 1px solid black;
+	background-color: white;
+	color: #840;
+	width: 16px;
+	height: 18px;
+	right: 0;
+	top: 0;
+	text-align: center;
+	font-weight: bold;
+	font-family: sans-serif;
+}

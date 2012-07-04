@@ -46,7 +46,7 @@ function saveWorld(G)
 	{
 		_cities[tid] = pruneStruct(G.cities[tid]);
 	}
-	fs.writeFileSync(filename+'.tmp', JSON.stringify(_cities);
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(_cities));
 
 	var allFiles = ['world.txt','terrain.txt','players.txt','maps.txt','fleets.txt','cities.txt'];
 	for (var i = 0; i < allFiles.length; i++)

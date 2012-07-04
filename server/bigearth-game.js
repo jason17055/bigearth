@@ -106,6 +106,52 @@ function fleetCurrentCommandFinished(fleetId, fleet)
 	fleetActivity(fleetId);
 }
 
+function fleetHasCapability(fleet, capability)
+{
+	return (fleet.type == 'settler');
+}
+
+function setFleetActivityFlag(fleetId, fleet, newActivity)
+{
+	if (newActivity)
+	{
+		fleet.activity = newActivity;
+	}
+	else
+	{
+		delete fleet.activity;
+	}
+
+	postEvent({
+		event: 'fleet-activity',
+		fleet: fleetId,
+		activity: fleet.activity
+		});
+	
+}
+
+function tryToBuildCity(fleetId, fleet)
+{
+	if (!fleetHasCapability(fleet, 'build-city'))
+		return fleetCurrentCommandFinished(fleetId, fleet);
+
+	if (fleet.activity == 'build-city')
+	{
+	//var tid = nextFleetId();
+	//G.cities[tid] = {
+	//	location: fleet.location,
+	//	};
+
+		setFleetActivityFlag(fleetId, fleet, null);
+		return fleetCurrentCommandFinished(fleetId, fleet);
+	}
+	else
+	{
+		setFleetActivityFlag(fleetId, fleet, 'build-city');
+		fleetCooldown(fleetId, fleet, 5000);
+	}
+}
+
 function moveFleetTowards(fleetId, targetLocation)
 {
 	var fleet = G.fleets[fleetId];
@@ -236,10 +282,15 @@ function moveFleetOneStep(fleetId, newLoc)
 		toLocation: newLoc,
 		delay: Math.round(costOfMovement)
 		});
+	fleetCooldown(fleetId, fleet, Math.round(costOfMovement));
+}
+
+function fleetCooldown(fleetId, fleet, delay)
+{
 	fleet._coolDownTimer = setTimeout(function() {
 		fleet._coolDownTimer = null;
 		fleetActivity(fleetId);
-		}, Math.round(costOfMovement));
+		}, delay);
 }
 
 function findSuitableStartingLocation()
@@ -363,6 +414,10 @@ function fleetActivity(fleetId)
 	{
 		return moveFleetTowards(fleetId, currentOrder.location);
 	}
+	else if (currentOrder.command == 'build-city')
+	{
+		return tryToBuildCity(fleetId, fleet);
+	}
 }
 
 function getGameState(request)
@@ -440,12 +495,15 @@ function getFleetInfoForPlayer(fleetId, playerId)
 	var f = G.fleets[fleetId];
 	if (f.owner == playerId)
 	{
-		return {
-		type: f.type,
-		location: f.location,
-		owner: f.owner,
-		orders: f.orders
+		var _fleet = {
+			type: f.type,
+			location: f.location,
+			owner: f.owner,
+			orders: f.orders
 		};
+		if (f.activity)
+			_fleet.activity = f.activity;
+		return _fleet;
 	}
 	else
 	{

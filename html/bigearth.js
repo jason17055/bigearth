@@ -352,13 +352,13 @@ function updateFleetIcon(fleetId, fleetInfo)
 
 	if ($f.length == 0)
 	{
-		$f = $('<div class="fleetIcon"><img></div>');
+		$f = $('<div class="fleetIcon"><img class="unitIcon"><span class="activityIcon"></span></div>');
 		$f.attr('fleet-id', fleetId);
 		$('#scrollPanel').append($f);
 	}
 
-	$('img',$f).attr('src', 'unit_images/'+fleetInfo.type+'.png');
-	$('img',$f).click(function() {
+	$('img.unitIcon',$f).attr('src', 'unit_images/'+fleetInfo.type+'.png');
+	$('img.unitIcon',$f).click(function() {
 		onFleetClicked(fleetId)
 		});
 	{
@@ -375,6 +375,16 @@ function updateFleetIcon(fleetId, fleetInfo)
 		left: (p.x - 32)+"px",
 		top: (p.y - 24)+"px"
 		});
+
+	if (fleetInfo.activity)
+	{
+		$('.activityIcon',$f).text('B');
+		$('.activityIcon',$f).show();
+	}
+	else
+	{
+		$('.activityIcon',$f).hide();
+	}
 }
 
 function onFleetMovement(eventData)
@@ -384,6 +394,16 @@ function onFleetMovement(eventData)
 	{
 		fleets[fleetId].location = eventData.toLocation;
 		fleets[fleetId].stepDelay = eventData.delay;
+		updateFleetIcon(fleetId, fleets[fleetId]);
+	}
+}
+
+function onFleetActivity(eventData)
+{
+	var fleetId = eventData.fleet;
+	if (fleets[fleetId])
+	{
+		fleets[fleetId].activity = eventData.activity;
 		updateFleetIcon(fleetId, fleets[fleetId]);
 	}
 }
@@ -444,6 +464,10 @@ function onEvent(eventData)
 	{
 		return onFleetMovement(eventData);
 	}
+	else if (eventData.event == 'fleet-activity')
+	{
+		return onFleetActivity(eventData);
+	}
 	else if (eventData.event == 'map-update')
 	{
 		if (eventData.locationType == 'cell')
@@ -458,7 +482,7 @@ function onEvent(eventData)
 	}
 	else
 	{
-		window.title = "event " + eventData.event;
+		document.title = "event " + eventData.event;
 	}
 }
 
@@ -1068,6 +1092,17 @@ function orderWander()
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([ { command: "wander" } ]),
+	contentType: "json"
+	});
+}
+
+function orderBuildCity()
+{
+	var fleetId = $('#infoPane').attr('fleet-id');
+	$.ajax({
+	type: "POST",
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([ { command: "build-city" } ]),
 	contentType: "json"
 	});
 }
