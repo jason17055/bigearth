@@ -266,7 +266,9 @@ function loadMap(mapName)
 
 function startGame()
 {
-	addTraveler();
+	newPlayer(1, function() {
+		addExplorer(1);
+		});
 }
 
 function startListener()

@@ -190,7 +190,24 @@ function moveFleetOneStep(fleetId, newLoc)
 		}, 1200);
 }
 
-function addTraveler()
+function newPlayer(playerId, andThen)
+{
+	G.DB.save('player/'+playerId, {
+		type: 'player'
+		}, function(err,res) {
+
+
+	if (err) {
+		console.log("Cannot create player " + playerId, err);
+	}
+	else {
+
+		if (andThen) andThen();
+	}
+		});
+}
+
+function addExplorer(playerId)
 {
 	G.fleets = {};
 	G.fleets[1] = {
@@ -263,16 +280,6 @@ function getGameState()
 	};
 }
 
-function newPlayer()
-{
-	var pid = G.nextPlayerId++;
-	G.players[pid] = {
-		money: 50,
-		demands: G.map.futureDemands.splice(0,5)
-		};
-	return pid;
-}
-
 function doExpose(requestData, remoteUser)
 {
 	console.log("in doExpose");
@@ -324,5 +331,6 @@ if (typeof global !== 'undefined')
 	global.G = G;
 	global.getGameState = getGameState;
 	global.actionHandlers = actionHandlers;
-	global.addTraveler = addTraveler;
+	global.addExplorer = addExplorer;
+	global.newPlayer = newPlayer;
 }
