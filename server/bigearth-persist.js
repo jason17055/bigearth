@@ -17,14 +17,18 @@ function saveWorld(G)
 	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.world));
 
 	filename = G.worldName + '/terrain.txt';
-	var _map = {
-		cells: G.terrain.cells,
+	var _terrain = {
+		cells: {},
 		edges: G.terrain.edges,
 		vertices: G.terrain.vertices,
 		size: G.terrain.size,
 		geometry: G.terrain.geometry.name
 		};
-	fs.writeFileSync(filename+'.tmp', JSON.stringify(_map));
+	for (var cid in G.terrain.cells)
+	{
+		_terrain.cells[cid] = pruneStruct(G.terrain.cells[cid]);
+	}
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(_terrain));
 
 	filename = G.worldName + '/players.txt';
 	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.players));

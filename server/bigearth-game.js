@@ -22,12 +22,16 @@ function discoverCell(playerId, location)
 	{
 		isNew = true;
 		mapCell = {};
-		mapCell.terrain = refCell.terrain;
 	}
-	else if (mapCell.terrain != refCell.terrain)
+	if (mapCell.terrain != refCell.terrain)
 	{
 		isNew = true;
 		mapCell.terrain = refCell.terrain;
+	}
+	if (mapCell.city != refCell.city)
+	{
+		isNew = true;
+		mapCell.city = refCell.city;
 	}
 
 	if (isNew)
@@ -130,6 +134,42 @@ function setFleetActivityFlag(fleetId, fleet, newActivity)
 	
 }
 
+function playerCanSee(playerId, cellId)
+{
+	var cells_to_check = [cellId];
+	var nn = G.geometry.getNeighbors(cellId);
+	for (var i = 0; i < nn.length; i++)
+	{
+		cells_to_check.push(nn[i]);
+	}
+
+	for (var fid in G.fleets)
+	{
+		var f = G.fleets[fid];
+		if (f.owner == playerId)
+		{
+			for (var i = 0; i < cells_to_check.length; i++)
+			{
+				if (f.location == cells_to_check[i])
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
+function terrainChanged(cellId)
+{
+	for (var mapId in G.maps)
+	{
+		var mapOwnerId = mapId;
+		if (playerCanSee(mapOwnerId, cellId))
+		{
+			discoverCell(mapOwnerId, cellId);
+		}
+	}
+}
+
 function tryToBuildCity(fleetId, fleet)
 {
 	if (!fleetHasCapability(fleet, 'build-city'))
@@ -137,10 +177,14 @@ function tryToBuildCity(fleetId, fleet)
 
 	if (fleet.activity == 'build-city')
 	{
-	//var tid = nextFleetId();
-	//G.cities[tid] = {
-	//	location: fleet.location,
-	//	};
+		var tid = nextFleetId();
+		var city = {
+			owner: fleet.owner,
+			location: fleet.location
+			};
+		G.cities[tid] = city;
+		G.terrain.cells[fleet.location].city = tid;
+		terrainChanged(fleet.location);
 
 		setFleetActivityFlag(fleetId, fleet, null);
 		return fleetCurrentCommandFinished(fleetId, fleet);

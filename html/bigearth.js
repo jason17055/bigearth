@@ -184,6 +184,12 @@ function repaintOne(canvasRow, canvasCol)
 		}
 		ctx.fill();
 
+		if (c.city)
+		{
+			ctx.fillStyle = '#fff';
+			ctx.fillText("CITY!", centerP.x, centerP.y-8);
+		}
+
 	// SHOW HEIGHTS
 	//	ctx.fillStyle = '#800';
 	//	ctx.fillText(c.height, centerP.x, centerP.y-8);
