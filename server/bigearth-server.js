@@ -235,6 +235,19 @@ function handleDefaultDocumentRequest(request, response)
 	response.end();
 }
 
+var dirty = false;
+function makeDirty()
+{
+	if (!dirty)
+	{
+		dirty = true;
+		setTimeout(function() {
+			saveWorld();
+			dirty = false;
+			}, 20000);
+	}
+}
+
 function handleRequest(request,response)
 {
 	var requestPath = URL.parse(request.url);
@@ -251,6 +264,8 @@ function handleRequest(request,response)
 	request.Session = s;
 	request.remote_user = s.identity;
 	request.remote_player = s.identity;
+
+	makeDirty();
 
 	if (requestPath.pathname == '/')
 	{
@@ -287,6 +302,41 @@ function handleRequest(request,response)
 
 	// assume it is a request for a file
 	return handleStaticFileRequest(requestPath.pathname,request,response);
+}
+
+function saveWorld()
+{
+	var fs = FS;
+
+	var filename = G.worldName + '/world.txt';
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.world));
+
+	filename = G.worldName + '/terrain.txt';
+	var _map = {
+		cells: G.terrain.cells,
+		edges: G.terrain.edges,
+		vertices: G.terrain.vertices,
+		size: G.terrain.size,
+		geometry: G.terrain.geometry.name
+		};
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(_map));
+
+	filename = G.worldName + '/players.txt';
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.players));
+
+	filename = G.worldName + '/maps.txt';
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.maps));
+
+	filename = G.worldName + '/fleets.txt';
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.fleets));
+
+	var allFiles = ['world.txt','terrain.txt','players.txt','maps.txt','fleets.txt'];
+	for (var i = 0; i < allFiles.length; i++)
+	{
+		var filename = G.worldName + '/' + allFiles[i];
+		fs.renameSync(filename+'.tmp', filename);
+	}
+	console.log('Saved world '+G.worldName);
 }
 
 function loadWorld(worldName)
