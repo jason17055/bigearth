@@ -295,28 +295,83 @@ function handleRequest(request,response)
 	return handleStaticFileRequest(requestPath.pathname,request,response);
 }
 
-function loadMap(mapName)
+function loadWorld(worldName)
 {
-	var SG = require('../html/sphere-geometry.js');
-	var cradle = require('cradle');
-	var DB = new(cradle.Connection)().database(worldName);
-	G.DB = DB;
+	G.worldName = worldName;
+	loadWorldParameters();
+	loadTerrain();
+	loadPlayers();
+	loadMaps();
+	loadFleets();
+}
 
-	// read game world parameters
-	DB.get('world', function(err,doc) {
-		if (err)
-		{
-			console.log("ERROR", err);
-		}
-		else
-		{
-			G.globalMap = doc;
-			G.geometry = new SG.SphereGeometry(doc.size);
+function loadWorldParameters()
+{
+	var filename = G.worldName + '/world.txt';
+	var rawData = FS.readFileSync(filename);
+	G.world = JSON.parse(rawData);
+}
 
-			startGame();
-			startListener();
-		}
-	});
+function loadTerrain()
+{
+	var filename = G.worldName + '/terrain.txt';
+	var rawData = FS.readFileSync(filename);
+
+	G.terrain = JSON.parse(rawData);
+	if (G.terrain.geometry == 'sphere')
+	{
+		var SG = require('../html/sphere-geometry.js');
+		G.geometry = new SG.SphereGeometry(G.terrain.size);
+	}
+	else
+	{
+		throw new Error('invalid geometry: '+G.terrain.geometry);
+	}
+}
+
+function loadPlayers()
+{
+	var filename = G.worldName + '/players.txt';
+
+	try
+	{
+		var rawData = FS.readFileSync(filename);
+		G.players = JSON.parse(rawData);
+	}
+	catch (err)
+	{
+		G.players = {};
+	}
+}
+
+function loadMaps()
+{
+	var filename = G.worldName + '/maps.txt';
+
+	try
+	{
+		var rawData = FS.readFileSync(filename);
+		G.maps = JSON.parse(rawData);
+	}
+	catch (err)
+	{
+		G.maps = {};
+	}
+}
+
+function loadFleets()
+{
+	var filename = G.worldName + '/fleets.txt';
+
+	try
+	{
+		var rawData = FS.readFileSync(filename);
+		G.fleets = JSON.parse(rawData);
+	}
+	catch (err)
+	{
+		G.fleets = {};
+	}
 }
 
 function startGame()
@@ -330,5 +385,6 @@ function startListener()
 }
 
 var worldName = process.argv[2];
-loadMap(worldName);
-
+loadWorld(worldName);
+startGame();
+startListener();

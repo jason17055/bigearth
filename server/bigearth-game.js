@@ -4,57 +4,36 @@ if (typeof require !== 'undefined')
 }
 
 var G = {
-	map: {},
+	world: {},
+	terrain: {},
 	players: {},
-	nextPlayerId: 1
+	maps: {},
+	fleets: {}
 	};
 G.players[1] = { primaryMap: { cells: [], edges: {}, vertices: {} } };
 
 function discoverCell(playerId, location)
 {
-	var mapCellId = 'map/'+playerId+'/'+location;
 	var isNew = false;
+	var refCell = G.terrain.cells[location];
 
-	// fetch the actual terrain and the player's map cell
-	G.DB.get( [
-		'terrain/'+location,
-		mapCellId
-		],
-	function(err,res) {
-
-		if (err)
-		{
-			console.log("DB ERROR (terrain/"+location+")", err);
-			return;
-		}
-
-	// the first result is the actual terrain
-	var refCell = res[0].doc;
-	if (!refCell) {
-		console.log("Oops, terrain "+location+" not found in DB");
-		return;
-	}
-
-	// the second result (which may be {error:"not_found"}, is
-	// what's on the player's map)
-
-	var mapCell = res[1].doc;
+	var map = G.maps[playerId];
+	var mapCell = map.cells[location];
 	if (!mapCell)
 	{
+		isNew = true;
 		mapCell = {};
 		mapCell.terrain = refCell.terrain;
-		isNew = true;
 	}
 	else if (mapCell.terrain != refCell.terrain)
 	{
-		mapCell.terrain = refCell.terrain;
 		isNew = true;
+		mapCell.terrain = refCell.terrain;
 	}
 
 	if (isNew)
 	{
-console.log("posting "+mapCellId,mapCell);
-		G.DB.save(mapCellId, mapCell, function(err1,res1) {});
+		map.cells[location] = mapCell;
 		postEvent({
 			event: 'map-update',
 			location: location,
@@ -63,44 +42,25 @@ console.log("posting "+mapCellId,mapCell);
 			});
 	}
 
-	var nn = refCell.neighbors;
+	var nn = G.geometry.getNeighbors(location);
 	for (var i = 0; i < nn.length; i++)
 	{
-		//if (map.cells[nn[i]-1])
-		//{
+		if (map.cells[nn[i]])
+		{
 			var eId = G.geometry._makeEdge(location, nn[i]);
 			discoverEdge(playerId, eId);
-		//}
+		}
 	}
-
-		}); //end of callback
 }
 
 function discoverEdge(playerId, eId)
 {
-	var mapEdgeId = 'map/'+playerId+'/'+eId;
 	var isNew = false;
 
-	// fetch the actual terrain and the player's map data
-	G.DB.get( [
-		'terrain/'+eId,
-		mapEdgeId
-		],
-	function(err,res) {
+	var refEdge = G.terrain.edges[eId] || {};
+	var map = G.maps[playerId];
+	var mapEdge = map.edges[eId];
 
-		if (err)
-		{
-			console.log("DB ERROR (terrain/"+eId+")", err);
-			return;
-		}
-
-	// the first result is the actual terrain
-	var refEdge = res[0].doc || {};
-
-	// the second result (which may be {error:"not_found"}, is
-	// what's on the player's map
-
-	var mapEdge = res[1].doc;
 	if (!mapEdge)
 	{
 		mapEdge = {};
@@ -116,7 +76,7 @@ function discoverEdge(playerId, eId)
 
 	if (isNew)
 	{
-		G.DB.save(mapEdgeId, mapEdge, function(err1,res1) {});
+		map.edges[eId] = mapEdge;
 		postEvent({
 			event: 'map-update',
 			location: eId,
@@ -124,7 +84,6 @@ function discoverEdge(playerId, eId)
 			data: mapEdge
 			});
 	}
-		}); //end of callback
 }
 
 function discoverCellBorder(playerId, cellIdx)
@@ -200,29 +159,21 @@ function moveFleetOneStep(fleetId, newLoc)
 
 function newPlayer(playerId, andThen)
 {
-	G.DB.get('player/'+playerId, function(err,res) {
+	if (G.players[playerId])
+	{
+		if (andThen) andThen();
+		return;
+	}
 
-		if (res)
-		{
-			if (andThen) andThen();
-		}
-
-
-	G.DB.save('player/'+playerId, {
+	G.players[playerId] = {
 		type: 'player'
-		}, function(err,res) {
+		};
+	addExplorer(playerId, andThen);
+}
 
-
-	if (err) {
-		console.log("Cannot create player " + playerId, err);
-	}
-	else {
-
-		addExplorer(playerId, andThen);
-	}
-		});
-
-		});
+function nextFleetId()
+{
+	return G.world.nextFleetId++;
 }
 
 function addExplorer(playerId, andThen)
@@ -233,21 +184,13 @@ function addExplorer(playerId, andThen)
 		type: 'explorer',
 		orders: []
 		};
-	G.DB.save(f, function(err,res) {
+	var fid = nextFleetId();
 
-		if (err)
-		{
-			console.log("DB ERROR (addExplorer)", err);
-			return;
-		}
+	G.fleets[fid] = f;
+	discoverCell(playerId,f.location);
+	discoverCellBorder(playerId,f.location);
 
-		var fid = res.id;
-		discoverCell(playerId,f.location);
-		discoverCellBorder(playerId,f.location);
-
-		if (andThen) andThen();
-
-		});
+	if (andThen) andThen();
 }
 
 function setFleetOrder(fleetId, newOrder, extraInfo)
@@ -285,7 +228,7 @@ function getGameState(request)
 		return {
 		role: "player",
 		map: "/map/"+request.remote_player,
-		mapSize: G.globalMap.size,
+		mapSize: G.terrain.size,
 		fleets: "/fleets/"+request.remote_player,
 		identity: request.remote_player
 		};
@@ -321,76 +264,36 @@ function doOrder(requestData, remoteUser)
 
 function getFleets(playerId, callback)
 {
-	var pruneProperties = function(doc) {
-		var x = {};
-		for (var k in doc)
+	var result = {};
+	for (var fid in G.fleets)
+	{
+		var f = G.fleets[fid];
+		if (f.owner == playerId)
 		{
-			if (k.substr(0,1)!= '_')
-				x[k]=doc[k];
+			result[fid] = f;
 		}
-		return x;
-	};
+	}
 
-	G.DB.view('fleets/byPlayer',
-		{ key: (""+playerId) },
-		function(err, res){
-
-		if (err) {
-		console.log("DB ERROR (fleets/byPlayer)", err);
-		return;
-		}
-
-		var result = {};
-		res.forEach(function(row) {
-
-			var fid = row._id;
-			result[fid] = pruneProperties(row);
-		});
-
-		callback(result);
-	});
+	callback(result);
 }
 exports.getFleets = getFleets;
 
 function getMapFragment(mapId, callback)
 {
-	var positionFromId = function(id) {
-		if (id.match(/\/([^\/]+)$/))
-			return RegExp.$1;
-		else
-			return id;
-	};
-	var pruneProperties = function(doc) {
-		var x = {};
-		for (var k in doc)
-		{
-			if (k.substr(0,1)!= '_')
-				x[k]=doc[k];
-		}
-		return x;
-	};
-		
+	var result = {};
+	var map = G.maps[mapId];
+	if (!map)
+		return callback(result);
 
-	G.DB.view('mapdata/byMap',
-		{ key: (""+mapId) },
-		function(err, res){
-
-		if (err) {
-		console.log("DB ERROR", err);
-		return;
-		}
-
-		var result = {};
-		var count = 0;
-		res.forEach(function(row) {
-
-			var location = positionFromId(row._id);
-			result[location] = pruneProperties(row);
-			count++;
-		});
-
-		callback(result);
-	});
+	for (var cid in map.cells)
+	{
+		result[cid] = map.cells[cid];
+	}
+	for (var eid in map.edges)
+	{
+		result[eid] = map.edges[eid];
+	}
+	return callback(result);
 }
 exports.getMapFragment = getMapFragment;
 

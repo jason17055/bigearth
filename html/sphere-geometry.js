@@ -19,6 +19,7 @@
 function SphereGeometry(size)
 {
 	this.size = size;
+	this.name = 'sphere';
 }
 
 SphereGeometry.prototype.getCellCount = function()

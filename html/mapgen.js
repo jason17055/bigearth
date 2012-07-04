@@ -113,7 +113,9 @@ function makeMap(geometry)
 	return {
 	cells: cells,
 	vertices: vertices,
-	edges: edges
+	edges: edges,
+	size: geometry.size,
+	geometry: geometry.name
 	};
 }
 
