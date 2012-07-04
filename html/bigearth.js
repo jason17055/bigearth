@@ -117,15 +117,13 @@ function repaintOne(canvasRow, canvasCol)
 		);
 
 	var myPatterns = {};
-	for (var i in map.cells)
+	for (var cid in map.cells)
 	{
-		var c = map.cells[i];
+		var c = map.cells[cid];
 		if (!c)
 			continue;
 
-		var cellIdx = parseInt(i)+1;
-
-		var co = coords.cells[cellIdx];
+		var co = coords.cells[cid];
 		var centerP = toScreenPoint(co.pt);
 		if (centerP.z < 0)
 			continue;
@@ -447,7 +445,7 @@ function onEvent(eventData)
 	{
 		if (eventData.locationType == 'cell')
 		{
-			map.cells[eventData.location-1] = eventData.data;
+			map.cells[eventData.location] = eventData.data;
 			triggerRepaintCell(eventData.location);
 		}
 		else if (eventData.locationType == 'edge')
@@ -526,14 +524,14 @@ function fetchMap()
 	var onSuccess = function(data,status)
 	{
 		map = {
-		cells: [],
+		cells: {},
 		edges: {}
 		};
 		for (var k in data)
 		{
 			if (k.match(/^(\d+)$/))
 			{
-				map.cells[k-1]=data[k];
+				map.cells[k]=data[k];
 			}
 			else if (k.match(/^(\d+)-(\d+)$/))
 			{
@@ -1017,7 +1015,7 @@ function addWaterAtPawn()
 {
 	if (pawn && pawn.locationType == 'cell')
 	{
-		map.cells[pawn.location-1].water++;
+		map.cells[pawn.location].water++;
 		repaint();
 	}
 }
@@ -1040,47 +1038,6 @@ function makeRiversClicked()
 	var R = new RiverFactory();
 	while (R.step());
 	repaint();
-}
-
-function greatFloodClicked()
-{
-	var $btn = $(this);
-	$btn.attr('disabled','disabled');
-
-	var maxHeight = -Infinity;
-	var minHeight = Infinity;
-	for (var i in map.cells)
-	{
-		var h = map.cells[i].height;
-		if (h > maxHeight)
-			maxHeight = h;
-		if (h < minHeight)
-			minHeight = h;
-	}
-
-	map.waterLevel = maxHeight+1;
-	repaint();
-
-	var nextStep;
-	nextStep = function()
-	{
-		map.waterLevel--;
-		repaint();
-		if (map.waterLevel > minHeight)
-		{
-			setTimeout(nextStep, 2000);
-		}
-		else
-		{
-			$btn.removeAttr('disabled');
-		}
-	};
-	setTimeout(nextStep, 2000);
-}
-
-function testSeaLevelClicked()
-{
-	findSeaLevel(map, 0.6);
 }
 
 function orderStop()
