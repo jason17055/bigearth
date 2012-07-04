@@ -327,6 +327,7 @@ function loadWorld(worldName)
 	loadPlayers();
 	loadMaps();
 	loadFleets();
+	loadCities();
 }
 
 function loadWorldParameters()
@@ -396,6 +397,21 @@ function loadFleets()
 	catch (err)
 	{
 		G.fleets = {};
+	}
+}
+
+function loadCities()
+{
+	var filename = G.worldName + '/cities.txt';
+
+	try
+	{
+		var rawData = FS.readFileSync(filename);
+		G.cities = JSON.parse(rawData);
+	}
+	catch (err)
+	{
+		G.cities = {};
 	}
 }
 

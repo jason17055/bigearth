@@ -1,6 +1,6 @@
 var fs = require('fs');
 
-function pruneFleetStruct(fleet)
+function pruneStruct(fleet)
 {
 	var rv = {};
 	for (var k in fleet)
@@ -36,11 +36,19 @@ function saveWorld(G)
 	var _fleets = {};
 	for (var fid in G.fleets)
 	{
-		_fleets[fid] = pruneFleetStruct(G.fleets[fid]);
+		_fleets[fid] = pruneStruct(G.fleets[fid]);
 	}
 	fs.writeFileSync(filename+'.tmp', JSON.stringify(_fleets));
 
-	var allFiles = ['world.txt','terrain.txt','players.txt','maps.txt','fleets.txt'];
+	filename = G.worldName + '/cities.txt';
+	var _cities = {};
+	for (var tid in G.cities)
+	{
+		_cities[tid] = pruneStruct(G.cities[tid]);
+	}
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(_cities);
+
+	var allFiles = ['world.txt','terrain.txt','players.txt','maps.txt','fleets.txt','cities.txt'];
 	for (var i = 0; i < allFiles.length; i++)
 	{
 		var filename = G.worldName + '/' + allFiles[i];
