@@ -24,7 +24,7 @@ function discoverCell(playerId, location)
 
 		if (err)
 		{
-			console.log("DB ERROR", err);
+			console.log("DB ERROR (terrain/"+location+")", err);
 			return;
 		}
 
@@ -90,7 +90,7 @@ function discoverEdge(playerId, eId)
 
 		if (err)
 		{
-			console.log("DB ERROR", err);
+			console.log("DB ERROR (terrain/"+eId+")", err);
 			return;
 		}
 
@@ -237,7 +237,7 @@ function addExplorer(playerId, andThen)
 
 		if (err)
 		{
-			console.log("DB ERROR", err);
+			console.log("DB ERROR (addExplorer)", err);
 			return;
 		}
 
@@ -278,35 +278,24 @@ function fleetActivity(fleetId)
 	}
 }
 
-function getGameState()
+function getGameState(request)
 {
-	var pp = {};
-	for (var pid in G.players)
+	if (request.remote_player)
 	{
-		var P = G.players[pid];
-
-		pp[pid] = {
+		return {
+		role: "player",
+		map: "/map/"+request.remote_player,
+		mapSize: G.globalMap.size,
+		fleets: "/fleets/"+request.remote_player,
+		identity: request.remote_player
 		};
 	}
-
-	var ff = {};
-	for (var fid in G.fleets)
+	else
 	{
-		var F = G.fleets[fid];
-
-		ff[fid] = {
-		location: F.location,
-		type: F.type,
-		currentOrder: F.currentOrder
+		return {
+		role: "observer",
 		};
 	}
-
-	return {
-	map: "/map/1",
-	mapSize: G.globalMap.size,
-	fleets: ff,
-	players: pp
-	};
 }
 
 function doExpose(requestData, remoteUser)
@@ -329,6 +318,39 @@ function doOrder(requestData, remoteUser)
 
 	setFleetOrder(fleetId, requestData.order, requestData);
 }
+
+function getFleets(playerId, callback)
+{
+	var pruneProperties = function(doc) {
+		var x = {};
+		for (var k in doc)
+		{
+			if (k.substr(0,1)!= '_')
+				x[k]=doc[k];
+		}
+		return x;
+	};
+
+	G.DB.view('fleets/byPlayer',
+		{ key: (""+playerId) },
+		function(err, res){
+
+		if (err) {
+		console.log("DB ERROR (fleets/byPlayer)", err);
+		return;
+		}
+
+		var result = {};
+		res.forEach(function(row) {
+
+			var fid = row._id;
+			result[fid] = pruneProperties(row);
+		});
+
+		callback(result);
+	});
+}
+exports.getFleets = getFleets;
 
 function getMapFragment(mapId, callback)
 {

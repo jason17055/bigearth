@@ -68,6 +68,19 @@ function createSchema()
 			} }
 		}
 		}, callback);
+
+	remaining++;
+	DB.save('_design/fleets', {
+		language: 'javascript',
+		views: {
+		byPlayer: { map: function(doc) {
+			if (doc.orders && doc.owner)
+			{
+				emit(""+doc.owner,doc);
+			}
+			} }
+		}
+		}, callback);
 }
 
 function createTerrain()

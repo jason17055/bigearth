@@ -57,8 +57,7 @@ function handleGameStateRequest(request,response)
 {
 	var s = request.Session;
 
-	var gameState = getGameState();
-	gameState.identity = s.identity;
+	var gameState = getGameState(request);
 	gameState.nextEventUrl = '/event/' + EVENTS.nextEventId;
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
@@ -185,6 +184,20 @@ function handleActionRequest(verb, request, response)
 		});
 }
 
+function handleFleetsRequest(pathInfo, request, response)
+{
+	var sendResponse = function(resultData) {
+		response.writeHead(200, {
+			'Content-Type': 'text/json'
+			});
+		response.end(
+			JSON.stringify(resultData)
+			);
+	};
+
+	GAME.getFleets(pathInfo, sendResponse);
+}
+
 function handleMapRequest(pathInfo, request, response)
 {
 	var processor = function(resultData) {
@@ -243,6 +256,7 @@ function handleRequest(request,response)
 	var s = SESSIONS.getSessionFromCookie(request);
 	request.Session = s;
 	request.remote_user = s.identity;
+	request.remote_player = s.identity;
 
 	if (requestPath.pathname == '/')
 	{
@@ -256,6 +270,11 @@ function handleRequest(request,response)
 	{
 		var pathInfo = RegExp.$1;
 		return handleMapRequest(pathInfo, request, response);
+	}
+	else if (requestPath.pathname.match(/^\/fleets\/(.*)$/))
+	{
+		var pathInfo = RegExp.$1;
+		return handleFleetsRequest(pathInfo, request, response);
 	}
 	else if (requestPath.pathname == "/login")
 	{
@@ -302,9 +321,6 @@ function loadMap(mapName)
 
 function startGame()
 {
-	newPlayer(1, function() {
-		addExplorer(1);
-		});
 }
 
 function startListener()

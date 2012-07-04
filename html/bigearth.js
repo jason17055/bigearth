@@ -58,6 +58,7 @@ function matrixMultiply(A, B)
 var geometry;
 var map;
 var coords;
+var fleets;
 var pawn = null;
 
 function updateTransformMatrix()
@@ -303,18 +304,26 @@ function onGameState()
 {
 	geometry = new SphereGeometry(gameState.mapSize);
 	coords = makeCoords(geometry);
-	fetchMap();
+	if (gameState.map)
+		fetchMap();
+	if (gameState.fleets)
+		fetchFleets();
+
+	if (gameState.role == 'observer')
+	{
+		window.location.href = '/login.html';
+	}
 }
 
 function recreateFleetIcons()
 {
 	$('.fleetIcon').remove();
 
-	if (gameState.fleets)
+	if (fleets)
 	{
-		for (var fid in gameState.fleets)
+		for (var fid in fleets)
 		{
-			var f = gameState.fleets[fid];
+			var f = fleets[fid];
 			updateFleetIcon(fid, f);
 		}
 	}
@@ -322,7 +331,7 @@ function recreateFleetIcons()
 
 function onFleetClicked(fleetId)
 {
-	var fleet = gameState.fleets[fleetId];
+	var fleet = fleets[fleetId];
 	if (!fleet)
 		return;
 
@@ -371,10 +380,10 @@ function updateFleetIcon(fleetId, fleetInfo)
 function onFleetMovement(eventData)
 {
 	var fleetId = eventData.fleet;
-	if (gameState.fleets[fleetId])
+	if (fleets[fleetId])
 	{
-		gameState.fleets[fleetId].location = eventData.toLocation;
-		updateFleetIcon(fleetId, gameState.fleets[fleetId]);
+		fleets[fleetId].location = eventData.toLocation;
+		updateFleetIcon(fleetId, fleets[fleetId]);
 	}
 }
 
@@ -486,6 +495,26 @@ function fetchNextEvent()
 	
 	$.ajax({
 	url: gameState.nextEventUrl,
+	success: onSuccess,
+	error: onError,
+	dataType: "json"
+	});
+}
+
+function fetchFleets()
+{
+	var onSuccess = function(data,status)
+	{
+		fleets = data;
+		recreateFleetIcons();
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		//TODO- throw an error
+	};
+
+	$.ajax({
+	url: gameState.fleets,
 	success: onSuccess,
 	error: onError,
 	dataType: "json"
