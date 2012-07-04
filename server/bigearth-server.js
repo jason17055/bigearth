@@ -248,7 +248,7 @@ function loadMap(mapName)
 	G.DB = DB;
 
 	// read game world parameters
-	DB.get('map', function(err,doc) {
+	DB.get('world', function(err,doc) {
 		if (err)
 		{
 			console.log("ERROR", err);

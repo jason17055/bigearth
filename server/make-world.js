@@ -39,13 +39,13 @@ function createSchema()
 		language: 'javascript',
 		views: {
 		all: { map: function(doc) {
-			if (doc._id.match(/^map\/(\d+)$/))
+			if (doc._id.match(/^terrain\/(\d+)$/))
 			{
 				emit(+RegExp.$1, doc);
 			}
 			} },
 		by_coordinates: { map: function(doc) {
-			if (doc._id.match(/^map\/(\d+)$/))
+			if (doc._id.match(/^terrain\/(\d+)$/))
 			{
 				var lat = Math.asin(doc.pt.z);
 				var lon = Math.atan2(doc.pt.y, doc.pt.x);
@@ -97,7 +97,7 @@ function createTerrain()
 		};
 
 		remaining++;
-		DB.save('map/'+cellIdx, x, callback);
+		DB.save('terrain/'+cellIdx, x, callback);
 	}
 
 	for (var eId in map.edges)
@@ -107,11 +107,11 @@ function createTerrain()
 			continue;
 
 		remaining++;
-		DB.save('map/'+eId, { feature: e.feature }, callback);
+		DB.save('terrain/'+eId, { feature: e.feature }, callback);
 	}
 
 	remaining++;
-	DB.save('map', {
+	DB.save('world', {
 		geometry: 'sphere',
 		size: geometry.size
 		}, callback);

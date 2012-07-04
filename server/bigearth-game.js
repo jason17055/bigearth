@@ -15,11 +15,11 @@ function discoverCell(playerId, location)
 	var map = G.players[playerId].primaryMap;
 	var isNew = false;
 
-	G.DB.get('map/'+location, function(err,doc) {
+	G.DB.get('terrain/'+location, function(err,doc) {
 
 		if (err)
 		{
-			console.log("ERROR: map cell " + location + " not found");
+			console.log("ERROR: terrain cell " + location + " not found");
 			return;
 		}
 
@@ -66,7 +66,7 @@ function discoverEdge(playerId, eId)
 
 	if (!map.edges[eId])
 	{
-		G.DB.get('map/'+eId, function(err,doc) {
+		G.DB.get('terrain/'+eId, function(err,doc) {
 
 		var e = {};
 		if (doc && doc.feature)
