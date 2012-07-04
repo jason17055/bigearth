@@ -55,6 +55,19 @@ function createSchema()
 			} }
 		}
 		}, callback);
+
+	remaining++;
+	DB.save('_design/mapdata', {
+		language: 'javascript',
+		views: {
+		byMap: { map: function(doc) {
+			if (doc._id.match(/^map\/(\d+)\/(.*)$/))
+			{
+				emit(RegExp.$1,doc);
+			}
+			} }
+		}
+		}, callback);
 }
 
 function createTerrain()

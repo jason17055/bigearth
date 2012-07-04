@@ -12,78 +12,119 @@ G.players[1] = { primaryMap: { cells: [], edges: {}, vertices: {} } };
 
 function discoverCell(playerId, location)
 {
-	var map = G.players[playerId].primaryMap;
+	var mapCellId = 'map/'+playerId+'/'+location;
 	var isNew = false;
 
-	G.DB.get('terrain/'+location, function(err,doc) {
+	// fetch the actual terrain and the player's map cell
+	G.DB.get( [
+		'terrain/'+location,
+		mapCellId
+		],
+	function(err,res) {
 
 		if (err)
 		{
-			console.log("ERROR: terrain cell " + location + " not found");
+			console.log("DB ERROR", err);
 			return;
 		}
 
-	var refCell = doc;
-	if (!map.cells[location-1])
+	// the first result is the actual terrain
+	var refCell = res[0].doc;
+	if (!refCell) {
+		console.log("Oops, terrain "+location+" not found in DB");
+		return;
+	}
+
+	// the second result (which may be {error:"not_found"}, is
+	// what's on the player's map)
+
+	var mapCell = res[1].doc;
+	if (!mapCell)
 	{
-		map.cells[location-1] = {};
-		map.cells[location-1].terrain = refCell.terrain;
+		mapCell = {};
+		mapCell.terrain = refCell.terrain;
 		isNew = true;
 	}
-	else if (map.cells[location-1].terrain != refCell.terrain)
+	else if (mapCell.terrain != refCell.terrain)
 	{
-		map.cells[location-1].terrain = refCell.terrain;
+		mapCell.terrain = refCell.terrain;
 		isNew = true;
 	}
 
 	if (isNew)
 	{
+console.log("posting "+mapCellId,mapCell);
+		G.DB.save(mapCellId, mapCell, function(err1,res1) {});
 		postEvent({
 			event: 'map-update',
 			location: location,
 			locationType: 'cell',
-			data: map.cells[location-1]
+			data: mapCell
 			});
 	}
 
 	var nn = refCell.neighbors;
 	for (var i = 0; i < nn.length; i++)
 	{
-		if (map.cells[nn[i]-1])
-		{
+		//if (map.cells[nn[i]-1])
+		//{
 			var eId = G.geometry._makeEdge(location, nn[i]);
 			discoverEdge(playerId, eId);
-		}
+		//}
 	}
 
-		});
+		}); //end of callback
 }
 
 function discoverEdge(playerId, eId)
 {
-	var map = G.players[playerId].primaryMap;
+	var mapEdgeId = 'map/'+playerId+'/'+eId;
 	var isNew = false;
 
-	if (!map.edges[eId])
-	{
-		G.DB.get('terrain/'+eId, function(err,doc) {
+	// fetch the actual terrain and the player's map data
+	G.DB.get( [
+		'terrain/'+eId,
+		mapEdgeId
+		],
+	function(err,res) {
 
-		var e = {};
-		if (doc && doc.feature)
+		if (err)
 		{
-			e.feature = doc.feature;
+			console.log("DB ERROR", err);
+			return;
 		}
 
-		map.edges[eId] = e;
+	// the first result is the actual terrain
+	var refEdge = res[0].doc || {};
+
+	// the second result (which may be {error:"not_found"}, is
+	// what's on the player's map
+
+	var mapEdge = res[1].doc;
+	if (!mapEdge)
+	{
+		mapEdge = {};
+		if (refEdge.feature)
+			mapEdge.feature = refEdge.feature;
+		isNew = true;
+	}
+	else if (mapEdge.feature != refEdge.feature)
+	{
+		mapEdge.feature = refEdge.feature;
+		isNew = true;
+	}
+
+	if (isNew)
+	{
+		G.DB.save(mapEdgeId, mapEdge, function(err1,res1) {});
 		postEvent({
 			event: 'map-update',
 			location: eId,
 			locationType: 'edge',
-			data: e
+			data: mapEdge
 			});
-
-		});
 	}
+		}); //end of callback
 }
 
 function discoverCellBorder(playerId, cellIdx)
@@ -133,40 +174,7 @@ console.log("  chose " + best);
 
 function moveFleetRandomly(fleetId)
 {
-	var fleet = G.fleets[fleetId];
-	var oldLoc = fleet.location;
-	var nn = G.geometry.getNeighbors(fleet.location);
-
-	var map = G.players[1].primaryMap;
-	var getTerrain = function(loc) {
-		return map.cells[loc-1] ?
-			map.cells[loc-1].terrain : null;
-	};
-
-	var candidates1 = [];
-	var candidates2 = [];
-	for (var i = 0; i < nn.length; i++)
-	{
-		if (getTerrain(oldLoc) == 'ocean'
-			|| getTerrain(nn[i]) != 'ocean')
-		{
-			if (!fleet.recent[nn[i]])
-				candidates1.push(nn[i]);
-			candidates2.push(nn[i]);
-		}
-	}
-	if (candidates1.length == 0)
-	{
-		fleet.recent = {};
-		candidates1 = candidates2;
-	}
-
-	if (candidates1.length > 0)
-	{
-		var newLoc = candidates1[Math.floor(Math.random()*candidates1.length)];
-		fleet.recent[newLoc] = true;
-		moveFleetOneStep(fleetId, newLoc);
-	}
+	//broken
 }
 
 function moveFleetOneStep(fleetId, newLoc)
@@ -303,33 +311,43 @@ function doOrder(requestData, remoteUser)
 
 function getMapFragment(mapId, callback)
 {
-	var map = G.players[mapId].primaryMap;
-	var result = {};
-	for (var i = 1, l = G.geometry.getCellCount();
-		i <= l; i++)
-	{
-		if (map.cells[i-1] && map.cells[i-1].terrain)
-			result[i] = map.cells[i-1];
-	}
-	for (var eId in map.edges)
-	{
-		if (map.edges[eId] && map.edges[eId].feature)
-			result[eId] = map.edges[eId];
-	}
-	callback(result);
+	var positionFromId = function(id) {
+		if (id.match(/\/([^\/]+)$/))
+			return RegExp.$1;
+		else
+			return id;
+	};
+	var pruneProperties = function(doc) {
+		var x = {};
+		for (var k in doc)
+		{
+			if (k.substr(0,1)!= '_')
+				x[k]=doc[k];
+		}
+		return x;
+	};
+		
 
-//	G.DB.view('maps/byName',
-//		{ key: mapId },
-//		function(err, res){
-//
-//		var result = {};
-//		res.forEach(function(row) {
-//
-//		result.push(row);
-//		});
-//
-//		callback(result);
-//	});
+	G.DB.view('mapdata/byMap',
+		{ key: (""+mapId) },
+		function(err, res){
+
+		if (err) {
+		console.log("DB ERROR", err);
+		return;
+		}
+
+		var result = {};
+		var count = 0;
+		res.forEach(function(row) {
+
+			var location = positionFromId(row._id);
+			result[location] = pruneProperties(row);
+			count++;
+		});
+
+		callback(result);
+	});
 }
 exports.getMapFragment = getMapFragment;
 
