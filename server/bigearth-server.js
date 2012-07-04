@@ -4,9 +4,10 @@ var FS = require('fs');
 var OS = require('os');
 var QS = require('querystring');
 var CRYPTO = require('crypto');
-var GAME = require('./bigearth-game.js');
 var SESSIONS = require('./sessions.js');
 var SECRET = CRYPTO.randomBytes(20).toString('hex');
+
+var GAME = require('./bigearth-game.js');
 
 
 function handleStaticFileRequest(requestPath,request,response)
@@ -140,71 +141,6 @@ function handleEventRequest(eventId, request, response)
 	}
 }
 
-function doEditMap(requestData, remoteUser)
-{
-	console.log("in doEditMap");
-
-	var map = {
-	cities: {}
-	};
-	for (var k in requestData)
-	{
-		var v = requestData[k];
-		if (k == 'terrain')
-		{
-			var t = v.split("\n");
-			map.terrain = t;
-		}
-		else if (k == 'rivers')
-		{
-			var t = v.split(" ");
-			var r = {};
-			for (var ii in t)
-			{
-				r[t[ii]] = 1;
-			}
-			map.rivers = r;
-		}
-		else if (k.match(/^cities/))
-		{
-			var re1 = /^cities\[(\d+)\]\[name\]$/;
-			var a = re1.exec(k);
-			if (a)
-			{
-				var cityId = a[1];
-				if (!map.cities[cityId]) { map.cities[cityId] = {}; }
-				map.cities[cityId].name = v;
-			}
-			var re2 = /^cities\[(\d+)\]\[offers\]\[\]$/;
-			var b = re2.exec(k);
-			if (b)
-			{
-				var cityId = b[1];
-				if (!map.cities[cityId]) { map.cities[cityId] = {}; }
-				map.cities[cityId].offers = (
-					typeof v == 'object' ? v : [v]);
-			}
-		}
-		else
-		{
-			console.log("in doEditMap, don't know " + k);
-		}
-	}
-
-	FS.writeFile('map.txt', JSON.stringify(map),
-	function(err) {
-		if (err) {
-			console.log(err);
-		} else {
-			console.log('The file was saved!');
-		}
-	});
-
-	return {};
-}
-
-actionHandlers.editMap = doEditMap;
-
 function handleActionRequest(verb, request, response)
 {
 	console.log('got request ' + verb);
@@ -306,61 +242,39 @@ function handleRequest(request,response)
 
 function loadMap(mapName)
 {
-	var mapDir = "../db/maps";
-	var mapFileName = mapDir + '/' + mapName + '.txt';
-	console.log('Loading map data from ' + mapFileName);
-
-	var data = FS.readFileSync(mapFileName);
-	var _map = JSON.parse(data);
-	var map = {
-	cells: _map.cells,
-	edges: _map.edges,
-	vertices: _map.vertices,
-	geometry: new SphereGeometry(_map.size)
-	};
-	return map;
-};
-//G.globalMap = loadMap('nippon');
-
-
-function saveMap(map, mapName)
-{
-	var _map = {};
-	_map.geometry = "sphere";
-	_map.size = map.geometry.size;
-	_map.cells = map.cells;
-	_map.edges = map.edges;
-	_map.vertices = map.vertices;
-
-	FS.writeFile(mapName, JSON.stringify(_map),
-		function(err) {
-			if (err) {
-				console.log(err);
-			} else {
-				console.log('The file was saved!');
-			}
-		});
-}
-
-function newMap()
-{
 	var SG = require('../html/sphere-geometry.js');
-	var MG = require('../html/mapgen.js');
+	var cradle = require('cradle');
+	var DB = new(cradle.Connection)().database(worldName);
+	G.DB = DB;
 
-	var geometry = new SG.SphereGeometry(22);
-	var map = MG.makeMap(geometry);
-	var coords = MG.makeCoords(geometry);
-	map.geometry = geometry;
-	map.size = geometry.size;
-	MG.generateTerrain(map, coords);
+	// read game world parameters
+	DB.get('map', function(err,doc) {
+		if (err)
+		{
+			console.log("ERROR", err);
+		}
+		else
+		{
+			G.globalMap = doc;
+			G.geometry = new SG.SphereGeometry(doc.size);
 
-	return map;
+			startGame();
+			startListener();
+		}
+	});
 }
-G.globalMap = newMap();
 
-saveMap(G.globalMap, '1.map');
+function startGame()
+{
+	addTraveler();
+}
 
-addTraveler();
+function startListener()
+{
+	HTTP.createServer(handleRequest).listen(8124);
+	console.log('Server running at http://localhost:8124/');
+}
 
-HTTP.createServer(handleRequest).listen(8124);
-console.log('Server running at http://localhost:8124/');
+var worldName = process.argv[2];
+loadMap(worldName);
+

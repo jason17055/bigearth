@@ -15,7 +15,15 @@ function discoverCell(playerId, location)
 	var map = G.players[playerId].primaryMap;
 	var isNew = false;
 
-	var refCell = G.globalMap.cells[location-1];
+	G.DB.get('map/'+location, function(err,doc) {
+
+		if (err)
+		{
+			console.log("ERROR: map cell " + location + " not found");
+			return;
+		}
+
+	var refCell = doc;
 	if (!map.cells[location-1])
 	{
 		map.cells[location-1] = {};
@@ -38,15 +46,17 @@ function discoverCell(playerId, location)
 			});
 	}
 
-	var nn = G.globalMap.geometry.getNeighbors(location);
+	var nn = refCell.neighbors;
 	for (var i = 0; i < nn.length; i++)
 	{
 		if (map.cells[nn[i]-1])
 		{
-			var eId = G.globalMap.geometry._makeEdge(location, nn[i]);
+			var eId = G.geometry._makeEdge(location, nn[i]);
 			discoverEdge(playerId, eId);
 		}
 	}
+
+		});
 }
 
 function discoverEdge(playerId, eId)
@@ -56,27 +66,35 @@ function discoverEdge(playerId, eId)
 
 	if (!map.edges[eId])
 	{
-		map.edges[eId] = {};
-		map.edges[eId].feature = G.globalMap.edges[eId].feature;
+		G.DB.get('map/'+eId, function(err,doc) {
 
+		var e = {};
+		if (doc && doc.feature)
+		{
+			e.feature = doc.feature;
+		}
+
+		map.edges[eId] = e;
 		postEvent({
 			event: 'map-update',
 			location: eId,
 			locationType: 'edge',
-			data: map.edges[eId]
+			data: e
 			});
+
+		});
 	}
 }
 
 function discoverCellBorder(playerId, cellIdx)
 {
-	var ee = G.globalMap.geometry.getEdgesAdjacentToCell(cellIdx);
+	var ee = G.geometry.getEdgesAdjacentToCell(cellIdx);
 	for (var i = 0; i < ee.length; i++)
 	{
 		discoverEdge(playerId, ee[i]);
 	}
 
-	var nn = G.globalMap.geometry.getNeighbors(cellIdx);
+	var nn = G.geometry.getNeighbors(cellIdx);
 	for (var i = 0; i < nn.length; i++)
 	{
 		discoverCell(playerId, nn[i]);
@@ -95,13 +113,13 @@ console.log("moving fleet "+fleetId+" from " + oldLoc + " to " + targetLocation)
 		return setFleetOrder(fleetId, "stop");
 	}
 
-	var nn = G.globalMap.geometry.getNeighbors(oldLoc);
+	var nn = G.geometry.getNeighbors(oldLoc);
 	var best = nn[0];
 	var bestDist = Infinity;
 	for (var i = 0, l = nn.length; i < l; i++)
 	{
 		var candidateLoc = nn[i];
-		var d = G.globalMap.geometry.distanceBetween(candidateLoc, targetLocation);
+		var d = G.geometry.distanceBetween(candidateLoc, targetLocation);
 		if (d < bestDist)
 		{
 			best = candidateLoc;
@@ -117,16 +135,20 @@ function moveFleetRandomly(fleetId)
 {
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
-	var nn = G.globalMap.geometry.getNeighbors(fleet.location);
+	var nn = G.geometry.getNeighbors(fleet.location);
 
 	var map = G.players[1].primaryMap;
+	var getTerrain = function(loc) {
+		return map.cells[loc-1] ?
+			map.cells[loc-1].terrain : null;
+	};
 
 	var candidates1 = [];
 	var candidates2 = [];
 	for (var i = 0; i < nn.length; i++)
 	{
-		if (map.cells[oldLoc-1].terrain == 'ocean'
-			|| map.cells[nn[i]-1].terrain != 'ocean')
+		if (getTerrain(oldLoc) == 'ocean'
+			|| getTerrain(nn[i]) != 'ocean')
 		{
 			if (!fleet.recent[nn[i]])
 				candidates1.push(nn[i]);
@@ -276,7 +298,7 @@ function getMapFragment(mapId, minLatitude, maxLatitude, minLongitude, maxLongit
 {
 	var map = G.players[mapId].primaryMap;
 	var result = {};
-	for (var i = 1, l = G.globalMap.geometry.getCellCount();
+	for (var i = 1, l = G.geometry.getCellCount();
 			i <= l; i++)
 	{
 		if (map.cells[i-1] && map.cells[i-1].terrain)
