@@ -84,12 +84,16 @@ function handleLoginRequest(request,response)
 		var sid = SESSIONS.newSession({
 			identity: args.id
 			});
+		var respondToLogin = function() {
 		response.writeHead(303, {
 			'Set-Cookie': SESSIONS.cookieName + "=" + sid,
 			'Content-Type': 'text/plain',
 			'Location': '/bigearth.html'
 			});
 		response.end();
+		};
+
+		newPlayer(args.id, respondToLogin);
 	}
 	else
 	{

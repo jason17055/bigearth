@@ -29,7 +29,10 @@ function getSessionIdFromCookie(req)
 
 function getSession(sid)
 {
-	return sid ? mySessions[sid] : {};
+	if (sid && mySessions[sid])
+		return mySessions[sid];
+	else
+		return {};
 }
 
 function newSession(s)

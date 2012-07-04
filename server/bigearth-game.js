@@ -200,6 +200,14 @@ function moveFleetOneStep(fleetId, newLoc)
 
 function newPlayer(playerId, andThen)
 {
+	G.DB.get('player/'+playerId, function(err,res) {
+
+		if (res)
+		{
+			if (andThen) andThen();
+		}
+
+
 	G.DB.save('player/'+playerId, {
 		type: 'player'
 		}, function(err,res) {
@@ -210,23 +218,36 @@ function newPlayer(playerId, andThen)
 	}
 	else {
 
-		if (andThen) andThen();
+		addExplorer(playerId, andThen);
 	}
+		});
+
 		});
 }
 
-function addExplorer(playerId)
+function addExplorer(playerId, andThen)
 {
-	G.fleets = {};
-	G.fleets[1] = {
-		location: 1,
+	var f = {
+		owner: playerId,
+		location: 2,
 		type: 'explorer',
-		recent: {}
+		orders: []
 		};
-	discoverCell(1,1);
-	discoverCellBorder(1,1);
+	G.DB.save(f, function(err,res) {
 
-	setFleetOrder(1, "wander");
+		if (err)
+		{
+			console.log("DB ERROR", err);
+			return;
+		}
+
+		var fid = res.id;
+		discoverCell(playerId,f.location);
+		discoverCellBorder(playerId,f.location);
+
+		if (andThen) andThen();
+
+		});
 }
 
 function setFleetOrder(fleetId, newOrder, extraInfo)
