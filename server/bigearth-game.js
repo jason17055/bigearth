@@ -272,6 +272,26 @@ function doOrder(requestData, remoteUser)
 	setFleetOrder(fleetId, requestData.order, requestData);
 }
 
+function getMapFragment(mapId, minLatitude, maxLatitude, minLongitude, maxLongitude)
+{
+	var map = G.players[mapId].primaryMap;
+	var result = {};
+	for (var i = 1, l = G.globalMap.geometry.getCellCount();
+			i <= l; i++)
+	{
+		if (map.cells[i-1] && map.cells[i-1].terrain)
+			result[i] = map.cells[i-1];
+	}
+	for (var eId in map.edges)
+	{
+		if (map.edges[eId] && map.edges[eId].feature)
+			result[eId] = map.edges[eId];
+	}
+	return result;
+}
+exports.getMapFragment = getMapFragment;
+
+
 var actionHandlers = {
 	expose: doExpose,
 	order: doOrder

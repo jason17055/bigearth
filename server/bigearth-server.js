@@ -243,6 +243,27 @@ function handleActionRequest(verb, request, response)
 		});
 }
 
+function handleMapRequest(pathInfo, request, response)
+{
+	var resultData;
+	if (pathInfo.match(/^([\d.]+)-([\d.]+)\/([\d.]+)-([\d.]+)$/))
+	{
+		resultData = GAME.getMapFragment(1, RegExp.$1, RegExp.$2, RegExp.$3, RegExp.$4);
+		
+	}
+	else
+	{
+		resultData = {};
+	}
+
+	response.writeHead(200, {
+		'Content-Type': 'text/json'
+		});
+	response.end(
+		JSON.stringify(resultData)
+		);
+}
+
 function handleRequest(request,response)
 {
 	var requestPath = URL.parse(request.url);
@@ -258,6 +279,11 @@ function handleRequest(request,response)
 	if (requestPath.pathname == "/gamestate")
 	{
 		return handleGameStateRequest(request,response);
+	}
+	else if (requestPath.pathname.match(/^\/map\/(.*)$/))
+	{
+		var pathInfo = RegExp.$1;
+		return handleMapRequest(pathInfo, request, response);
 	}
 	else if (requestPath.pathname == "/login")
 	{
