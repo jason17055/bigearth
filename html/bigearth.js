@@ -508,6 +508,13 @@ function fetchFleets()
 	{
 		fleets = data;
 		recreateFleetIcons();
+
+		for (var fid in fleets)
+		{
+			var pt = coords.cells[fleets[fid].location].pt;
+			panToCoords(pt);
+			break;
+		}
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
