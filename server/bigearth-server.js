@@ -93,7 +93,8 @@ function handleLoginRequest(request,response)
 		response.end();
 		};
 
-		newPlayer(args.id, respondToLogin);
+		newPlayer(args.id);
+		respondToLogin();
 	}
 	else
 	{

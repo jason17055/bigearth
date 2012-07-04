@@ -242,13 +242,59 @@ function moveFleetOneStep(fleetId, newLoc)
 		}, Math.round(costOfMovement));
 }
 
-function newPlayer(playerId, andThen)
+function findSuitableStartingLocation()
+{
+	var best = 1;
+	var bestV = -Infinity;
+	for (var cid in G.terrain.cells)
+	{
+		var c = G.terrain.cells[cid];
+		if (c.terrain != 'grassland' &&
+			c.terrain != 'plains' &&
+			c.terrain != 'forest' &&
+			c.terrain != 'hills')
+			continue;
+
+		var v = (c.temperature / 20) * (c.moisture / 0.8);
+		if (v > 1) v = 1;
+
+		var nn = G.geometry.getNeighbors(cid);
+		var numGoodNeighbors = 0;
+		var numRivers = 0;
+		for (var i = 0; i < nn.length; i++)
+		{
+			var n = G.terrain.cells[nn[i]];
+			if (n.terrain == 'grassland' ||
+				n.terrain == 'plains' ||
+				n.terrain == 'forest' ||
+				n.terrain == 'hills')
+			{
+				numGoodNeighbors++;
+			}
+			var eId = G.geometry._makeEdge(cid,nn[i]);
+			var e = G.terrain.edges[eId];
+			if (e && e.feature == 'river')
+			{
+				numRivers++;
+			}
+		}
+
+		v += numGoodNeighbors / 5;
+		v -= 0.3 * Math.abs(numRivers - 2);
+	
+		if (v > bestV)
+		{
+			best = cid;
+			bestV = v;
+		}
+	}
+	return best;
+}
+
+function newPlayer(playerId)
 {
 	if (G.players[playerId])
-	{
-		if (andThen) andThen();
 		return;
-	}
 
 	G.players[playerId] = {
 		type: 'player'
@@ -257,7 +303,11 @@ function newPlayer(playerId, andThen)
 		cells: {},
 		edges: {}
 		};
-	addExplorer(playerId, andThen);
+
+	// pick a location to be this player's home location
+	var loc = findSuitableStartingLocation();
+	createUnit(playerId, "settler", loc);
+	createUnit(playerId, "explorer", G.geometry.getNeighbors(loc)[0]);
 }
 
 function nextFleetId()
@@ -265,12 +315,12 @@ function nextFleetId()
 	return G.world.nextFleetId++;
 }
 
-function addExplorer(playerId, andThen)
+function createUnit(playerId, unitType, initialLocation)
 {
 	var f = {
 		owner: playerId,
-		location: 2,
-		type: 'explorer',
+		location: initialLocation,
+		type: unitType,
 		orders: []
 		};
 	var fid = nextFleetId();
@@ -278,8 +328,6 @@ function addExplorer(playerId, andThen)
 	G.fleets[fid] = f;
 	discoverCell(playerId,f.location);
 	discoverCellBorder(playerId,f.location);
-
-	if (andThen) andThen();
 }
 
 function fleetActivity(fleetId)
@@ -464,7 +512,6 @@ if (typeof global !== 'undefined')
 	global.G = G;
 	global.getGameState = getGameState;
 	global.actionHandlers = actionHandlers;
-	global.addExplorer = addExplorer;
 	global.newPlayer = newPlayer;
 	global.startGame = startGame;
 }
