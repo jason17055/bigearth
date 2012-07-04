@@ -152,8 +152,9 @@ var UNIT_MOVEMENT_RULES = {
 		tundra: 1200,
 		glacier: 1200,
 		hills: 1800,
-		mountain: 2400,
-		across_river: 1200
+		mountains: 2400,
+		across_river: 1200,
+		other_terrain: 600
 		},
 	'*': {
 		'other_terrain': 3600
