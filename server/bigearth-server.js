@@ -200,6 +200,8 @@ function handleFleetsRequest(pathInfo, request, response)
 
 function handleMapRequest(pathInfo, request, response)
 {
+	console.log("got map request "+pathInfo);
+
 	var processor = function(resultData) {
 		response.writeHead(200, {
 			'Content-Type': 'text/json'
@@ -216,16 +218,8 @@ function handleMapRequest(pathInfo, request, response)
 	//	
 	//}
 
-	if (pathInfo.match(/^([\d]+)$/))
-	{
-		var mapId = RegExp.$1;
-		GAME.getMapFragment(mapId, processor);
-	}
-	else
-	{
-		processor({});
-	}
-
+	var mapId = pathInfo;
+	GAME.getMapFragment(mapId, processor);
 }
 
 function handleDefaultDocumentRequest(request, response)
@@ -322,6 +316,7 @@ function loadTerrain()
 	{
 		var SG = require('../html/sphere-geometry.js');
 		G.geometry = new SG.SphereGeometry(G.terrain.size);
+		G.terrain.geometry = G.geometry;
 	}
 	else
 	{

@@ -10,7 +10,6 @@ var G = {
 	maps: {},
 	fleets: {}
 	};
-G.players[1] = { primaryMap: { cells: [], edges: {}, vertices: {} } };
 
 function discoverCell(playerId, location)
 {
@@ -142,8 +141,8 @@ function moveFleetOneStep(fleetId, newLoc)
 	var oldLoc = fleet.location;
 	fleet.location = newLoc;
 
-	discoverCell(1, newLoc);
-	discoverCellBorder(1, newLoc);
+	discoverCell(fleet.owner, newLoc);
+	discoverCellBorder(fleet.owner, newLoc);
 		
 	postEvent({
 		event: 'fleet-movement',
@@ -167,6 +166,10 @@ function newPlayer(playerId, andThen)
 
 	G.players[playerId] = {
 		type: 'player'
+		};
+	G.maps[playerId] = {
+		cells: {},
+		edges: {}
 		};
 	addExplorer(playerId, andThen);
 }
@@ -280,10 +283,14 @@ exports.getFleets = getFleets;
 
 function getMapFragment(mapId, callback)
 {
+console.log("in getMapFragment");
 	var result = {};
 	var map = G.maps[mapId];
 	if (!map)
+	{
+		console.log("Warning: map '"+mapId+"' not found");
 		return callback(result);
+	}
 
 	for (var cid in map.cells)
 	{
@@ -293,6 +300,7 @@ function getMapFragment(mapId, callback)
 	{
 		result[eid] = map.edges[eid];
 	}
+	console.log("map is "+JSON.stringify(result));
 	return callback(result);
 }
 exports.getMapFragment = getMapFragment;

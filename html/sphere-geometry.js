@@ -145,6 +145,7 @@ SphereGeometry.prototype.getFaceCell = function(faceId, row, idx)
 SphereGeometry.prototype.getNeighbors = function(cellIdx)
 {
 	var sz = this.size;
+	cellIdx = +cellIdx; //ensure cell id treated as a number
 
 	if (cellIdx <= 12)
 	{
@@ -324,7 +325,7 @@ SphereGeometry.prototype.getNeighbors = function(cellIdx)
 //
 SphereGeometry.prototype._makeEdge = function(cell1, cell2)
 {
-	if (cell1 < cell2)
+	if ((+cell1) < (+cell2))
 	{
 		return cell1+"-"+cell2;
 	}
@@ -341,11 +342,11 @@ SphereGeometry.prototype._makeEdge = function(cell1, cell2)
 //
 SphereGeometry.prototype._makeVertex = function(cell1, cell2, cell3)
 {
-	if (cell1 < cell2 && cell1 < cell3)
+	if ((+cell1) < (+cell2) && (+cell1) < (+cell3))
 	{
 		return cell1+","+cell2+","+cell3;
 	}
-	else if (cell2 < cell1 && cell2 < cell3)
+	else if ((+cell2) < (+cell1) && (+cell2) < (+cell3))
 	{
 		return cell2+","+cell3+","+cell1;
 	}
@@ -367,8 +368,8 @@ SphereGeometry.prototype.getCellsAdjacentToEdge = function(edgeId)
 SphereGeometry.prototype.getVerticesAdjacentToEdge = function(edgeId)
 {
 	var cc = edgeId.split(/-/);
-	var c = parseInt(cc[0]);
-	var d = parseInt(cc[1]);
+	var c = +cc[0];
+	var d = +cc[1];
 
 	var adj = this.getNeighbors(c);
 	for (var i = 0, l = adj.length; i < l; i++)
@@ -387,6 +388,7 @@ SphereGeometry.prototype.getVerticesAdjacentToEdge = function(edgeId)
 
 SphereGeometry.prototype.getVerticesAdjacentToCell = function(cellIdx)
 {
+	cellIdx = +cellIdx;
 	var n = this.getNeighbors(cellIdx);
 	var a = new Array();
 
@@ -400,6 +402,7 @@ SphereGeometry.prototype.getVerticesAdjacentToCell = function(cellIdx)
 
 SphereGeometry.prototype.getEdgesAdjacentToCell = function(cellIdx)
 {
+	cellIdx = +cellIdx;
 	var n = this.getNeighbors(cellIdx);
 	var a = [];
 
@@ -415,9 +418,9 @@ SphereGeometry.prototype.getCellsAdjacentToVertex = function(vertexId)
 {
 	var a = vertexId.split(',');
 	return [
-		parseInt(a[0]),
-		parseInt(a[1]),
-		parseInt(a[2])
+		+a[0],
+		+a[1],
+		+a[2]
 		];
 };
 
@@ -481,6 +484,7 @@ SphereGeometry.ATAN12 = Math.atan(0.5);
 
 SphereGeometry.prototype.getSpherePoint = function(cellIdx)
 {
+	cellIdx = +cellIdx;
 	var sz = this.size;
 
 	if (cellIdx <= 12)

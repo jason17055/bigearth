@@ -18,8 +18,6 @@ function createTerrain()
 	var geometry = new SG.SphereGeometry(22);
 	var map = MG.makeMap(geometry);
 	var coords = MG.makeCoords(geometry);
-	map.geometry = geometry;
-	map.size = geometry.size;
 	MG.generateTerrain(map, coords);
 
 	var worldFile = worldName + '/world.txt';
@@ -30,9 +28,14 @@ function createTerrain()
 		}));
 
 	var filename = worldName+'/terrain.txt';
-	fs.writeFileSync(filename,
-		JSON.stringify(map)
-		);
+	var _map = {
+		cells: map.cells,
+		edges: map.edges,
+		vertices: map.vertices,
+		size: map.size,
+		geometry: map.geometry.name
+		};
+	fs.writeFileSync(filename, JSON.stringify(_map));
 }
 
 createDatabase();

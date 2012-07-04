@@ -76,7 +76,7 @@ function makeCoords(geometry)
 
 function makeMap(geometry)
 {
-	var cells = new Array();
+	var cells = {};
 	var vertices = {};
 	var edges = {};
 
@@ -88,7 +88,7 @@ function makeMap(geometry)
 			water: 0,
 			moisture: 0
 			};
-		cells.push(c);
+		cells[cellIdx] = c;
 
 		var adj = geometry.getNeighbors(cellIdx);
 		for (var j = 0, l = adj.length; j < l; j++)
@@ -115,7 +115,7 @@ function makeMap(geometry)
 	vertices: vertices,
 	edges: edges,
 	size: geometry.size,
-	geometry: geometry.name
+	geometry: geometry
 	};
 }
 
@@ -136,10 +136,10 @@ function bumpMap(map, coords, d, attrName)
 		attrName = 'height';
 	}
 
-	for (var i in map.cells)
+	for (var cid in map.cells)
 	{
-		var c = map.cells[i];
-		var co = coords.cells[parseInt(i)+1];
+		var c = map.cells[cid];
+		var co = coords.cells[cid];
 		var u = {
 		x: co.pt.x - v.x,
 		y: co.pt.y - v.y,
@@ -207,12 +207,11 @@ function blurMoisture(map)
 	for (var cid in map.cells)
 	{
 		var c = map.cells[cid];
-		var cellIdx = +cid+1;
 
-		var nn = map.geometry.getNeighbors(cellIdx);
+		var nn = map.geometry.getNeighbors(cid);
 		for (var i = 0, l = nn.length; i < l; i++)
 		{
-			var nid = nn[i]-1;
+			var nid = nn[i];
 			var n = map.cells[nid];
 			var diff = c.moisture - n.moisture;
 			if (diff > 0)
@@ -249,10 +248,10 @@ function generateTerrain(map, coords)
 
 	// generate temperature map...
 	//  start by calculating temperature based on latitude
-	for (var i = 1, l = map.geometry.getCellCount(); i <= l; i++)
+	for (var cid in map.cells)
 	{
-		var lat = Math.asin(coords.cells[i].pt.z);
-		map.cells[i-1].temperature = 24 - 20 * Math.pow(lat,2);
+		var lat = Math.asin(coords.cells[cid].pt.z);
+		map.cells[cid].temperature = 24 - 20 * Math.pow(lat,2);
 	}
 	//  then apply some random noise to those numbers
 	for (var i = 0; i < 30; i++)
@@ -283,14 +282,14 @@ function generateTerrain(map, coords)
 		map.cells[cid].soil = LogisticFunction(map.cells[cid].soil);
 	}
 
-	for (var i = 1, l = map.geometry.getCellCount(); i <= l; i++)
+	for (var cid in map.cells)
 	{
-		var c = map.cells[i-1];
-		var nn = map.geometry.getNeighbors(i);
+		var c = map.cells[cid];
+		var nn = map.geometry.getNeighbors(cid);
 		var sumVar = 0;
 		for (var j = 0; j < nn.length; j++)
 		{
-			var n = map.cells[nn[j]-1];
+			var n = map.cells[nn[j]];
 			sumVar += Math.pow(n.height-c.height,2);
 		}
 		sumVar /= nn.length;
@@ -338,9 +337,9 @@ function generateTerrain(map, coords)
 				break;
 
 			var cc = map.geometry.getCellsAdjacentToEdge(eId);
-			if (map.cells[cc[0]-1].height < 1)
+			if (map.cells[cc[0]].height < 1)
 				break;
-			if (map.cells[cc[1]-1].height < 1)
+			if (map.cells[cc[1]].height < 1)
 				break;
 
 			map.edges[eId].feature = "river";
@@ -372,9 +371,9 @@ RiverFactory.prototype.getVertexHeight = function(vId)
 	var map = this.map;
 	var cc = map.geometry.getCellsAdjacentToVertex(vId);
 	return (
-		map.cells[cc[0]-1].height +
-		map.cells[cc[1]-1].height +
-		map.cells[cc[2]-1].height) / 3;
+		map.cells[cc[0]].height +
+		map.cells[cc[1]].height +
+		map.cells[cc[2]].height) / 3;
 };
 
 RiverFactory.prototype.addRiverAt = function(vId)
