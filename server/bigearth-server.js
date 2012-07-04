@@ -146,17 +146,16 @@ function handleEventRequest(eventId, request, response)
 	}
 }
 
-function handleActionRequest(verb, request, response)
+function handleActionRequest(verb, queryString, request, response)
 {
-	console.log('got request ' + verb);
+	console.log('got request ' + verb + ' ' + queryString);
+
 	if (!actionHandlers[verb])
 	{
 		response.writeHead(404);
 		response.end('Bad request\n');
 		return;
 	}
-
-	var s = request.Session;
 
 	var body = '';
 	request.on('data', function(chunk) {
@@ -167,8 +166,21 @@ function handleActionRequest(verb, request, response)
 		}
 		});
 	request.on('end', function() {
-		var requestData = QS.parse(body);
-		var responseData = actionHandlers[verb](requestData, s.identity);
+		console.log("raw request is "+body);
+		var requestData;
+
+		try
+		{
+		if (request.headers['content-type'].match(/json/))
+			requestData = JSON.parse(body);
+		else
+			requestData = QS.parse(body);
+		}
+		catch (err) {
+			requestData = {};
+		}
+
+		var responseData = actionHandlers[verb](requestData, queryString, request.remote_player);
 		if (responseData)
 		{
 			response.writeHead(200, {
@@ -294,10 +306,11 @@ function handleRequest(request,response)
 		var eventId = requestPath.pathname.substr(7);
 		return handleEventRequest(eventId, request, response);
 	}
-	else if (requestPath.pathname.match(/^\/request\//))
+	else if (requestPath.pathname.match(/^\/request\/(.*)$/))
 	{
-		var verb = requestPath.pathname.substr(9);
-		return handleActionRequest(verb, request, response);
+		var verb = RegExp.$1;
+		var queryString = requestPath.query;
+		return handleActionRequest(verb, queryString, request, response);
 	}
 
 	// assume it is a request for a file

@@ -1045,11 +1045,9 @@ function orderStop()
 	var fleetId = $('#infoPane').attr('fleet-id');
 	$.ajax({
 	type: "POST",
-	url: "/request/order",
-	data: { fleet: fleetId,
-		order: "stop"
-		},
-	dataType: "json"
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([]),
+	contentType: "json"
 	});
 }
 
@@ -1058,11 +1056,9 @@ function orderWander()
 	var fleetId = $('#infoPane').attr('fleet-id');
 	$.ajax({
 	type: "POST",
-	url: "/request/order",
-	data: { fleet: fleetId,
-		order: "wander"
-		},
-	dataType: "json"
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([ { command: "wander" } ]),
+	contentType: "json"
 	});
 }
 
@@ -1070,12 +1066,12 @@ function orderGoTo(fleetId, location)
 {
 	$.ajax({
 	type: "POST",
-	url: "/request/order",
-	data: { fleet: fleetId,
-		order: "goto",
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([ {
+		command: "goto",
 		location: location,
 		locationType: "cell"
-		},
-	dataType: "json"
+		} ]),
+	contentType: "json"
 	});
 }

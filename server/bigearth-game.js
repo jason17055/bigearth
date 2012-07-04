@@ -100,17 +100,23 @@ function discoverCellBorder(playerId, cellIdx)
 	}
 }
 
+function fleetCurrentCommandFinished(fleetId, fleet)
+{
+	fleet.orders.shift();
+	fleetActivity(fleetId);
+}
+
 function moveFleetTowards(fleetId, targetLocation)
 {
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
 
-console.log("moving fleet "+fleetId+" from " + oldLoc + " to " + targetLocation);
-
-	if (oldLoc == targetLocation)
+	if (!targetLocation || oldLoc == targetLocation)
 	{
-		return setFleetOrder(fleetId, "stop");
+		return fleetCurrentCommandFinished(fleetId, fleet);
 	}
+
+console.log("moving fleet "+fleetId+" from " + oldLoc + " to " + targetLocation);
 
 	var nn = G.geometry.getNeighbors(oldLoc);
 	var best = nn[0];
@@ -196,31 +202,38 @@ function addExplorer(playerId, andThen)
 	if (andThen) andThen();
 }
 
-function setFleetOrder(fleetId, newOrder, extraInfo)
-{
-	var fleet = G.fleets[fleetId];
-	fleet.currentOrder = newOrder;
-	if (newOrder == 'goto')
-	{
-		fleet.targetLocation = extraInfo.location;
-	}
-	fleetActivity(fleetId);
-}
-
 function fleetActivity(fleetId)
 {
 	var fleet = G.fleets[fleetId];
-	if (!fleet) return;
-	if (fleet.coolDownTimer) return;
+	if (fleet.coolDownTimer)
+	{
+		// this fleet is still performing last step.
+		// not to worry, this function will be called automatically
+		// when the fleet finishes its current task
+		return;
+	}
 
-	if (fleet.currentOrder == 'wander')
+	if (!fleet.orders || fleet.orders.length == 0)
+	{
+		// this fleet does not have any orders
+		return;
+	}
+
+	var currentOrder = fleet.orders[0];
+	if (!currentOrder)
+	{
+		console.log("invalid first command", fleet.orders);
+		return;
+	}
+
+	if (currentOrder.command == 'wander')
 	{
 		console.log("traveler moves!");
 		return moveFleetRandomly(fleetId);
 	}
-	if (fleet.currentOrder == 'goto')
+	if (currentOrder.command == 'goto')
 	{
-		return moveFleetTowards(fleetId, fleet.targetLocation);
+		return moveFleetTowards(fleetId, currentOrder.location);
 	}
 }
 
@@ -244,9 +257,9 @@ function getGameState(request)
 	}
 }
 
-function doExpose(requestData, remoteUser)
+function doExpose(requestData, queryString, remoteUser)
 {
-	console.log("in doExpose");
+	// TODO- delete this function
 
 	if (requestData.cell)
 	{
@@ -254,15 +267,44 @@ function doExpose(requestData, remoteUser)
 	}
 }
 
-function doOrder(requestData, remoteUser)
+function doOrders(requestData, queryString, remoteUser)
 {
-	console.log("in doOrder");
-
-	var fleetId = +(requestData.fleet);
-	if (!G.fleets[fleetId])
+	if (!queryString.match(/^fleet=(.*)$/))
+	{
+		console.log("doOrders: invalid query string");
 		return;
+	}
 
-	setFleetOrder(fleetId, requestData.order, requestData);
+	var fleetId = RegExp.$1;
+	var fleet = G.fleets[fleetId];
+	if (!fleet)
+	{
+		console.log("Warning: fleet "+fleetId+" not found");
+		return;
+	}
+
+	if (fleet.owner != remoteUser)
+	{
+		console.log("Warning: fleet "+fleetId+" not owned by player "+remoteUser);
+		return;
+	}
+
+	if (!(requestData instanceof Array))
+	{
+		console.log("doOrders: request content not a JSON array");
+		return;
+	}
+	for (var i = 0; i < requestData.length; i++)
+	{
+		if (!requestData[i].command)
+		{
+			console.log("doOrders: one or more orders without a 'command'");
+			return;
+		}
+	}
+
+	fleet.orders = requestData;
+	fleetActivity(fleetId);
 }
 
 function getFleets(playerId, callback)
@@ -308,7 +350,7 @@ exports.getMapFragment = getMapFragment;
 
 var actionHandlers = {
 	expose: doExpose,
-	order: doOrder
+	orders: doOrders
 	};
 
 if (typeof global !== 'undefined')
