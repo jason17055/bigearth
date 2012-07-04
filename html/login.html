@@ -1,10 +1,14 @@
 <html>
 <body>
-<form method="get" action="/login">
+<form name="form1" method="get" action="/login">
 <label>User:
-<input type="text" name="id">
+<input type="text" name="id" value="def">
 </label>
 <button type="submit">Login</button>
 </form>
+
+<script type="text/javascript"><!--
+document.form1.submit();
+//--></script>
 </body>
 </html>
