@@ -307,15 +307,33 @@ function doOrders(requestData, queryString, remoteUser)
 	fleetActivity(fleetId);
 }
 
+function getFleetInfoForPlayer(fleetId, playerId)
+{
+	var f = G.fleets[fleetId];
+	if (f.owner == playerId)
+	{
+		return {
+		type: f.type,
+		location: f.location,
+		owner: f.owner,
+		orders: f.orders
+		};
+	}
+	else
+	{
+		return null;
+	}
+}
+
 function getFleets(playerId, callback)
 {
 	var result = {};
 	for (var fid in G.fleets)
 	{
-		var f = G.fleets[fid];
-		if (f.owner == playerId)
+		var fi = getFleetInfoForPlayer(fid, playerId);
+		if (fi)
 		{
-			result[fid] = f;
+			result[fid] = fi;
 		}
 	}
 
@@ -347,6 +365,14 @@ console.log("in getMapFragment");
 }
 exports.getMapFragment = getMapFragment;
 
+function startGame()
+{
+	for (var fid in G.fleets)
+	{
+		fleetActivity(fid);
+	}
+}
+
 
 var actionHandlers = {
 	expose: doExpose,
@@ -360,4 +386,5 @@ if (typeof global !== 'undefined')
 	global.actionHandlers = actionHandlers;
 	global.addExplorer = addExplorer;
 	global.newPlayer = newPlayer;
+	global.startGame = startGame;
 }

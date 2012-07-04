@@ -398,10 +398,6 @@ function loadFleets()
 	}
 }
 
-function startGame()
-{
-}
-
 function startListener()
 {
 	HTTP.createServer(handleRequest).listen(8124);
