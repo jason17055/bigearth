@@ -279,12 +279,10 @@ function onResize()
 
 var gameState;
 
-function onGameState()
+function onMapReplaced()
 {
-	map = gameState.map;
-	geometry = new SphereGeometry(gameState.mapSize);
-	coords = makeCoords(geometry);
 	pawn = null;
+
 	updateTransformMatrix();
 	onResize();
 	VIEWPORT.translateX = -Math.round(-VIEWPORT.screenWidth/2);
@@ -299,6 +297,13 @@ function onGameState()
 	recreateFleetIcons();
 
 	fetchNextEvent();
+}
+
+function onGameState()
+{
+	geometry = new SphereGeometry(gameState.mapSize);
+	coords = makeCoords(geometry);
+	fetchMap();
 }
 
 function recreateFleetIcons()
@@ -433,12 +438,12 @@ function onEvent(eventData)
 	{
 		if (eventData.locationType == 'cell')
 		{
-			gameState.map.cells[eventData.location-1] = eventData.data;
+			map.cells[eventData.location-1] = eventData.data;
 			triggerRepaintCell(eventData.location);
 		}
 		else if (eventData.locationType == 'edge')
 		{
-			gameState.map.edges[eventData.location] = eventData.data;
+			map.edges[eventData.location] = eventData.data;
 		}
 	}
 	else
@@ -481,6 +486,40 @@ function fetchNextEvent()
 	
 	$.ajax({
 	url: gameState.nextEventUrl,
+	success: onSuccess,
+	error: onError,
+	dataType: "json"
+	});
+}
+
+function fetchMap()
+{
+	var onSuccess = function(data,status)
+	{
+		map = {
+		cells: [],
+		edges: {}
+		};
+		for (var k in data)
+		{
+			if (k.match(/^(\d+)$/))
+			{
+				map.cells[k-1]=data[k];
+			}
+			else if (k.match(/^(\d+)-(\d+)$/))
+			{
+				map.edges[k]=data[k];
+			}
+		}
+		onMapReplaced();
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		//TODO- throw an error
+	};
+
+	$.ajax({
+	url: gameState.map,
 	success: onSuccess,
 	error: onError,
 	dataType: "json"

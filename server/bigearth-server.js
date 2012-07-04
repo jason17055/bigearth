@@ -181,23 +181,32 @@ function handleActionRequest(verb, request, response)
 
 function handleMapRequest(pathInfo, request, response)
 {
-	var resultData;
-	if (pathInfo.match(/^([\d.]+)-([\d.]+)\/([\d.]+)-([\d.]+)$/))
+	var processor = function(resultData) {
+		response.writeHead(200, {
+			'Content-Type': 'text/json'
+			});
+		response.end(
+			JSON.stringify(resultData)
+			);
+	};
+
+	//if (pathInfo.match(/^([\d]+)\/([\d.]+)-([\d.]+)\/([\d.]+)-([\d.]+)$/))
+	//{
+	//	var mapId = RegExp.$1;
+	//	resultData = GAME.getMapFragment(mapId, RegExp.$2, RegExp.$3, RegExp.$4, RegExp.$5);
+	//	
+	//}
+
+	if (pathInfo.match(/^([\d]+)$/))
 	{
-		resultData = GAME.getMapFragment(1, RegExp.$1, RegExp.$2, RegExp.$3, RegExp.$4);
-		
+		var mapId = RegExp.$1;
+		GAME.getMapFragment(mapId, processor);
 	}
 	else
 	{
-		resultData = {};
+		processor({});
 	}
 
-	response.writeHead(200, {
-		'Content-Type': 'text/json'
-		});
-	response.end(
-		JSON.stringify(resultData)
-		);
 }
 
 function handleRequest(request,response)

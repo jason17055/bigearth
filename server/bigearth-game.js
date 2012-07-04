@@ -273,7 +273,7 @@ function getGameState()
 	}
 
 	return {
-	map: G.players[1].primaryMap,
+	map: "/map/1",
 	mapSize: G.globalMap.size,
 	fleets: ff,
 	players: pp
@@ -301,12 +301,12 @@ function doOrder(requestData, remoteUser)
 	setFleetOrder(fleetId, requestData.order, requestData);
 }
 
-function getMapFragment(mapId, minLatitude, maxLatitude, minLongitude, maxLongitude)
+function getMapFragment(mapId, callback)
 {
 	var map = G.players[mapId].primaryMap;
 	var result = {};
 	for (var i = 1, l = G.geometry.getCellCount();
-			i <= l; i++)
+		i <= l; i++)
 	{
 		if (map.cells[i-1] && map.cells[i-1].terrain)
 			result[i] = map.cells[i-1];
@@ -316,7 +316,20 @@ function getMapFragment(mapId, minLatitude, maxLatitude, minLongitude, maxLongit
 		if (map.edges[eId] && map.edges[eId].feature)
 			result[eId] = map.edges[eId];
 	}
-	return result;
+	callback(result);
+
+//	G.DB.view('maps/byName',
+//		{ key: mapId },
+//		function(err, res){
+//
+//		var result = {};
+//		res.forEach(function(row) {
+//
+//		result.push(row);
+//		});
+//
+//		callback(result);
+//	});
 }
 exports.getMapFragment = getMapFragment;
 
