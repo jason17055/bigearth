@@ -278,8 +278,6 @@ function handleRequest(request,response)
 	request.remote_user = s.identity;
 	request.remote_player = s.identity;
 
-	makeDirty();
-
 	if (requestPath.pathname == '/')
 	{
 		return handleDefaultDocumentRequest(request, response);
@@ -300,6 +298,7 @@ function handleRequest(request,response)
 	}
 	else if (requestPath.pathname == "/login")
 	{
+		makeDirty();
 		return handleLoginRequest(request,response);
 	}
 	else if (requestPath.pathname.match(/^\/event\//))
@@ -311,6 +310,7 @@ function handleRequest(request,response)
 	{
 		var verb = RegExp.$1;
 		var queryString = requestPath.query;
+		makeDirty();
 		return handleActionRequest(verb, queryString, request, response);
 	}
 
