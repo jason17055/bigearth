@@ -156,8 +156,8 @@ function moveFleetOneStep(fleetId, newLoc)
 		fromLocation: oldLoc,
 		toLocation: newLoc
 		});
-	fleet.coolDownTimer = setTimeout(function() {
-		fleet.coolDownTimer = null;
+	fleet._coolDownTimer = setTimeout(function() {
+		fleet._coolDownTimer = null;
 		fleetActivity(fleetId);
 		}, 1200);
 }
@@ -205,7 +205,7 @@ function addExplorer(playerId, andThen)
 function fleetActivity(fleetId)
 {
 	var fleet = G.fleets[fleetId];
-	if (fleet.coolDownTimer)
+	if (fleet._coolDownTimer)
 	{
 		// this fleet is still performing last step.
 		// not to worry, this function will be called automatically
