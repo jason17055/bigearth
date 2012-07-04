@@ -368,8 +368,10 @@ function updateFleetIcon(fleetId, fleetInfo)
 				return onFleetDragStart(fleetId, evt);
 			}, false);
 	}
+
+	var delay = fleetInfo.stepDelay ? (fleetInfo.stepDelay / 2) / 1000 : 0.5;
 	$f.css({
-		'-moz-transition': 'all 0.5s ease-out',
+		'-moz-transition': 'all '+delay+'s ease-out',
 		left: (p.x - 32)+"px",
 		top: (p.y - 24)+"px"
 		});
@@ -381,6 +383,7 @@ function onFleetMovement(eventData)
 	if (fleets[fleetId])
 	{
 		fleets[fleetId].location = eventData.toLocation;
+		fleets[fleetId].stepDelay = eventData.delay;
 		updateFleetIcon(fleetId, fleets[fleetId]);
 	}
 }

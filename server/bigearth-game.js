@@ -141,25 +141,104 @@ function moveFleetRandomly(fleetId)
 	//broken
 }
 
+var UNIT_MOVEMENT_RULES = {
+	explorer: {
+		plains:  600,
+		grassland: 600,
+		desert: 600,
+		forest: 1200,
+		swamp: 1200,
+		ocean: 3600,
+		tundra: 1200,
+		glacier: 1200,
+		hills: 1800,
+		mountain: 2400,
+		across_river: 1200
+		},
+	'*': {
+		'other_terrain': 3600
+		},
+	};
+
+function getUnitMovementCost(unitType, oldLoc, newLoc)
+{
+	var locationInfo = function(loc)
+	{
+		if ((""+loc).match(/^(\d+)$/))
+		{
+			return { locationType: 'cell', location: +loc };
+		}
+		else if ((""+loc).match(/^(\d+)-(\d+)$/))
+		{
+			return { locationType: 'edge', location: loc };
+		}
+		else
+		{
+			return { locationType: 'vertex', location: loc };
+		}
+	};
+
+	var ol = locationInfo(oldLoc);
+	var ne = locationInfo(newLoc);
+	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
+
+	if (ol.locationType == 'cell' && ne.locationType == 'cell')
+	{
+		//CASE 1 : from center hex to center of neighboring hex
+
+		var costOldCell = (UM[G.terrain.cells[ol.location].terrain] || UM.other_terrain) / 2;
+		var costNewCell = (UM[G.terrain.cells[ne.location].terrain] || UM.other_terrain) / 2;
+
+		var cost = costOldCell + costNewCell;
+
+		// TODO - consider cost of crossing a river, if there is
+		// one.
+		var eId = G.geometry._makeEdge(ol.location, ne.location);
+		var e = G.terrain.edges[eId];
+		var riverCrossing = false;
+		if (e && e.feature && e.feature == 'river')
+		{
+			riverCrossing = true;
+			cost += (UM.across_river || 0);
+		}
+
+		console.log("from " + G.terrain.cells[ol.location].terrain + " to " + G.terrain.cells[ne.location].terrain +
+			(riverCrossing ? " (w/ river)" : "") +
+			" cost is " + cost);
+
+		return cost;
+	}
+	return Infinity;
+}
+
+function getFleetMovementCost(fleetId, oldLoc, newLoc)
+{
+	return getUnitMovementCost(G.fleets[fleetId].type, oldLoc, newLoc);
+}
+
 function moveFleetOneStep(fleetId, newLoc)
 {
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
 	fleet.location = newLoc;
 
+	var costOfMovement = getFleetMovementCost(fleetId, oldLoc, newLoc);
+	console.log("cost is " + Math.round(costOfMovement));
+
 	discoverCell(fleet.owner, newLoc);
 	discoverCellBorder(fleet.owner, newLoc);
-		
+
 	postEvent({
 		event: 'fleet-movement',
 		fleet: fleetId,
 		fromLocation: oldLoc,
-		toLocation: newLoc
+		toLocation: newLoc,
+		delay: Math.round(costOfMovement)
 		});
 	fleet._coolDownTimer = setTimeout(function() {
 		fleet._coolDownTimer = null;
 		fleetActivity(fleetId);
-		}, 1200);
+		}, Math.round(costOfMovement));
 }
 
 function newPlayer(playerId, andThen)
