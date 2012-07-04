@@ -11,15 +11,15 @@ var VIEWPORT_TILE_SIZE = 400;
 var VIEWPORT_TILE_OVERFLOW = 40;
 
 var TERRAIN_IMAGES = {};
-var terrainImagesToLoad = 0;
+var imagesToLoad = 0;
 function loadTerrainImage(terrainType)
 {
-	terrainImagesToLoad++;
+	imagesToLoad++;
 	var imageObj = new Image();
 	imageObj.onload = function() {
 		TERRAIN_IMAGES[terrainType] = imageObj;
-		terrainImagesToLoad--;
-		if (terrainImagesToLoad == 0)
+		imagesToLoad--;
+		if (imagesToLoad == 0)
 			repaint();
 		};
 	imageObj.src = "terrain_textures/"+terrainType+".png";
@@ -34,6 +34,22 @@ loadTerrainImage("swamp");
 loadTerrainImage("forest");
 loadTerrainImage("mountains");
 loadTerrainImage("hills");
+
+var CITIES_IMAGE = null;
+function loadCitiesImage()
+{
+	imagesToLoad++;
+	var imageObj = new Image();
+	imageObj.onload = function() {
+		CITIES_IMAGE = imageObj;
+		imagesToLoad--;
+		if (imagesToLoad == 0)
+			repaint();
+		};
+	imageObj.src = "city_images/ancientcities.png";
+}
+loadCitiesImage();
+
 
 var CANVASES = [];
 
@@ -116,6 +132,7 @@ function repaintOne(canvasRow, canvasCol)
 		-(VIEWPORT.offsetY + VIEWPORT_TILE_SIZE*canvasRow)
 		);
 
+	var citiesToLabel = [];
 	var myPatterns = {};
 	for (var cid in map.cells)
 	{
@@ -186,8 +203,19 @@ function repaintOne(canvasRow, canvasCol)
 
 		if (c.city)
 		{
-			ctx.fillStyle = '#fff';
-			ctx.fillText("CITY!", centerP.x, centerP.y-8);
+			citiesToLabel.push({
+				id: c.city,
+				location: cid,
+				screenPt: centerP
+				});
+
+			if (CITIES_IMAGE)
+			{
+			ctx.drawImage(CITIES_IMAGE,1,1,96,72,
+				Math.round(centerP.x-48-6),
+				Math.round(centerP.y-36-12),
+				96,72);
+			}
 		}
 
 	// SHOW HEIGHTS
@@ -250,6 +278,24 @@ function repaintOne(canvasRow, canvasCol)
 		ctx.fillText(Math.floor(v.water), p.x-4, p.y+4);
 
 		ctx.restore();
+	}
+
+	for (var i = 0; i < citiesToLabel.length; i++)
+	{
+		var cityInfo = citiesToLabel[i];
+		var p = cityInfo.screenPt;
+
+		var cityName = 'city'+cityInfo.id;
+		ctx.font = 'bold 16px sans-serif';
+		var m = ctx.measureText(cityName);
+
+		ctx.fillStyle = '#000';
+		ctx.globalAlpha = 0.4;
+		ctx.fillRect(p.x-Math.round(m.width/2)-2,p.y+12,Math.round(m.width)+4,19);
+
+		ctx.globalAlpha = 1;
+		ctx.fillStyle = '#fff';
+		ctx.fillText(cityName, p.x-m.width/2, p.y+12+15);
 	}
 
 	ctx.restore();
