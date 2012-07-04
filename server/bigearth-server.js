@@ -6,6 +6,7 @@ var QS = require('querystring');
 var CRYPTO = require('crypto');
 var SESSIONS = require('./sessions.js');
 var SECRET = CRYPTO.randomBytes(20).toString('hex');
+var SECURE = false;
 
 var GAME = require('./bigearth-game.js');
 
@@ -54,7 +55,7 @@ var EVENTS = {
 
 function handleGameStateRequest(request,response)
 {
-	var s = SESSIONS.getSessionFromCookie(request);
+	var s = request.Session;
 
 	var gameState = getGameState();
 	gameState.identity = s.identity;
@@ -76,8 +77,9 @@ function handleLoginRequest(request,response)
 	var sha1 = CRYPTO.createHash('sha1');
 	sha1.update(b);
 	var expectedChecksum = sha1.digest('hex');
-	
-	if (args.cs == expectedChecksum)
+
+	if (args.id.match(/^([\w\d.@_-]+)$/)
+		&& (args.cs == expectedChecksum || !SECURE))
 	{
 		var sid = SESSIONS.newSession({
 			identity: args.id
@@ -85,7 +87,7 @@ function handleLoginRequest(request,response)
 		response.writeHead(303, {
 			'Set-Cookie': SESSIONS.cookieName + "=" + sid,
 			'Content-Type': 'text/plain',
-			'Location': '/index.html'
+			'Location': '/bigearth.html'
 			});
 		response.end();
 	}
@@ -151,7 +153,7 @@ function handleActionRequest(verb, request, response)
 		return;
 	}
 
-	var s = SESSIONS.getSessionFromCookie(request);
+	var s = request.Session;
 
 	var body = '';
 	request.on('data', function(chunk) {
@@ -209,6 +211,19 @@ function handleMapRequest(pathInfo, request, response)
 
 }
 
+function handleDefaultDocumentRequest(request, response)
+{
+	if (request.remote_user)
+	{
+		response.writeHead(302, {Location:'/bigearth.html'});
+	}
+	else
+	{
+		response.writeHead(302, {Location:'/login.html'});
+	}
+	response.end();
+}
+
 function handleRequest(request,response)
 {
 	var requestPath = URL.parse(request.url);
@@ -221,7 +236,15 @@ function handleRequest(request,response)
 		return;
 	}
 
-	if (requestPath.pathname == "/gamestate")
+	var s = SESSIONS.getSessionFromCookie(request);
+	request.Session = s;
+	request.remote_user = s.identity;
+
+	if (requestPath.pathname == '/')
+	{
+		return handleDefaultDocumentRequest(request, response);
+	}
+	else if (requestPath.pathname == "/gamestate")
 	{
 		return handleGameStateRequest(request,response);
 	}

@@ -45,4 +45,4 @@ exports.getSessionFromCookie = function(req) {
 		};
 exports.getSession = getSession;
 exports.newSession = newSession;
-exports.cookieName = 'trainssession';
+exports.cookieName = 'sid';
