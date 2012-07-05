@@ -42,20 +42,30 @@ function discoverCell(playerId, location)
 			isNew = true;
 			mapCell.city = { id: refCell.city };
 		}
-		if (mapCell.city.name != city.name)
+
+		var pub_props = [ 'name', 'size', 'owner' ];
+		var own_props = [ 'population', 'food', 'fuel' ];
+
+		for (var i = 0; i < pub_props.length; i++)
 		{
-			isNew = true;
-			mapCell.city.name = city.name;
+			var p = pub_props[i];
+			if (mapCell.city[p] != city[p])
+			{
+				isNew = true;
+				mapCell.city[p] = city[p];
+			}
 		}
-		if (mapCell.city.size != city.size)
+		if (city.owner == playerId)
 		{
-			isNew = true;
-			mapCell.city.size = city.size;
+		for (var i = 0; i < own_props.length; i++)
+		{
+			var p = own_props[i];
+			if (mapCell.city[p] != city[p])
+			{
+				isNew = true;
+				mapCell.city[p] = city[p];
+			}
 		}
-		if (mapCell.city.owner != city.owner)
-		{
-			isNew = true;
-			mapCell.city.owner = city.owner;
 		}
 	}
 
@@ -205,7 +215,10 @@ function tryToBuildCity(fleetId, fleet)
 		var tid = nextFleetId();
 		var city = {
 			owner: fleet.owner,
-			location: fleet.location
+			location: fleet.location,
+			population: 100,
+			food: 100,
+			fuel: 50
 			};
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
@@ -650,8 +663,28 @@ function startGame()
 {
 	for (var fid in G.fleets)
 	{
+		checkFleet(fid);
 		fleetActivity(fid);
 	}
+
+	for (var tid in G.cities)
+	{
+		checkCity(tid, G.cities[tid]);
+	}
+}
+
+function checkFleet(fleetId)
+{
+}
+
+function checkCity(cityId, city)
+{
+	if (!('population' in city))
+		city.population = 100;
+	if (!('fuel' in city))
+		city.fuel = 0;
+	if (!('food' in city))
+		city.food = 0;
 }
 
 

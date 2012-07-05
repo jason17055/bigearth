@@ -386,6 +386,9 @@ function onCityClicked(location, city)
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane .cityName').text(city.name);
 	$('#cityPane .citySize').text(city.size);
+	$('#cityPane .cityPopulation').text(city.population);
+	$('#cityPane .cityFood').text(city.food);
+	$('#cityPane .cityFuel').text(city.fuel);
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
 	$('#cityPane').show();
 }
