@@ -279,6 +279,8 @@ function handleRequest(request,response)
 	request.remote_user = s.identity;
 	request.remote_player = s.identity;
 
+	G.year = getYear();
+
 	if (requestPath.pathname == '/')
 	{
 		return handleDefaultDocumentRequest(request, response);

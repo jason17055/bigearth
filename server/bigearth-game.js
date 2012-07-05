@@ -598,6 +598,41 @@ function doRenameCity(requestData, queryString, remoteUser)
 	terrainChanged(city.location);
 }
 
+function doCityTest(requestData, queryString, remoteUser)
+{
+	if (!queryString.match(/^city=(.*)$/))
+	{
+		console.log("doRenameCity: invalid query string");
+		return;
+	}
+
+	var cityId = RegExp.$1;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		console.log("doRenameCity: city " + cityId + " not found");
+		return;
+	}
+
+	updateCityProperties(cityId, city);
+}
+
+function getYear()
+{
+	var t = new Date().getTime();
+	return G.world.age + (t-G.world.realWorldTime)/G.world.oneYear;
+}
+
+function updateCityProperties(cityId, city)
+{
+	if (!city.lastUpdate)
+		city.lastUpdate = 0;
+
+	var yearsElapsed = G.year - city.lastUpdate;
+	city.lastUpdate = G.year;
+	city.population += yearsElapsed;
+}
+
 function getFleetInfoForPlayer(fleetId, playerId)
 {
 	var f = G.fleets[fleetId];
@@ -721,7 +756,8 @@ function checkCity(cityId, city)
 var actionHandlers = {
 	expose: doExpose,
 	orders: doOrders,
-	'rename-city': doRenameCity
+	'rename-city': doRenameCity,
+	'test-city': doCityTest
 	};
 
 if (typeof global !== 'undefined')
@@ -731,4 +767,5 @@ if (typeof global !== 'undefined')
 	global.actionHandlers = actionHandlers;
 	global.newPlayer = newPlayer;
 	global.startGame = startGame;
+	global.getYear = getYear;
 }

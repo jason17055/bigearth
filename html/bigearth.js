@@ -1209,3 +1209,13 @@ function cityRename()
 		});
 	}
 }
+
+function cityTest()
+{
+	var cityId = $('#cityPane').attr('city-id');
+	$.ajax({
+		type: "POST",
+		url: "/request/test-city?city="+cityId,
+		data: {}
+		});
+}
