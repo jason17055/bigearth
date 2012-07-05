@@ -381,11 +381,19 @@ function recreateFleetIcons()
 
 function onCityClicked(location, city)
 {
-	alert("city clicked");
+	$('#infoPane').hide();
+
+	$('#cityPane').attr('city-id', city.id);
+	$('#cityPane .cityName').text(city.name);
+	$('#cityPane .citySize').text(city.size);
+	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
+	$('#cityPane').show();
 }
 
 function onFleetClicked(fleetId)
 {
+	$('#cityPane').hide();
+
 	var fleet = fleets[fleetId];
 	if (!fleet)
 		return;
@@ -1183,4 +1191,18 @@ function orderGoTo(fleetId, location)
 		} ]),
 	contentType: "json"
 	});
+}
+
+function cityRename()
+{
+	var cityId = $('#cityPane').attr('city-id');
+	var newName = prompt('Name for city?', $('#cityPane .cityName').text());
+	if (newName)
+	{
+		$.ajax({
+		type: "POST",
+		url: "/request/rename-city?city="+cityId,
+		data: { name: newName }
+		});
+	}
 }

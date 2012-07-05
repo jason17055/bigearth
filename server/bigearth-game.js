@@ -559,6 +559,32 @@ function doOrders(requestData, queryString, remoteUser)
 	fleetActivity(fleetId);
 }
 
+function doRenameCity(requestData, queryString, remoteUser)
+{
+	if (!queryString.match(/^city=(.*)$/))
+	{
+		console.log("doRenameCity: invalid query string");
+		return;
+	}
+
+	var cityId = RegExp.$1;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		console.log("doRenameCity: city " + cityId + " not found");
+		return;
+	}
+
+	if (city.owner != remoteUser)
+	{
+		console.log("doRenameCity: city " + cityId + " not owned by player " + remoteUser);
+		return;
+	}
+
+	city.name = requestData.name;
+	terrainChanged(city.location);
+}
+
 function getFleetInfoForPlayer(fleetId, playerId)
 {
 	var f = G.fleets[fleetId];
@@ -631,7 +657,8 @@ function startGame()
 
 var actionHandlers = {
 	expose: doExpose,
-	orders: doOrders
+	orders: doOrders,
+	'rename-city': doRenameCity
 	};
 
 if (typeof global !== 'undefined')

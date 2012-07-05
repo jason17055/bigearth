@@ -49,6 +49,17 @@ body {
 	background-color: white
 }
 
+#cityPane {
+	position: absolute;
+	right: 1em;
+	top: 1em;
+	width: 3in;
+	height: 3in;
+	font-family: sans-serif;
+	color: black;
+	background-color: white
+}
+
 #dragTargetIndicator {
 	position: absolute;
 	display: none;
