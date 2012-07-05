@@ -24,7 +24,9 @@ function createTerrain()
 	fs.writeFileSync(worldFile,
 		JSON.stringify({
 		nextPlayerId: 1,
-		nextFleetId: 1
+		nextFleetId: 1,
+		age: 0,
+		oneYear: 60000
 		}));
 
 	var filename = worldName+'/terrain.txt';

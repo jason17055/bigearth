@@ -14,6 +14,9 @@ function pruneStruct(fleet)
 function saveWorld(G)
 {
 	var filename = G.worldName + '/world.txt';
+	var newRealWorldTime = new Date().getTime();
+	G.world.age += (newRealWorldTime - G.world.realWorldTime) / G.world.oneYear;
+	G.world.realWorldTime = newRealWorldTime;
 	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.world));
 
 	filename = G.worldName + '/terrain.txt';

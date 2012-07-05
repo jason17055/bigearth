@@ -661,10 +661,12 @@ exports.getMapFragment = getMapFragment;
 
 function startGame()
 {
+	checkWorldParameters();
+
 	for (var fid in G.fleets)
 	{
 		checkFleet(fid);
-		fleetActivity(fid);
+		fleetActivity(fid, G.fleets[fid]);
 	}
 
 	for (var tid in G.cities)
@@ -673,10 +675,38 @@ function startGame()
 	}
 }
 
-function checkFleet(fleetId)
+// inspect properties from world.txt,
+// add any that are missing,
+// fix any whose semantics have changed.
+//
+function checkWorldParameters()
+{
+	// real-world-time this file was last saved
+	if (!G.world.realWorldTime)
+		G.world.realWorldTime = new Date().getTime();
+
+	// how many game-years this world has been run
+	if (!G.world.age)
+		G.world.age = 0;
+
+	// how many real-world-milliseconds correspond to one game-year
+	// (this parameter may change between executions of the server)
+	if (!G.world.oneYear)
+		G.world.oneYear = 60000;
+}
+
+// inspect properties of a single fleet.
+// add any that are missing,
+// fix any whose semantics have changed.
+//
+function checkFleet(fleetId, fleet)
 {
 }
 
+// inspect properties of a single city.
+// add any that are missing,
+// fix any whose semantics have changed.
+//
 function checkCity(cityId, city)
 {
 	if (!('population' in city))
