@@ -28,10 +28,35 @@ function discoverCell(playerId, location)
 		isNew = true;
 		mapCell.terrain = refCell.terrain;
 	}
-	if (mapCell.city != refCell.city)
+
+	if (mapCell.city && !refCell.city)
 	{
 		isNew = true;
-		mapCell.city = refCell.city;
+		delete mapCell.city;
+	}
+	else if (refCell.city)
+	{
+		var city = G.cities[refCell.city] || {};
+		if (!mapCell.city || mapCell.city.id != refCell.city)
+		{
+			isNew = true;
+			mapCell.city = { id: refCell.city };
+		}
+		if (mapCell.city.name != city.name)
+		{
+			isNew = true;
+			mapCell.city.name = city.name;
+		}
+		if (mapCell.city.size != city.size)
+		{
+			isNew = true;
+			mapCell.city.size = city.size;
+		}
+		if (mapCell.city.owner != city.owner)
+		{
+			isNew = true;
+			mapCell.city.owner = city.owner;
+		}
 	}
 
 	if (isNew)

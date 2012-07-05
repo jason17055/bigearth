@@ -204,7 +204,7 @@ function repaintOne(canvasRow, canvasCol)
 		if (c.city)
 		{
 			citiesToLabel.push({
-				id: c.city,
+				city: c.city,
 				location: cid,
 				screenPt: centerP
 				});
@@ -285,7 +285,7 @@ function repaintOne(canvasRow, canvasCol)
 		var cityInfo = citiesToLabel[i];
 		var p = cityInfo.screenPt;
 
-		var cityName = 'city'+cityInfo.id;
+		var cityName = cityInfo.city.name || ('city'+cityInfo.city.id);
 		ctx.font = 'bold 16px sans-serif';
 		var m = ctx.measureText(cityName);
 
@@ -377,6 +377,11 @@ function recreateFleetIcons()
 			updateFleetIcon(fid, f);
 		}
 	}
+}
+
+function onCityClicked(location, city)
+{
+	alert("city clicked");
 }
 
 function onFleetClicked(fleetId)
@@ -985,7 +990,14 @@ function onMouseDown(evt)
 	}
 	else if (xx.type == 'cell')
 	{
-		return panToCoords(coords.cells[xx.id].pt);
+		if (map.cells[xx.id].city)
+		{
+			return onCityClicked(xx.id, map.cells[xx.id].city);
+		}
+		else
+		{
+			return panToCoords(coords.cells[xx.id].pt);
+		}
 
 		$('#infoPane .featureType').text('Cell');
 		$('#vId').text(xx.id);
