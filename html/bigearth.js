@@ -381,8 +381,14 @@ function recreateFleetIcons()
 
 function onCityClicked(location, city)
 {
-	$('#infoPane').hide();
+	loadCityInfo(city);
 
+	$('#infoPane').hide();
+	$('#cityPane').show();
+}
+
+function loadCityInfo(city)
+{
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane .cityName').text(city.name);
 	$('#cityPane .citySize').text(city.size);
@@ -391,7 +397,6 @@ function onCityClicked(location, city)
 	$('#cityPane .cityFood').text(city.food);
 	$('#cityPane .cityFuel').text(city.fuel);
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
-	$('#cityPane').show();
 }
 
 function onFleetClicked(fleetId)
@@ -527,6 +532,16 @@ function triggerRepaintCell(cellIdx)
 		triggerRepaintCanvasTile(ix, iy+1);
 }
 
+function onMapCellChanged(location)
+{
+	var city = map.cells[location].city;
+	if (city && city.id == $('#cityPane').attr('city-id'))
+	{
+		loadCityInfo(city);
+	}
+	triggerRepaintCell(location);
+}
+
 function onEvent(eventData)
 {
 	if (eventData.event == 'fleet-movement')
@@ -542,7 +557,7 @@ function onEvent(eventData)
 		if (eventData.locationType == 'cell')
 		{
 			map.cells[eventData.location] = eventData.data;
-			triggerRepaintCell(eventData.location);
+			onMapCellChanged(eventData.location);
 		}
 		else if (eventData.locationType == 'edge')
 		{
