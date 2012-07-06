@@ -178,6 +178,16 @@ function playerCanSee(playerId, cellId)
 		cells_to_check.push(nn[i]);
 	}
 
+	for (var i = 0; i < cells_to_check.length; i++)
+	{
+		var tid = G.terrain.cells[cells_to_check[i]].city;
+		if (tid)
+		{
+			if (G.cities[tid].owner == playerId)
+				return true;
+		}
+	}
+
 	for (var fid in G.fleets)
 	{
 		var f = G.fleets[fid];
@@ -190,6 +200,7 @@ function playerCanSee(playerId, cellId)
 			}
 		}
 	}
+
 	return false;
 }
 
