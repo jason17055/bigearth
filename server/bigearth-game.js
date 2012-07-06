@@ -43,29 +43,30 @@ function discoverCell(playerId, location)
 			mapCell.city = { id: refCell.city };
 		}
 
-		var pub_props = [ 'name', 'size', 'owner' ];
-		var own_props = [ 'population', 'food', 'fuel', 'children' ];
+		var props = {
+		name: "public",
+		size: "public",
+		owner: "public",
+		population: "private floor",
+		food: "private floor",
+		fuel: "private floor",
+		children: "private floor"
+		};
 
-		for (var i = 0; i < pub_props.length; i++)
+		for (var p in props)
 		{
-			var p = pub_props[i];
-			if (mapCell.city[p] != city[p])
+			if (props[p].match(/private/) && city.owner != playerId)
+				continue;
+
+			var refValue = city[p];
+			if (props[p].match(/floor/))
+				refValue = Math.floor(refValue);
+
+			if (mapCell.city[p] != refValue)
 			{
 				isNew = true;
-				mapCell.city[p] = city[p];
+				mapCell.city[p] = refValue;
 			}
-		}
-		if (city.owner == playerId)
-		{
-		for (var i = 0; i < own_props.length; i++)
-		{
-			var p = own_props[i];
-			if (mapCell.city[p] != city[p])
-			{
-				isNew = true;
-				mapCell.city[p] = city[p];
-			}
-		}
 		}
 	}
 
