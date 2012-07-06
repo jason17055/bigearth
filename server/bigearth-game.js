@@ -642,6 +642,11 @@ function getYear()
 	return G.world.age + (t-G.world.realWorldTime)/G.world.oneYear;
 }
 
+//TODO- ensure that the following two distributions are equivalent:
+//   RndProductionPoints(x)
+//  and
+//   RndProductionPoints(x/2) + RndProductionPoints(x/2)
+//
 function RndProductionPoints(x)
 {
 	var t = Math.random();
@@ -683,6 +688,7 @@ var LIFE_EXPECTANCY = 60;
 		city.population -= deaths;
 		city.deaths += deaths;
 
+		// finished
 		city.lastUpdate = aTime;
 	};
 
