@@ -44,7 +44,7 @@ function discoverCell(playerId, location)
 		}
 
 		var pub_props = [ 'name', 'size', 'owner' ];
-		var own_props = [ 'population', 'food', 'fuel' ];
+		var own_props = [ 'population', 'food', 'fuel', 'children' ];
 
 		for (var i = 0; i < pub_props.length; i++)
 		{
@@ -621,6 +621,7 @@ function doCityTest(requestData, queryString, remoteUser)
 	}
 
 	updateCityProperties(cityId, city);
+	terrainChanged(city.location);
 }
 
 function getYear()
