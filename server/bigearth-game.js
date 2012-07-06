@@ -659,10 +659,10 @@ function updateCityProperties(cityId, city)
 	if (!city.lastUpdate)
 		city.lastUpdate = 0;
 
-var ADULT_AGE = 10;
-var LIFE_EXPECTANCY = 60;
-var FOOD_PER_ADULT = 0.1;
-var FOOD_PER_CHILD = 0.1;
+	var ADULT_AGE = G.world.childAge;
+	var LIFE_EXPECTANCY = G.world.lifeExpectancy;
+	var FOOD_PER_CHILD = G.world.hungerPerChild;
+	var FOOD_PER_ADULT = G.world.hungerPerAdult;
 
 	var bringForward = function(aTime)
 	{
@@ -886,6 +886,18 @@ function checkWorldParameters()
 	// (this parameter may change between executions of the server)
 	if (!G.world.oneYear)
 		G.world.oneYear = 60000;
+
+	if (!G.world.childYears)
+		G.world.childYears = 10;
+
+	if (!G.world.lifeExpectancy)
+		G.world.lifeExpectancy = 60;
+
+	if (!G.world.hungerPerChild)
+		G.world.hungerPerChild = 0.01;
+
+	if (!G.world.hungerPerAdult)
+		G.world.hungerPerAdult = 0.01;
 }
 
 // inspect properties of a single fleet.
