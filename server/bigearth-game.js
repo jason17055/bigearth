@@ -661,6 +661,8 @@ function updateCityProperties(cityId, city)
 
 var ADULT_AGE = 10;
 var LIFE_EXPECTANCY = 60;
+var FOOD_PER_ADULT = 0.1;
+var FOOD_PER_CHILD = 0.1;
 
 	var bringForward = function(aTime)
 	{
@@ -677,16 +679,9 @@ var LIFE_EXPECTANCY = 60;
 				productionPoints;
 		}
 
-		// calculate deaths
-		var deathRate = 1/LIFE_EXPECTANCY;
-		var deaths = yearsElapsed * city.population * deathRate;
-		for (var job in city.workers)
-		{
-			var portion = city.workers[job] / city.population;
-			city.workers[job] -= portion * deaths;
-		}
-		city.population -= deaths;
-		city.deaths += deaths;
+		// calculate hunger
+		var foodRequired = (FOOD_PER_ADULT * city.population + FOOD_PER_CHILD * city.children) * yearsElapsed;
+		city.hunger = (city.hunger || 0) + foodRequired;
 
 		// finished
 		city.lastUpdate = aTime;
@@ -696,21 +691,20 @@ var LIFE_EXPECTANCY = 60;
 	{
 		console.log("city "+city.name+": end of year");
 
+		// calculate births and bring forward growing children
 		var newAdults = city.childrenByAge[ADULT_AGE-1] || 0;
+		var childCareDemand = 0;
 		for (var i = ADULT_AGE-1; i > 0; i--)
 		{
 			city.childrenByAge[i] = (city.childrenByAge[i-1] || 0);
+			childCareDemand += city.childrenByAge[i];
 		}
 		city.childrenByAge[0] = 0;
 		city.children -= newAdults;
 
-		// distribute new adults evenly
-		for (var job in city.workers)
-		{
-			var portion = city.workers[job] / city.population;
-			city.workers[job] += portion * newAdults;
-		}
-		city.population += newAdults;
+		// TODO- consider childCareDemand... if not enough workers
+		// assigned to procreate, then kill off children since
+		// they is inadequate caretakers.
 
 		if (city.production.procreate)
 		{
@@ -723,13 +717,50 @@ var LIFE_EXPECTANCY = 60;
 			city.births += births;
 		}
 
+		// food production
 		if (city.production.hunt)
 		{
 			var pts = city.production.hunt;
 			delete city.production.hunt;
-			city.food += pts;
+			city.food += 0.5*pts;
 		}
 
+		// feed the population
+		var foodDemand = city.hunger || 0;
+		var sustenance;
+		if (city.food >= foodDemand)
+		{
+			// ok, enough to satisfy everyone
+			sustenance = 1;
+			city.food -= foodDemand;
+		}
+		else   // city.food < foodDemand
+		{
+			// not enough food, some people gonna die
+			sustenance = Math.sqrt(city.food / foodDemand);
+			city.food = 0;
+		}
+		city.hunger = 0;
+
+		// calculate deaths
+		var sustainRate = 1 - 1/LIFE_EXPECTANCY;
+		sustainRate *= sustenance;
+		var deathRate = 1 - sustainRate;
+		var deaths = city.population * deathRate;
+		city.deaths += deaths;
+
+		// distribute net change in adults evenly
+		newAdults -= deaths;
+		for (var job in city.workers)
+		{
+			var portion = city.workers[job] / city.population;
+			city.workers[job] += portion * newAdults;
+		}
+		city.population += newAdults;
+
+		console.log("  population: adults: " + city.population +
+			", children: " + city.children);
+		console.log("  food: " + city.food);
 		console.log("  births: " + city.births);
 		console.log("  deaths: " + city.deaths);
 		console.log("  new adults: " + newAdults);
