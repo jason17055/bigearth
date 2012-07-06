@@ -218,7 +218,12 @@ function tryToBuildCity(fleetId, fleet)
 			location: fleet.location,
 			population: 100,
 			food: 100,
-			fuel: 50
+			fuel: 50,
+			workers: { procreate: 50, hunt: 50 },
+			children: 0,
+			childrenByAge: [],
+			lastUpdate: G.year,
+			lastCycle: G.year
 			};
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
@@ -371,6 +376,7 @@ function fleetCooldown(fleetId, fleet, delay)
 {
 	fleet._coolDownTimer = setTimeout(function() {
 		fleet._coolDownTimer = null;
+		G.year = getYear();
 		fleetActivity(fleetId);
 		}, delay);
 }
@@ -623,14 +629,102 @@ function getYear()
 	return G.world.age + (t-G.world.realWorldTime)/G.world.oneYear;
 }
 
+function RndProductionPoints(x)
+{
+	var t = Math.random();
+	if (t == 0) return 0;
+	return x * Math.exp( -Math.log((1/t)-1) / 15 );
+}
+
 function updateCityProperties(cityId, city)
 {
 	if (!city.lastUpdate)
 		city.lastUpdate = 0;
 
-	var yearsElapsed = G.year - city.lastUpdate;
-	city.lastUpdate = G.year;
-	city.population += yearsElapsed;
+var ADULT_AGE = 10;
+var LIFE_EXPECTANCY = 60;
+
+	var bringForward = function(aTime)
+	{
+		var yearsElapsed = aTime - city.lastUpdate;
+
+		// calculate worker production
+		if (!city.production)
+			city.production = {};
+
+		for (var job in city.workers)
+		{
+			var productionPoints = RndProductionPoints(yearsElapsed * city.workers[job]);
+			city.production[job] = (city.production[job] || 0) +
+				productionPoints;
+		}
+
+		// calculate deaths
+		var deathRate = 1/LIFE_EXPECTANCY;
+		var deaths = yearsElapsed * city.population * deathRate;
+		for (var job in city.workers)
+		{
+			var portion = city.workers[job] / city.population;
+			city.workers[job] -= portion * deaths;
+		}
+		city.population -= deaths;
+		city.deaths += deaths;
+
+		city.lastUpdate = aTime;
+	};
+
+	var endOfYear = function()
+	{
+		console.log("city "+city.name+": end of year");
+
+		var newAdults = city.childrenByAge[ADULT_AGE-1] || 0;
+		for (var i = ADULT_AGE-1; i > 0; i--)
+		{
+			city.childrenByAge[i] = (city.childrenByAge[i-1] || 0);
+		}
+		city.childrenByAge[0] = 0;
+		city.children -= newAdults;
+
+		// distribute new adults evenly
+		for (var job in city.workers)
+		{
+			var portion = city.workers[job] / city.population;
+			city.workers[job] += portion * newAdults;
+		}
+		city.population += newAdults;
+
+		if (city.production.procreate)
+		{
+			var pts = city.production.procreate;
+			delete city.production.procreate;
+
+			var births = pts/ADULT_AGE;
+			city.childrenByAge[0] = births;
+			city.children = (city.children || 0) + births;
+			city.births += births;
+		}
+
+		if (city.production.hunt)
+		{
+			var pts = city.production.hunt;
+			delete city.production.hunt;
+			city.food += pts;
+		}
+
+		console.log("  births: " + city.births);
+		console.log("  deaths: " + city.deaths);
+		console.log("  new adults: " + newAdults);
+		city.births = 0;
+		city.deaths = 0;
+	};
+
+	while (city.lastCycle+1 <= G.year)
+	{
+		bringForward(city.lastCycle + 1);
+		city.lastCycle += 1;
+		endOfYear();
+	}
+	bringForward(G.year);
 }
 
 function getFleetInfoForPlayer(fleetId, playerId)
@@ -750,6 +844,24 @@ function checkCity(cityId, city)
 		city.fuel = 0;
 	if (!('food' in city))
 		city.food = 0;
+	if (!city.workers)
+	{
+		city.workers = {
+			hunt: city.population/2,
+			procreate: city.population/2
+			};
+	}
+	if (!city.childrenByAge)
+		city.childrenByAge = [];
+	if (!('children' in city))
+		city.children = 0;
+	
+	if (!city.lastUpdate)
+		city.lastUpdate = G.world.age;
+	if (!city.lastCycle)
+		city.lastCycle = city.lastUpdate;
+	if (!city.birth)
+		city.birth = city.lastCycle;
 }
 
 
