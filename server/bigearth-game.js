@@ -854,6 +854,7 @@ exports.getMapFragment = getMapFragment;
 function startGame()
 {
 	checkWorldParameters();
+	G.world.realWorldTime = new Date().getTime();
 
 	for (var fid in G.fleets)
 	{
