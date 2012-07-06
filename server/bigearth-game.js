@@ -722,7 +722,20 @@ var FOOD_PER_CHILD = 0.1;
 		{
 			var pts = city.production.hunt;
 			delete city.production.hunt;
-			city.food += 0.5*pts;
+
+			var maximumYield = 100;
+
+			//TODO- replace this calculation with some sort
+			//of asymptotic function, representing concept
+			//of diminishing returns
+
+			//TODO- subtract food taken from this cell's
+			//wildlife counter.
+
+			var yield = 0.5*pts;
+			if (yield > maximumYield)
+				yield = maximumYield;
+			city.food += yield;
 		}
 
 		// feed the population
