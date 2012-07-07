@@ -232,6 +232,7 @@ function tryToBuildCity(fleetId, fleet)
 			food: 100,
 			fuel: 50,
 			workers: { procreate: 50, hunt: 50 },
+			production: {},
 			children: 0,
 			childrenByAge: [],
 			lastUpdate: G.year,
@@ -654,24 +655,119 @@ function RndProductionPoints(x)
 	return x * Math.exp( -Math.log((1/t)-1) / 15 );
 }
 
+function cityEndOfYear(cityId, city)
+{
+	console.log("city "+city.name+": end of year");
+
+	updateCityProperties(cityId, city);
+
+	var ADULT_AGE = G.world.childYears;
+	var LIFE_EXPECTANCY = G.world.lifeExpectancy;
+
+	// calculate births and bring forward growing children
+	var newAdults = city.childrenByAge[ADULT_AGE-1] || 0;
+	var childCareDemand = 0;
+	for (var i = ADULT_AGE-1; i > 0; i--)
+	{
+		city.childrenByAge[i] = (city.childrenByAge[i-1] || 0);
+		childCareDemand += city.childrenByAge[i];
+	}
+	city.childrenByAge[0] = 0;
+	city.children -= newAdults;
+
+	// TODO- consider childCareDemand... if not enough workers
+	// assigned to procreate, then kill off children since
+	// they is inadequate caretakers.
+
+	if (city.production.procreate)
+	{
+		var pts = city.production.procreate;
+		delete city.production.procreate;
+
+		var births = pts/ADULT_AGE;
+		city.childrenByAge[0] = births;
+		city.children = (city.children || 0) + births;
+		city.births += births;
+	}
+
+	// food production
+	if (city.production.hunt)
+	{
+		var pts = city.production.hunt;
+		delete city.production.hunt;
+
+		var numWildlife = 80;
+		var s = 0.5*Math.sqrt(numWildlife/40);
+		var numHarvested = numWildlife - numWildlife * Math.exp(-s * pts / numWildlife);
+
+		//TODO- subtract numHarvested from this cell's
+		//wildlife counter.
+
+		var foodYield = numHarvested * G.world.foodPerAnimal;
+		city.food += foodYield;
+
+		console.log("  hunters brought in " + foodYield + " food");
+	}
+
+	// feed the population
+	var foodDemand = city.hunger || 0;
+	var sustenance;
+	if (city.food >= foodDemand)
+	{
+		// ok, enough to satisfy everyone
+		sustenance = 1;
+		city.food -= foodDemand;
+	}
+	else   // city.food < foodDemand
+	{
+		// not enough food, some people gonna die
+		sustenance = Math.sqrt(city.food / foodDemand);
+		city.food = 0;
+	}
+	city.hunger = 0;
+
+	// calculate deaths
+	var sustainRate = 1 - 1/LIFE_EXPECTANCY;
+	sustainRate *= sustenance;
+	var deathRate = 1 - sustainRate;
+	var deaths = city.population * deathRate;
+	city.deaths += deaths;
+
+	// distribute net change in adults evenly
+	var netPopChange = newAdults - deaths;
+	for (var job in city.workers)
+	{
+		var portion = city.workers[job] / city.population;
+		city.workers[job] += portion * netPopChange;
+	}
+	city.population += netPopChange;
+
+	console.log("  population: adults: " + city.population +
+		", children: " + city.children);
+	console.log("  food: " + city.food);
+	console.log("  births: " + city.births);
+	console.log("  deaths: " + city.deaths);
+	console.log("  new adults: " + newAdults);
+	city.births = 0;
+	city.deaths = 0;
+}
+
 function updateCityProperties(cityId, city)
 {
 	if (!city.lastUpdate)
 		city.lastUpdate = 0;
 
-	var ADULT_AGE = G.world.childYears;
-	var LIFE_EXPECTANCY = G.world.lifeExpectancy;
 	var FOOD_PER_CHILD = G.world.hungerPerChild;
 	var FOOD_PER_ADULT = G.world.hungerPerAdult;
 
 	var bringForward = function(aTime)
 	{
+		if (city.lastUpdate >= aTime)
+			return;
+
 		var yearsElapsed = aTime - city.lastUpdate;
 
 		// calculate worker production
-		if (!city.production)
-			city.production = {};
-
 		for (var job in city.workers)
 		{
 			var productionPoints = RndProductionPoints(yearsElapsed * city.workers[job]);
@@ -687,104 +783,6 @@ function updateCityProperties(cityId, city)
 		city.lastUpdate = aTime;
 	};
 
-	var endOfYear = function()
-	{
-		console.log("city "+city.name+": end of year");
-
-		// calculate births and bring forward growing children
-		var newAdults = city.childrenByAge[ADULT_AGE-1] || 0;
-		var childCareDemand = 0;
-		for (var i = ADULT_AGE-1; i > 0; i--)
-		{
-			city.childrenByAge[i] = (city.childrenByAge[i-1] || 0);
-			childCareDemand += city.childrenByAge[i];
-		}
-		city.childrenByAge[0] = 0;
-		city.children -= newAdults;
-
-		// TODO- consider childCareDemand... if not enough workers
-		// assigned to procreate, then kill off children since
-		// they is inadequate caretakers.
-
-		if (city.production.procreate)
-		{
-			var pts = city.production.procreate;
-			delete city.production.procreate;
-
-			var births = pts/ADULT_AGE;
-			city.childrenByAge[0] = births;
-			city.children = (city.children || 0) + births;
-			city.births += births;
-		}
-
-		// food production
-		if (city.production.hunt)
-		{
-			var pts = city.production.hunt;
-			delete city.production.hunt;
-
-			var numWildlife = 80;
-			var s = 0.5*Math.sqrt(numWildlife/40);
-			var numHarvested = numWildlife - numWildlife * Math.exp(-s * pts / numWildlife);
-
-			//TODO- subtract numHarvested from this cell's
-			//wildlife counter.
-
-			var foodYield = numHarvested * G.world.foodPerAnimal;
-			city.food += foodYield;
-
-			console.log("  hunters brought in " + foodYield + " food");
-		}
-
-		// feed the population
-		var foodDemand = city.hunger || 0;
-		var sustenance;
-		if (city.food >= foodDemand)
-		{
-			// ok, enough to satisfy everyone
-			sustenance = 1;
-			city.food -= foodDemand;
-		}
-		else   // city.food < foodDemand
-		{
-			// not enough food, some people gonna die
-			sustenance = Math.sqrt(city.food / foodDemand);
-			city.food = 0;
-		}
-		city.hunger = 0;
-
-		// calculate deaths
-		var sustainRate = 1 - 1/LIFE_EXPECTANCY;
-		sustainRate *= sustenance;
-		var deathRate = 1 - sustainRate;
-		var deaths = city.population * deathRate;
-		city.deaths += deaths;
-
-		// distribute net change in adults evenly
-		var netPopChange = newAdults - deaths;
-		for (var job in city.workers)
-		{
-			var portion = city.workers[job] / city.population;
-			city.workers[job] += portion * netPopChange;
-		}
-		city.population += netPopChange;
-
-		console.log("  population: adults: " + city.population +
-			", children: " + city.children);
-		console.log("  food: " + city.food);
-		console.log("  births: " + city.births);
-		console.log("  deaths: " + city.deaths);
-		console.log("  new adults: " + newAdults);
-		city.births = 0;
-		city.deaths = 0;
-	};
-
-	while (city.lastCycle+1 <= G.year)
-	{
-		bringForward(city.lastCycle + 1);
-		city.lastCycle += 1;
-		endOfYear();
-	}
 	bringForward(G.year);
 }
 
@@ -849,20 +847,43 @@ console.log("in getMapFragment");
 }
 exports.getMapFragment = getMapFragment;
 
+function endOfYear()
+{
+	G.world.lastYear++;
+	if (G.year < G.world.lastYear)
+		G.year = G.world.lastYear;
+
+	// do this year's processing
+	console.log("processing year " + G.world.lastYear);
+
+	// process cities
+	for (var tid in G.cities)
+	{
+		cityEndOfYear(tid, G.cities[tid]);
+	}
+
+	// schedule for next end-of-year
+	var nextYearDelay = (Math.round(G.world.lastYear+1) - getYear()) * G.world.oneYear;
+	setTimeout(endOfYear, nextYearDelay > 0 ? nextYearDelay : 0);
+}
+
 function startGame()
 {
 	checkWorldParameters();
 	G.world.realWorldTime = new Date().getTime();
 
+	for (var tid in G.cities)
+	{
+		checkCity(tid, G.cities[tid]);
+	}
+
+	var nextYearDelay = (Math.round(G.world.lastYear+1) - G.world.age) * G.world.oneYear;
+	setTimeout(endOfYear, nextYearDelay > 0 ? nextYearDelay : 0);
+
 	for (var fid in G.fleets)
 	{
 		checkFleet(fid);
 		fleetActivity(fid, G.fleets[fid]);
-	}
-
-	for (var tid in G.cities)
-	{
-		checkCity(tid, G.cities[tid]);
 	}
 }
 
@@ -879,6 +900,10 @@ function checkWorldParameters()
 	// how many game-years this world has been run
 	if (!G.world.age)
 		G.world.age = 0;
+
+	// age of world when the last end-of-year was performed
+	if (!G.world.lastYear)
+		G.world.lastYear = Math.floor(G.world.age);
 
 	// how many real-world-milliseconds correspond to one game-year
 	// (this parameter may change between executions of the server)
@@ -927,6 +952,10 @@ function checkCity(cityId, city)
 			hunt: city.population/2,
 			procreate: city.population/2
 			};
+	}
+	if (!city.production)
+	{
+		city.production = {};
 	}
 	if (!city.childrenByAge)
 		city.childrenByAge = [];
