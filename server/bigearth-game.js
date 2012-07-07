@@ -422,6 +422,10 @@ var UNIT_MOVEMENT_RULES = {
 		across_river: 1200,
 		other_terrain: 600
 		},
+	trieme: {
+		ocean: 800,
+		other_terrain: 3600
+		},
 	'*': {
 		'other_terrain': 3600
 		},
@@ -773,7 +777,7 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	terrainChanged(city.location);
 }
 
-function doCityBuildSettler(requestData, queryString, remoteUser)
+function doCityBuildUnit(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
@@ -795,16 +799,65 @@ function doCityBuildSettler(requestData, queryString, remoteUser)
 		return;
 	}
 
+	if (requestData.type == 'settler')
+	{
+		return tryBuildSettler(cityId, city);
+	}
+	else if (requestData.type == 'trieme')
+	{
+		return tryBuildTrieme(cityId, city);
+	}
+}
+
+function tryBuildTrieme(cityId, city)
+{
+	if (city.population < 150)
+	{
+		console.log("build-unit: city " + cityId + " not large enough to build trieme");
+		return;
+	}
+
+	stealWorkers(cityId, city, 50, 'trieme');
+	createUnit(city.owner, "trieme", city.location, {
+		population: 50
+		});
+	removeWorkers(cityId, city, 50, 'trieme');
+	terrainChanged(city.location);
+}
+
+function removeWorkers(cityId, city, quantity, fromJob)
+{
+	if (city.workers[fromJob] > quantity)
+	{
+		city.population -= quantity;
+		city.workers[fromJob] -= quantity;
+		return quantity;
+	}
+	else if (city.workers[fromJob])
+	{
+		quantity = city.workers[fromJob];
+		city.population -= quantity;
+		delete city.workers[fromJob];
+		return quantity;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+function tryBuildSettler(cityId, city)
+{
 	if (city.population < 200)
 	{
-		console.log("build-settler: city " + cityId + " not large enough");
+		console.log("build-unit: city " + cityId + " not large enough to build settler");
 		return;
 	}
 
 	var numSettlers = city.workers.settle || 0;
 	if (numSettlers < 100)
 	{
-		console.log("build-settler: city " + cityId + " not enough workers assigned to 'settle'");
+		console.log("build-unit: city " + cityId + " not enough workers assigned to 'settle'");
 		return;
 	}
 
@@ -877,6 +930,41 @@ function RndProductionPoints(x)
 	var t = Math.random();
 	if (t == 0) return 0;
 	return x * Math.exp( -Math.log((1/t)-1) / 15 );
+}
+
+var FREE_PROFESSIONS = {
+	"hunt": true,
+	"procreate": true
+	};
+
+function countFreeWorkers(cityId, city)
+{
+	var sum = 0;
+	for (var k in city.workers)
+	{
+		if (FREE_PROFESSIONS[k])
+			sum += city.workers[k];
+	}
+	return sum;
+}
+
+//caller should call fire-city-update-notification
+//
+function stealWorkers(cityId, city, quantity, toJob)
+{
+	var sumFreeWorkers = countFreeWorkers(cityId, city);
+	if (sumFreeWorkers < quantity)
+		throw new Error("oops not enough free workers");
+
+	for (var k in city.workers)
+	{
+		if (FREE_PROFESSIONS[k])
+		{
+			city.workers[k] -= quantity*city.workers[k]/sumFreeWorkers;
+			if (city.workers[k] == 0)
+				delete city.workers[k];
+		}
+	}
 }
 
 function cityEndOfYear(cityId, city)
@@ -1223,7 +1311,7 @@ var actionHandlers = {
 	'rename-city': doRenameCity,
 	'test-city': doCityTest,
 	'reassign-workers': doReassignWorkers,
-	'build-settler': doCityBuildSettler
+	'build-unit': doCityBuildUnit
 	};
 
 if (typeof global !== 'undefined')
