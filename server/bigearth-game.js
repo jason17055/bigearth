@@ -217,6 +217,30 @@ function terrainChanged(cellId)
 	}
 }
 
+function fleetActivityError(fleetId, fleet, errorMessage)
+{
+	console.log("fleet #"+fleetId + " error: " + errorMessage);
+}
+
+function fleetDisbandInCity(fleetId, fleet)
+{
+	var location = fleet.location;
+	var cityId = G.terrain.cells[location].city;
+	var city = G.cities[cityId];
+	if (!city)
+		return fleetActivityError(fleetId, fleet, "No city at this location");
+
+	//TODO - add this fleet's numbers to the city
+
+	delete G.fleets[fleetId];
+	postEvent({
+		event: 'fleet-terminated',
+		fleet: fleetId,
+		location: location,
+		disposition: 'disband-in-city'
+		});
+}
+
 function tryToBuildCity(fleetId, fleet)
 {
 	if (!fleetHasCapability(fleet, 'build-city'))
@@ -242,7 +266,7 @@ function tryToBuildCity(fleetId, fleet)
 		terrainChanged(fleet.location);
 
 		setFleetActivityFlag(fleetId, fleet, null);
-		return fleetCurrentCommandFinished(fleetId, fleet);
+		return fleetDisbandInCity(fleetId, fleet);
 	}
 	else
 	{

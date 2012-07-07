@@ -413,6 +413,12 @@ function onFleetClicked(fleetId)
 	$('#infoPane').show();
 }
 
+function removeFleetIcon(fleetId)
+{
+	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]');
+	$f.remove();
+}
+
 function updateFleetIcon(fleetId, fleetInfo)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]');
@@ -479,6 +485,16 @@ function onFleetActivity(eventData)
 	{
 		fleets[fleetId].activity = eventData.activity;
 		updateFleetIcon(fleetId, fleets[fleetId]);
+	}
+}
+
+function onFleetTerminated(eventData)
+{
+	var fleetId = eventData.fleet;
+	if (fleets[fleetId])
+	{
+		removeFleetIcon(fleetId);
+		delete fleets[fleetId];
 	}
 }
 
@@ -551,6 +567,10 @@ function onEvent(eventData)
 	else if (eventData.event == 'fleet-activity')
 	{
 		return onFleetActivity(eventData);
+	}
+	else if (eventData.event == 'fleet-terminated')
+	{
+		return onFleetTerminated(eventData);
 	}
 	else if (eventData.event == 'map-update')
 	{
