@@ -742,6 +742,10 @@ function cityEndOfYear(cityId, city)
 	}
 	city.population += netPopChange;
 
+	// notify interested parties
+	terrainChanged(city.location);
+
+	// record stats
 	console.log("  population: adults: " + city.population +
 		", children: " + city.children);
 	console.log("  food: " + city.food);
