@@ -381,6 +381,7 @@ function recreateFleetIcons()
 
 function onCityClicked(location, city)
 {
+	resetCityPane();
 	loadCityInfo(city);
 
 	$('#fleetPane').hide();
@@ -527,6 +528,11 @@ function onJobBoxClicked()
 	$countBox.text(newCountA);
 	$aCountBox.text(newCountB);
 	$countBox.after($aCountBox);
+}
+
+function resetCityPane()
+{
+	$('#cityPane .cityJobBox').remove();
 }
 
 function loadCityInfo(city)
