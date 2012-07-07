@@ -401,7 +401,16 @@ function onJobBoxClicked()
 	var $jobBox = $(jobBoxEl);
 	var job = jobBoxEl.getAttribute('job');
 
-	alert("Group of " + $countBox.text() + " in job " + job + " clicked");
+	var curCount = +($countBox.text());
+	var newCountA = Math.ceil(curCount/3);
+	var newCountB = curCount - newCountA;
+	if (newCountA == 0 || newCountB == 0)
+		return;
+
+	var $aCountBox = $countBox.clone(true);
+	$countBox.text(newCountA);
+	$aCountBox.text(newCountB);
+	$countBox.after($aCountBox);
 }
 
 function loadCityInfo(city)
@@ -433,7 +442,27 @@ function loadCityInfo(city)
 				$('#cityPane .cityJobsContainer').append($jobBox);
 			}
 
-			$('.jobCount', $jobBox).text(count);
+			var $jobCounts = $('.jobCount', $jobBox);
+			var targetCount = count;
+			var toRemove = [];
+			for (var i = 0; i + 1 < $jobCounts.length; i++)
+			{
+				var $aCount = $($jobCounts.get(i));
+				var t = +($aCount.text());
+				if (targetCount > t)
+				{
+					targetCount -= t;
+				}
+				else
+				{
+					toRemove.push($aCount);
+				}
+			}
+			$($jobCounts.get($jobCounts.length-1)).text(targetCount);
+			for (var i = 0; i < toRemove.length; i++)
+			{
+				toRemove[i].remove();
+			}
 		}
 	}
 }

@@ -109,6 +109,14 @@ body {
 	padding-right: 3pt;
 }
 
+.cityJobBox .jobCount {
+	float: left;
+	margin-left: 3pt;
+	margin-right: 3pt;
+	border: 1px solid white;
+	cursor: default;
+}
+
 .cityJobBox .jobLabel {
 	font-size: 8pt;
 	padding-left: 3pt;
