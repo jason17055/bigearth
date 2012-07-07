@@ -383,7 +383,7 @@ function onCityClicked(location, city)
 {
 	loadCityInfo(city);
 
-	$('#infoPane').hide();
+	$('#fleetPane').hide();
 	$('#cityPane').show();
 }
 
@@ -407,10 +407,10 @@ function onFleetClicked(fleetId)
 	if (!fleet)
 		return;
 
-	$('#infoPane').attr('fleet-id', fleetId);
-	$('#infoPane img.icon').attr('src','unit_images/'+fleet.type+'.png');
-	$('#infoPane .featureType').text(fleet.type);
-	$('#infoPane').show();
+	$('#fleetPane').attr('fleet-id', fleetId);
+	$('#fleetPane img.icon').attr('src','unit_images/'+fleet.type+'.png');
+	$('#fleetPane .featureType').text(fleet.type);
+	$('#fleetPane').show();
 }
 
 function removeFleetIcon(fleetId)
@@ -495,6 +495,11 @@ function onFleetTerminated(eventData)
 	{
 		removeFleetIcon(fleetId);
 		delete fleets[fleetId];
+	}
+
+	if (fleetId == $('#fleetPane').attr('fleet-id'))
+	{
+		$('#fleetPane').hide();
 	}
 }
 
@@ -1021,21 +1026,7 @@ function onMouseDown(evt)
 		};
 
 	var xx = getNearestFeatureFromScreen(screenPt, false, true, true);
-	if (xx.type == 'vertex')
-	{
-		var vId = xx.id;
-		$('#infoPane .featureType').text('Vertex');
-		$('#vId').text(vId);
-		$('#infoPane .adjacentCells').text(geometry.getCellsAdjacentToVertex(vId).join('; '));
-		$('#infoPane .adjacentVertices').text(geometry.getVerticesAdjacentToVertex(vId).join('; '));
-		$('#infoPane').show();
-
-		if (!pawn) { pawn = {}; }
-		pawn.locationType = "vertex";
-		pawn.location = xx.id;
-		repaint();
-	}
-	else if (xx.type == 'cell')
+	if (xx.type == 'cell')
 	{
 		if (map.cells[xx.id].city)
 		{
@@ -1045,30 +1036,6 @@ function onMouseDown(evt)
 		{
 			return panToCoords(coords.cells[xx.id].pt);
 		}
-
-		$('#infoPane .featureType').text('Cell');
-		$('#vId').text(xx.id);
-		$('#infoPane .adjacentCells').text(geometry.getNeighbors(xx.id).join('; '));
-		$('#infoPane .adjacentVertices').text(geometry.getVerticesAdjacentToCell(xx.id).join('; '));
-		$('#infoPane').show();
-
-		if (!pawn) { pawn = {}; }
-		pawn.locationType = "cell";
-		pawn.location = xx.id;
-		repaint();
-	}
-	else if (xx.type == 'edge')
-	{
-		$('#infoPane .featureType').text('Edge');
-		$('#vId').text(xx.id);
-		$('#infoPane .adjacentCells').text("");
-		$('#infoPane .adjacentVertices').text("");
-		$('#infoPane').show();
-
-		if (!pawn) { pawn = {}; }
-		pawn.locationType = xx.type;
-		pawn.location = xx.id;
-		repaint();
 	}
 }
 
@@ -1187,7 +1154,7 @@ function makeRiversClicked()
 
 function orderStop()
 {
-	var fleetId = $('#infoPane').attr('fleet-id');
+	var fleetId = $('#fleetPane').attr('fleet-id');
 	$.ajax({
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
@@ -1198,7 +1165,7 @@ function orderStop()
 
 function orderWander()
 {
-	var fleetId = $('#infoPane').attr('fleet-id');
+	var fleetId = $('#fleetPane').attr('fleet-id');
 	$.ajax({
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
@@ -1209,7 +1176,7 @@ function orderWander()
 
 function orderBuildCity()
 {
-	var fleetId = $('#infoPane').attr('fleet-id');
+	var fleetId = $('#fleetPane').attr('fleet-id');
 	$.ajax({
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,

@@ -38,7 +38,7 @@ body {
 	z-index: 1;
 }
 
-#infoPane {
+#fleetPane {
 	position: absolute;
 	right: 1em;
 	top: 1em;
