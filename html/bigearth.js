@@ -387,6 +387,23 @@ function onCityClicked(location, city)
 	$('#cityPane').show();
 }
 
+function onJobBoxClicked()
+{
+	var $countBox = $(this);
+
+	var jobBoxEl = this;
+	while (jobBoxEl && !jobBoxEl.hasAttribute('job'))
+		jobBoxEl = jobBoxEl.parentNode;
+
+	if (!jobBoxEl)
+		return;
+
+	var $jobBox = $(jobBoxEl);
+	var job = jobBoxEl.getAttribute('job');
+
+	alert("Group of " + $countBox.text() + " in job " + job + " clicked");
+}
+
 function loadCityInfo(city)
 {
 	$('#cityPane').attr('city-id', city.id);
@@ -404,7 +421,19 @@ function loadCityInfo(city)
 		for (var job in city.workers)
 		{
 			var count = city.workers[job];
-			$('#cityPane .cityJobBox[job="'+job+'"] .jobCount').text(count);
+
+			var $jobBox = $('#cityPane .cityJobBox[job="'+job+'"]');
+			if ($jobBox.length == 0)
+			{
+				$jobBox = $('#cityPane .cityJobBoxTemplate').clone();
+				$jobBox.attr('class','cityJobBox');
+				$jobBox.attr('job',job);
+				$('.jobCount',$jobBox).click(onJobBoxClicked);
+				$('.jobLabel',$jobBox).text(job);
+				$('#cityPane .cityJobsContainer').append($jobBox);
+			}
+
+			$('.jobCount', $jobBox).text(count);
 		}
 	}
 }

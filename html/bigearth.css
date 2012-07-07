@@ -93,15 +93,26 @@ body {
 	visibility: hidden;
 }
 
+.cityJobBoxTemplate {
+	display: none;
+}
+
 .cityJobBox {
 	float: left;
 	border: 1px solid black;
-	height: 3em;
 	text-align: center;
 }
 
-.cityJobBox .jobCount {
+.cityJobBox .jobCounts {
 	line-height: 2em;
+	padding-left: 3pt;
+	padding-right: 3pt;
+}
+
+.cityJobBox .jobLabel {
+	font-size: 8pt;
+	padding-left: 3pt;
+	padding-right: 3pt;
 }
 
 .cityJobBox[job="procreate"] {
