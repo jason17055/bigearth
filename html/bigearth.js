@@ -1384,13 +1384,13 @@ function orderStop()
 	});
 }
 
-function orderWander()
+function orderFollowCoast()
 {
 	var fleetId = $('#fleetPane').attr('fleet-id');
 	$.ajax({
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
-	data: JSON.stringify([ { command: "wander" } ]),
+	data: JSON.stringify([ { command: "follow-coast" } ]),
 	contentType: "json"
 	});
 }

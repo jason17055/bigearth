@@ -335,6 +335,43 @@ function tryToBuildCity(fleetId, fleet)
 	}
 }
 
+function moveFleetAlongCoast(fleetId)
+{
+	var fleet = G.fleets[fleetId];
+	var oldLoc = fleet.location;
+
+	var nn = G.geometry.getNeighbors(oldLoc);
+	var lastLoc = fleet.lastLocation;
+
+	var i;
+	for (i = 0; i < nn.length; i++)
+	{
+		if (lastLoc && nn[i] == lastLoc)
+			break;
+	}
+
+	var foundSea = false;
+	var map = G.maps[fleet.owner];
+	for (var j = 0; j < nn.length + 6; j++)
+	{
+		var nid = nn[(i+1+j)%nn.length];
+		var c = map.cells[nid];
+		if (!c)
+			continue;
+		if (foundSea && c.terrain != 'ocean')
+		{
+			return moveFleetOneStep(fleetId, nid);
+		}
+		else if (c.terrain == 'ocean')
+		{
+			foundSea=true;
+		}
+	}
+
+	// don't know where to go
+	return fleetCurrentCommandFinished(fleetId, fleet);
+}
+
 function moveFleetTowards(fleetId, targetLocation)
 {
 	var fleet = G.fleets[fleetId];
@@ -450,6 +487,7 @@ function moveFleetOneStep(fleetId, newLoc)
 {
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
+	fleet.lastLocation = oldLoc;
 	fleet.location = newLoc;
 
 	var costOfMovement = getFleetMovementCost(fleetId, oldLoc, newLoc);
@@ -606,6 +644,10 @@ function fleetActivity(fleetId)
 	{
 		console.log("traveler moves!");
 		return moveFleetRandomly(fleetId);
+	}
+	if (currentOrder.command == 'follow-coast')
+	{
+		return moveFleetAlongCoast(fleetId);
 	}
 	if (currentOrder.command == 'goto')
 	{
