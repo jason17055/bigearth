@@ -746,6 +746,16 @@ function cityEndOfYear(cityId, city)
 	terrainChanged(city.location);
 
 	// record stats
+	var fs = require('fs');
+	var fd = fs.appendFileSync(G.worldName+'/city'+cityId+'.log',
+		[ G.world.lastYear,
+		city.population,
+		city.children,
+		city.food,
+		city.births,
+		city.deaths,
+		newAdults ].join(',') + "\n");
+
 	console.log("  population: adults: " + city.population +
 		", children: " + city.children);
 	console.log("  food: " + city.food);
@@ -786,6 +796,9 @@ function updateCityProperties(cityId, city)
 		// finished
 		city.lastUpdate = aTime;
 	};
+
+	if (!G.year)
+		throw new Error("invalid year ("+G.year+", "+G.world.lastYear+")");
 
 	bringForward(G.year);
 }
@@ -875,6 +888,7 @@ function startGame()
 {
 	checkWorldParameters();
 	G.world.realWorldTime = new Date().getTime();
+	G.year = G.world.age;
 
 	for (var tid in G.cities)
 	{
