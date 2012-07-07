@@ -674,6 +674,49 @@ function doOrders(requestData, queryString, remoteUser)
 	fleetActivity(fleetId);
 }
 
+function doReassignWorkers(requestData, queryString, remoteUser)
+{
+	if (!queryString.match(/^city=(.*)$/))
+	{
+		console.log("doRenameCity: invalid query string");
+		return;
+	}
+
+	var cityId = RegExp.$1;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		console.log("doRenameCity: city " + cityId + " not found");
+		return;
+	}
+
+	if (city.owner != remoteUser)
+	{
+		console.log("doRenameCity: city " + cityId + " not owned by player " + remoteUser);
+		return;
+	}
+
+	var fromJob = requestData.fromJob;
+	var toJob = requestData.toJob;
+	var quantity = +requestData.amount;
+
+	if (!city.workers[fromJob])
+		return;
+
+	if (quantity < (+city.workers[fromJob]))
+	{
+		city.workers[fromJob] -= quantity;
+	}
+	else
+	{
+		quantity = (+city.workers[fromJob]);
+		delete city.workers[fromJob];
+	}
+
+	city.workers[toJob] = +(city.workers[toJob] || 0) + quantity;
+	terrainChanged(city.location);
+}
+
 function doRenameCity(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
@@ -1074,7 +1117,8 @@ var actionHandlers = {
 	expose: doExpose,
 	orders: doOrders,
 	'rename-city': doRenameCity,
-	'test-city': doCityTest
+	'test-city': doCityTest,
+	'reassign-workers': doReassignWorkers
 	};
 
 if (typeof global !== 'undefined')

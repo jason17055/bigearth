@@ -486,12 +486,6 @@ function onJobBoxDrop(evt)
 		transferWorkers(+tt[1], tt[0], job);
 }
 
-function transferWorkers(numWorkers, fromJob, toJob)
-{
-	document.title = "transfer "+numWorkers+" from " + fromJob +
-		" to " + toJob;
-}
-
 function addJobBoxEventListeners(jobBoxEl)
 {
 	$(jobBoxEl).click(onJobBoxClicked);
@@ -1401,6 +1395,20 @@ function cityRename()
 		data: { name: newName }
 		});
 	}
+}
+
+function transferWorkers(numWorkers, fromJob, toJob)
+{
+	var cityId = $('#cityPane').attr('city-id');
+	$.ajax({
+		type: "POST",
+		url: "/request/reassign-workers?city="+cityId,
+		data: {
+		fromJob: fromJob,
+		toJob: toJob,
+		amount: numWorkers
+		}
+		});
 }
 
 function cityTest()
