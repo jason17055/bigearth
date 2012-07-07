@@ -384,22 +384,114 @@ function moveFleetTowards(fleetId, targetLocation)
 
 console.log("moving fleet "+fleetId+" from " + oldLoc + " to " + targetLocation);
 
-	var nn = G.geometry.getNeighbors(oldLoc);
-	var best = nn[0];
-	var bestDist = Infinity;
-	for (var i = 0, l = nn.length; i < l; i++)
+	if (fleet.path && fleet.path.length >= 1)
 	{
-		var candidateLoc = nn[i];
-		var d = G.geometry.distanceBetween(candidateLoc, targetLocation);
-		if (d < bestDist)
-		{
-			best = candidateLoc;
-			bestDist = d;
-		}
-	}
-console.log("  chose " + best);
+console.log("using memoized path (length " + fleet.path.length + ")");
 
-	return moveFleetOneStep(fleetId, best);
+		var nextLoc = fleet.path.shift();
+		if (isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
+			return moveFleetOneStep(fleetId, nextLoc);
+		delete fleet.path;
+	}
+
+// perform a shortest path search for the destination
+
+console.log("must perform a shortest path search");
+
+	fleet.path = shortestPath(oldLoc, targetLocation, fleet);
+
+console.log("shortest path is", fleet.path);
+if (fleet.path.length > 50)
+	fleet.path.splice(0,50);
+
+	var nextLoc = fleet.path.shift();
+	if (nextLoc && isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
+		return moveFleetOneStep(fleetId, nextLoc);
+	else
+		return fleetActivityError(fleetId, fleet, "Cannot reach destination");
+}
+
+//FIXME- this function accesses server-side terrain data to
+//find the best route; obviously that is not desirable.
+//
+function shortestPath(fromLoc, toLoc, fleet)
+{
+	var baseDist = null;
+
+	var seen = {};
+	var buildPath = function(loc)
+	{
+		var path = [];
+		while (loc != fromLoc)
+		{
+			path.unshift(loc);
+			loc = seen[loc];
+			if (!loc)
+				throw new Error("unexpected");
+		}
+		return path;
+	};
+
+	// each entry in Q is [ cellId, lastCell, accumDist, estRemainDist ];
+
+	var Q = [];
+	Q.push([ fromLoc, 0, 0, Infinity ]);
+
+	var countIterations = 0;
+	var bestSoFar;               //in case we stop early
+	var bestSoFarScore = Infinity;
+
+	while (Q.length)
+	{
+		var cur = Q.shift();
+		var curLoc = cur[0];
+
+		if (cur[3] < bestSoFarScore)
+		{
+			bestSoFar = curLoc;
+			bestSoFarScore = cur[3];
+		}
+
+		if (++countIterations > 500)
+		{
+			console.log("shortestPath taking too long, aborting");
+			
+			return buildPath(bestSoFar);
+		}
+
+		if (seen[curLoc])
+			continue;
+		seen[curLoc] = cur[1];
+
+		var nn = G.geometry.getNeighbors(curLoc);
+		if (!baseDist)
+			baseDist = G.geometry.distanceBetween(curLoc, nn[0]);
+
+		for (var i = 0, l = nn.length; i < l; i++)
+		{
+			if (seen[nn[i]])
+				continue;
+
+			if (nn[i] == toLoc)
+			{
+				seen[nn[i]] = curLoc;
+				return buildPath(toLoc);
+			}
+
+			var accumDist = cur[2] + getFleetMovementCost(fleet, curLoc, nn[i]);
+			var estRemainDistSteps = G.geometry.distanceBetween(nn[i], toLoc) / baseDist;
+			var estRemainDist = estRemainDistSteps * 3000;
+
+			Q.push([ nn[i], curLoc, accumDist, estRemainDist ]);
+		}
+		Q.sort(function(a,b) {
+
+			return (a[2] + a[3]) - (b[2] + b[3]);
+			});
+	}
+
+	// ran out of options to try
+	return [];
 }
 
 function moveFleetRandomly(fleetId)
@@ -414,7 +506,7 @@ var UNIT_MOVEMENT_RULES = {
 		desert: 600,
 		forest: 1200,
 		swamp: 1200,
-		ocean: 3600,
+		ocean: 15000,
 		tundra: 1200,
 		glacier: 1200,
 		hills: 1800,
@@ -424,12 +516,22 @@ var UNIT_MOVEMENT_RULES = {
 		},
 	trieme: {
 		ocean: 800,
-		other_terrain: 3600
+		other_terrain: 15000
 		},
 	'*': {
 		'other_terrain': 3600
 		},
 	};
+
+function isNavigableByMap(map, fleet, location)
+{
+	var unitType = fleet.type;
+	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
+	var c = map.cells[location];
+
+	var cost = UM[c.terrain] || UM.other_terrain;
+	return cost < 15000;
+}
 
 function getUnitMovementCost(unitType, oldLoc, newLoc)
 {
@@ -482,9 +584,9 @@ function getUnitMovementCost(unitType, oldLoc, newLoc)
 	return Infinity;
 }
 
-function getFleetMovementCost(fleetId, oldLoc, newLoc)
+function getFleetMovementCost(fleet, oldLoc, newLoc)
 {
-	return getUnitMovementCost(G.fleets[fleetId].type, oldLoc, newLoc);
+	return getUnitMovementCost(fleet.type, oldLoc, newLoc);
 }
 
 function moveFleetOneStep(fleetId, newLoc)
@@ -494,7 +596,7 @@ function moveFleetOneStep(fleetId, newLoc)
 	fleet.lastLocation = oldLoc;
 	fleet.location = newLoc;
 
-	var costOfMovement = getFleetMovementCost(fleetId, oldLoc, newLoc);
+	var costOfMovement = getFleetMovementCost(fleet, oldLoc, newLoc);
 	console.log("cost is " + Math.round(costOfMovement));
 
 	discoverCell(fleet.owner, newLoc);
