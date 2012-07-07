@@ -235,8 +235,7 @@ function tryToBuildCity(fleetId, fleet)
 			production: {},
 			children: 0,
 			childrenByAge: [],
-			lastUpdate: G.year,
-			lastCycle: G.year
+			lastUpdate: G.year
 			};
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
@@ -982,10 +981,8 @@ function checkCity(cityId, city)
 	
 	if (!city.lastUpdate)
 		city.lastUpdate = G.world.age;
-	if (!city.lastCycle)
-		city.lastCycle = city.lastUpdate;
 	if (!city.birth)
-		city.birth = city.lastCycle;
+		city.birth = city.lastUpdate;
 }
 
 
