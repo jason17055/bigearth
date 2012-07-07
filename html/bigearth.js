@@ -387,6 +387,121 @@ function onCityClicked(location, city)
 	$('#cityPane').show();
 }
 
+function onJobBoxDragStart(evt)
+{
+	var $countBox = $(this);
+
+	var jobBoxEl = this;
+	while (jobBoxEl && !jobBoxEl.hasAttribute('job'))
+		jobBoxEl = jobBoxEl.parentNode;
+
+	if (!jobBoxEl)
+		return;
+	var job = jobBoxEl.getAttribute('job');
+	var count = +($countBox.text());
+
+	evt.dataTransfer.effectAllowed = 'move';
+	evt.dataTransfer.setData('application/bigearth+workers', job + " " + count);
+	this.style.opacity = 0.4;
+}
+
+function onJobBoxDragEnd(evt)
+{
+	this.style.opacity = 1.0;
+
+	if (evt.dataTransfer.dropEffect == 'move')
+	{
+		var t = evt.dataTransfer.getData('application/bigearth+workers');
+		var tt = t.split(/ /);
+		var amountMoved = +tt[1];
+
+		var myCount = +($(this).text());
+		myCount -= amountMoved;
+
+		if (myCount > 0)
+		{
+			$(this).text(myCount);
+		}
+		else
+		{
+			$(this).remove();
+		}
+	}
+}
+
+function onJobBoxDragEnter(evt)
+{
+	// the idea here is to highlight the box when it is ready to
+	// accept a drop; unfortunately, the 'dragenter' and 'dragleave'
+	// events are fired only for the mouse cursor being over the
+	// part of this element not taken up by the text
+
+	evt.stopPropagation();
+	evt.preventDefault();
+	this.classList.add('over');
+}
+
+function onJobBoxDragLeave(evt)
+{
+	// the idea here is to highlight the box when it is ready to
+	// accept a drop; unfortunately, the 'dragenter' and 'dragleave'
+	// events are fired only for the mouse cursor being over the
+	// part of this element not taken up by the text
+
+	evt.stopPropagation();
+	evt.preventDefault();
+	this.classList.remove('over');
+}
+
+function onJobBoxDragOver(evt)
+{
+	if (evt.dataTransfer.types.contains('application/bigearth+workers'))
+	{
+		evt.stopPropagation();
+		evt.preventDefault();
+		evt.dropEffect = 'move';
+	}
+	return false;
+}
+
+function onJobBoxDrop(evt)
+{
+	var $countBox = $(this);
+
+	var jobBoxEl = this;
+	while (jobBoxEl && !jobBoxEl.hasAttribute('job'))
+		jobBoxEl = jobBoxEl.parentNode;
+
+	if (!jobBoxEl)
+		return;
+	var job = jobBoxEl.getAttribute('job');
+	var count = +($countBox.text());
+
+	var t = evt.dataTransfer.getData('application/bigearth+workers');
+	var tt = t.split(/ /);
+	$countBox.text(count + (+tt[1]));
+
+	if (tt[0] != job)
+		transferWorkers(+tt[1], tt[0], job);
+}
+
+function transferWorkers(numWorkers, fromJob, toJob)
+{
+	document.title = "transfer "+numWorkers+" from " + fromJob +
+		" to " + toJob;
+}
+
+function addJobBoxEventListeners(jobBoxEl)
+{
+	$(jobBoxEl).click(onJobBoxClicked);
+	jobBoxEl.addEventListener('dragstart', onJobBoxDragStart, false);
+	jobBoxEl.addEventListener('dragend', onJobBoxDragEnd, false);
+	//jobBoxEl.addEventListener('dragenter', onJobBoxDragEnter, false);
+	jobBoxEl.addEventListener('dragover', onJobBoxDragOver, false);
+	//jobBoxEl.addEventListener('dragleave', onJobBoxDragLeave, false);
+	jobBoxEl.addEventListener('drop', onJobBoxDrop, false);
+}
+
 function onJobBoxClicked()
 {
 	var $countBox = $(this);
@@ -407,7 +522,8 @@ function onJobBoxClicked()
 	if (newCountA == 0 || newCountB == 0)
 		return;
 
-	var $aCountBox = $countBox.clone(true);
+	var $aCountBox = $countBox.clone(false);
+	addJobBoxEventListeners($aCountBox.get(0));
 	$countBox.text(newCountA);
 	$aCountBox.text(newCountB);
 	$countBox.after($aCountBox);
@@ -437,7 +553,7 @@ function loadCityInfo(city)
 				$jobBox = $('#cityPane .cityJobBoxTemplate').clone();
 				$jobBox.attr('class','cityJobBox');
 				$jobBox.attr('job',job);
-				$('.jobCount',$jobBox).click(onJobBoxClicked);
+				addJobBoxEventListeners($('.jobCount',$jobBox).get(0));
 				$('.jobLabel',$jobBox).text(job);
 				$('#cityPane .cityJobsContainer').append($jobBox);
 			}
