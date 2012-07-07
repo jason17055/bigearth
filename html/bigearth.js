@@ -1457,3 +1457,13 @@ function onCityNewJob()
 		el.value = '';
 	}
 }
+
+function cityBuildSettler()
+{
+	var cityId = $('#cityPane').attr('city-id');
+	$.ajax({
+		type: "POST",
+		url: "/request/build-settler?city="+cityId,
+		data: {}
+		});
+}

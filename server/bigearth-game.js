@@ -312,7 +312,6 @@ function tryToBuildCity(fleetId, fleet)
 		var city = {
 			owner: fleet.owner,
 			location: fleet.location,
-			population: 100,
 			food: 100,
 			fuel: 50,
 			workers: { procreate: 50, hunt: 50 },
@@ -321,6 +320,7 @@ function tryToBuildCity(fleetId, fleet)
 			childrenByAge: [],
 			lastUpdate: G.year
 			};
+		city.population = fleet.population || 100;
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
 		terrainChanged(fleet.location);
@@ -550,7 +550,7 @@ function nextFleetId()
 	return G.world.nextFleetId++;
 }
 
-function createUnit(playerId, unitType, initialLocation)
+function createUnit(playerId, unitType, initialLocation, extraProperties)
 {
 	var f = {
 		owner: playerId,
@@ -558,6 +558,13 @@ function createUnit(playerId, unitType, initialLocation)
 		type: unitType,
 		orders: []
 		};
+	if (extraProperties)
+	{
+		for (var k in extraProperties)
+		{
+			f[k] = extraProperties[k];
+		}
+	}
 	var fid = nextFleetId();
 
 	G.fleets[fid] = f;
@@ -678,7 +685,7 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
-		console.log("doRenameCity: invalid query string");
+		console.log("reassign-workers: invalid query string");
 		return;
 	}
 
@@ -686,13 +693,13 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	var city = G.cities[cityId];
 	if (!city)
 	{
-		console.log("doRenameCity: city " + cityId + " not found");
+		console.log("reassign-workers: city " + cityId + " not found");
 		return;
 	}
 
 	if (city.owner != remoteUser)
 	{
-		console.log("doRenameCity: city " + cityId + " not owned by player " + remoteUser);
+		console.log("reassign-workers: city " + cityId + " not owned by player " + remoteUser);
 		return;
 	}
 
@@ -716,6 +723,48 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 
 	city.workers[toJob] = +(city.workers[toJob] || 0) + quantity;
 	terrainChanged(city.location);
+}
+
+function doCityBuildSettler(requestData, queryString, remoteUser)
+{
+	if (!queryString.match(/^city=(.*)$/))
+	{
+		console.log("build-settler: invalid query string");
+		return;
+	}
+
+	var cityId = RegExp.$1;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		console.log("build-settler: city " + cityId + " not found");
+		return;
+	}
+
+	if (city.owner != remoteUser)
+	{
+		console.log("build-settler: city " + cityId + " not owned by player " + remoteUser);
+		return;
+	}
+
+	if (city.population < 200)
+	{
+		console.log("build-settler: city " + cityId + " not large enough");
+		return;
+	}
+
+	var numSettlers = city.workers.settle || 0;
+	if (numSettlers < 100)
+	{
+		console.log("build-settler: city " + cityId + " not enough workers assigned to 'settle'");
+		return;
+	}
+
+	delete city.workers.settle;
+	terrainChanged(city.location);
+	createUnit(city.owner, "settler", city.location, {
+		population: numSettlers
+		});
 }
 
 function doRenameCity(requestData, queryString, remoteUser)
@@ -1125,7 +1174,8 @@ var actionHandlers = {
 	orders: doOrders,
 	'rename-city': doRenameCity,
 	'test-city': doCityTest,
-	'reassign-workers': doReassignWorkers
+	'reassign-workers': doReassignWorkers,
+	'build-settler': doCityBuildSettler
 	};
 
 if (typeof global !== 'undefined')
