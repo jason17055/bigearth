@@ -1084,8 +1084,6 @@ function checkFleet(fleetId, fleet)
 //
 function checkCity(cityId, city)
 {
-	if (!('population' in city))
-		city.population = 100;
 	if (!('fuel' in city))
 		city.fuel = 0;
 	if (!('food' in city))
@@ -1093,9 +1091,14 @@ function checkCity(cityId, city)
 	if (!city.workers)
 	{
 		city.workers = {
-			hunt: city.population/2,
-			procreate: city.population/2
+			hunt: 50,
+			procreate: 50
 			};
+	}
+	city.population = 0;
+	for (var j in city.workers)
+	{
+		city.population += (+city.workers[j]);
 	}
 	if (!city.production)
 	{
@@ -1103,8 +1106,11 @@ function checkCity(cityId, city)
 	}
 	if (!city.childrenByAge)
 		city.childrenByAge = [];
-	if (!('children' in city))
-		city.children = 0;
+	city.children = 0;
+	for (var i = 0; i < city.childrenByAge.length; i++)
+	{
+		city.children += (+(city.childrenByAge[i] || 0));
+	}
 	
 	if (!city.lastUpdate)
 		city.lastUpdate = G.world.age;
