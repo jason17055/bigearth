@@ -410,6 +410,13 @@ function onJobBoxDragEnd(evt)
 {
 	this.style.opacity = 1.0;
 
+	var jobBoxEl = this;
+	while (jobBoxEl && !jobBoxEl.hasAttribute('job'))
+		jobBoxEl = jobBoxEl.parentNode;
+
+	if (!jobBoxEl)
+		return;
+
 	if (evt.dataTransfer.dropEffect == 'move')
 	{
 		var t = evt.dataTransfer.getData('application/bigearth+workers');
@@ -419,7 +426,9 @@ function onJobBoxDragEnd(evt)
 		var myCount = +($(this).text());
 		myCount -= amountMoved;
 
-		if (myCount > 0)
+		var numCounts = $('.jobCount', $(jobBoxEl)).length;
+
+		if (myCount > 0 || numCounts == 1)
 		{
 			$(this).text(myCount);
 		}
@@ -543,10 +552,8 @@ function loadCityInfo(city)
 
 	if (city.workers)
 	{
-		for (var job in city.workers)
+		var makeJobBox = function(job, putAtEnd)
 		{
-			var count = city.workers[job];
-
 			var $jobBox = $('#cityPane .cityJobBox[job="'+job+'"]');
 			if ($jobBox.length == 0)
 			{
@@ -555,8 +562,19 @@ function loadCityInfo(city)
 				$jobBox.attr('job',job);
 				addJobBoxEventListeners($('.jobCount',$jobBox).get(0));
 				$('.jobLabel',$jobBox).text(job);
-				$('#cityPane .cityJobsContainer').append($jobBox);
+				if(putAtEnd)
+					$('#cityPane .cityJobsContainer').append($jobBox);
+				else
+					$('#cityPane .cityJobBoxTemplate').before($jobBox);
 			}
+			return $jobBox;
+		};
+
+		for (var job in city.workers)
+		{
+			var count = city.workers[job];
+
+			var $jobBox = makeJobBox(job);
 
 			var $jobCounts = $('.jobCount', $jobBox);
 			var targetCount = count;
@@ -580,6 +598,17 @@ function loadCityInfo(city)
 				toRemove[i].remove();
 			}
 		}
+
+		var $jobBoxen = $('#cityPane .cityJobBox');
+		for (var i = 0; i < $jobBoxen.length; i++)
+		{
+			var $jobBox = $($jobBoxen.get(i));
+			var job = $jobBox.attr('job');
+			if (!city.workers[job])
+				$('.jobCount',$jobBox).text('0');
+		}
+
+		makeJobBox('unassigned', true);
 	}
 }
 
