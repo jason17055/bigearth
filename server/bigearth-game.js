@@ -703,9 +703,10 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	if (!city.workers[fromJob])
 		return;
 
-	if (quantity < (+city.workers[fromJob]))
+	if (quantity + 1 < (+city.workers[fromJob]))
 	{
 		city.workers[fromJob] -= quantity;
+		console.log('still have ' + city.workers[fromJob] + ' workers left');
 	}
 	else
 	{
