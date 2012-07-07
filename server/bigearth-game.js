@@ -659,7 +659,7 @@ function updateCityProperties(cityId, city)
 	if (!city.lastUpdate)
 		city.lastUpdate = 0;
 
-	var ADULT_AGE = G.world.childAge;
+	var ADULT_AGE = G.world.childYears;
 	var LIFE_EXPECTANCY = G.world.lifeExpectancy;
 	var FOOD_PER_CHILD = G.world.hungerPerChild;
 	var FOOD_PER_ADULT = G.world.hungerPerAdult;
@@ -723,19 +723,17 @@ function updateCityProperties(cityId, city)
 			var pts = city.production.hunt;
 			delete city.production.hunt;
 
-			var maximumYield = 100;
+			var numWildlife = 80;
+			var s = 0.5*Math.sqrt(numWildlife/40);
+			var numHarvested = numWildlife - numWildlife * Math.exp(-s * pts / numWildlife);
 
-			//TODO- replace this calculation with some sort
-			//of asymptotic function, representing concept
-			//of diminishing returns
-
-			//TODO- subtract food taken from this cell's
+			//TODO- subtract numHarvested from this cell's
 			//wildlife counter.
 
-			var yield = 0.5*pts;
-			if (yield > maximumYield)
-				yield = maximumYield;
-			city.food += yield;
+			var foodYield = numHarvested * G.world.foodPerAnimal;
+			city.food += foodYield;
+
+			console.log("  hunters brought in " + foodYield + " food");
 		}
 
 		// feed the population
@@ -763,13 +761,13 @@ function updateCityProperties(cityId, city)
 		city.deaths += deaths;
 
 		// distribute net change in adults evenly
-		newAdults -= deaths;
+		var netPopChange = newAdults - deaths;
 		for (var job in city.workers)
 		{
 			var portion = city.workers[job] / city.population;
-			city.workers[job] += portion * newAdults;
+			city.workers[job] += portion * netPopChange;
 		}
-		city.population += newAdults;
+		city.population += netPopChange;
 
 		console.log("  population: adults: " + city.population +
 			", children: " + city.children);
@@ -898,6 +896,9 @@ function checkWorldParameters()
 
 	if (!G.world.hungerPerAdult)
 		G.world.hungerPerAdult = 0.01;
+
+	if (!G.world.foodPerAnimal)
+		G.world.foodPerAnimal = 0.1;
 }
 
 // inspect properties of a single fleet.
