@@ -392,11 +392,21 @@ function loadCityInfo(city)
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane .cityName').text(city.name);
 	$('#cityPane .citySize').text(city.size);
-	$('#cityPane .cityPopulation').text(city.population);
+	$('#cityPane .cityPopulation').text(city.population + city.children);
 	$('#cityPane .cityChildren').text(city.children);
+	$('#cityPane .cityWorkersCount').text(city.population);
 	$('#cityPane .cityFood').text(city.food);
 	$('#cityPane .cityFuel').text(city.fuel);
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
+
+	if (city.workers)
+	{
+		for (var job in city.workers)
+		{
+			var count = city.workers[job];
+			$('#cityPane .cityJobBox[job="'+job+'"] .jobCount').text(count);
+		}
+	}
 }
 
 function onFleetClicked(fleetId)

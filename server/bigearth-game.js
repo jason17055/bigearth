@@ -68,6 +68,30 @@ function discoverCell(playerId, location)
 				mapCell.city[p] = refValue;
 			}
 		}
+
+		if (city.owner == playerId)
+		{
+			if (!mapCell.city.workers)
+				mapCell.city.workers = {};
+
+			var ww = roundWorkers(city.workers);
+			for (var j in mapCell.city.workers)
+			{
+				if (!ww[j])
+				{
+					isNew = true;
+					delete mapCell.city.workers[j];
+				}
+			}
+			for (var j in ww)
+			{
+				if (mapCell.city.workers[j] != ww[j])
+				{
+					isNew = true;
+					mapCell.city.workers[j] = ww[j];
+				}
+			}
+		}
 	}
 
 	if (isNew)
@@ -90,6 +114,42 @@ function discoverCell(playerId, location)
 			discoverEdge(playerId, eId);
 		}
 	}
+}
+
+// given an associative array, return a new associative array with
+// all the numbers rounded up, in such a way that the sum of the
+// numbers in the result equals the floored sum of the input.
+//
+function roundWorkers(aa)
+{
+	var err = 0;
+	var sum = 0;
+	var jj = [];
+	for (var k in aa)
+	{
+		jj.push([k,aa[k]]);
+		sum += aa[k];
+	}
+	var target = Math.floor(sum);
+
+	// sort smallest to largest
+	jj.sort(function(a,b) {
+		return a[1]-b[1];
+		});
+
+	var result = {};
+	for (var i = 0; i + 1 < jj.length; i++)
+	{
+		var x = jj[i];
+		var v = Math.ceil(x[1]-err);
+		err += v - x[1];
+		sum -= x[1];
+		target -= v;
+		result[x[0]] = v;
+	}
+	result[jj[jj.length-1][0]] = target;
+
+	return result;
 }
 
 function discoverEdge(playerId, eId)

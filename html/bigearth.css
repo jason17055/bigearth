@@ -84,3 +84,31 @@ body {
 	font-weight: bold;
 	font-family: sans-serif;
 }
+
+.cityJobsContainer:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+
+.cityJobBox {
+	float: left;
+	border: 1px solid black;
+	height: 3em;
+	text-align: center;
+}
+
+.cityJobBox .jobCount {
+	line-height: 2em;
+}
+
+.cityJobBox[job="procreate"] {
+	background-color: #bfb;
+	color: black;
+}
+.cityJobBox[job="hunt"] {
+	background-color: #fbb;
+	color: black;
+}
