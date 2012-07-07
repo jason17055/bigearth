@@ -535,7 +535,25 @@ function onJobBoxClicked()
 
 function resetCityPane()
 {
+	var el = document.getElementById('cityNewJobChoice');
+	if (el) { el.value = ""; }
+
 	$('#cityPane .cityJobBox').remove();
+}
+
+function cityMakeJobBox(job)
+{
+	var $jobBox = $('#cityPane .cityJobBox[job="'+job+'"]');
+	if ($jobBox.length == 0)
+	{
+		$jobBox = $('#cityPane .cityJobBoxTemplate').clone();
+		$jobBox.attr('class','cityJobBox');
+		$jobBox.attr('job',job);
+		addJobBoxEventListeners($('.jobCount',$jobBox).get(0));
+		$('.jobLabel',$jobBox).text(job);
+		$('#cityPane .cityJobsContainer').append($jobBox);
+	}
+	return $jobBox;
 }
 
 function loadCityInfo(city)
@@ -552,29 +570,11 @@ function loadCityInfo(city)
 
 	if (city.workers)
 	{
-		var makeJobBox = function(job, putAtEnd)
-		{
-			var $jobBox = $('#cityPane .cityJobBox[job="'+job+'"]');
-			if ($jobBox.length == 0)
-			{
-				$jobBox = $('#cityPane .cityJobBoxTemplate').clone();
-				$jobBox.attr('class','cityJobBox');
-				$jobBox.attr('job',job);
-				addJobBoxEventListeners($('.jobCount',$jobBox).get(0));
-				$('.jobLabel',$jobBox).text(job);
-				if(putAtEnd)
-					$('#cityPane .cityJobsContainer').append($jobBox);
-				else
-					$('#cityPane .cityJobBoxTemplate').before($jobBox);
-			}
-			return $jobBox;
-		};
-
 		for (var job in city.workers)
 		{
 			var count = city.workers[job];
 
-			var $jobBox = makeJobBox(job);
+			var $jobBox = cityMakeJobBox(job);
 
 			var $jobCounts = $('.jobCount', $jobBox);
 			var targetCount = count;
@@ -607,8 +607,6 @@ function loadCityInfo(city)
 			if (!city.workers[job])
 				$('.jobCount',$jobBox).text('0');
 		}
-
-		makeJobBox('unassigned', true);
 	}
 }
 
@@ -1448,4 +1446,14 @@ function cityTest()
 		url: "/request/test-city?city="+cityId,
 		data: {}
 		});
+}
+
+function onCityNewJob()
+{
+	var el = document.getElementById('cityNewJobChoice');
+	if (el.value)
+	{
+		cityMakeJobBox(el.value);
+		el.value = '';
+	}
 }

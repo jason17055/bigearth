@@ -137,6 +137,11 @@ body {
 	background-color: #fbb;
 	color: black;
 }
+.cityJobBox[job="settle"] {
+	background-color: #fc8;
+	color: black;
+}
+/* no longer used */
 .cityJobBox[job="unassigned"] {
 	background-color: #ccc;
 	color: black;
