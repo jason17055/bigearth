@@ -1249,7 +1249,7 @@ function onMouseDown(evt)
 	var xx = getNearestFeatureFromScreen(screenPt, false, true, true);
 	if (xx.type == 'cell')
 	{
-		if (map.cells[xx.id].city)
+		if (map.cells[xx.id] && map.cells[xx.id].city)
 		{
 			return onCityClicked(xx.id, map.cells[xx.id].city);
 		}
