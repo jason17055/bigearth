@@ -776,7 +776,11 @@ function onMapCellChanged(location)
 
 function onEvent(eventData)
 {
-	if (eventData.event == 'fleet-movement')
+	if (eventData.event == 'fleet-spawned')
+	{
+		return onFleetSpawned(eventData);
+	}
+	else if (eventData.event == 'fleet-movement')
 	{
 		return onFleetMovement(eventData);
 	}
@@ -844,6 +848,12 @@ function fetchNextEvent()
 	error: onError,
 	dataType: "json"
 	});
+}
+
+function onFleetSpawned(eventData)
+{
+	fleets[eventData.fleet] = eventData.data;
+	updateFleetIcon(eventData.fleet, eventData.data);
 }
 
 function fetchFleets()

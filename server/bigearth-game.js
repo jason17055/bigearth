@@ -568,6 +568,12 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 	var fid = nextFleetId();
 
 	G.fleets[fid] = f;
+	postEvent({
+		event: 'fleet-spawned',
+		fleet: fid,
+		data: getFleetInfoForPlayer(fid, playerId)
+		});
+	
 	discoverCell(playerId,f.location);
 	discoverCellBorder(playerId,f.location);
 }
