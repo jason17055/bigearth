@@ -132,7 +132,7 @@ function repaintOne(canvasRow, canvasCol)
 		-(VIEWPORT.offsetY + VIEWPORT_TILE_SIZE*canvasRow)
 		);
 
-	var citiesToLabel = [];
+	var citiesToDraw = [];
 	var myPatterns = {};
 	for (var cid in map.cells)
 	{
@@ -203,19 +203,11 @@ function repaintOne(canvasRow, canvasCol)
 
 		if (c.city)
 		{
-			citiesToLabel.push({
+			citiesToDraw.push({
 				city: c.city,
 				location: cid,
 				screenPt: centerP
 				});
-
-			if (CITIES_IMAGE)
-			{
-			ctx.drawImage(CITIES_IMAGE,1,1,96,72,
-				Math.round(centerP.x-48-6),
-				Math.round(centerP.y-36-12),
-				96,72);
-			}
 		}
 
 	// SHOW HEIGHTS
@@ -280,9 +272,23 @@ function repaintOne(canvasRow, canvasCol)
 		ctx.restore();
 	}
 
-	for (var i = 0; i < citiesToLabel.length; i++)
+	for (var i = 0; i < citiesToDraw.length; i++)
 	{
-		var cityInfo = citiesToLabel[i];
+		var cityInfo = citiesToDraw[i];
+		var p = cityInfo.screenPt;
+
+		if (CITIES_IMAGE)
+		{
+			ctx.drawImage(CITIES_IMAGE,1,1,96,72,
+				Math.round(p.x-48-6),
+				Math.round(p.y-36-12),
+				96,72);
+		}
+	}
+
+	for (var i = 0; i < citiesToDraw.length; i++)
+	{
+		var cityInfo = citiesToDraw[i];
 		var p = cityInfo.screenPt;
 
 		var cityName = cityInfo.city.name || ('city'+cityInfo.city.id);
