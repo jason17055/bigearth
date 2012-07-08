@@ -865,7 +865,7 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	var toJob = requestData.toJob;
 	var quantity = +requestData.amount;
 
-	updateCityProperties(cityId, city);
+	lockCityStruct(city);
 
 	if (quantity + 1 >= +(city.workers[fromJob] || 0))
 		quantity = quantity+1;
@@ -873,7 +873,7 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	quantity = removeWorkers(cityId, city, quantity, fromJob);
 	addWorkers(cityId, city, quantity, toJob);
 
-	terrainChanged(city.location);
+	unlockCityStruct(cityId, city);
 }
 
 function doCityBuildUnit(requestData, queryString, remoteUser)
@@ -932,11 +932,11 @@ function addWorkers(cityId, city, quantity, toJob)
 		throw new Error("invalid argument for addWorkers");
 	if (quantity > 0)
 	{
-		updateCityProperties(cityId, city);
+		lockCityStruct(city);
 		city.workers[toJob] = (city.workers[toJob] || 0) + quantity;
 		city.population += quantity;
 		cityNewWorkerRate(city, toJob);
-		cityActivity(cityId, city);
+		unlockCityStruct(cityId, city);
 	}
 }
 
@@ -952,7 +952,7 @@ function removeWorkers(cityId, city, quantity, fromJob)
 
 	if (quantity > 0)
 	{
-		updateCityProperties(cityId, city);
+		lockCityStruct(city);
 		if (city.workers[fromJob] > quantity)
 		{
 			city.population -= quantity;
@@ -970,7 +970,7 @@ function removeWorkers(cityId, city, quantity, fromJob)
 		{
 			quantity = 0;
 		}
-		cityActivity(cityId, city);
+		unlockCityStruct(cityId, city);
 	}
 	return quantity;
 }
@@ -983,7 +983,8 @@ function tryBuildSettler(cityId, city)
 		return;
 	}
 
-	
+	lockCityStruct(city);
+
 	var numSettlers = city.workers.settle || 0;
 console.log("numSettlers is " + numSettlers);
 	if (numSettlers < 100)
@@ -997,8 +998,8 @@ console.log("numSettlers is " + numSettlers);
 		});
 
 console.log("city now has " + city.workers.settle + " workers");
-	terrainChanged(city.location);
-	cityActivity(cityId, city);
+
+	unlockCityStruct(cityId, city);
 }
 
 function cityActivity(cityId, city)
@@ -1046,7 +1047,7 @@ function doCityTest(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
-		console.log("doRenameCity: invalid query string");
+		console.log("doCityTest: invalid query string");
 		return;
 	}
 
@@ -1054,12 +1055,11 @@ function doCityTest(requestData, queryString, remoteUser)
 	var city = G.cities[cityId];
 	if (!city)
 	{
-		console.log("doRenameCity: city " + cityId + " not found");
+		console.log("doCityTest: city " + cityId + " not found");
 		return;
 	}
 
-	updateCityProperties(cityId, city);
-	terrainChanged(city.location);
+	throw new Error("not implemented");
 }
 
 function getYear()
@@ -1135,7 +1135,7 @@ function cityEndOfYear(cityId, city)
 {
 	console.log("city "+city.name+": end of year");
 
-	updateCityProperties(cityId, city);
+	lockCityStruct(city);
 
 	var ADULT_AGE = G.world.childYears;
 	var LIFE_EXPECTANCY = G.world.lifeExpectancy;
@@ -1223,7 +1223,7 @@ function cityEndOfYear(cityId, city)
 	terrainChanged(city.location);
 
 	// done changing the city properties
-	cityActivity(cityId, city);
+	unlockCityStruct(cityId, city);
 
 	// record stats
 	var fs = require('fs');
@@ -1246,7 +1246,13 @@ function cityEndOfYear(cityId, city)
 	city.deaths = 0;
 }
 
-function updateCityProperties(cityId, city)
+// prepare a City struct for manipulation; each call to lockCityStruct()
+// should be paired with a call to unlockCityStruct().
+// nesting the calls is ok.
+// the global value G.year should be properly set when calling
+// lockCityStruct().
+//
+function lockCityStruct(city)
 {
 	if (!city.lastUpdate)
 		city.lastUpdate = 0;
@@ -1281,7 +1287,31 @@ function updateCityProperties(cityId, city)
 	if (!G.year)
 		throw new Error("invalid year ("+G.year+", "+G.world.lastYear+")");
 
-	bringForward(G.year);
+	if (city._lockLevel)
+	{
+		if (city._lockedWhen != G.year)
+			throw new Error("lockCityStruct() called on city already locked with a different timestamp");
+
+		city._lockLevel++;
+	}
+	else
+	{
+		city._lockLevel = 1;
+		city._lockedWhen = G.year;
+		bringForward(G.year);
+	}
+}
+
+function unlockCityStruct(cityId, city)
+{
+	city._lockLevel--;
+	if (!city._lockLevel)
+	{
+		delete city._lockLevel;
+		delete city._lockedWhen;
+		terrainChanged(city.location);
+		cityActivity(cityId, city);
+	}
 }
 
 function getFleetInfoForPlayer(fleetId, playerId)
