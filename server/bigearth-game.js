@@ -533,6 +533,8 @@ function isNavigableByMap(map, fleet, location)
 	var unitType = fleet.type;
 	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
 	var c = map.cells[location];
+	if (!c)
+		return false;
 
 	var cost = UM[c.terrain] || UM.other_terrain;
 	return cost < 15000;
@@ -899,14 +901,16 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 		return;
 	}
 
-	if (requestData.type == 'settler')
-	{
-		return tryBuildSettler(cityId, city);
-	}
-	else if (requestData.type == 'trieme')
-	{
-		return tryBuildTrieme(cityId, city);
-	}
+	lockCityStruct(city);
+
+	if (!city.tasks)
+		city.tasks = [];
+	city.tasks.push({
+		task: 'build',
+		type: requestData.type
+		});
+
+	unlockCityStruct(cityId, city);
 }
 
 function tryBuildTrieme(cityId, city)
@@ -914,15 +918,15 @@ function tryBuildTrieme(cityId, city)
 	if (city.population < 150)
 	{
 		console.log("build-unit: city " + cityId + " not large enough to build trieme");
-		return;
 	}
-
-	stealWorkers(cityId, city, 50, 'trieme');
-	createUnit(city.owner, "trieme", city.location, {
-		population: 50
-		});
-	removeWorkers(cityId, city, 50, 'trieme');
-	terrainChanged(city.location);
+	else
+	{
+		stealWorkers(cityId, city, 50, 'trieme');
+		createUnit(city.owner, "trieme", city.location, {
+			population: 50
+			});
+		removeWorkers(cityId, city, 50, 'trieme');
+	}
 }
 
 // adds new people to the city, given a particular job
@@ -933,11 +937,12 @@ function addWorkers(cityId, city, quantity, toJob)
 		throw new Error("invalid argument for addWorkers");
 	if (quantity > 0)
 	{
-		lockCityStruct(city);
+		if (city.lastUpdate != G.year)
+			throw new Error("not ready for addWorkers");
+
 		city.workers[toJob] = (city.workers[toJob] || 0) + quantity;
 		city.population += quantity;
 		cityNewWorkerRate(city, toJob);
-		unlockCityStruct(cityId, city);
 	}
 }
 
@@ -953,7 +958,9 @@ function removeWorkers(cityId, city, quantity, fromJob)
 
 	if (quantity > 0)
 	{
-		lockCityStruct(city);
+		if (city.lastUpdate != G.year)
+			throw new Error("not ready for addWorkers");
+
 		if (city.workers[fromJob] > quantity)
 		{
 			city.population -= quantity;
@@ -971,51 +978,88 @@ function removeWorkers(cityId, city, quantity, fromJob)
 		{
 			quantity = 0;
 		}
-		unlockCityStruct(cityId, city);
 	}
 	return quantity;
 }
 
+function cityActivityError(cityId, city, message)
+{
+	console.log("city " + cityId + ": " + message);
+	return;
+}
+
 function tryBuildSettler(cityId, city)
 {
-	if (city.population < 200)
+	if (city.production.settle >= 200 &&
+		city.population >= 200)
 	{
-		console.log("build-unit: city " + cityId + " not large enough to build settler");
-		return;
+		var numSettlers = city.workers.settle || 0;
+		if (numSettlers < 100)
+			stealWorkers(cityId, city, 100-numSettlers, 'settle');
+	//	else if (numSettlers > 100)
+	//		freeWorkers(cityId, city, numSettlers-100, 'settle');
+
+		delete city.production.settle;
+		numSettlers = removeWorkers(cityId, city, 100, 'settle');
+		createUnit(city.owner, "settler", city.location, {
+			population: numSettlers
+			});
+
+		return cityCurrentTaskFinished(cityId, city);
+	}
+	else if (city.production.settle >= 200)
+	{
+		return cityActivityError(cityId, city, "Settler ready but city is not large enough to populate it");
 	}
 
-	lockCityStruct(city);
+	if (city.population < 200)
+	{
+		return cityActivityError(cityId, city, "not large enough to build settler");
+	}
 
 	var numSettlers = city.workers.settle || 0;
-console.log("numSettlers is " + numSettlers);
 	if (numSettlers < 100)
 		stealWorkers(cityId, city, 100-numSettlers, 'settle');
 
-	if (!city.tasks)
-		city.tasks = [];
-	city.tasks.push({
-		task: 'build',
-		type: 'settler'
-		});
+	//TODO - if settler will be finished before end-of-year,
+	// set a timeout to wake self up and complete building the
+	// settler
+}
 
-console.log("city now has " + city.workers.settle + " workers");
-
-	unlockCityStruct(cityId, city);
+function cityCurrentTaskFinished(cityId, city)
+{
+	city.tasks.shift();
+	if (city.tasks.length == 0)
+		delete city.tasks;
+	else
+		return cityActivity(cityId, city);
 }
 
 function cityActivity(cityId, city)
 {
-return;
-	setTimeout(function() {
+console.log("in cityActivity");
 
-	var numSettlers = city.workers.settle || 0;
-	createUnit(city.owner, "settler", city.location, {
-		population: numSettlers
-		});
-	delete city.workers.settle;
-	terrainChanged(city.location);
+	if (!city.tasks || city.tasks.length == 0)
+	{
+		// this city does not have any orders
+		return;
+	}
 
-		}, 5000);
+	var currentTask = city.tasks[0];
+	if (!currentTask)
+		throw new Error("invalid first task", city.tasks);
+
+console.log("current task is " + currentTask.task);
+
+	if (currentTask.task == 'build')
+	{
+		if (currentTask.type == 'settler')
+			return tryBuildSettler(cityId, city);
+		else if (currentTask.type == 'trieme')
+			return tryBuildTrieme(cityId, city);
+	}
+
+	return cityActivityError(cityId, city, "unrecognized task " + currentTask.task);
 }
 
 function doRenameCity(requestData, queryString, remoteUser)
@@ -1110,7 +1154,7 @@ function stealWorkers(cityId, city, quantity, toJob)
 {
 	var sumFreeWorkers = countFreeWorkers(cityId, city);
 	if (sumFreeWorkers < quantity)
-		throw new Error("oops not enough free workers");
+		throw new Error("oops not enough free workers ("+city.name+", want "+quantity+" for job " + toJob+")");
 
 	for (var k in city.workers)
 	{
@@ -1305,13 +1349,21 @@ function lockCityStruct(city)
 
 function unlockCityStruct(cityId, city)
 {
-	city._lockLevel--;
-	if (!city._lockLevel)
+	if (city._lockLevel > 1)
 	{
+		city._lockLevel--;
+	}
+	else
+	{
+		if (!city._inActivity)
+		{
+			city._inActivity = true;
+			cityActivity(cityId, city);
+			terrainChanged(city.location);
+			delete city._inActivity;
+		}
 		delete city._lockLevel;
 		delete city._lockedWhen;
-		terrainChanged(city.location);
-		cityActivity(cityId, city);
 	}
 }
 
