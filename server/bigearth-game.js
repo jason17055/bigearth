@@ -132,6 +132,9 @@ function roundWorkers(aa)
 	}
 	var target = Math.floor(sum);
 
+	if (jj.length == 0)
+		return {};
+
 	// sort smallest to largest
 	jj.sort(function(a,b) {
 		return a[1]-b[1];
@@ -1030,7 +1033,7 @@ console.log("remaining production is "+remainingProduction);
 	//		freeWorkers(cityId, city, numSettlers-100, 'settle');
 
 		delete city.production.settle;
-		numSettlers = removeWorkers(cityId, city, 100, 'settle');
+		numSettlers = removeWorkers(cityId, city, Infinity, 'settle');
 		createUnit(city.owner, "settler", city.location, {
 			population: numSettlers
 			});
