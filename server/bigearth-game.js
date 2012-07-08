@@ -314,12 +314,15 @@ function tryToBuildCity(fleetId, fleet)
 			location: fleet.location,
 			food: 100,
 			fuel: 50,
-			workers: { procreate: 50, hunt: 50 },
+			workers: {},
 			production: {},
+			population: 0,
 			children: 0,
 			childrenByAge: [],
 			lastUpdate: G.year
 			};
+		addWorkers(city, fleet.population/2, "procreate");
+		addWorkers(city, fleet.population/2, "hunt");
 		city.population = fleet.population || 100;
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
@@ -927,6 +930,18 @@ function tryBuildTrieme(cityId, city)
 	terrainChanged(city.location);
 }
 
+// adds new people to the city, given a particular job
+//
+function addWorkers(city, quantity, toJob)
+{
+	if (quantity < 0)
+		throw new Error("invalid argument for addWorkers");
+
+	if (quantity != 0)
+		city.workers[toJob] = (city.workers[toJob] || 0) + quantity;
+	city.population += quantity;
+}
+
 function removeWorkers(cityId, city, quantity, fromJob)
 {
 	if (city.workers[fromJob] > quantity)
@@ -1086,7 +1101,7 @@ function stealWorkers(cityId, city, quantity, toJob)
 		}
 	}
 
-	city.workers[toJob] = (city.workers[toJob] || 0) + quantity;
+	addWorkers(city, quantity, toJob);
 }
 
 function cityEndOfYear(cityId, city)
