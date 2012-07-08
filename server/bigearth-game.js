@@ -925,17 +925,42 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 
 function tryBuildTrieme(cityId, city)
 {
+	var requiredProduction = G.world.triemeCost || 400;
+	var remaining = requiredProduction - (city.production.build || 0);
+
+	if (remaining > 0.01)
+	{
+		if (city.population < 400)
+		{
+			return cityActivityError(cityId, city, "not large enough to build trieme");
+		}
+
+		var numBuilders = city.workers.build || 0;
+		if (numBuilders < 200)
+			stealWorkers(cityId, city, 200-numBuilders, 'build');
+
+		var timeRemaining = remaining / city.workerRates.build;
+		return cityActivityWakeup(cityId, city, timeRemaining);
+	}
+
 	if (city.population < 150)
 	{
-		console.log("build-unit: city " + cityId + " not large enough to build trieme");
+		return cityActivityError(cityId, city, "Trieme ready but city is not large enough to populate it");
 	}
 	else
 	{
-		stealWorkers(cityId, city, 50, 'trieme');
+		var numBuilders = city.workers.build || 0;
+		if (numBuilders < 50)
+			stealWorkers(cityId, city, 50-numBuilders, 'build');
+
+		delete city.production.build;
+		numBuilders = removeWorkers(cityId, city, 50, 'build');
+
 		createUnit(city.owner, "trieme", city.location, {
-			population: 50
+			population: numBuilders
 			});
-		removeWorkers(cityId, city, 50, 'trieme');
+
+		return cityActivityComplete(cityId, city);
 	}
 }
 
