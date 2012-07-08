@@ -523,6 +523,7 @@ var UNIT_MOVEMENT_RULES = {
 		other_terrain: 15000
 		},
 	'*': {
+		ocean: 15000,
 		'other_terrain': 3600
 		},
 	};
