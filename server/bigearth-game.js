@@ -956,18 +956,36 @@ function tryBuildSettler(cityId, city)
 		return;
 	}
 
+	
 	var numSettlers = city.workers.settle || 0;
+console.log("numSettlers is " + numSettlers);
 	if (numSettlers < 100)
-	{
-		console.log("build-unit: city " + cityId + " not enough workers assigned to 'settle'");
-		return;
-	}
+		stealWorkers(cityId, city, 100-numSettlers, 'settle');
 
-	delete city.workers.settle;
+	if (!city.tasks)
+		city.tasks = [];
+	city.tasks.push({
+		task: 'build',
+		type: 'settler'
+		});
+
+console.log("city now has " + city.workers.settle + " workers");
 	terrainChanged(city.location);
+	cityActivity(cityId, city);
+}
+
+function cityActivity(cityId, city)
+{
+	setTimeout(function() {
+
+	var numSettlers = city.workers.settle || 0;
 	createUnit(city.owner, "settler", city.location, {
 		population: numSettlers
 		});
+	delete city.workers.settle;
+	terrainChanged(city.location);
+
+		}, 5000);
 }
 
 function doRenameCity(requestData, queryString, remoteUser)
@@ -1067,6 +1085,8 @@ function stealWorkers(cityId, city, quantity, toJob)
 				delete city.workers[k];
 		}
 	}
+
+	city.workers[toJob] = (city.workers[toJob] || 0) + quantity;
 }
 
 function cityEndOfYear(cityId, city)
