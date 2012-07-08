@@ -290,7 +290,13 @@ function fleetDisbandInCity(fleetId, fleet)
 	if (!city)
 		return fleetActivityError(fleetId, fleet, "No city at this location");
 
-	//TODO - add this fleet's numbers to the city
+	if (fleet.population)
+	{
+		lockCityStruct(city);
+		addWorkers(cityId, city, fleet.population/2, 'hunt');
+		addWorkers(cityId, city, fleet.population/2, 'procreate');
+		unlockCityStruct(cityId, city);
+	}
 
 	delete G.fleets[fleetId];
 	postEvent({
@@ -322,9 +328,6 @@ function tryToBuildCity(fleetId, fleet)
 			childrenByAge: [],
 			lastUpdate: G.year
 			};
-		addWorkers(tid, city, fleet.population/2, "procreate");
-		addWorkers(tid, city, fleet.population/2, "hunt");
-		city.population = fleet.population || 100;
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
 		terrainChanged(fleet.location);
@@ -769,6 +772,10 @@ function fleetActivity(fleetId)
 	else if (currentOrder.command == 'build-city')
 	{
 		return tryToBuildCity(fleetId, fleet);
+	}
+	else if (currentOrder.command == 'disband')
+	{
+		return fleetDisbandInCity(fleetId, fleet);
 	}
 }
 

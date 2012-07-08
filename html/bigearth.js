@@ -1412,6 +1412,17 @@ function orderBuildCity()
 	});
 }
 
+function orderDisband()
+{
+	var fleetId = $('#fleetPane').attr('fleet-id');
+	$.ajax({
+	type: "POST",
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([ { command: "disband" } ]),
+	contentType: "json"
+	});
+}
+
 function orderGoTo(fleetId, location)
 {
 	$.ajax({
