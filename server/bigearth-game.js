@@ -990,8 +990,31 @@ function cityActivityError(cityId, city, message)
 
 function tryBuildSettler(cityId, city)
 {
-	if (city.production.settle >= 200 &&
-		city.population >= 200)
+	var requiredProduction = G.world.settlerCost || 200;
+	var remainingProduction = requiredProduction - (city.production.settle || 0);
+
+	if (remainingProduction > 0.01)
+	{
+		if (city.population < 200)
+		{
+			return cityActivityError(cityId, city, "not large enough to build settler");
+		}
+
+		var numSettlers = city.workers.settle || 0;
+		if (numSettlers < 100)
+			stealWorkers(cityId, city, 100-numSettlers, 'settle');
+
+console.log("remaining production is "+remainingProduction);
+
+		var timeRemaining = remainingProduction / city.workerRates.settle;
+		return cityActivityWakeup(cityId, city, timeRemaining);
+	}
+
+	if (city.population < 200)
+	{
+		return cityActivityError(cityId, city, "Settler ready but city is not large enough to populate it");
+	}
+	else
 	{
 		var numSettlers = city.workers.settle || 0;
 		if (numSettlers < 100)
@@ -1005,28 +1028,34 @@ function tryBuildSettler(cityId, city)
 			population: numSettlers
 			});
 
-		return cityCurrentTaskFinished(cityId, city);
+		return cityActivityComplete(cityId, city);
 	}
-	else if (city.production.settle >= 200)
-	{
-		return cityActivityError(cityId, city, "Settler ready but city is not large enough to populate it");
-	}
-
-	if (city.population < 200)
-	{
-		return cityActivityError(cityId, city, "not large enough to build settler");
-	}
-
-	var numSettlers = city.workers.settle || 0;
-	if (numSettlers < 100)
-		stealWorkers(cityId, city, 100-numSettlers, 'settle');
-
-	//TODO - if settler will be finished before end-of-year,
-	// set a timeout to wake self up and complete building the
-	// settler
 }
 
-function cityCurrentTaskFinished(cityId, city)
+function cityActivityWakeup(cityId, city, yearsRemaining)
+{
+	if (city._wakeupTimer)
+	{
+		cancelTimeout(city._wakeupTimer);
+		delete city._timer;
+	}
+
+	var targetTime = G.year + yearsRemaining;
+	if (targetTime < G.world.lastYear+1)
+	{
+		var delay = Math.ceil(yearsRemaining * G.world.oneYear);
+		city._timer = setTimeout(function() {
+				console.log("city "+cityId+" waking up at "+G.year+", targetTime="+targetTime);
+				if (G.year < targetTime)
+					G.year = targetTime;
+				lockCityStruct(city);
+				unlockCityStruct(cityId, city);
+			}, delay);
+	}
+	// otherwise, just wait until cityEndOfYear is called...
+}
+
+function cityActivityComplete(cityId, city)
 {
 	city.tasks.shift();
 	if (city.tasks.length == 0)
@@ -1154,13 +1183,15 @@ function stealWorkers(cityId, city, quantity, toJob)
 {
 	var sumFreeWorkers = countFreeWorkers(cityId, city);
 	if (sumFreeWorkers < quantity)
-		throw new Error("oops not enough free workers ("+city.name+", want "+quantity+" for job " + toJob+")");
+		throw new Error("oops not enough free workers (city "+city.name+", want "+quantity+" for job " + toJob+")");
 
 	for (var k in city.workers)
 	{
 		if (FREE_PROFESSIONS[k])
 		{
-			city.workers[k] -= quantity*city.workers[k]/sumFreeWorkers;
+			var amt = quantity * city.workers[k]/sumFreeWorkers;
+			city.workers[k] -= amt;
+			city.population -= amt;
 			if (city.workers[k] > 0)
 			{
 				cityNewWorkerRate(city, k);
