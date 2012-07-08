@@ -315,14 +315,15 @@ function tryToBuildCity(fleetId, fleet)
 			food: 100,
 			fuel: 50,
 			workers: {},
+			workerRates: {},
 			production: {},
 			population: 0,
 			children: 0,
 			childrenByAge: [],
 			lastUpdate: G.year
 			};
-		addWorkers(city, fleet.population/2, "procreate");
-		addWorkers(city, fleet.population/2, "hunt");
+		addWorkers(tid, city, fleet.population/2, "procreate");
+		addWorkers(tid, city, fleet.population/2, "hunt");
 		city.population = fleet.population || 100;
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
@@ -864,21 +865,14 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	var toJob = requestData.toJob;
 	var quantity = +requestData.amount;
 
-	if (!city.workers[fromJob])
-		return;
+	updateCityProperties(cityId, city);
 
-	if (quantity + 1 < (+city.workers[fromJob]))
-	{
-		city.workers[fromJob] -= quantity;
-		console.log('still have ' + city.workers[fromJob] + ' workers left');
-	}
-	else
-	{
-		quantity = (+city.workers[fromJob]);
-		delete city.workers[fromJob];
-	}
+	if (quantity + 1 >= +(city.workers[fromJob] || 0))
+		quantity = quantity+1;
 
-	city.workers[toJob] = +(city.workers[toJob] || 0) + quantity;
+	quantity = removeWorkers(cityId, city, quantity, fromJob);
+	addWorkers(cityId, city, quantity, toJob);
+
 	terrainChanged(city.location);
 }
 
@@ -932,35 +926,53 @@ function tryBuildTrieme(cityId, city)
 
 // adds new people to the city, given a particular job
 //
-function addWorkers(city, quantity, toJob)
+function addWorkers(cityId, city, quantity, toJob)
 {
 	if (quantity < 0)
 		throw new Error("invalid argument for addWorkers");
-
-	if (quantity != 0)
+	if (quantity > 0)
+	{
+		updateCityProperties(cityId, city);
 		city.workers[toJob] = (city.workers[toJob] || 0) + quantity;
-	city.population += quantity;
+		city.population += quantity;
+		cityNewWorkerRate(city, toJob);
+		cityActivity(cityId, city);
+	}
+}
+
+function cityNewWorkerRate(city, job)
+{
+	city.workerRates[job] = city.workers[job] * nextRandomWorkerRate();
 }
 
 function removeWorkers(cityId, city, quantity, fromJob)
 {
-	if (city.workers[fromJob] > quantity)
+	if (quantity < 0)
+		throw new Error("invalid argument for removeWorkers");
+
+	if (quantity > 0)
 	{
-		city.population -= quantity;
-		city.workers[fromJob] -= quantity;
-		return quantity;
+		updateCityProperties(cityId, city);
+		if (city.workers[fromJob] > quantity)
+		{
+			city.population -= quantity;
+			city.workers[fromJob] -= quantity;
+			cityNewWorkerRate(city, fromJob);
+		}
+		else if (city.workers[fromJob])
+		{
+			quantity = city.workers[fromJob];
+			city.population -= quantity;
+			delete city.workers[fromJob];
+			delete city.workerRates[fromJob];
+		}
+		else
+		{
+			quantity = 0;
+		}
+		cityActivity(cityId, city);
 	}
-	else if (city.workers[fromJob])
-	{
-		quantity = city.workers[fromJob];
-		city.population -= quantity;
-		delete city.workers[fromJob];
-		return quantity;
-	}
-	else
-	{
-		return 0;
-	}
+	return quantity;
 }
 
 function tryBuildSettler(cityId, city)
@@ -991,6 +1003,7 @@ console.log("city now has " + city.workers.settle + " workers");
 
 function cityActivity(cityId, city)
 {
+return;
 	setTimeout(function() {
 
 	var numSettlers = city.workers.settle || 0;
@@ -1055,6 +1068,13 @@ function getYear()
 	return G.world.age + (t-G.world.realWorldTime)/G.world.oneYear;
 }
 
+function nextRandomWorkerRate()
+{
+	var t = Math.random();
+	if (t == 0) return 0;
+	return Math.exp( -Math.log((1/t)-1) / 15 );
+}
+
 //TODO- ensure that the following two distributions are equivalent:
 //   RndProductionPoints(x)
 //  and
@@ -1096,12 +1116,19 @@ function stealWorkers(cityId, city, quantity, toJob)
 		if (FREE_PROFESSIONS[k])
 		{
 			city.workers[k] -= quantity*city.workers[k]/sumFreeWorkers;
-			if (city.workers[k] == 0)
+			if (city.workers[k] > 0)
+			{
+				cityNewWorkerRate(city, k);
+			}
+			else
+			{
 				delete city.workers[k];
+				delete city.workerRates[k];
+			}
 		}
 	}
 
-	addWorkers(city, quantity, toJob);
+	addWorkers(cityId, city, quantity, toJob);
 }
 
 function cityEndOfYear(cityId, city)
@@ -1188,11 +1215,15 @@ function cityEndOfYear(cityId, city)
 	{
 		var portion = city.workers[job] / city.population;
 		city.workers[job] += portion * netPopChange;
+		cityNewWorkerRate(city, job);
 	}
 	city.population += netPopChange;
 
 	// notify interested parties
 	terrainChanged(city.location);
+
+	// done changing the city properties
+	cityActivity(cityId, city);
 
 	// record stats
 	var fs = require('fs');
@@ -1233,7 +1264,8 @@ function updateCityProperties(cityId, city)
 		// calculate worker production
 		for (var job in city.workers)
 		{
-			var productionPoints = RndProductionPoints(yearsElapsed * city.workers[job]);
+			var rate = city.workerRates[job] || 0;
+			var productionPoints = yearsElapsed * rate;
 			city.production[job] = (city.production[job] || 0) +
 				productionPoints;
 		}
@@ -1418,6 +1450,8 @@ function checkCity(cityId, city)
 			procreate: 50
 			};
 	}
+	if (!city.workerRates)
+		city.workerRates = {};
 	city.population = 0;
 	for (var j in city.workers)
 	{
