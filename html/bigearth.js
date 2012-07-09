@@ -573,6 +573,7 @@ function loadCityInfo(city)
 	$('#cityPane .cityFood').text(city.food);
 	$('#cityPane .cityFuel').text(city.fuel);
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
+	$('#cityPane .cityActivity').text(city.activity || '');
 
 	if (city.workers)
 	{

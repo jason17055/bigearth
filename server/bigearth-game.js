@@ -50,7 +50,8 @@ function discoverCell(playerId, location)
 		population: "private floor",
 		food: "private floor",
 		fuel: "private floor",
-		children: "private floor"
+		children: "private floor",
+		activity: "private"
 		};
 
 		for (var p in props)
@@ -893,7 +894,7 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
-		console.log("build-settler: invalid query string");
+		console.log("build-unit: invalid query string");
 		return;
 	}
 
@@ -901,13 +902,13 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 	var city = G.cities[cityId];
 	if (!city)
 	{
-		console.log("build-settler: city " + cityId + " not found");
+		console.log("build-unit: city " + cityId + " not found");
 		return;
 	}
 
 	if (city.owner != remoteUser)
 	{
-		console.log("build-settler: city " + cityId + " not owned by player " + remoteUser);
+		console.log("build-unit: city " + cityId + " not owned by player " + remoteUser);
 		return;
 	}
 
@@ -925,42 +926,32 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 
 function tryBuildTrieme(cityId, city)
 {
-	var requiredProduction = G.world.triemeCost || 400;
-	var remaining = requiredProduction - (city.production.build || 0);
+	var builders = 400;   // number of workers required to build the boat
+	var cost = G.world.triemeCost || 400;
 
-	if (remaining > 0.01)
+	if (city.activity != 'build-trieme' && city.production.build >= cost)
 	{
-		if (city.population < 400)
+		freeWorkers(cityId, city, 'build');
+
+		if (city.population < 150)
 		{
 			return cityActivityError(cityId, city, "not large enough to build trieme");
 		}
 
-		var numBuilders = city.workers.build || 0;
-		if (numBuilders < 200)
-			stealWorkers(cityId, city, 200-numBuilders, 'build');
+		stealWorkers(cityId, city, 50, 'trieme');
+		delete city.production.build;
+		var numSailers = removeWorkers(cityId, city, Infinity, 'trieme');
+		createUnit(city.owner, "trieme", city.location, {
+			population: numSailers
+			});
 
-		var timeRemaining = remaining / city.workerRates.build;
-		return cityActivityWakeup(cityId, city, timeRemaining);
-	}
-
-	if (city.population < 150)
-	{
-		return cityActivityError(cityId, city, "Trieme ready but city is not large enough to populate it");
+		cityActivityComplete(cityId, city);
+		return;
 	}
 	else
 	{
-		var numBuilders = city.workers.build || 0;
-		if (numBuilders < 50)
-			stealWorkers(cityId, city, 50-numBuilders, 'build');
-
-		delete city.production.build;
-		numBuilders = removeWorkers(cityId, city, 50, 'build');
-
-		createUnit(city.owner, "trieme", city.location, {
-			population: numBuilders
-			});
-
-		return cityActivityComplete(cityId, city);
+		setCityActivity(cityId, city, 'build-trieme', builders, cost);
+		return;
 	}
 }
 
@@ -1023,48 +1014,80 @@ function cityActivityError(cityId, city, message)
 	return;
 }
 
+function setCityActivity(cityId, city, activity, builders, cost)
+{
+	if (city.activity != activity)
+	{
+		city.activity = activity;
+
+		var targetWorkerCount = builders;
+		if (targetWorkerCount > city.population - 100 &&
+				city.population - 100 > 0)
+		{
+			targetWorkerCount = city.population - 100;
+		}
+
+		var curWorkerCount = city.workers.build || 0;
+		if (curWorkerCount < targetWorkerCount)
+		{
+			stealWorkers(cityId, city,
+				targetWorkerCount-curWorkerCount, 'build');
+		}
+	}
+
+	var rate = city.workerRates.build || 0;
+	if (rate > 0)
+	{
+		var remaining = cost - (city.production.build || 0);
+		var timeRemaining = remaining / rate;
+		if (timeRemaining < 0.001)
+			timeRemaining = 0.001;
+		return cityActivityWakeup(cityId, city, timeRemaining);
+	}
+}
+
+function freeWorkers(cityId, city, job)
+{
+	var num = city.workers[job] || 0;
+
+	delete city.workers[job];
+	delete city.workerRates[job];
+	city.population -= num;
+
+	addWorkers(cityId, city, num/2, 'hunt');
+	addWorkers(cityId, city, num/2, 'procreate');
+}
+
 function tryBuildSettler(cityId, city)
 {
-	var requiredProduction = G.world.settlerCost || 200;
-	var remainingProduction = requiredProduction - (city.production.settle || 0);
+	var builders = 50;   // number of workers to build settlers
+	var cost = G.world.settlerCost || 200;
 
-	if (remainingProduction > 0.01)
+	if (city.activity == 'build-settler' && city.production.build >= cost)
 	{
+		freeWorkers(cityId, city, 'build');
+
 		if (city.population < 200)
 		{
 			return cityActivityError(cityId, city, "not large enough to build settler");
 		}
 
-		var numSettlers = city.workers.settle || 0;
-		if (numSettlers < 100)
-			stealWorkers(cityId, city, 100-numSettlers, 'settle');
-
-console.log("remaining production is "+remainingProduction);
-
-		var timeRemaining = remainingProduction / city.workerRates.settle;
-		return cityActivityWakeup(cityId, city, timeRemaining);
-	}
-
-	if (city.population < 200)
-	{
-		return cityActivityError(cityId, city, "Settler ready but city is not large enough to populate it");
-	}
-	else
-	{
-		var numSettlers = city.workers.settle || 0;
-		if (numSettlers < 100)
-			stealWorkers(cityId, city, 100-numSettlers, 'settle');
-	//	else if (numSettlers > 100)
-	//		freeWorkers(cityId, city, numSettlers-100, 'settle');
-
-		delete city.production.settle;
-		numSettlers = removeWorkers(cityId, city, Infinity, 'settle');
+		stealWorkers(cityId, city, 100, 'settle');
+		delete city.production.build;
+		var numSettlers = removeWorkers(cityId, city, Infinity, 'settle');
 		createUnit(city.owner, "settler", city.location, {
 			population: numSettlers
 			});
 
-		return cityActivityComplete(cityId, city);
+		cityActivityComplete(cityId, city);
+		return;
 	}
+	else
+	{
+		setCityActivity(cityId, city, 'build-settler', builders, cost);
+		return;
+	}
+	
 }
 
 function cityActivityWakeup(cityId, city, yearsRemaining)
@@ -1090,13 +1113,29 @@ function cityActivityWakeup(cityId, city, yearsRemaining)
 	// otherwise, just wait until cityEndOfYear is called...
 }
 
+function cityChanged(cityId)
+{
+	var city = G.cities[cityId];
+	if (!city)
+		throw new Error("oops! city "+cityId+" not found");
+
+	terrainChanged(city.location);
+}
+
 function cityActivityComplete(cityId, city)
 {
+	delete city.activity;
+
 	city.tasks.shift();
 	if (city.tasks.length == 0)
+	{
 		delete city.tasks;
+		cityChanged(cityId);
+	}
 	else
+	{
 		return cityActivity(cityId, city);
+	}
 }
 
 function cityActivity(cityId, city)
@@ -1149,7 +1188,7 @@ function doRenameCity(requestData, queryString, remoteUser)
 	}
 
 	city.name = requestData.name;
-	terrainChanged(city.location);
+	cityChanged(cityId);
 }
 
 function doCityTest(requestData, queryString, remoteUser)
@@ -1331,8 +1370,6 @@ function cityEndOfYear(cityId, city)
 	city.population += netPopChange;
 
 	// notify interested parties
-	terrainChanged(city.location);
-
 	// done changing the city properties
 	unlockCityStruct(cityId, city);
 
@@ -1425,7 +1462,7 @@ function unlockCityStruct(cityId, city)
 		{
 			city._inActivity = true;
 			cityActivity(cityId, city);
-			terrainChanged(city.location);
+			cityChanged(cityId);
 			delete city._inActivity;
 		}
 		delete city._lockLevel;
