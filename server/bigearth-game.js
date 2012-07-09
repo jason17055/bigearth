@@ -1041,14 +1041,15 @@ function setCityActivity(cityId, city, activity, builders, cost)
 	}
 
 	var rate = city.workerRates.build || 0;
+	var partComplete = city.production.build || 0;
+
+	city.activityTime = G.year;
+	city.activityComplete = (partComplete / cost);
+	city.activitySpeed = (rate / cost);
+	cityChanged(cityId);
+
 	if (rate > 0)
 	{
-		var partComplete = city.production.build || 0;
-
-		city.activityTime = G.year;
-		city.activityComplete = (partComplete / cost);
-		city.activitySpeed = (rate / cost);
-
 		var remaining = cost - partComplete;
 		var timeRemaining = remaining / rate;
 		if (timeRemaining < 0.001)
