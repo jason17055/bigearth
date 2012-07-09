@@ -150,9 +150,12 @@ body {
 .cityActivityContainer {
 	clear: both;
 	border: 1px solid black;
-	padding: 3pt;
+	padding-top: 3pt;
 	text-align: center;
 }
 .cityActivityComplete {
 	font-size: 7pt;
+	width: 0;
+	height: 6pt;
+	background-color: #ccc;
 }

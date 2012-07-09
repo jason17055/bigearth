@@ -592,8 +592,9 @@ function animateCityActivityProgressBar(city)
 			var gameTime = getGameTime();
 			var el = gameTime - city.activityTime;
 			var complete = +city.activityComplete + el * city.activitySpeed;
-			$cac.text(
-			Math.round(complete*100) + '% complete');
+			$cac.css({
+			width: Math.round(complete*100)+'%'
+			});
 
 	progressBarAnimation = myAnim;
 	myAnim.timer = 
@@ -608,7 +609,7 @@ function animateCityActivityProgressBar(city)
 			return;
 		}
 	}
-	$('#cityPane .cityActivityComplete').text('');
+	$cac.css({ width: 0 });
 }
 
 function loadCityInfo(city)
