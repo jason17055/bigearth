@@ -929,7 +929,7 @@ function tryBuildTrieme(cityId, city)
 	var builders = 400;   // number of workers required to build the boat
 	var cost = G.world.triemeCost || 400;
 
-	if (city.activity != 'build-trieme' && city.production.build >= cost)
+	if (city.activity == 'build-trieme' && city.production.build >= cost)
 	{
 		freeWorkers(cityId, city, 'build');
 
@@ -1041,7 +1041,10 @@ function setCityActivity(cityId, city, activity, builders, cost)
 		var remaining = cost - (city.production.build || 0);
 		var timeRemaining = remaining / rate;
 		if (timeRemaining < 0.001)
+		{
+			console.log("warning: city "+cityId+" ("+city.name+") activity "+activity+" has "+(city.production.build||0)+" of "+cost+" already");
 			timeRemaining = 0.001;
+		}
 		return cityActivityWakeup(cityId, city, timeRemaining);
 	}
 }
