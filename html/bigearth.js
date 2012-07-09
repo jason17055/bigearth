@@ -585,15 +585,15 @@ function animateCityActivityProgressBar(city)
 
 	var myAnim = { city: city };
 
-	if (city)
+	if (city && city.activity)
 	{
-		if (city.activityComplete)
+		if (city.activityTime || city.activitySpeed || city.activityComplete)
 		{
 			var gameTime = getGameTime();
 			var el = gameTime - city.activityTime;
-			var complete = +city.activityComplete + el / city.activitySpeed;
-			$cac.text('c='+complete+', el='+el+', speed='+city.activitySpeed);
-			//Math.round(city.activityComplete*100) + '% complete');
+			var complete = +city.activityComplete + el * city.activitySpeed;
+			$cac.text(
+			Math.round(complete*100) + '% complete');
 
 	progressBarAnimation = myAnim;
 	myAnim.timer = 
