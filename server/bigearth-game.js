@@ -51,7 +51,10 @@ function discoverCell(playerId, location)
 		food: "private floor",
 		fuel: "private floor",
 		children: "private floor",
-		activity: "private"
+		activity: "private",
+		activityTime: "private",
+		activityComplete: "private",
+		activitySpeed: "private"
 		};
 
 		for (var p in props)
@@ -789,6 +792,8 @@ function getGameState(request)
 	{
 		return {
 		role: "player",
+		gameYear: G.year,
+		gameSpeed: G.world.oneYear,
 		map: "/map/"+request.remote_player,
 		mapSize: G.terrain.size,
 		fleets: "/fleets/"+request.remote_player,
@@ -1038,7 +1043,13 @@ function setCityActivity(cityId, city, activity, builders, cost)
 	var rate = city.workerRates.build || 0;
 	if (rate > 0)
 	{
-		var remaining = cost - (city.production.build || 0);
+		var partComplete = city.production.build || 0;
+
+		city.activityTime = G.year;
+		city.activityComplete = (partComplete / cost);
+		city.activitySpeed = (rate / cost);
+
+		var remaining = cost - partComplete;
 		var timeRemaining = remaining / rate;
 		if (timeRemaining < 0.001)
 		{

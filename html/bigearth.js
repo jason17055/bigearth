@@ -562,6 +562,55 @@ function cityMakeJobBox(job)
 	return $jobBox;
 }
 
+function getGameTime()
+{
+	var elapsed = new Date().getTime() - gameState.timeStamp;
+	return gameState.gameYear + elapsed / gameState.gameSpeed;
+}
+
+var progressBarAnimation = null;
+function animateCityActivityProgressBar(city)
+{
+	if (progressBarAnimation)
+	{
+		if (progressBarAnimation.city == city)
+			return;
+		else
+			clearTimeout(progressBarAnimation.timer);
+
+		progressBarAnimation = null;
+	}
+
+	var $cac = $('#cityPane .cityActivityComplete');
+
+	var myAnim = { city: city };
+
+	if (city)
+	{
+		if (city.activityComplete)
+		{
+			var gameTime = getGameTime();
+			var el = gameTime - city.activityTime;
+			var complete = +city.activityComplete + el / city.activitySpeed;
+			$cac.text('c='+complete+', el='+el+', speed='+city.activitySpeed);
+			//Math.round(city.activityComplete*100) + '% complete');
+
+	progressBarAnimation = myAnim;
+	myAnim.timer = 
+	setTimeout(function() {
+			if (progressBarAnimation == myAnim)
+			{
+				progressBarAnimation = null;
+				animateCityActivityProgressBar(city);
+			}
+		}, 400);
+
+			return;
+		}
+	}
+	$('#cityPane .cityActivityComplete').text('');
+}
+
 function loadCityInfo(city)
 {
 	$('#cityPane').attr('city-id', city.id);
@@ -574,6 +623,7 @@ function loadCityInfo(city)
 	$('#cityPane .cityFuel').text(city.fuel);
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
 	$('#cityPane .cityActivity').text(city.activity || '');
+	animateCityActivityProgressBar(city);
 
 	if (city.workers)
 	{
@@ -929,6 +979,7 @@ function fetchGameState()
 	var onSuccess = function(data,status)
 	{
 		gameState = data;
+		gameState.timeStamp = new Date().getTime();
 		onGameState();
 	};
 	var onError = function(xhr, status, errorThrown)
