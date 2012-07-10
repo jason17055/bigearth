@@ -1033,6 +1033,31 @@ function testBtnClicked()
 	alert('adjacent to ' + x + ' is ' + adj.join(', '));
 }
 
+function nextUnitClicked()
+{
+	var fleetId = $('#fleetPane').attr('fleet-id') || 0;
+	var found = false;
+	var nextFleet;
+	for (var fid in fleets)
+	{
+		if (!nextFleet) nextFleet = fid;
+		if (fid == fleetId)
+			found = true;
+		else if (found) {
+			nextFleet = fid;
+			break;
+		}
+	}
+
+	if (nextFleet)
+	{
+		var loc = fleets[nextFleet].location;
+		var pt = coords.cells[loc].pt;
+		panToCoords(pt);
+		onFleetClicked(nextFleet);
+	}
+}
+
 function panToCoords(pt)
 {
 	var ptLgt = Math.atan2(pt.y, pt.x);
