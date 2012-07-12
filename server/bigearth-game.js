@@ -1500,6 +1500,15 @@ function getFleetInfoForPlayer(fleetId, playerId)
 			_fleet.activity = f.activity;
 		return _fleet;
 	}
+	else if (playerCanSee(playerId, f.location))
+	{
+		var _fleet = {
+			type: f.type,
+			location: f.location,
+			owner: f.owner
+		};
+		return _fleet;
+	}
 	else
 	{
 		return null;
