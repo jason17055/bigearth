@@ -152,7 +152,7 @@ body {
 	background-color: #fbb;
 	color: black;
 }
-.cityJobBox[job="settle"] {
+.cityJobBox[job="farm"] {
 	background-color: #fc8;
 	color: black;
 }

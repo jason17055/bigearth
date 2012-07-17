@@ -622,6 +622,11 @@ function loadCityInfo(city)
 	$('#cityPane .cityWorkersCount').text(city.population);
 	$('#cityPane .cityFood').text(city.food);
 	$('#cityPane .cityFuel').text(city.fuel);
+	$('#cityPane .cityFarms').text(city.farms);
+	if (city.farms)
+		$('#cityPane .cityFarmsContainer').show();
+	else
+		$('#cityPane .cityFarmsContainer').hide();
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
 	$('#cityPane .cityActivity').text(city.activity || '');
 	animateCityActivityProgressBar(city);

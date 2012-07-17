@@ -47,6 +47,7 @@ function discoverCell(playerId, location)
 		name: "public",
 		size: "public",
 		owner: "public",
+		farms: "public",
 		population: "private floor",
 		food: "private floor",
 		fuel: "private floor",
@@ -971,10 +972,16 @@ function tryBuildFarm(cityId, city)
 	if (city.activity == 'build-farm' && city.production.build >= cost)
 	{
 		freeWorkers(cityId, city, 'build');
-		stealWorkers(cityId, city, 'farm', 15);
+		stealWorkers(cityId, city, 15, 'farm');
 		delete city.production.build;
 
 		city.farms = (city.farms || 0) + 1;
+		cityChanged(cityId);
+
+console.log("farmers", city.workers.farm);
+
+		cityActivityComplete(cityId, city);
+		return;
 	}
 	else
 	{
