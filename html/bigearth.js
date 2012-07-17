@@ -701,7 +701,7 @@ function updateFleetIcon(fleetId, fleetInfo)
 
 	if ($f.length == 0)
 	{
-		$f = $('<div class="fleetIcon"><img class="unitIcon"><span class="activityIcon"></span></div>');
+		$f = $('<div class="fleetIcon"><img class="unitIcon"><span class="ownerIcon"></span><span class="activityIcon"></span></div>');
 		$f.attr('fleet-id', fleetId);
 		$('#scrollPanel').append($f);
 	}
@@ -733,6 +733,16 @@ function updateFleetIcon(fleetId, fleetInfo)
 	else
 	{
 		$('.activityIcon',$f).hide();
+	}
+
+	if (fleetInfo.owner != gameState.identity)
+	{
+		$('.ownerIcon',$f).text('E');
+		$('.ownerIcon',$f).show();
+	}
+	else
+	{
+		$('.ownerIcon',$f).hide();
 	}
 }
 
@@ -1580,5 +1590,15 @@ function cityBuildTrieme()
 		type: "POST",
 		url: "/request/build-unit?city="+cityId,
 		data: { type: 'trieme' }
+		});
+}
+
+function cityBuildFarm()
+{
+	var cityId = $('#cityPane').attr('city-id');
+	$.ajax({
+		type: "POST",
+		url: "/request/build-improvement?city="+cityId,
+		data: { improvement: 'farm' }
 		});
 }

@@ -929,6 +929,59 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
+function doCityBuildImprovement(requestData, queryString, remoteUser)
+{
+	if (!queryString.match(/^city=(.*)$/))
+	{
+		console.log("build-improvement: invalid query string");
+		return;
+	}
+
+	var cityId = RegExp.$1;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		console.log("build-improvement: city " + cityId + " not found");
+		return;
+	}
+
+	if (city.owner != remoteUser)
+	{
+		console.log("build-improvement: city " + cityId + " not owned by player " + remoteUser);
+		return;
+	}
+
+	lockCityStruct(city);
+
+	if (!city.tasks)
+		city.tasks = [];
+	city.tasks.push({
+		task: 'improvement',
+		type: requestData.improvement
+		});
+
+	unlockCityStruct(cityId, city);
+}
+
+function tryBuildFarm(cityId, city)
+{
+	var builders = 25;
+	var cost = G.world.farmCost || 50;
+
+	if (city.activity == 'build-farm' && city.production.build >= cost)
+	{
+		freeWorkers(cityId, city, 'build');
+		stealWorkers(cityId, city, 'farm', 15);
+		delete city.production.build;
+
+		city.farms = (city.farms || 0) + 1;
+	}
+	else
+	{
+		setCityActivity(cityId, city, 'build-farm', builders, cost);
+	}
+}
+
 function tryBuildTrieme(cityId, city)
 {
 	var builders = 400;   // number of workers required to build the boat
@@ -1175,6 +1228,11 @@ console.log("current task is " + currentTask.task);
 			return tryBuildSettler(cityId, city);
 		else if (currentTask.type == 'trieme')
 			return tryBuildTrieme(cityId, city);
+	}
+	else if (currentTask.task == 'improvement')
+	{
+		if (currentTask.type == 'farm')
+			return tryBuildFarm(cityId, city);
 	}
 
 	return cityActivityError(cityId, city, "unrecognized task " + currentTask.task);
@@ -1692,7 +1750,8 @@ var actionHandlers = {
 	'rename-city': doRenameCity,
 	'test-city': doCityTest,
 	'reassign-workers': doReassignWorkers,
-	'build-unit': doCityBuildUnit
+	'build-unit': doCityBuildUnit,
+	'build-improvement': doCityBuildImprovement
 	};
 
 if (typeof global !== 'undefined')
