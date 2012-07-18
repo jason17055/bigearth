@@ -978,8 +978,6 @@ function tryBuildFarm(cityId, city)
 		city.farms = (city.farms || 0) + 1;
 		cityChanged(cityId);
 
-console.log("farmers", city.workers.farm);
-
 		cityActivityComplete(cityId, city);
 		return;
 	}
@@ -1037,9 +1035,29 @@ function addWorkers(cityId, city, quantity, toJob)
 	}
 }
 
+var cityWorkerRatesSpecial = {
+
+	farm: function(city, baseProduction) {
+		var numFarms = city.farms || 0;
+		var maxYield = numFarms * 30;
+		var z = maxYield - maxYield * Math.exp(-1 * baseProduction / maxYield);
+		return z;
+		},
+
+	hunt: function(city, baseProduction) {
+		var numWildlife = 80;
+		var s = 0.5 * Math.sqrt(numWildlife / 40);
+		return numWildlife - numWildlife * Math.exp(-s * baseProduction / numWildlife);
+		}
+	};
+
 function cityNewWorkerRate(city, job)
 {
-	city.workerRates[job] = city.workers[job] * nextRandomWorkerRate();
+	var baseProduction = (city.workers[job] || 0) * nextRandomWorkerRate();
+	var f = cityWorkerRatesSpecial[job];
+	city.workerRates[job] = f ?
+			f(city, baseProduction) :
+			baseProduction;
 }
 
 function removeWorkers(cityId, city, quantity, fromJob)
@@ -1402,9 +1420,7 @@ function cityEndOfYear(cityId, city)
 		var pts = city.production.hunt;
 		delete city.production.hunt;
 
-		var numWildlife = 80;
-		var s = 0.5*Math.sqrt(numWildlife/40);
-		var numHarvested = numWildlife - numWildlife * Math.exp(-s * pts / numWildlife);
+		var numHarvested = pts;
 
 		//TODO- subtract numHarvested from this cell's
 		//wildlife counter.
