@@ -1415,6 +1415,17 @@ function cityEndOfYear(cityId, city)
 		console.log("  hunters brought in " + foodYield + " food");
 	}
 
+	if (city.production.farm)
+	{
+		var pts = city.production.farm;
+		delete city.production.farm;
+
+		var foodYield = pts * G.world.foodPerFarmer;
+		city.food += foodYield;
+
+		console.log("  farmers brought in " + foodYield + " food");
+	}
+
 	// feed the population
 	var foodDemand = city.hunger || 0;
 	var sustenance;
@@ -1698,6 +1709,9 @@ function checkWorldParameters()
 
 	if (!G.world.foodPerAnimal)
 		G.world.foodPerAnimal = 0.1;
+
+	if (!G.world.foodPerFarmer)
+		G.world.foodPerFarmer = 0.1;
 }
 
 // inspect properties of a single fleet.
