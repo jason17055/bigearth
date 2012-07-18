@@ -26,29 +26,35 @@
 </div>
 
 <div id="cityPane" style="display:none">
-<div><a href="#" onclick="cityRename();return false" class="cityName">City</a></div>
-<div><img class="icon" align="left">
-<div>Size: <span class="citySize">0</span></div>
+<div id="cityTopview">
+	<div><img class="icon"></div>
+	<div><a href="#" onclick="cityRename();return false" class="cityName">City</a></div>
+</div>
+
 <div>Population: <span class="cityPopulation">0</span></div>
 <div>Children: <span class="cityChildren">0</span></div>
+<div>Workers: <span class="cityWorkersCount">0</span></div>
 <div class="cityActivityContainer">
+	<div class="cityActivityLabel">Building Queue</div>
 	<div class="cityActivity"></div>
 	<div class="cityActivityComplete"></div>
+	<div class="cityActivityNext"></div>
 </div>
-<div>Workers: <span class="cityWorkersCount">0</span></div>
 <div class="cityJobsContainer">
-<div class="cityJobBoxTemplate"><div class="jobCounts"><span class="jobCount" draggable="true">0</span></div><div class="jobLabel">Job</div></div>
+  <div class="cityJobBoxTemplate"><div class="jobCounts"><span class="jobCount" draggable="true">0</span></div><div class="jobLabel">Job</div></div>
 </div>
 <div>Food: <span class="cityFood">0</span></div>
 <div>Fuel: <span class="cityFuel">0</span></div>
 <div class="cityFarmsContainer">Farms: <span class="cityFarms">0</span></div>
-</div>
-<div>
+
+<div id="cityButtonBar">
+<!--
 <select onchange="onCityNewJob()" id="cityNewJobChoice"><option selected="selected" value="">--Add Profession--</option>
 <option value="hunt">hunt</option>
 <option value="procreate">procreate</option>
 <option value="settle">settle</option>
 </select>
+-->
 <button type="button" onclick="cityBuildSettler()">Build Settler</button>
 <button type="button" onclick="cityBuildTrieme()">Build Trieme</button>
 <button type="button" onclick="cityTest()">Test</button>

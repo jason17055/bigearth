@@ -38,26 +38,42 @@ body {
 	z-index: 1;
 }
 
-#fleetPane {
+#fleetPane, #cityPane {
 	position: absolute;
 	right: 1em;
 	top: 1em;
-	width: 3in;
-	height: 3in;
 	font-family: sans-serif;
 	color: black;
-	background-color: white
+	background-color: white;
+	border-top:    6px solid #ccc;
+	border-left:   6px solid #ccc;
+	border-bottom: 6px solid #666;
+	border-right:  6px solid #666;
+	overflow: hidden;
+	padding: 3pt;
+}
+
+#fleetPane {
+	width: 3in;
+	height: 3in;
 }
 
 #cityPane {
-	position: absolute;
-	right: 1em;
-	top: 1em;
-	width: 3in;
-	height: 3in;
-	font-family: sans-serif;
+	width: 4in;
+	height: 4in;
+}
+
+#cityTopview {
+	width: 2in;
+	float: left;
+	border: 1px solid black;
+	text-align: center;
+	padding-bottom: 6pt;
+}
+
+#cityPane .cityName {
+	text-decoration: underline;
 	color: black;
-	background-color: white
 }
 
 #dragTargetIndicator {
@@ -165,9 +181,13 @@ body {
 .cityActivityContainer {
 	clear: both;
 	border: 1px solid black;
-	padding-top: 3pt;
 	text-align: center;
 }
+
+.cityActivityLabel {
+	font-size: 8pt;
+}
+
 .cityActivityComplete {
 	font-size: 7pt;
 	width: 0;
