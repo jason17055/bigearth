@@ -1147,8 +1147,12 @@ function freeWorkers(cityId, city, job)
 	delete city.workerRates[job];
 	city.population -= num;
 
-	addWorkers(cityId, city, num/2, 'hunt');
-	addWorkers(cityId, city, num/2, 'procreate');
+	var p = city.population;
+	for (var job in city.workers)
+	{
+		var q = city.workers[job] / p;
+		addWorkers(cityId, city, q, job);
+	}
 }
 
 function tryBuildSettler(cityId, city)
