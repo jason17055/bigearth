@@ -295,8 +295,25 @@ function fleetDisbandInCity(fleetId, fleet)
 	var location = fleet.location;
 	var cityId = G.terrain.cells[location].city;
 	var city = G.cities[cityId];
+	if (!city && G.terrain.cells[location].terrain == 'ocean')
+	{
+		// try to find a city in an adjoining cell
+		var nn = G.geometry.getNeighbors(location);
+		for (var i = 0; i < nn.length; i++)
+		{
+			var c = G.terrain.cells[nn[i]];
+			if (c.city)
+			{
+				cityId = c.city;
+				city = G.cities[cityId];
+				break;
+			}
+		}
+	}
 	if (!city)
+	{
 		return fleetActivityError(fleetId, fleet, "No city at this location");
+	}
 
 	if (fleet.population)
 	{
