@@ -364,6 +364,11 @@ function tryToBuildCity(fleetId, fleet)
 
 	if (fleet.activity == 'build-city')
 	{
+		if (G.terrain.cells[fleet.location].city)
+		{
+			return fleetActivityError(fleetId, fleet, "There is already a city here.");
+		}
+
 		var tid = nextFleetId();
 		var city = {
 			owner: fleet.owner,
