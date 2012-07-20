@@ -628,8 +628,8 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityWorkersCount').text(city.population);
 	$('#cityPane .cityFood').text(city.food);
 	$('#cityPane .cityFuel').text(city.fuel);
-	$('#cityPane .cityFarms').text(mapCell.subcells.farms);
-	if (mapCell.subcells.farms)
+	$('#cityPane .cityFarms').text(mapCell.subcells.farm);
+	if (mapCell.subcells.farm)
 		$('#cityPane .cityFarmsContainer').show();
 	else
 		$('#cityPane .cityFarmsContainer').hide();
@@ -1611,5 +1611,15 @@ function cityBuildFarm()
 		type: "POST",
 		url: "/request/build-improvement?city="+cityId,
 		data: { improvement: 'farm' }
+		});
+}
+
+function cityExpandVillage()
+{
+	var cityId = $('#cityPane').attr('city-id');
+	$.ajax({
+		type: "POST",
+		url: "/request/build-improvement?city="+cityId,
+		data: { improvement: 'hamlet' }
 		});
 }

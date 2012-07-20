@@ -1014,25 +1014,50 @@ function developLand(location, type, amount)
 	terrainChanged(location);
 }
 
-function tryBuildFarm(cityId, city)
+function onFarmCompleted(cityId, city)
 {
-	var builders = 25;
-	var cost = G.world.farmCost || 50;
+	stealWorkers(cityId, city, 15, 'farm');
+}
 
-	if (city.activity == 'build-farm' && city.production.build >= cost)
+// [0]: number of builders to assign when task starts
+// [1]: production cost
+// [2]: function to call after land has been developed (can be null)
+//
+var LAND_TYPE_COSTS = {
+	farm:   [ 25, 50, onFarmCompleted ],
+	hamlet: [ 50, 100, null ]
+	};
+
+function tryDevelopLand(cityId, city, landType)
+{
+	var ltc = LAND_TYPE_COSTS[landType];
+	if (!ltc)
 	{
-		freeWorkers(cityId, city, 'build');
-		stealWorkers(cityId, city, 15, 'farm');
+		return cityActivityError(cityId, city, "invalid land type: "+landType);
+	}
+
+	var builders = ltc[0];
+	var cost = ltc[1];
+	var activityName = 'build-'+landType;
+
+	if (city.activity == activityName && city.production.build >= cost)
+	{
 		delete city.production.build;
+		freeWorkers(cityId, city, 'build');
 
-		developLand(city.location, 'farms', 1);
-
+		developLand(city.location, landType, 1);
 		cityActivityComplete(cityId, city);
+
+		if (ltc[2])
+		{
+			ltc[2](cityId, city);
+		}
+
 		return;
 	}
 	else
 	{
-		setCityActivity(cityId, city, 'build-farm', builders, cost);
+		setCityActivity(cityId, city, activityName, builders, cost);
 	}
 }
 
@@ -1088,7 +1113,7 @@ var cityWorkerRatesSpecial = {
 
 	farm: function(city, baseProduction) {
 		var cell = G.terrain.cells[city.location];
-		var numFarms = cell.subcells.farms || 0;
+		var numFarms = cell.subcells.farm || 0;
 		var maxYield = numFarms * 30;
 		var z = maxYield - maxYield * Math.exp(-1 * baseProduction / maxYield);
 		return z;
@@ -1310,8 +1335,7 @@ console.log("current task is " + currentTask.task);
 	}
 	else if (currentTask.task == 'improvement')
 	{
-		if (currentTask.type == 'farm')
-			return tryBuildFarm(cityId, city);
+		return tryDevelopLand(cityId, city, currentTask.type);
 	}
 
 	return cityActivityError(cityId, city, "unrecognized task " + currentTask.task);
@@ -1808,7 +1832,7 @@ function checkTerrainCell(cid, cell)
 			if (city && city.farms)
 			{
 				cell.subcells.natural -= city.farms;
-				cell.subcells.farms = city.farms;
+				cell.subcells.farm = city.farms;
 				delete city.farms;
 			}
 			if (city)
@@ -1817,6 +1841,12 @@ function checkTerrainCell(cid, cell)
 				cell.subcells.hamlet = 1;
 			}
 		}
+	}
+
+	if (cell.subcells.farms)
+	{
+		cell.subcells.farm = cell.subcells.farms;
+		delete cell.subcells.farms;
 	}
 }
 
