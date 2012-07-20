@@ -1225,7 +1225,7 @@ function freeWorkers(cityId, city, job)
 	var p = city.population;
 	for (var job in city.workers)
 	{
-		var q = city.workers[job] / p;
+		var q = num * city.workers[job] / p;
 		addWorkers(cityId, city, q, job);
 	}
 }
