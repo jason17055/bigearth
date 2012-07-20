@@ -1457,6 +1457,12 @@ function stealWorkers(cityId, city, quantity, toJob)
 	addWorkers(cityId, city, quantity, toJob);
 }
 
+function getCityPopulationCapacity(city)
+{
+	var c = G.terrain.cells[city.location];
+	return (c.subcells.hamlet || 0) * 200;
+}
+
 function cityEndOfYear(cityId, city)
 {
 	console.log("city "+city.name+": end of year");
@@ -1486,7 +1492,16 @@ function cityEndOfYear(cityId, city)
 		var pts = city.production.procreate;
 		delete city.production.procreate;
 
+		// determine how much room there is for growth
+		var cityCapacity = getCityPopulationCapacity(city);
+		var excessCapacity = cityCapacity - (city.population + city.children);
+
 		var births = pts/ADULT_AGE;
+		if (births > excessCapacity)
+		{
+			births = excessCapacity > 0 ? excessCapacity : 0;
+		}
+
 		city.childrenByAge[0] = births;
 		city.children = (city.children || 0) + births;
 		city.births += births;
