@@ -29,6 +29,32 @@ function discoverCell(playerId, location)
 		mapCell.terrain = refCell.terrain;
 	}
 
+	for (var subcellType in refCell.subcells)
+	{
+		if (subcellType == 'natural')
+			continue;
+
+		if (!mapCell.subcells)
+			mapCell.subcells = {};
+
+		if (refCell.subcells[subcellType] != mapCell.subcells[subcellType])
+		{
+			mapCell.subcells[subcellType] = refCell.subcells[subcellType];
+			isNew = true;
+		}
+	}
+	if (mapCell.subcells)
+	{
+		for (var subcellType in mapCell.subcells)
+		{
+			if (!mapCell.subcells[subcellType])
+			{
+				delete mapCell.subcells[subcellType];
+				isNew = true;
+			}
+		}
+	}
+
 	if (mapCell.city && !refCell.city)
 	{
 		isNew = true;
@@ -47,7 +73,6 @@ function discoverCell(playerId, location)
 		name: "public",
 		size: "public",
 		owner: "public",
-		farms: "public",
 		population: "private floor",
 		food: "private floor",
 		fuel: "private floor",
@@ -981,6 +1006,14 @@ function doCityBuildImprovement(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
+function developLand(location, type, amount)
+{
+	var c = G.terrain.cells[location];
+	c.subcells.natural -= amount;
+	c.subcells[type] += amount;
+	terrainChanged(location);
+}
+
 function tryBuildFarm(cityId, city)
 {
 	var builders = 25;
@@ -992,8 +1025,7 @@ function tryBuildFarm(cityId, city)
 		stealWorkers(cityId, city, 15, 'farm');
 		delete city.production.build;
 
-		city.farms = (city.farms || 0) + 1;
-		cityChanged(cityId);
+		developLand(city.location, 'farms', 1);
 
 		cityActivityComplete(cityId, city);
 		return;
@@ -1055,7 +1087,8 @@ function addWorkers(cityId, city, quantity, toJob)
 var cityWorkerRatesSpecial = {
 
 	farm: function(city, baseProduction) {
-		var numFarms = city.farms || 0;
+		var cell = G.terrain.cells[city.location];
+		var numFarms = cell.subcells.farms || 0;
 		var maxYield = numFarms * 30;
 		var z = maxYield - maxYield * Math.exp(-1 * baseProduction / maxYield);
 		return z;
@@ -1694,6 +1727,11 @@ function startGame()
 	G.world.realWorldTime = new Date().getTime();
 	G.year = G.world.age;
 
+	for (var cid in G.terrain.cells)
+	{
+		checkTerrainCell(cid, G.terrain.cells[cid]);
+	}
+
 	for (var tid in G.cities)
 	{
 		checkCity(tid, G.cities[tid]);
@@ -1757,6 +1795,29 @@ function checkWorldParameters()
 //
 function checkFleet(fleetId, fleet)
 {
+}
+
+function checkTerrainCell(cid, cell)
+{
+	if (!cell.subcells)
+	{
+		cell.subcells = { natural: 64 };
+		if (cell.city)
+		{
+			var city = G.cities[cell.city];
+			if (city && city.farms)
+			{
+				cell.subcells.natural -= city.farms;
+				cell.subcells.farms = city.farms;
+				delete city.farms;
+			}
+			if (city)
+			{
+				cell.subcells.natural -= 1;
+				cell.subcells.hamlet = 1;
+			}
+		}
+	}
 }
 
 // inspect properties of a single city.

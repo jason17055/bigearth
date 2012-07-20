@@ -388,7 +388,7 @@ function recreateFleetIcons()
 function onCityClicked(location, city)
 {
 	resetCityPane();
-	loadCityInfo(city);
+	loadCityInfo(city, location);
 
 	$('#fleetPane').hide();
 	$('#cityPane').show();
@@ -612,18 +612,24 @@ function animateCityActivityProgressBar(city)
 	$cac.css({ width: 0 });
 }
 
-function loadCityInfo(city)
+function loadCityInfo(city, location)
 {
+	var mapCell = map.cells[location];
+	if (!mapCell)
+		return;
+	if (!mapCell.subcells)
+		mapCell.subcells = {};
+
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane .cityName').text(city.name);
-	$('#cityPane .citySize').text(city.size);
+	$('#cityPane .citySize').text(mapCell.subcells.hamlet || 0);
 	$('#cityPane .cityPopulation').text(city.population + city.children);
 	$('#cityPane .cityChildren').text(city.children);
 	$('#cityPane .cityWorkersCount').text(city.population);
 	$('#cityPane .cityFood').text(city.food);
 	$('#cityPane .cityFuel').text(city.fuel);
-	$('#cityPane .cityFarms').text(city.farms);
-	if (city.farms)
+	$('#cityPane .cityFarms').text(mapCell.subcells.farms);
+	if (mapCell.subcells.farms)
 		$('#cityPane .cityFarmsContainer').show();
 	else
 		$('#cityPane .cityFarmsContainer').hide();
@@ -842,7 +848,7 @@ function onMapCellChanged(location)
 	var city = map.cells[location].city;
 	if (city && city.id == $('#cityPane').attr('city-id'))
 	{
-		loadCityInfo(city);
+		loadCityInfo(city, location);
 	}
 	triggerRepaintCell(location);
 }
