@@ -1482,6 +1482,7 @@ function cityEndOfYear(cityId, city)
 	}
 	city.childrenByAge[0] = 0;
 	city.children -= newAdults;
+	if (city.children < 0) { city.children = 0; }
 
 	// TODO- consider childCareDemand... if not enough workers
 	// assigned to procreate, then kill off children since
