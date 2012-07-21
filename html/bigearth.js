@@ -629,13 +629,19 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityFood').text(city.food);
 	$('#cityResourcesContainer div').remove();
 	var RESOURCE_TYPES = [ 'wood', 'clay', 'stone', 'fuel' ];
+	var RESOURCE_DISPLAY_NAMES = {
+		wood: "Wood",
+		clay: "Clay",
+		stone: "Stone",
+		fuel: "Fuel"
+		};
 	for (var i = 0; i < RESOURCE_TYPES.length; i++)
 	{
 		var t = RESOURCE_TYPES[i];
 		if (city[t])
 		{
 			var $x = $('<div><span class="cityResourceType"></span>: <span class="cityResourceAmount"></span></div>');
-			$('.cityResourceType', $x).text(t);
+			$('.cityResourceType', $x).text(RESOURCE_DISPLAY_NAMES[t]);
 			$('.cityResourceAmount', $x).text(city[t]);
 			$('#cityResourcesContainer').append($x);
 		}
