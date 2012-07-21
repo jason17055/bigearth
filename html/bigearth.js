@@ -627,6 +627,19 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityChildren').text(city.children);
 	$('#cityPane .cityWorkersCount').text(city.population);
 	$('#cityPane .cityFood').text(city.food);
+	$('#cityResourcesContainer div').remove();
+	var RESOURCE_TYPES = [ 'wood', 'clay', 'stone', 'fuel' ];
+	for (var i = 0; i < RESOURCE_TYPES.length; i++)
+	{
+		var t = RESOURCE_TYPES[i];
+		if (city[t])
+		{
+			var $x = $('<div><span class="cityResourceType"></span>: <span class="cityResourceAmount"></span></div>');
+			$('.cityResourceType', $x).text(t);
+			$('.cityResourceAmount', $x).text(city[t]);
+			$('#cityResourcesContainer').append($x);
+		}
+	}
 	$('#cityPane .cityFuel').text(city.fuel);
 	$('#cityPane .cityFarms').text(mapCell.subcells.farm);
 	if (mapCell.subcells.farm)

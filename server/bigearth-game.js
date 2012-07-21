@@ -75,7 +75,9 @@ function discoverCell(playerId, location)
 		owner: "public",
 		population: "private floor",
 		food: "private floor",
-		fuel: "private floor",
+		wood: "private floor",
+		clay: "private floor",
+		stone: "private floor",
 		children: "private floor",
 		activity: "private",
 		activityTime: "private",
@@ -1533,6 +1535,28 @@ function cityEndOfYear(cityId, city)
 		city.births += births;
 	}
 
+	if (city.production['gather-wood'])
+	{
+		var pts = city.production['gather-wood'];
+		delete city.production['gather-wood'];
+
+		var woodYield = pts * G.world.woodPerWoodGatherer;
+		city.wood = (city.wood || 0) + woodYield;
+
+		console.log("  wood gatherers brought in " + woodYield + " wood");
+	}
+
+	if (city.production['gather-clay'])
+	{
+		var pts = city.production['gather-clay'];
+		delete city.production['gather-clay'];
+
+		var clayYield = pts * G.world.clayPerClayGatherer;
+		city.clay = (city.clay || 0) + clayYield;
+
+		console.log('  clay gathers brought in ' + clayYield + " clay");
+	}
+
 	// food production
 	if (city.production.hunt)
 	{
@@ -1852,6 +1876,11 @@ function checkWorldParameters()
 
 	if (!G.world.foodPerFarmer)
 		G.world.foodPerFarmer = 0.1;
+
+	if (!G.world.woodPerWoodGatherer)
+		G.world.woodPerWoodGatherer = 0.01;
+	if (!G.world.clayPerClayGatherer)
+		G.world.clayPerClayGatherer = 0.01;
 }
 
 // inspect properties of a single fleet.
