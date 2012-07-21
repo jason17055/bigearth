@@ -160,7 +160,7 @@ body {
 	padding-right: 3pt;
 }
 
-.cityJobBox[job="raise-children"] {
+.cityJobBox[job="childcare"] {
 	background-color: #bfb;
 	color: black;
 }

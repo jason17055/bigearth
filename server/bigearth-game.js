@@ -156,8 +156,8 @@ function addAvailableJobs(cityId, jobs)
 
 	if (!jobs.hunt)
 		jobs.hunt = 0;
-	if (!jobs['raise-children'])
-		jobs['raise-children'] = 0;
+	if (!jobs.childcare)
+		jobs.childcare = 0;
 
 	if (!jobs['gather-wood'] && cell.terrain == 'forest')
 		jobs['gather-wood'] = 0;
@@ -383,7 +383,7 @@ function fleetDisbandInCity(fleetId, fleet)
 	{
 		lockCityStruct(city);
 		addWorkers(cityId, city, fleet.population/2, 'hunt');
-		addWorkers(cityId, city, fleet.population/2, 'raise-children');
+		addWorkers(cityId, city, fleet.population/2, 'childcare');
 		unlockCityStruct(cityId, city);
 	}
 
@@ -1457,7 +1457,7 @@ function RndProductionPoints(x)
 
 var FREE_PROFESSIONS = {
 	"hunt": true,
-	"raise-children": true
+	"childcare": true
 	};
 
 function countFreeWorkers(cityId, city)
@@ -1518,12 +1518,12 @@ function cityEndOfYear(cityId, city)
 
 	// check child care
 	var childCareDemand = city.children;
-	var childCareSupply = 2*(city.production['raise-children'] || 0);
+	var childCareSupply = 2*(city.production.childcare || 0);
 	if (childCareSupply < childCareDemand)
 	{
 		// not enough child care, kill off some children
 		var caredForPortion = childCareSupply / childCareDemand;
-		var survivalRate = 0.65 + 0.35 * Math.pow(caredForPortion,2);
+		var survivalRate = 0.60 + 0.40 * Math.pow(caredForPortion,2);
 
 		if (survivalRate > 1) //sanity check
 			survivalRate = 1;
@@ -1973,16 +1973,23 @@ function checkCity(cityId, city)
 	{
 		city.workers = {};
 		city.workers.hunt = 50;
-		city.workers['raise-children'] = 50;
+		city.workers.childcare = 50;
 	}
 	if (!city.workerRates)
 		city.workerRates = {};
 	if (city.workers.procreate)
 	{
 		city.workers['raise-children'] = city.workers.procreate;
-		city.workerRates['raise-children'] = city.workerRates['raise-children'];
+		city.workerRates['raise-children'] = city.workerRates.procreate;
 		delete city.workers.procreate;
 		delete city.workerRates.procreate;
+	}
+	if (city.workers['raise-children'])
+	{
+		city.workers.childcare = city.workers['raise-children'];
+		city.workerRates.childcare = city.workerRates['raise-children'];
+		delete city.workers['raise-children'];
+		delete city.workerRates['raise-children'];
 	}
 	city.population = 0;
 	for (var j in city.workers)
