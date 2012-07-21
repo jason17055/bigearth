@@ -156,8 +156,8 @@ function addAvailableJobs(cityId, jobs)
 
 	if (!jobs.hunt)
 		jobs.hunt = 0;
-	if (!jobs.procreate)
-		jobs.procreate = 0;
+	if (!jobs['raise-children'])
+		jobs['raise-children'] = 0;
 
 	if (!jobs['gather-wood'] && cell.terrain == 'forest')
 		jobs['gather-wood'] = 0;
@@ -383,7 +383,7 @@ function fleetDisbandInCity(fleetId, fleet)
 	{
 		lockCityStruct(city);
 		addWorkers(cityId, city, fleet.population/2, 'hunt');
-		addWorkers(cityId, city, fleet.population/2, 'procreate');
+		addWorkers(cityId, city, fleet.population/2, 'raise-children');
 		unlockCityStruct(cityId, city);
 	}
 
@@ -1457,7 +1457,7 @@ function RndProductionPoints(x)
 
 var FREE_PROFESSIONS = {
 	"hunt": true,
-	"procreate": true
+	"raise-children": true
 	};
 
 function countFreeWorkers(cityId, city)
@@ -1516,36 +1516,45 @@ function cityEndOfYear(cityId, city)
 	var ADULT_AGE = G.world.childYears;
 	var LIFE_EXPECTANCY = G.world.lifeExpectancy;
 
-	// calculate births and bring forward growing children
+	// check child care
+	var childCareDemand = city.children;
+	var childCareSupply = 2*(city.production['raise-children'] || 0);
+	if (childCareSupply < childCareDemand)
+	{
+		// not enough child care, kill off some children
+		var caredForPortion = childCareSupply / childCareDemand;
+		var survivalRate = 0.65 + 0.35 * Math.pow(caredForPortion,2);
+
+		if (survivalRate > 1) //sanity check
+			survivalRate = 1;
+
+		var newSum = 0.0;
+		for (var i = 0; i < ADULT_AGE; i++)
+		{
+			city.childrenByAge[i] = (city.childrenByAge[i] || 0) * survivalRate;
+			newSum += city.childrenByAge[i];
+		}
+		city.children = newSum;
+	}
+
+	// bring forward growing children
 	var newAdults = city.childrenByAge[ADULT_AGE-1] || 0;
-	var childCareDemand = 0;
 	for (var i = ADULT_AGE-1; i > 0; i--)
 	{
 		city.childrenByAge[i] = (city.childrenByAge[i-1] || 0);
-		childCareDemand += city.childrenByAge[i];
 	}
 	city.childrenByAge[0] = 0;
 	city.children -= newAdults;
 	if (city.children < 0) { city.children = 0; }
 
-	// TODO- consider childCareDemand... if not enough workers
-	// assigned to procreate, then kill off children since
-	// they is inadequate caretakers.
-
-	if (city.production.procreate)
+	// calculate new births
 	{
-		var pts = city.production.procreate;
-		delete city.production.procreate;
-
 		// determine how much room there is for growth
 		var cityCapacity = getCityPopulationCapacity(city);
-		var excessCapacity = cityCapacity - (city.population + city.children);
+		var housingUsage = (city.population + city.children) / cityCapacity;
 
-		var births = pts/ADULT_AGE;
-		if (births > excessCapacity)
-		{
-			births = excessCapacity > 0 ? excessCapacity : 0;
-		}
+		var birthRate = 0.125 / (1 + Math.exp(-(0.85-housingUsage)*12));
+		var births = city.population * birthRate;
 
 		city.childrenByAge[0] = births;
 		city.children = (city.children || 0) + births;
@@ -1962,13 +1971,19 @@ function checkCity(cityId, city)
 		city.food = 0;
 	if (!city.workers)
 	{
-		city.workers = {
-			hunt: 50,
-			procreate: 50
-			};
+		city.workers = {};
+		city.workers.hunt = 50;
+		city.workers['raise-children'] = 50;
 	}
 	if (!city.workerRates)
 		city.workerRates = {};
+	if (city.workers.procreate)
+	{
+		city.workers['raise-children'] = city.workers.procreate;
+		city.workerRates['raise-children'] = city.workerRates['raise-children'];
+		delete city.workers.procreate;
+		delete city.workerRates.procreate;
+	}
 	city.population = 0;
 	for (var j in city.workers)
 	{
