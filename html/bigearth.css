@@ -180,6 +180,10 @@ body {
 	background-color: #fa8;
 	color: black;
 }
+.cityJobBox[job="gather-stone"] {
+	background-color: #aba;
+	color: black;
+}
 
 .cityActivityContainer {
 	clear: both;

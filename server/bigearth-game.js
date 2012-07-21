@@ -159,12 +159,29 @@ function addAvailableJobs(cityId, jobs)
 	if (!jobs.procreate)
 		jobs.procreate = 0;
 
-	if (cell.terrain == 'forest' && !jobs['gather-wood'])
+	if (!jobs['gather-wood'] && cell.terrain == 'forest')
 		jobs['gather-wood'] = 0;
-	if (cell.terrain == 'hills' && !jobs['gather-clay'])
+
+	if (!jobs['gather-clay'] && (
+			cell.terrain == 'grassland' ||
+			cell.terrain == 'hills' ||
+			cell.terrain == 'plains' ||
+			cell.terrain == 'mountains' ||
+			cell.terrain == 'swamp'))
 		jobs['gather-clay'] = 0;
 
-	if (cell.subcells.farm && !jobs.farm)
+	if (!jobs['gather-stone'] && (
+			cell.terrain == 'desert' ||
+			cell.terrain == 'forest' ||
+			cell.terrain == 'grassland' ||
+			cell.terrain == 'hills' ||
+			cell.terrain == 'mountains' ||
+			cell.terrain == 'plains' ||
+			cell.terrain == 'swamp' ||
+			cell.terrain == 'tundra'))
+		jobs['gather-stone'] = 0;
+
+	if (!jobs.farm && cell.subcells.farm)
 		jobs.farm = 0;
 }
 
@@ -1554,7 +1571,18 @@ function cityEndOfYear(cityId, city)
 		var clayYield = pts * G.world.clayPerClayGatherer;
 		city.clay = (city.clay || 0) + clayYield;
 
-		console.log('  clay gathers brought in ' + clayYield + " clay");
+		console.log('  clay gatherers brought in ' + clayYield + " clay");
+	}
+
+	if (city.production['gather-stone'])
+	{
+		var pts = city.production['gather-stone'];
+		delete city.production['gather-stone'];
+
+		var stoneYield = pts * G.world.stonePerStoneGatherer;
+		city.stone = (city.stone || 0) + stoneYield;
+
+		console.log('  stone gatherers brought in ' + stoneYield + " stone");
 	}
 
 	// food production
@@ -1881,6 +1909,8 @@ function checkWorldParameters()
 		G.world.woodPerWoodGatherer = 0.01;
 	if (!G.world.clayPerClayGatherer)
 		G.world.clayPerClayGatherer = 0.01;
+	if (!G.world.stonePerStoneGatherer)
+		G.world.stonePerStoneGatherer = 0.01;
 }
 
 // inspect properties of a single fleet.
