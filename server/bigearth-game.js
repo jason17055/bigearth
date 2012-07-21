@@ -105,9 +105,10 @@ function discoverCell(playerId, location)
 				mapCell.city.workers = {};
 
 			var ww = roundWorkers(city.workers);
+			addAvailableJobs(refCell.city, ww);
 			for (var j in mapCell.city.workers)
 			{
-				if (!ww[j])
+				if (!(j in ww))
 				{
 					isNew = true;
 					delete mapCell.city.workers[j];
@@ -144,6 +145,25 @@ function discoverCell(playerId, location)
 			discoverEdge(playerId, eId);
 		}
 	}
+}
+
+function addAvailableJobs(cityId, jobs)
+{
+	var city = G.cities[cityId];
+	var cell = G.terrain.cells[city.location];
+
+	if (!jobs.hunt)
+		jobs.hunt = 0;
+	if (!jobs.procreate)
+		jobs.procreate = 0;
+
+	if (cell.terrain == 'forest' && !jobs['gather-wood'])
+		jobs['gather-wood'] = 0;
+	if (cell.terrain == 'hills' && !jobs['gather-clay'])
+		jobs['gather-clay'] = 0;
+
+	if (cell.subcells.farm && !jobs.farm)
+		jobs.farm = 0;
 }
 
 // given an associative array, return a new associative array with

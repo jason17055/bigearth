@@ -172,9 +172,12 @@ body {
 	background-color: #fc8;
 	color: black;
 }
-/* no longer used */
-.cityJobBox[job="unassigned"] {
-	background-color: #ccc;
+.cityJobBox[job="gather-wood"] {
+	background-color: #cfa;
+	color: black;
+}
+.cityJobBox[job="gather-clay"] {
+	background-color: #fa8;
 	color: black;
 }
 
