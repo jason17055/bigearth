@@ -626,10 +626,10 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityPopulation').text(city.population + city.children);
 	$('#cityPane .cityChildren').text(city.children);
 	$('#cityPane .cityWorkersCount').text(city.population);
-	$('#cityPane .cityFood').text(city.food);
 	$('#cityResourcesContainer div').remove();
-	var RESOURCE_TYPES = [ 'wood', 'clay', 'stone', 'fuel' ];
+	var RESOURCE_TYPES = [ 'food', 'wood', 'clay', 'stone', 'fuel' ];
 	var RESOURCE_DISPLAY_NAMES = {
+		food: "Food",
 		wood: "Wood",
 		clay: "Clay",
 		stone: "Stone",
