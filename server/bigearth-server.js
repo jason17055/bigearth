@@ -283,7 +283,17 @@ function handleRequest(request,response)
 	{
 		var streamId = RegExp.$1;
 		var eventId = RegExp.$2;
-		return EVENTS.allEventStreams[streamId].handleEventRequest(eventId, request, response);
+		var stream = EVENTS.allEventStreams[streamId];
+		if (stream)
+		{
+			return stream.handleEventRequest(eventId, request, response);
+		}
+		else
+		{
+			response.writeHead(404, {'Content-Type': 'text/plain'});
+			response.end('Bad event stream id\n');
+			return;
+		}
 	}
 	else if (requestPath.pathname.match(/^\/request\/(.*)$/))
 	{
