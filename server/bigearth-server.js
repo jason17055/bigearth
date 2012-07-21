@@ -5,6 +5,7 @@ var OS = require('os');
 var QS = require('querystring');
 var CRYPTO = require('crypto');
 var SESSIONS = require('./sessions.js');
+var EVENTS = require('./events.js');
 var SECRET = CRYPTO.randomBytes(20).toString('hex');
 var SECURE = false;
 
@@ -48,18 +49,13 @@ function handleStaticFileRequest(requestPath,request,response)
 		});
 }
 
-var EVENTS = {
-	nextEventId: 1,
-	waitingListeners: [],
-	sentEvents: {}
-	};
-
 function handleGameStateRequest(request,response)
 {
 	var s = request.Session;
 
 	var gameState = getGameState(request);
-	gameState.nextEventUrl = '/event/' + EVENTS.nextEventId;
+	var eventStream = EVENTS.createEventStream();
+	gameState.nextEventUrl = eventStream.getNextEventUrl();
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
 	response.end(
@@ -119,34 +115,13 @@ function sendEvent(evt, response)
 
 function postEvent(evt)
 {
-	evt.id = EVENTS.nextEventId++;
-	evt.nextEventUrl = '/event/'+EVENTS.nextEventId;
-	EVENTS.sentEvents[evt.id] = evt;
-
-	for (var i in EVENTS.waitingListeners)
+	for (var k in EVENTS.allEventStreams)
 	{
-		var l = EVENTS.waitingListeners[i];
-		sendEvent(evt, l);
+		var s = EVENTS.allEventStreams[k];
+		s.postEvent(evt);
 	}
-	EVENTS.waitingListeners = [];
 }
 global.postEvent = postEvent;
-
-function handleEventRequest(eventId, request, response)
-{
-	console.log('got event request ' + eventId);
-	if (eventId && parseInt(eventId) < EVENTS.nextEventId)
-	{
-		// request for an already sent event
-		var evt = EVENTS.sentEvents[eventId];
-		return sendEvent(evt, response);
-	}
-	else
-	{
-		// must wait
-		EVENTS.waitingListeners.push(response);
-	}
-}
 
 function handleActionRequest(verb, queryString, request, response)
 {
@@ -304,10 +279,11 @@ function handleRequest(request,response)
 		makeDirty();
 		return handleLoginRequest(request,response);
 	}
-	else if (requestPath.pathname.match(/^\/event\//))
+	else if (requestPath.pathname.match(/^\/events\/(\d+)\/(.*)$/))
 	{
-		var eventId = requestPath.pathname.substr(7);
-		return handleEventRequest(eventId, request, response);
+		var streamId = RegExp.$1;
+		var eventId = RegExp.$2;
+		return EVENTS.allEventStreams[streamId].handleEventRequest(eventId, request, response);
 	}
 	else if (requestPath.pathname.match(/^\/request\/(.*)$/))
 	{
