@@ -1457,7 +1457,10 @@ function RndProductionPoints(x)
 
 var FREE_PROFESSIONS = {
 	"hunt": true,
-	"childcare": true
+	"childcare": true,
+	"gather-wood": true,
+	"gather-clay": true,
+	"gather-stone": true
 	};
 
 function countFreeWorkers(cityId, city)
