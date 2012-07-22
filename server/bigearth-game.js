@@ -1455,48 +1455,35 @@ function RndProductionPoints(x)
 	return x * Math.exp( -Math.log((1/t)-1) / 15 );
 }
 
-var FREE_PROFESSIONS = {
-	"hunt": true,
-	"childcare": true,
-	"gather-wood": true,
-	"gather-clay": true,
-	"gather-stone": true
-	};
-
-function countFreeWorkers(cityId, city)
-{
-	var sum = 0;
-	for (var k in city.workers)
-	{
-		if (FREE_PROFESSIONS[k])
-			sum += city.workers[k];
-	}
-	return sum;
-}
-
 //caller should call fire-city-update-notification
 //
 function stealWorkers(cityId, city, quantity, toJob)
 {
-	var sumFreeWorkers = countFreeWorkers(cityId, city);
-	if (sumFreeWorkers < quantity)
-		throw new Error("oops not enough free workers (city "+city.name+", want "+quantity+" for job " + toJob+")");
-
-	for (var k in city.workers)
+	var sumAvailable = 0;
+	for (var job in city.workers)
 	{
-		if (FREE_PROFESSIONS[k])
+		if (job != toJob)
+			sumAvailable += city.workers[job];
+	}
+
+	if (sumAvailable < quantity)
+		throw new Error("oops, not enough available workers (city "+city.name+", want "+quantity+" for job " + toJob+")");
+
+	for (var job in city.workers)
+	{
+		if (job != toJob)
 		{
-			var amt = quantity * city.workers[k]/sumFreeWorkers;
-			city.workers[k] -= amt;
+			var amt = quantity * city.workers[job]/sumFreeWorkers;
+			city.workers[job] -= amt;
 			city.population -= amt;
-			if (city.workers[k] > 0)
+			if (city.workers[job] > 0)
 			{
-				cityNewWorkerRate(city, k);
+				cityNewWorkerRate(city, job);
 			}
 			else
 			{
-				delete city.workers[k];
-				delete city.workerRates[k];
+				delete city.workers[job];
+				delete city.workerRates[job];
 			}
 		}
 	}
