@@ -302,38 +302,18 @@ function setFleetActivityFlag(fleetId, fleet, newActivity)
 	
 }
 
-function playerCanSee(playerId, cellId)
+function playerCanSee(playerId, location)
 {
-	var cells_to_check = [cellId];
-	var nn = G.geometry.getNeighbors(cellId);
-	for (var i = 0; i < nn.length; i++)
-	{
-		cells_to_check.push(nn[i]);
-	}
+	var cell = getTerrainLocation(location);
+	if (!cell.seenBy)
+		return false;
 
-	for (var i = 0; i < cells_to_check.length; i++)
+	for (var fid in cell.seenBy)
 	{
-		var tid = G.terrain.cells[cells_to_check[i]].city;
-		if (tid)
-		{
-			if (G.cities[tid].owner == playerId)
-				return true;
-		}
-	}
-
-	for (var fid in G.fleets)
-	{
-		var f = G.fleets[fid];
+		var f = G.fleets[fid] || G.cities[fid];
 		if (f.owner == playerId)
-		{
-			for (var i = 0; i < cells_to_check.length; i++)
-			{
-				if (f.location == cells_to_check[i])
-					return true;
-			}
-		}
+			return true;
 	}
-
 	return false;
 }
 
@@ -693,12 +673,80 @@ function getFleetMovementCost(fleet, oldLoc, newLoc)
 	return getUnitMovementCost(fleet.type, oldLoc, newLoc);
 }
 
+function getTerrainLocation(location)
+{
+	return G.terrain.cells[location];
+}
+
+function visibilityChanged(playerId, location)
+{
+	//TODO... notify user
+}
+
+// called after fleet has moved
+// this function is responsible for fleets being able to see each
+// other, and detecting when a fleet can no longer be seen
+//
+function fleetMoved(fleetId, fleet, oldLoc, newLoc)
+{
+	var newVisibility = {};
+
+	newVisibility[newLoc] = true;
+	var nn = G.geometry.getNeighbors(newLoc);
+	for (var i = 0; i < nn.length; i++)
+	{
+		var n = nn[i];
+		newVisibility[n] = true;
+	}
+
+	if (!fleet.canSee)
+		fleet.canSee = {};
+
+	for (var loc in fleet.canSee)
+	{
+		if (!newVisibility[loc])
+		{
+			var cell = getTerrainLocation(loc);
+
+			delete fleet.canSee[loc];
+			if (cell.seenBy)
+				delete cell.seenBy[fleetId];
+		}
+	}
+
+	for (var loc in newVisibility)
+	{
+		if (!fleet.canSee[loc])
+		{
+			var cell = getTerrainLocation(loc);
+
+			fleet.canSee[loc] = true;
+			if (!cell.seenBy)
+				cell.seenBy = {};
+			cell.seenBy[fleetId] = true;
+		}
+	}
+}
+
 function moveFleetOneStep(fleetId, newLoc)
 {
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
 	fleet.lastLocation = oldLoc;
 	fleet.location = newLoc;
+
+	{
+		var oldLocStruct = getTerrainLocation(oldLoc);
+		if (oldLocStruct.fleets)
+			delete oldLocStruct.fleets[fleetId];
+
+		var newLocStruct = getTerrainLocation(newLoc);
+		if (!newLocStruct.fleets)
+			newLocStruct.fleets = {};
+		newLocStruct.fleets[fleetId] = true;
+	}
+
+	fleetMoved(fleetId, fleet, oldLoc, newLoc);
 
 	var costOfMovement = getFleetMovementCost(fleet, oldLoc, newLoc);
 	console.log("cost is " + Math.round(costOfMovement));
@@ -1861,6 +1909,11 @@ function startGame()
 		checkFleet(fid);
 		fleetActivity(fid, G.fleets[fid]);
 	}
+
+	for (var pid in G.players)
+	{
+		checkPlayer(pid, G.players[pid]);
+	}
 }
 
 // inspect properties from world.txt,
@@ -1910,6 +1963,42 @@ function checkWorldParameters()
 		G.world.clayPerClayGatherer = 0.01;
 	if (!G.world.stonePerStoneGatherer)
 		G.world.stonePerStoneGatherer = 0.01;
+}
+
+// inspect properties of Player struct
+//
+function checkPlayer(pid, player)
+{
+	player.canSee = {};
+	for (var tid in G.cities)
+	{
+		var city = G.cities[tid];
+		if (city.owner != pid)
+			continue;
+
+		player.canSee[city.location] = true;
+		var nn = G.geometry.getNeighbors(city.location);
+		for (var i = 0; i < nn.length; i++)
+		{
+			var n = nn[i];
+			player.canSee[n] = true;
+		}
+	}
+
+	for (var fid in G.fleets)
+	{
+		var fleet = G.fleets[fid];
+		if (fleet.owner != pid)
+			continue;
+
+		player.canSee[fleet.location] = true;;
+		var nn = G.geometry.getNeighbors(fleet.location);
+		for (var i = 0; i < nn.length; i++)
+		{
+			var n = nn[i];
+			player.canSee[n] = true;
+		}
+	}
 }
 
 // inspect properties of a single fleet.
