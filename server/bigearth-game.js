@@ -1607,6 +1607,7 @@ function cityEndOfYear(cityId, city)
 	{
 		// determine how much room there is for growth
 		var cityCapacity = getCityPopulationCapacity(city);
+		if (cityCapacity < 1) cityCapacity = 1;
 		var housingUsage = (city.population + city.children) / cityCapacity;
 
 		var birthRate = 0.125 / (1 + Math.exp(-(0.85-housingUsage)*12));
