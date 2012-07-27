@@ -20,11 +20,6 @@ body {
 	position: absolute;
 }
 
-.testPan {
-	-moz-transition: all 2s ease-out 0s;
-	-moz-transform: translateX(600px);
-}
-
 #crossHairs {
 	display: none;
 	position: absolute;
