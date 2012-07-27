@@ -892,7 +892,9 @@ function newPlayer(playerId)
 
 	// pick a location to be this player's home location
 	var loc = findSuitableStartingLocation();
-	createUnit(playerId, "settler", loc);
+	createUnit(playerId, "settler", loc, {
+			population: numSettlers
+			});
 	createUnit(playerId, "explorer", G.geometry.getNeighbors(loc)[0]);
 }
 
@@ -907,6 +909,7 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 		owner: playerId,
 		location: initialLocation,
 		type: unitType,
+		population: 50,
 		orders: []
 		};
 	if (extraProperties)
