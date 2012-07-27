@@ -311,6 +311,8 @@ function playerCanSee(playerId, location)
 	for (var fid in cell.seenBy)
 	{
 		var f = G.fleets[fid] || G.cities[fid];
+		if (!f)
+			throw new Error("unexpected: cell "+location+" has seenby of "+fid+" but this is neither a fleet nor a city");
 		if (f.owner == playerId)
 			return true;
 	}
@@ -367,13 +369,29 @@ function fleetDisbandInCity(fleetId, fleet)
 		unlockCityStruct(cityId, city);
 	}
 
-	delete G.fleets[fleetId];
+	destroyFleet(fleetId, 'disband-in-city');
+}
+
+function destroyFleet(fleetId, disposition)
+{
+	var fleet = G.fleets[fleetId];
+	var location = fleet.location;
+
 	postEvent({
 		event: 'fleet-terminated',
 		fleet: fleetId,
 		location: location,
-		disposition: 'disband-in-city'
+		disposition: disposition
 		});
+
+	if (fleet.canSee)
+	{
+		for (var loc in fleet.canSee)
+		{
+			delete getTerrainLocation(loc).seenBy[fleetId];
+		}
+	}
+	delete G.fleets[fleetId];
 }
 
 function tryToBuildCity(fleetId, fleet)
@@ -2035,6 +2053,16 @@ function checkTerrainCell(cid, cell)
 	{
 		cell.subcells.farm = cell.subcells.farms;
 		delete cell.subcells.farms;
+	}
+
+	if (cell.seenBy)
+	{
+		for (var fid in cell.seenBy)
+		{
+			var fleetOrCity = G.fleets[fid] || G.cities[fid];
+			if (!fleetOrCity)
+				delete cell.seenBy[fid];
+		}
 	}
 }
 
