@@ -34,6 +34,7 @@ loadTerrainImage("swamp");
 loadTerrainImage("forest");
 loadTerrainImage("mountains");
 loadTerrainImage("hills");
+loadTerrainImage("jungle");
 
 var CITIES_IMAGE = null;
 function loadCitiesImage()
