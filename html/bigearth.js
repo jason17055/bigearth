@@ -345,9 +345,10 @@ function onMapReplaced()
 	onResize();
 	VIEWPORT.translateX = -Math.round(-VIEWPORT.screenWidth/2);
 	VIEWPORT.translateY = -Math.round(-VIEWPORT.screenHeight/2);
+
 	$('#scrollPanel').css({
 		'-moz-transition':'none',
-		'-moz-transform':'translate('+VIEWPORT.translateX+','+VIEWPORT.translateY+')'
+		'-moz-transform':'translate('+VIEWPORT.translateX+'px,'+VIEWPORT.translateY+'px)'
 		});
 	CANVASES = [];
 	$('.aCanvas').remove();
@@ -1152,7 +1153,7 @@ function panToCoords(pt)
 	var $sp = $('#scrollPanel');
 	$sp.css({
 		'-moz-transition': 'all 1.0s ease-out',
-		'-moz-transform': 'translate('+dx+','+dy+')'
+		'-moz-transform': 'translate('+dx+'px,'+dy+'px)'
 		});
 
 	if (needsAttitudeChange)
@@ -1187,7 +1188,7 @@ function panToCoords(pt)
 			var rotateAmt = (crossProd > 0 ? "-" : "") +
 				Math.round(intAngle*180/Math.PI) + "deg";
 			$sp.css({
-				'-moz-transform': 'translate('+dx+','+dy+') rotate('+rotateAmt+')',
+				'-moz-transform': 'translate('+dx+'px,'+dy+'px) rotate('+rotateAmt+')',
 				'-moz-transform-origin': Math.round(b_p.x)+'px '+Math.round(b_p.y)+'px'
 				});
 		}
@@ -1212,7 +1213,7 @@ function panToCoords(pt)
 
 			$sp.css({
 				'-moz-transition': 'none',
-				'-moz-transform': 'translate('+dx+','+dy+')',
+				'-moz-transform': 'translate('+dx+'px,'+dy+'px)',
 				'-moz-transform-origin': '50% 50%'
 				});
 		}, 1000);
