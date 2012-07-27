@@ -497,7 +497,7 @@ console.log("using memoized path (length " + fleet.path.length + ")");
 
 console.log("must perform a shortest path search");
 
-	fleet.path = shortestPath(oldLoc, targetLocation, fleet);
+	fleet.path = shortestPathByMap(G.maps[fleet.owner], fleet, oldLoc, targetLocation);
 
 console.log("shortest path is", fleet.path);
 if (fleet.path.length > 50)
@@ -513,7 +513,7 @@ if (fleet.path.length > 50)
 //FIXME- this function accesses server-side terrain data to
 //find the best route; obviously that is not desirable.
 //
-function shortestPath(fromLoc, toLoc, fleet)
+function shortestPathByMap(map, fleet, fromLoc, toLoc)
 {
 	var baseDist = null;
 
@@ -577,7 +577,7 @@ function shortestPath(fromLoc, toLoc, fleet)
 				return buildPath(toLoc);
 			}
 
-			var accumDist = cur[2] + getFleetMovementCost(fleet, curLoc, nn[i]);
+			var accumDist = cur[2] + getFleetMovementCostByMap(fleet, curLoc, nn[i], map);
 			var estRemainDistSteps = G.geometry.distanceBetween(nn[i], toLoc) / baseDist;
 			var estRemainDist = estRemainDistSteps * 3000;
 
@@ -635,6 +635,38 @@ function isNavigableByMap(map, fleet, location)
 	return cost < 15000;
 }
 
+function getUnitMovementCostByMap(unitType, oldLoc, newLoc, map)
+{
+	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
+
+	var oldLocCell = map.cells[oldLoc];
+	var newLocCell = map.cells[newLoc];
+
+	var UNKNOWN_TERRAIN_COST = 1100;
+	var costOldCell = oldLocCell && oldLocCell.terrain ?
+		((UM[oldLocCell.terrain] || UM.other_terrain) / 2) :
+		UNKNOWN_TERRAIN_COST;
+;
+	var costNewCell = newLocCell && newLocCell.terrain ?
+		((UM[newLocCell.terrain] || UM.other_terrain) / 2) :
+		UNKNOWN_TERRAIN_COST;
+
+	var cost = costOldCell + costNewCell;
+
+	// consider cost of crossing a river, if there is one.
+
+	var eId = G.geometry._makeEdge(oldLoc, newLoc);
+	var e = map.edges[eId];
+	var riverCrossing = false;
+	if (e && e.feature && e.feature == 'river')
+	{
+		riverCrossing = true;
+		cost += (UM.across_river || 0);
+	}
+
+	return cost;
+}
+
 function getUnitMovementCost(unitType, oldLoc, newLoc)
 {
 	var locationInfo = function(loc)
@@ -684,6 +716,11 @@ function getUnitMovementCost(unitType, oldLoc, newLoc)
 		return cost;
 	}
 	return Infinity;
+}
+
+function getFleetMovementCostByMap(fleet, oldLoc, newLoc, map)
+{
+	return getUnitMovementCostByMap(fleet.type, oldLoc, newLoc, map);
 }
 
 function getFleetMovementCost(fleet, oldLoc, newLoc)
