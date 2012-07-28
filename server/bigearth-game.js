@@ -735,12 +735,39 @@ function getTerrainLocation(location)
 
 function addPlayerCanSee(playerId, location)
 {
-	//TODO... notify user
+	// notify user of any fleets found at this location
+
+	for (var fid in G.fleets)
+	{
+		var fleet = G.fleets[fid];
+		if (fleet.location == location && fleet.owner != playerId)
+		{
+			postEvent({
+				event: 'fleet-spawned',
+				fleet: fid,
+				data: getFleetInfoForPlayer(fid, playerId)
+				});
+		}
+	}
 }
 
 function removePlayerCanSee(playerId, location)
 {
-	//TODO... notify user
+	// notify user that they lost sight of any fleets at this location
+
+	for (var fid in G.fleets)
+	{
+		var fleet = G.fleets[fid];
+		if (fleet.location == location && fleet.owner != playerId)
+		{
+			postEvent({
+				event: 'fleet-terminated',
+				fleet: fid,
+				location: location,
+				disposition: "out-of-sight"
+				});
+		}
+	}
 }
 
 function addFleetCanSee(fleetId, fleet, location)
