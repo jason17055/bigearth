@@ -423,6 +423,7 @@ function tryToBuildCity(fleetId, fleet)
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
 		terrainChanged(fleet.location);
+		updateFleetSight(tid, city);
 
 		setFleetActivityFlag(fleetId, fleet, null);
 		return fleetDisbandInCity(fleetId, fleet);
@@ -801,16 +802,12 @@ function removeFleetCanSee(fleetId, fleet, location)
 	}
 }
 
-// called after fleet has moved
-// this function is responsible for fleets being able to see each
-// other, and detecting when a fleet can no longer be seen
-//
-function fleetMoved(fleetId, fleet, oldLoc, newLoc)
+function updateFleetSight(fid, fleet)
 {
 	var newVisibility = {};
 
-	newVisibility[newLoc] = true;
-	var nn = G.geometry.getNeighbors(newLoc);
+	newVisibility[fleet.location] = true;
+	var nn = G.geometry.getNeighbors(fleet.location);
 	for (var i = 0; i < nn.length; i++)
 	{
 		var n = nn[i];
@@ -824,7 +821,7 @@ function fleetMoved(fleetId, fleet, oldLoc, newLoc)
 	{
 		if (!newVisibility[loc])
 		{
-			removeFleetCanSee(fleetId, fleet, loc);
+			removeFleetCanSee(fid, fleet, loc);
 		}
 	}
 
@@ -832,9 +829,18 @@ function fleetMoved(fleetId, fleet, oldLoc, newLoc)
 	{
 		if (!fleet.canSee[loc])
 		{
-			addFleetCanSee(fleetId, fleet, loc);
+			addFleetCanSee(fid, fleet, loc);
 		}
 	}
+}
+
+// called after fleet has moved
+// this function is responsible for fleets being able to see each
+// other, and detecting when a fleet can no longer be seen
+//
+function fleetMoved(fleetId, fleet, oldLoc, newLoc)
+{
+	updateFleetSight(fleetId, fleet);
 }
 
 function moveFleetOneStep(fleetId, newLoc)
@@ -2214,6 +2220,8 @@ function checkCity(cityId, city)
 		city.lastUpdate = G.world.age;
 	if (!city.birth)
 		city.birth = city.lastUpdate;
+
+	updateFleetSight(cityId, city);
 }
 
 
