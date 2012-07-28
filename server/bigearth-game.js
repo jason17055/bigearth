@@ -372,6 +372,24 @@ function fleetDisbandInCity(fleetId, fleet)
 	destroyFleet(fleetId, 'disband-in-city');
 }
 
+function allPlayersWhoCanSee(location)
+{
+	var cell = getTerrainLocation(location);
+	if (!cell.seenBy)
+		return {};
+
+	var seenByPid = {};
+	for (var fid in cell.seenBy)
+	{
+		var fleet = G.fleets[fid] || G.cities[fid];
+		if (fleet.owner)
+		{
+			seenByPid[fleet.owner] = true;
+		}
+	}
+	return seenByPid;
+}
+
 function destroyFleet(fleetId, disposition)
 {
 	var fleet = G.fleets[fleetId];
@@ -383,6 +401,21 @@ function destroyFleet(fleetId, disposition)
 		location: location,
 		disposition: disposition
 		});
+
+	var pp = allPlayersWhoCanSee(location);
+	for (var pid in pp)
+	{
+		if (pid != fleet.owner)
+		{
+			// notify foreign player that can also see this fleet
+			notifyPlayer(pid, {
+				event: 'fleet-terminated',
+				fleet: fleetId,
+				location: location,
+				disposition: disposition
+				});
+		}
+	}
 
 	if (fleet.canSee)
 	{
@@ -876,6 +909,56 @@ function moveFleetOneStep(fleetId, newLoc)
 		toLocation: newLoc,
 		delay: Math.round(costOfMovement)
 		});
+
+	var observersOldLoc = allPlayersWhoCanSee(oldLoc);
+	var observersNewLoc = allPlayersWhoCanSee(newLoc);
+	for (var pid in observersOldLoc)
+	{
+		if (pid == fleet.owner)
+			continue;
+
+		if (observersNewLoc[pid])
+		{
+			// ordinary movement
+			notifyPlayer(pid, {
+				event: 'fleet-movement',
+				fleet: fleetId,
+				fromLocation: oldLoc,
+				toLocation: newLoc,
+				delay: Math.round(costOfMovement)
+				});
+		}
+		else
+		{
+			// observer of fleet at old location, but cannot
+			// see the new location
+			notifyPlayer(pid, {
+				event: 'fleet-terminated',
+				fleet: fleetId,
+				location: oldLoc,
+				newLocation: newLoc,
+				disposition: 'moved-out-of-sight'
+				});
+		}
+	}
+	for (var pid in observersNewLoc)
+	{
+		if (pid == fleet.owner)
+			continue;
+
+		if (!observersOldLoc[pid])
+		{
+			// observer who can see new location, but not
+			// able to see the old location
+			notifyPlayer(pid, {
+				event: 'fleet-spawned',
+				fleet: fleetId,
+				fromLocation: oldLoc,
+				data: getFleetInfoForPlayer(fleetId, pid)
+				});
+		}
+	}
+
 	fleetCooldown(fleetId, fleet, Math.round(costOfMovement));
 }
 
@@ -987,6 +1070,19 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 		fleet: fid,
 		data: getFleetInfoForPlayer(fid, playerId)
 		});
+
+	var pp = allPlayersWhoCanSee(initialLocation);
+	for (var pid in pp)
+	{
+		if (pid == playerId)
+			continue;
+
+		notifyPlayer(pid, {
+			event: 'fleet-spawned',
+			fleet: fid,
+			data: getFleetInfoForPlayer(fid, pid)
+			});
+	}
 	
 	discoverCell(playerId,f.location);
 	discoverCellBorder(playerId,f.location);
