@@ -388,7 +388,7 @@ function destroyFleet(fleetId, disposition)
 	{
 		for (var loc in fleet.canSee)
 		{
-			delete getTerrainLocation(loc).seenBy[fleetId];
+			removeFleetCanSee(fleetId, fleet, loc);
 		}
 	}
 	delete G.fleets[fleetId];
@@ -733,9 +733,45 @@ function getTerrainLocation(location)
 	return G.terrain.cells[location];
 }
 
-function visibilityChanged(playerId, location)
+function addPlayerCanSee(playerId, location)
 {
 	//TODO... notify user
+}
+
+function removePlayerCanSee(playerId, location)
+{
+	//TODO... notify user
+}
+
+function addFleetCanSee(fleetId, fleet, location)
+{
+	var couldSeeBefore = playerCanSee(fleet.owner, location);
+
+	fleet.canSee[location] = true;
+
+	var cell = getTerrainLocation(location);
+	if (!cell.seenBy)
+		cell.seenBy = {};
+	cell.seenBy[fleetId] = true;
+
+	if (!couldSeeBefore)
+	{
+		addPlayerCanSee(fleet.owner, location);
+	}
+}
+
+function removeFleetCanSee(fleetId, fleet, location)
+{
+	delete fleet.canSee[location];
+
+	var cell = getTerrainLocation(location);
+	if (cell.seenBy)
+		delete cell.seenBy[fleetId];
+
+	if (!playerCanSee(fleet.owner, location))
+	{
+		removePlayerCanSee(fleet.owner, location);
+	}
 }
 
 // called after fleet has moved
@@ -761,11 +797,7 @@ function fleetMoved(fleetId, fleet, oldLoc, newLoc)
 	{
 		if (!newVisibility[loc])
 		{
-			var cell = getTerrainLocation(loc);
-
-			delete fleet.canSee[loc];
-			if (cell.seenBy)
-				delete cell.seenBy[fleetId];
+			removeFleetCanSee(fleetId, fleet, loc);
 		}
 	}
 
@@ -773,12 +805,7 @@ function fleetMoved(fleetId, fleet, oldLoc, newLoc)
 	{
 		if (!fleet.canSee[loc])
 		{
-			var cell = getTerrainLocation(loc);
-
-			fleet.canSee[loc] = true;
-			if (!cell.seenBy)
-				cell.seenBy = {};
-			cell.seenBy[fleetId] = true;
+			addFleetCanSee(fleetId, fleet, loc);
 		}
 	}
 }
