@@ -130,7 +130,7 @@ function discoverCell(playerId, location)
 	if (isNew)
 	{
 		map.cells[location] = mapCell;
-		postEvent({
+		notifyPlayer(playerId, {
 			event: 'map-update',
 			location: location,
 			locationType: 'cell',
@@ -248,7 +248,7 @@ function discoverEdge(playerId, eId)
 	if (isNew)
 	{
 		map.edges[eId] = mapEdge;
-		postEvent({
+		notifyPlayer(playerId, {
 			event: 'map-update',
 			location: eId,
 			locationType: 'edge',
@@ -294,7 +294,7 @@ function setFleetActivityFlag(fleetId, fleet, newActivity)
 		delete fleet.activity;
 	}
 
-	postEvent({
+	notifyPlayer(fleet.owner, {
 		event: 'fleet-activity',
 		fleet: fleetId,
 		activity: fleet.activity
@@ -377,7 +377,7 @@ function destroyFleet(fleetId, disposition)
 	var fleet = G.fleets[fleetId];
 	var location = fleet.location;
 
-	postEvent({
+	notifyPlayer(fleet.owner, {
 		event: 'fleet-terminated',
 		fleet: fleetId,
 		location: location,
@@ -743,7 +743,7 @@ function addPlayerCanSee(playerId, location)
 		var fleet = G.fleets[fid];
 		if (fleet.location == location && fleet.owner != playerId)
 		{
-			postEvent({
+			notifyPlayer(playerId, {
 				event: 'fleet-spawned',
 				fleet: fid,
 				data: getFleetInfoForPlayer(fid, playerId)
@@ -761,7 +761,7 @@ function removePlayerCanSee(playerId, location)
 		var fleet = G.fleets[fid];
 		if (fleet.location == location && fleet.owner != playerId)
 		{
-			postEvent({
+			notifyPlayer(playerId, {
 				event: 'fleet-terminated',
 				fleet: fid,
 				location: location,
@@ -869,7 +869,7 @@ function moveFleetOneStep(fleetId, newLoc)
 	discoverCell(fleet.owner, newLoc);
 	discoverCellBorder(fleet.owner, newLoc);
 
-	postEvent({
+	notifyPlayer(fleet.owner, {
 		event: 'fleet-movement',
 		fleet: fleetId,
 		fromLocation: oldLoc,
@@ -982,7 +982,7 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 	var fid = nextFleetId();
 
 	G.fleets[fid] = f;
-	postEvent({
+	notifyPlayer(playerId, {
 		event: 'fleet-spawned',
 		fleet: fid,
 		data: getFleetInfoForPlayer(fid, playerId)

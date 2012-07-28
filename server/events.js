@@ -1,10 +1,17 @@
 var nextEventStreamId = 1;
 var allEventStreams = {};
+var eventStreamsByPlayer = {};
 
-function createEventStream()
+function createEventStream(playerId)
 {
 	var me = new EventStream(nextEventStreamId++);
+	me.playerId = playerId;
 	allEventStreams[me.id] = me;
+
+	if (!eventStreamsByPlayer[playerId])
+		eventStreamsByPlayer[playerId] = {};
+	eventStreamsByPlayer[playerId][me.id] = me;
+
 	return me;
 }
 
@@ -69,3 +76,4 @@ EventStream.prototype.handleEventRequest = function(eventId, request, response)
 
 exports.createEventStream = createEventStream;
 exports.allEventStreams = allEventStreams;
+exports.eventStreamsByPlayer = eventStreamsByPlayer;

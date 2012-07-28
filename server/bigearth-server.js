@@ -54,8 +54,12 @@ function handleGameStateRequest(request,response)
 	var s = request.Session;
 
 	var gameState = getGameState(request);
-	var eventStream = EVENTS.createEventStream();
-	gameState.nextEventUrl = eventStream.getNextEventUrl();
+
+	if (request.remote_player)
+	{
+		var eventStream = EVENTS.createEventStream(request.remote_player);
+		gameState.nextEventUrl = eventStream.getNextEventUrl();
+	}
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
 	response.end(
@@ -113,15 +117,19 @@ function sendEvent(evt, response)
 		);
 }
 
-function postEvent(evt)
+function notifyPlayer(playerId, evt)
 {
-	for (var k in EVENTS.allEventStreams)
+	var streams = EVENTS.eventStreamsByPlayer[playerId];
+	if (streams)
 	{
-		var s = EVENTS.allEventStreams[k];
-		s.postEvent(evt);
+		for (var k in streams)
+		{
+			var s = streams[k];
+			s.postEvent(evt);
+		}
 	}
 }
-global.postEvent = postEvent;
+global.notifyPlayer = notifyPlayer;
 
 function handleActionRequest(verb, queryString, request, response)
 {
