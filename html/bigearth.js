@@ -1656,3 +1656,10 @@ function cityExpandVillage()
 		data: { improvement: 'hamlet' }
 		});
 }
+
+$(function() {
+$('.closeBtn').click(function() {
+		$('#fleetPane').hide();
+		$('#cityPane').hide();
+	});
+});

@@ -196,3 +196,15 @@ body {
 	height: 6pt;
 	background-color: #ccc;
 }
+
+.closeBtn {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 20px;
+	height: 20px;
+	border: 1px solid black;
+	text-align: center;
+	line-height: 20px;
+	cursor: default;
+}
