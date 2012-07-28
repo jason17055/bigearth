@@ -346,9 +346,13 @@ function onMapReplaced()
 	VIEWPORT.translateX = -Math.round(-VIEWPORT.screenWidth/2);
 	VIEWPORT.translateY = -Math.round(-VIEWPORT.screenHeight/2);
 
+	var translateRule = 'translate('+VIEWPORT.translateX+'px,'+VIEWPORT.translateY+'px)';
+
 	$('#scrollPanel').css({
+		'-webkit-transition':'none',
 		'-moz-transition':'none',
-		'-moz-transform':'translate('+VIEWPORT.translateX+'px,'+VIEWPORT.translateY+'px)'
+		'-webkit-transform':translateRule,
+		'-moz-transform':translateRule
 		});
 	CANVASES = [];
 	$('.aCanvas').remove();
@@ -752,6 +756,7 @@ function updateFleetIcon(fleetId, fleetInfo)
 
 	var delay = fleetInfo.stepDelay ? (fleetInfo.stepDelay / 2) / 1000 : 0.5;
 	$f.css({
+		'-webkit-transition': 'all '+delay+'s ease-out',
 		'-moz-transition': 'all '+delay+'s ease-out',
 		left: (p.x - 32)+"px",
 		top: (p.y - 24)+"px"
@@ -1152,7 +1157,9 @@ function panToCoords(pt)
 
 	var $sp = $('#scrollPanel');
 	$sp.css({
+		'-webkit-transition': 'all 1.0s ease-out',
 		'-moz-transition': 'all 1.0s ease-out',
+		'-webkit-transform': 'translate('+dx+'px,'+dy+'px)',
 		'-moz-transform': 'translate('+dx+'px,'+dy+'px)'
 		});
 
@@ -1188,7 +1195,9 @@ function panToCoords(pt)
 			var rotateAmt = (crossProd > 0 ? "-" : "") +
 				Math.round(intAngle*180/Math.PI) + "deg";
 			$sp.css({
+				'-webkit-transform': 'translate('+dx+'px,'+dy+'px) rotate('+rotateAmt+')',
 				'-moz-transform': 'translate('+dx+'px,'+dy+'px) rotate('+rotateAmt+')',
+				'-webkit-transform-origin': Math.round(b_p.x)+'px '+Math.round(b_p.y)+'px',
 				'-moz-transform-origin': Math.round(b_p.x)+'px '+Math.round(b_p.y)+'px'
 				});
 		}
@@ -1212,8 +1221,11 @@ function panToCoords(pt)
 			exposeCanvases();
 
 			$sp.css({
+				'-webkit-transition': 'none',
 				'-moz-transition': 'none',
+				'-webkit-transform': 'translate('+dx+'px,'+dy+'px)',
 				'-moz-transform': 'translate('+dx+'px,'+dy+'px)',
+				'-webkit-transform-origin': '50% 50%',
 				'-moz-transform-origin': '50% 50%'
 				});
 		}, 1000);
