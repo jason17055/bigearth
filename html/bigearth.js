@@ -809,7 +809,26 @@ function onFleetTerminated(eventData)
 	var fleetId = eventData.fleet;
 	if (fleets[fleetId])
 	{
-		removeFleetIcon(fleetId);
+		if (eventData.disposition == 'moved-out-of-sight' && eventData.newLocation)
+		{
+			var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]');
+			var p = toScreenPoint(coords.cells[eventData.newLocation].pt);
+			$f.css({
+				'-webkit-transition': 'all 0.5s ease-out',
+				'-moz-transition': 'all 0.5s ease-out',
+				left: (p.x-32)+"px",
+				top: (p.y-24)+"px",
+				opacity: '0'
+				});
+			setTimeout(function() {
+				$f.remove();
+				}, 500);
+		}
+		else
+		{
+			removeFleetIcon(fleetId);
+		}
+
 		delete fleets[fleetId];
 	}
 
