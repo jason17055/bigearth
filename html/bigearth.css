@@ -33,6 +33,11 @@ body {
 	z-index: 1;
 }
 
+.fleetIcon.selectedFleet {
+	z-index: 2;
+	background-color: yellow;
+}
+
 #fleetPane, #cityPane {
 	position: absolute;
 	right: 1em;

@@ -707,6 +707,8 @@ function loadCityInfo(city, location)
 function onFleetClicked(fleetId)
 {
 	$('#cityPane').hide();
+	$('.fleetIcon').removeClass('selectedFleet');
+	$('.fleetIcon[fleet-id="'+fleetId+'"]').addClass('selectedFleet');
 
 	var fleet = fleets[fleetId];
 	if (!fleet)
@@ -716,6 +718,25 @@ function onFleetClicked(fleetId)
 	$('#fleetPane img.icon').attr('src','unit_images/'+fleet.type+'.png');
 	$('#fleetPane .featureType').text(fleet.type);
 	$('#fleetPane').show();
+
+	$('#fleetPane .atThisLocation').empty();
+	for (var fid in fleets)
+	{
+		if (fid == fleetId)
+			continue;
+
+		if (fleets[fid].location == fleet.location)
+		{
+			var $x = $('<div class="otherFleet"></div>');
+			$x.text('Fleet ' + fleets[fid].type + ' (' + fleets[fid].owner + ')');
+			with ({otherFleetId: fid}) {
+			$x.click(function() {
+				onFleetClicked(otherFleetId);
+				});
+			}
+			$('#fleetPane .atThisLocation').append($x);
+		}
+	}
 }
 
 function removeFleetIcon(fleetId)
