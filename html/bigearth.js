@@ -758,7 +758,7 @@ function updateFleetIcon(fleetId, fleetInfo)
 
 	if ($f.length == 0)
 	{
-		$f = $('<div class="fleetIcon"><img class="unitIcon"><span class="ownerIcon"></span><span class="activityIcon"></span></div>');
+		$f = $('<div class="fleetIcon"><img class="selectionCircle" src="fleet_selection_circle_front.gif"><img class="unitIcon"><span class="ownerIcon"></span><span class="activityIcon"></span></div>');
 		$f.attr('fleet-id', fleetId);
 		$('#scrollPanel').append($f);
 	}

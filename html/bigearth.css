@@ -31,11 +31,25 @@ body {
 .fleetIcon {
 	position: absolute;
 	z-index: 1;
+	width: 64px;
+	height: 48px;
+}
+
+.fleetIcon .selectionCircle {
+	display: none;
 }
 
 .fleetIcon.selectedFleet {
 	z-index: 2;
-	background-color: yellow;
+	background-image: url("fleet_selection_circle_back.gif");
+}
+
+.fleetIcon.selectedFleet .selectionCircle {
+	display: block;
+	position: absolute;
+	width: 64px;
+	height: 48px;
+	z-index: 3;
 }
 
 #fleetPane, #cityPane {
