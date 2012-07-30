@@ -391,12 +391,20 @@ function recreateFleetIcons()
 	}
 }
 
+function unselect()
+{
+	$('.fleetIcon').removeClass('selectedFleet');
+	$('#fleetPane').hide();
+	$('#cityPane').hide();
+}
+
 function onCityClicked(location, city)
 {
+	unselect();
+
 	resetCityPane();
 	loadCityInfo(city, location);
 
-	$('#fleetPane').hide();
 	$('#cityPane').show();
 }
 
@@ -706,8 +714,7 @@ function loadCityInfo(city, location)
 
 function onFleetClicked(fleetId)
 {
-	$('#cityPane').hide();
-	$('.fleetIcon').removeClass('selectedFleet');
+	unselect();
 	$('.fleetIcon[fleet-id="'+fleetId+'"]').addClass('selectedFleet');
 
 	var fleet = fleets[fleetId];
@@ -1703,8 +1710,5 @@ function cityExpandVillage()
 }
 
 $(function() {
-$('.closeBtn').click(function() {
-		$('#fleetPane').hide();
-		$('#cityPane').hide();
-	});
+$('.closeBtn').click(unselect);
 });
