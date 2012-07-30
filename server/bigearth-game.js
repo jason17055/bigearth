@@ -1735,7 +1735,7 @@ function stealWorkers(cityId, city, quantity, toJob)
 	{
 		if (job != toJob)
 		{
-			var amt = quantity * city.workers[job]/sumFreeWorkers;
+			var amt = quantity * city.workers[job]/sumAvailable;
 			city.workers[job] -= amt;
 			city.population -= amt;
 			if (city.workers[job] > 0)
