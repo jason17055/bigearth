@@ -1712,3 +1712,13 @@ function cityExpandVillage()
 $(function() {
 $('.closeBtn').click(unselect);
 });
+
+function cityBuildStoneWorkshop()
+{
+	var cityId = $('#cityPane').attr('city-id');
+	$.ajax({
+		type: "POST",
+		url: "/request/build-building?city="+cityId,
+		data: { building: 'stone-workshop' }
+		});
+}

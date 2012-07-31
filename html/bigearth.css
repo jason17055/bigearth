@@ -239,3 +239,7 @@ body {
 	padding-left: 3pt;
 	padding-right: 3pt;
 }
+
+.buttonBarSectionHeader {
+	font-size: 7pt;
+}

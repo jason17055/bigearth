@@ -183,6 +183,9 @@ function addAvailableJobs(cityId, jobs)
 
 	if (!jobs.farm && cell.subcells.farm)
 		jobs.farm = 0;
+
+	if (!jobs.mason && city.buildings && city.buildings['stone-workshop'])
+		jobs.mason = 0;
 }
 
 // given an associative array, return a new associative array with
@@ -1312,6 +1315,47 @@ function doCityBuildImprovement(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
+function doCityBuildBuilding(requestData, queryString, remoteUser)
+{
+	if (!queryString.match(/^city=(.*)$/))
+	{
+		console.log("build-building: invalid query string");
+		return;
+	}
+
+	var cityId = RegExp.$1;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		console.log("build-building: city " + cityId + " not found");
+		return;
+	}
+
+	if (city.owner != remoteUser)
+	{
+		console.log("build-building: city " + cityId + " not owned by player " + remoteUser);
+		return;
+	}
+
+	lockCityStruct(city);
+
+	if (!city.tasks)
+		city.tasks = [];
+	city.tasks.push({
+		task: 'building',
+		type: requestData.building
+		});
+
+	unlockCityStruct(cityId, city);
+}
+
+function addBuilding(cityId, city, buildingType)
+{
+	if (!city.buildings)
+		city.buildings = {};
+	city.buildings[buildingType] = (city.buildings[buildingType] || 0) + 1;
+}
+
 function developLand(location, type, amount)
 {
 	var c = G.terrain.cells[location];
@@ -1357,6 +1401,47 @@ function tryDevelopLand(cityId, city, landType)
 		if (ltc[2])
 		{
 			ltc[2](cityId, city);
+		}
+
+		return;
+	}
+	else
+	{
+		setCityActivity(cityId, city, activityName, builders, cost);
+	}
+}
+
+// [0]: number of builders to assign when task starts
+// [1]: production cost
+// [2]: function to call after building has been completed (can be null)
+//
+var BUILDING_TYPE_COSTS = {
+	'stone-workshop':   [ 25, 50, null ]
+	};
+
+function tryMakeBuilding(cityId, city, buildingType)
+{
+	var costInfo = BUILDING_TYPE_COSTS[buildingType];
+	if (!costInfo)
+	{
+		return cityActivityError(cityId, city, "invalid building type: "+buildingType);
+	}
+
+	var builders = costInfo[0];
+	var cost = costInfo[1];
+	var activityName = 'build-'+buildingType;
+
+	if (city.activity == activityName && city.production.build >= cost)
+	{
+		delete city.production.build;
+		freeWorkers(cityId, city, 'build');
+
+		addBuilding(cityId, city, buildingType);
+		cityActivityComplete(cityId, city);
+
+		if (costInfo[2])
+		{
+			costInfo[2](cityId, city);
 		}
 
 		return;
@@ -1642,6 +1727,10 @@ console.log("current task is " + currentTask.task);
 	else if (currentTask.task == 'improvement')
 	{
 		return tryDevelopLand(cityId, city, currentTask.type);
+	}
+	else if (currentTask.task == 'building')
+	{
+		return tryMakeBuilding(cityId, city, currentTask.type);
 	}
 
 	return cityActivityError(cityId, city, "unrecognized task " + currentTask.task);
@@ -2328,7 +2417,8 @@ var actionHandlers = {
 	'test-city': doCityTest,
 	'reassign-workers': doReassignWorkers,
 	'build-unit': doCityBuildUnit,
-	'build-improvement': doCityBuildImprovement
+	'build-improvement': doCityBuildImprovement,
+	'build-building': doCityBuildBuilding
 	};
 
 if (typeof global !== 'undefined')
