@@ -226,4 +226,16 @@ body {
 	text-align: center;
 	line-height: 20px;
 	cursor: default;
+	background-color: #ccc;
+	color: black;
+}
+
+#fleetButtonBar, #cityButtonBar {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	background-color: #ccc;
+	margin-left: -3pt;
+	padding-left: 3pt;
+	padding-right: 3pt;
 }
