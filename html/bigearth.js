@@ -660,7 +660,6 @@ function loadCityInfo(city, location)
 			$('#cityResourcesContainer').append($x);
 		}
 	}
-	$('#cityPane .cityFuel').text(city.fuel);
 	$('#cityPane .cityFarms').text(mapCell.subcells.farm);
 	if (mapCell.subcells.farm)
 		$('#cityPane .cityFarmsContainer').show();
@@ -669,6 +668,24 @@ function loadCityInfo(city, location)
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
 	$('#cityPane .cityActivity').text(city.activity || '');
 	animateCityActivityProgressBar(city);
+
+	$('#cityBuildingsContainer .cityBuildingItem').remove();
+	if (city.buildings)
+	{
+		$('#cityBuildingsContainer').show();
+		for (var bt in city.buildings)
+		{
+			var q = city.buildings[bt];
+
+			var $x = $('<div class="cityBuildingItem"></div>');
+			$x.text(q == 1 ? bt : (bt + " (" + q + ")"));
+			$('#cityBuildingsContainer').append($x);
+		}
+	}
+	else
+	{
+		$('#cityBuildingsContainer').hide();
+	}
 
 	if (city.workers)
 	{

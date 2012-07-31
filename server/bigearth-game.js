@@ -124,6 +124,26 @@ function discoverCell(playerId, location)
 					mapCell.city.workers[j] = ww[j];
 				}
 			}
+
+			if (!mapCell.city.buildings)
+				mapCell.city.buildings = {};
+
+			for (var bt in mapCell.city.buildings)
+			{
+				if (!city.buildings[bt])
+				{
+					isNew = true;
+					delete mapCell.city.buildings[bt];
+				}
+			}
+			for (var bt in city.buildings)
+			{
+				if (mapCell.city.buildings[bt] != city.buildings[bt])
+				{
+					isNew = true;
+					mapCell.city.buildings[bt] = city.buildings[bt];
+				}
+			}
 		}
 	}
 
@@ -184,7 +204,7 @@ function addAvailableJobs(cityId, jobs)
 	if (!jobs.farm && cell.subcells.farm)
 		jobs.farm = 0;
 
-	if (!jobs.mason && city.buildings && city.buildings['stone-workshop'])
+	if (!jobs.mason && city.buildings['stone-workshop'])
 		jobs.mason = 0;
 }
 
@@ -1351,8 +1371,6 @@ function doCityBuildBuilding(requestData, queryString, remoteUser)
 
 function addBuilding(cityId, city, buildingType)
 {
-	if (!city.buildings)
-		city.buildings = {};
 	city.buildings[buildingType] = (city.buildings[buildingType] || 0) + 1;
 }
 
@@ -2405,6 +2423,9 @@ function checkCity(cityId, city)
 		city.lastUpdate = G.world.age;
 	if (!city.birth)
 		city.birth = city.lastUpdate;
+
+	if (!city.buildings)
+		city.buildings = {};
 
 	updateFleetSight(cityId, city);
 }
