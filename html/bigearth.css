@@ -264,3 +264,16 @@ body {
 .cityBuildingItem.expanded .buildingCollapseBtn {
 	display: inline;
 }
+
+.popupTabsBar {
+	width: 100%;
+	background-color: #ccc;
+	color: black;
+	margin-left: -3pt;
+	padding-left: 3pt;
+	padding-right: 3pt;
+}
+
+#cityPane .popupTabsBar button {
+	min-width: 56pt;
+}

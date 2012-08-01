@@ -35,9 +35,17 @@
 	<div><a href="#" onclick="cityRename();return false" class="cityName">City</a></div>
 </div>
 
-<div>Size: <span class="citySize">0</span></div>
+<div>Size: <span class="citySize">0</span>
+<span id="cityPopulationContainer">(Pop. <span class="cityPopulation">0</span>)</span>
+</div>
 <div class="cityFarmsContainer">Farms: <span class="cityFarms">0</span></div>
 <div style="clear:both"></div>
+<div class="popupTabsBar">
+  <button type="button">Goods</button>
+  <button type="button">Workers</button>
+  <button type="button">Construction</button>
+  <button type="button">Units</button>
+</div>
 <div id="cityPopulationContainer">
 Population: <span class="cityPopulation">0</span>
 (<span class="cityWorkersCount">0</span> workers;
