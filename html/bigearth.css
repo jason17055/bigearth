@@ -243,3 +243,24 @@ body {
 .buttonBarSectionHeader {
 	font-size: 7pt;
 }
+
+.buildingExpandSection {
+	display: none;
+	font-size: 8pt;
+}
+
+.cityBuildingItem.expanded .buildingExpandSection {
+	display: block;
+}
+
+.cityBuildingItem.expanded .buildingExpandBtn {
+	display: none;
+}
+
+.cityBuildingItem .buildingCollapseBtn {
+	display: none;
+}
+
+.cityBuildingItem.expanded .buildingCollapseBtn {
+	display: inline;
+}

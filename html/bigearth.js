@@ -677,9 +677,19 @@ function loadCityInfo(city, location)
 		{
 			var q = city.buildings[bt];
 
-			var $x = $('<div class="cityBuildingItem"></div>');
-			$x.text(q == 1 ? bt : (bt + " (" + q + ")"));
+			var $x = $('<div class="cityBuildingItem"><span class="cityBuildingName"></span> <a class="buildingExpandBtn" href="#">[+]</a><a class="buildingCollapseBtn" href="#">[-]</a><div class="buildingExpandSection">Orders: 7 stone weapons, 25 stone building blocks</div></div>');
+			$('.cityBuildingName', $x).text(q == 1 ? bt : (bt + " (" + q + ")"));
 			$('#cityBuildingsContainer').append($x);
+
+			with({x:$x}) {
+				$('.buildingExpandBtn',$x).click(function(){
+					$('.cityBuildingItem').removeClass('expanded');
+					x.addClass('expanded');
+				});
+				$('.buildingCollapseBtn',$x).click(function(){
+					x.removeClass('expanded');
+				});
+			}
 		}
 	}
 	else
