@@ -41,46 +41,65 @@
 <div class="cityFarmsContainer">Farms: <span class="cityFarms">0</span></div>
 <div style="clear:both"></div>
 <div class="popupTabsBar">
-  <button type="button">Goods</button>
-  <button type="button">Workers</button>
-  <button type="button">Construction</button>
-  <button type="button">Units</button>
+  <button class="popupTabsButton" popup-page="cityPaneGoodsTab" type="button">Goods</button>
+  <button class="popupTabsButton" popup-page="cityPaneWorkersTab" type="button">Workers</button>
+  <button class="popupTabsButton" popup-page="cityPaneConstructionTab" type="button">Construction</button>
+  <button class="popupTabsButton" popup-page="cityPaneUnitsTab" type="button">Units</button>
 </div>
-<div id="cityPopulationContainer">
-Population: <span class="cityPopulation">0</span>
-(<span class="cityWorkersCount">0</span> workers;
-<span class="cityChildren">0</span> children)
-</div>
+<div id="cityPaneTabArea">
+
+<div class="cityPaneTab" id="cityPaneGoodsTab">
 <div id="cityResourcesContainer"></div>
-<div class="cityActivityContainer">
+</div>
+
+<div class="cityPaneTab" id="cityPaneWorkersTab">
+  <div id="cityPopulationContainer">
+    Population: <span class="cityPopulation">0</span>
+    (<span class="cityWorkersCount">0</span> workers;
+    <span class="cityChildren">0</span> children)
+  </div>
+
+  <div class="cityJobsContainer">
+    <div class="cityJobBoxTemplate"><div class="jobCounts"><span class="jobCount" draggable="true">0</span></div><div class="jobLabel">Job</div></div>
+  </div>
+
+</div><!-- end of cityPaneWorkersTab -->
+
+<div class="cityPaneTab" id="cityPaneConstructionTab">
+<div id="cityBuildingsContainer"></div>
+  <div class="cityActivityContainer">
 	<div class="cityActivityLabel">Building Queue</div>
 	<div class="cityActivity"></div>
 	<div class="cityActivityComplete"></div>
 	<div class="cityActivityNext"></div>
-</div>
-<div class="cityJobsContainer">
-  <div class="cityJobBoxTemplate"><div class="jobCounts"><span class="jobCount" draggable="true">0</span></div><div class="jobLabel">Job</div></div>
-</div>
-<div id="cityBuildingsContainer"></div>
-
-<div id="cityButtonBar">
+  </div>
 <div class="buttonBarSectionHeader">Develop Land</div>
 <div>
   <button type="button" onclick="cityBuildFarm()">Build Farm</button>
   <button type="button" onclick="cityExpandVillage()">Expand Village</button>
 </div>
+<div class="buttonBarSectionHeader">Create Buildings</div>
+<div>
+  <button type="button" onclick="cityBuildStoneWorkshop()">Stone Workshop</button>
+</div>
+</div><!-- end of cityPaneConstructionTab -->
+
+<div class="cityPaneTab" id="cityPaneUnitsTab">
 <div class="buttonBarSectionHeader">Create Units</div>
 <div>
   <button type="button" onclick="cityBuildSettler()">Build Settler</button>
   <button type="button" onclick="cityBuildTrieme()">Build Trieme</button>
 </div>
-<div class="buttonBarSectionHeader">Create Buildings</div>
-<div>
-  <button type="button" onclick="cityBuildStoneWorkshop()">Stone Workshop</button>
-  <button type="button" onclick="cityTest()">Test</button>
-</div>
+</div><!-- end of cityPaneUnitsTab -->
 
-</div>
+</div><!-- end of cityPaneTabArea -->
+
+
+<div id="cityPaneButtonBar">
+  <button type="button" onclick="cityTest()">Test</button>
+</div><!-- end of cityPaneButtonBar -->
+
+</div><!-- end of cityPane -->
 
 <div id="fleetPane" style="display:none">
 <div class="closeBtn">X</div>

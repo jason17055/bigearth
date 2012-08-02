@@ -230,7 +230,7 @@ body {
 	color: black;
 }
 
-#fleetButtonBar, #cityButtonBar {
+#fleetButtonBar, #cityPaneButtonBar {
 	position: absolute;
 	bottom: 0;
 	width: 100%;
@@ -238,6 +238,7 @@ body {
 	margin-left: -3pt;
 	padding-left: 3pt;
 	padding-right: 3pt;
+	min-height: 16pt;
 }
 
 .buttonBarSectionHeader {
@@ -276,4 +277,8 @@ body {
 
 #cityPane .popupTabsBar button {
 	min-width: 56pt;
+}
+
+.cityPaneTab {
+	display: none;
 }

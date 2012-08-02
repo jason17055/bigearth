@@ -1738,6 +1738,16 @@ function cityExpandVillage()
 
 $(function() {
 $('.closeBtn').click(unselect);
+$('.popupTabsButton').click(function() {
+			var pageId = $(this).attr('popup-page');
+			var el = document.getElementById(pageId);
+			if (!el) {
+				alert("no element with id '"+pageId+"'");
+				return;
+			}
+			$('.cityPaneTab').hide();
+			$(el).show();
+		});
 });
 
 function cityBuildStoneWorkshop()
