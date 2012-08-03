@@ -654,7 +654,8 @@ function loadCityInfo(city, location)
 		var t = RESOURCE_TYPES[i];
 		if (city[t])
 		{
-			var $x = $('<div><span class="cityResourceType"></span>: <span class="cityResourceAmount"></span></div>');
+			var $x = $('<div><img src=""><span class="cityResourceType"></span>: <span class="cityResourceAmount"></span></div>');
+			$('img', $x).attr('src', 'resource_icons/'+t+'.png');
 			$('.cityResourceType', $x).text(RESOURCE_DISPLAY_NAMES[t]);
 			$('.cityResourceAmount', $x).text(city[t]);
 			$('#cityResourcesContainer').append($x);
