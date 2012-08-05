@@ -69,6 +69,13 @@ function discoverCell(playerId, location)
 			mapCell.city = { id: refCell.city };
 		}
 
+		if ('fuel' in mapCell.city)
+		{
+			//compatibility fix
+			isNew = true;
+			delete mapCell.city.fuel;
+		}
+
 		var props = {
 		name: "public",
 		size: "public",
@@ -467,7 +474,7 @@ function tryToBuildCity(fleetId, fleet)
 			owner: fleet.owner,
 			location: fleet.location,
 			food: 100,
-			fuel: 50,
+			wood: 50,
 			workers: {},
 			workerRates: {},
 			production: {},
@@ -2376,8 +2383,11 @@ function checkTerrainCell(cid, cell)
 //
 function checkCity(cityId, city)
 {
-	if (!('fuel' in city))
-		city.fuel = 0;
+	if ('fuel' in city)
+	{
+		city.wood = city.fuel;
+		delete city.fuel;
+	}
 	if (!('food' in city))
 		city.food = 0;
 	if (!city.workers)
