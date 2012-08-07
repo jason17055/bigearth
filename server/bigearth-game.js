@@ -82,9 +82,11 @@ function discoverCell(playerId, location)
 		owner: "public",
 		population: "private floor",
 		food: "private floor",
-		wood: "private floor",
 		clay: "private floor",
+		meat: "private floor",
 		stone: "private floor",
+		wheat: "private floor",
+		wood: "private floor",
 		children: "private floor",
 		activity: "private",
 		activityTime: "private",
@@ -473,7 +475,7 @@ function tryToBuildCity(fleetId, fleet)
 		var city = {
 			owner: fleet.owner,
 			location: fleet.location,
-			food: 100,
+			wheat: 100,
 			wood: 50,
 			workers: {},
 			workerRates: {},
@@ -1873,6 +1875,38 @@ function getCityPopulationCapacity(city)
 	return (c.subcells.hamlet || 0) * 200;
 }
 
+var FOOD_TYPES = [ 'food', 'meat', 'wheat' ];
+
+function getTotalFood(city)
+{
+	var sum = 0;
+	for (var i = 0; i < FOOD_TYPES.length; i++)
+	{
+		var ft = FOOD_TYPES[i];
+		sum += (city[ft] || 0);
+	}
+	return sum;
+}
+
+function subtractFood(city, amount)
+{
+	for (var i = 0; i < FOOD_TYPES.length; i++)
+	{
+		var ft = FOOD_TYPES[i];
+		if (city[ft])
+		{
+			if (city[ft] > amount)
+			{
+				city[ft] -= amount;
+				return true;
+			}
+			amount -= city[ft];
+			delete city[ft];
+		}
+	}
+	return false;
+}
+
 function cityEndOfYear(cityId, city)
 {
 	console.log("city "+city.name+": end of year");
@@ -1973,9 +2007,9 @@ function cityEndOfYear(cityId, city)
 		//wildlife counter.
 
 		var foodYield = numHarvested * G.world.foodPerAnimal;
-		city.food += foodYield;
+		city.meat = (city.meat || 0) + foodYield;
 
-		console.log("  hunters brought in " + foodYield + " food");
+		console.log("  hunters brought in " + foodYield + " meat");
 	}
 
 	if (city.production.farm)
@@ -1984,26 +2018,27 @@ function cityEndOfYear(cityId, city)
 		delete city.production.farm;
 
 		var foodYield = pts * G.world.foodPerFarmer;
-		city.food += foodYield;
+		city.wheat = (city.wheat || 0) + foodYield;
 
-		console.log("  farmers brought in " + foodYield + " food");
+		console.log("  farmers brought in " + foodYield + " wheat");
 	}
 
 	// feed the population
 	var foodDemand = city.hunger || 0;
-	var sustenance;
-	if (city.food >= foodDemand)
+	var foodSupply = getTotalFood(city);
+	var foodConsumed;
+	if (foodSupply >= foodDemand)
 	{
 		// ok, enough to satisfy everyone
-		sustenance = 1;
-		city.food -= foodDemand;
+		foodConsumed = foodDemand;
 	}
 	else   // city.food < foodDemand
 	{
 		// not enough food, some people gonna die
-		sustenance = Math.sqrt(city.food / foodDemand);
-		city.food = 0;
+		foodConsumed = foodSupply;
 	}
+	subtractFood(city, foodConsumed);
+	var sustenance = Math.sqrt(foodConsumed / foodDemand);
 	city.hunger = 0;
 
 	// calculate deaths

@@ -641,9 +641,11 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityChildren').text(city.children);
 	$('#cityPane .cityWorkersCount').text(city.population);
 	$('#cityResourcesContainer div').remove();
-	var RESOURCE_TYPES = [ 'food', 'wood', 'clay', 'stone', 'fuel' ];
+	var RESOURCE_TYPES = [ 'food', 'meat', 'wheat', 'wood', 'clay', 'stone', 'fuel' ];
 	var RESOURCE_DISPLAY_NAMES = {
 		food: "Food",
+		meat: "Meat",
+		wheat: "Wheat",
 		wood: "Wood",
 		clay: "Clay",
 		stone: "Stone",
