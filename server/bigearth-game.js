@@ -135,7 +135,10 @@ function discoverCell(playerId, location)
 			}
 
 			if (!mapCell.city.buildings)
+			{
 				mapCell.city.buildings = {};
+			}
+			delete mapCell.city.buildingOrders;
 
 			for (var bt in mapCell.city.buildings)
 			{
@@ -2471,6 +2474,19 @@ function checkCity(cityId, city)
 
 	if (!city.buildings)
 		city.buildings = {};
+	delete city.buildingOrders;
+
+	for (var bt in city.buildings)
+	{
+		if ((typeof city.buildings[bt]) == 'number')
+		{
+			var sz = city.buildings[bt];
+			city.buildings[bt] = {
+				buildingType: bt,
+				size: sz
+				};
+		}
+	}
 
 	updateFleetSight(cityId, city);
 }
