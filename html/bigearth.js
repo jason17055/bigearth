@@ -626,6 +626,17 @@ function animateCityActivityProgressBar(city)
 	$cac.css({ width: 0 });
 }
 
+function loadCityInfo_resourceProduction(city)
+{
+	$('#cityResourcesContainer .resourceProduction').remove();
+
+if (city.buildings['stone-workshop'])
+{
+	var $x = $('<div class="resourceProduction"><div class="building_name">Stone Workshop</div><button type="button">Weapons</button><button type="button">Blocks</button></div>');
+	$('#cityResourcesContainer').append($x);
+}
+}
+
 function loadCityInfo(city, location)
 {
 	var mapCell = map.cells[location];
@@ -663,6 +674,9 @@ function loadCityInfo(city, location)
 			$('#cityResourcesContainer').append($x);
 		}
 	}
+
+	loadCityInfo_resourceProduction(city);
+
 	$('#cityPane .cityFarms').text(mapCell.subcells.farm);
 	if (mapCell.subcells.farm)
 		$('#cityPane .cityFarmsContainer').show();
@@ -680,8 +694,16 @@ function loadCityInfo(city, location)
 		{
 			var q = city.buildings[bt];
 
-			var $x = $('<div class="cityBuildingItem"><span class="cityBuildingName"></span> <a class="buildingExpandBtn" href="#">[+]</a><a class="buildingCollapseBtn" href="#">[-]</a><div class="buildingExpandSection">Orders: 7 stone weapons, 25 stone building blocks</div></div>');
+			var $x = $('#cityBuildingItemTemplate').clone();
+			$x.attr('id', '');
+			$x.addClass('cityBuildingItem');
+			$x.removeClass('template');
+
 			$('.cityBuildingName', $x).text(q == 1 ? bt : (bt + " (" + q + ")"));
+
+			var $y = $('<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone_block.png"></div>');
+			$x.append($y);
+
 			$('#cityBuildingsContainer').append($x);
 
 			with({x:$x}) {
