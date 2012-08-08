@@ -320,6 +320,7 @@ body {
 	padding-left: 2pt;
 	padding-right: 2pt;
 	line-height: 24px;
+	cursor: default;
 }
 
 .cityBuildingOrdersBtn img {

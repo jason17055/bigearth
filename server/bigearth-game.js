@@ -1409,6 +1409,44 @@ function doCityBuildBuilding(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
+function doCityBuildingOrders(requestData, queryString, remoteUser)
+{
+	var QS = require('querystring');
+	var args = QS.parse(queryString);
+
+	if (!args.city || !args.building)
+	{
+		console.log("building-orders: invalid query string");
+		return;
+	}
+
+	var city = G.cities[args.city];
+	if (!city)
+	{
+		console.log("building-orders: city " + args.city + " not found");
+		return;
+	}
+
+	if (city.owner != remoteUser)
+	{
+		console.log("building-orders: city " + args.city + " not owned by player " + remoteUser);
+		return;
+	}
+
+	var building = city.buildings[args.building];
+	if (!building)
+	{
+		console.log("building-orders: building " + args.building + " not found in city " + args.city);
+		return;
+	}
+		
+	lockCityStruct(city);
+
+	building.orders = requestData.orders;
+
+	unlockCityStruct(args.city, city);
+}
+
 function addBuilding(cityId, city, buildingType)
 {
 	city.buildings[buildingType] = (city.buildings[buildingType] || 0) + 1;
@@ -2528,7 +2566,8 @@ var actionHandlers = {
 	'reassign-workers': doReassignWorkers,
 	'build-unit': doCityBuildUnit,
 	'build-improvement': doCityBuildImprovement,
-	'build-building': doCityBuildBuilding
+	'build-building': doCityBuildBuilding,
+	'building-orders': doCityBuildingOrders
 	};
 
 if (typeof global !== 'undefined')

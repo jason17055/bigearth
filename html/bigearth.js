@@ -408,6 +408,48 @@ function onCityClicked(location, city)
 	$('#cityPane').show();
 }
 
+function onBuildingChangeOrdersClicked(evt)
+{
+	var tmpEl = this;
+	var buildingId = null;
+	var cityId = null;
+	var cityLocation = null;
+	for (var tmpEl = this; tmpEl; tmpEl = tmpEl.parentNode)
+	{
+		if (!buildingId && tmpEl.hasAttribute('building-id'))
+		{
+			buildingId = tmpEl.getAttribute('building-id');
+		}
+		if (!cityId && tmpEl.hasAttribute('city-id'))
+		{
+			cityId = tmpEl.getAttribute('city-id');
+		}
+		if (!cityLocation && tmpEl.hasAttribute('city-location'))
+		{
+			cityLocation = tmpEl.getAttribute('city-location');
+		}
+	}
+
+	if (!(buildingId && cityId && cityLocation))
+		return;
+
+	var city = map.cells[cityLocation].city;
+	if (!city)
+		return;
+
+	var bldg = city.buildings[buildingId];
+	if (!bldg)
+		return;
+
+	var currentOrders = bldg.orders;
+	if (currentOrders == 'make-stone-blocks')
+		currentOrders = 'make-stone-weapons';
+	else
+		currentOrders = 'make-stone-blocks';
+
+	setBuildingOrders(cityId, buildingId, currentOrders);
+}
+
 function onJobBoxDragStart(evt)
 {
 	var $countBox = $(this);
@@ -646,6 +688,7 @@ function loadCityInfo(city, location)
 		mapCell.subcells = {};
 
 	$('#cityPane').attr('city-id', city.id);
+	$('#cityPane').attr('city-location', location);
 	$('#cityPane .cityName').text(city.name);
 	$('#cityPane .citySize').text(mapCell.subcells.hamlet || 0);
 	$('#cityPane .cityPopulation').text(city.population + city.children);
@@ -695,26 +738,22 @@ function loadCityInfo(city, location)
 			var q = city.buildings[bt];
 
 			var $x = $('#cityBuildingItemTemplate').clone();
-			$x.attr('id', '');
+			$x.removeAttr('id');
 			$x.addClass('cityBuildingItem');
+			$x.attr('building-id', bt);
 			$x.removeClass('template');
 
-			$('.cityBuildingName', $x).text(q == 1 ? bt : (bt + " (" + q + ")"));
+			$('.cityBuildingName', $x).text(bt);
 
-			var $y = $('<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone_block.png"></div>');
+			var orders = q.orders;
+			var $y = $(orders == 'make-stone-blocks' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone_block.png"></div>' :
+				orders == 'make-stone-weapons' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone_weapon.png"></div>' :
+				('<div class="cityBuildingOrdersBtn">'+ (orders || '(none)') + '</div>'));
+
+			$y.click(onBuildingChangeOrdersClicked);
+
 			$x.append($y);
-
 			$('#cityBuildingsContainer').append($x);
-
-			with({x:$x}) {
-				$('.buildingExpandBtn',$x).click(function(){
-					$('.cityBuildingItem').removeClass('expanded');
-					x.addClass('expanded');
-				});
-				$('.buildingCollapseBtn',$x).click(function(){
-					x.removeClass('expanded');
-				});
-			}
 		}
 	}
 	else
@@ -1758,6 +1797,15 @@ function cityExpandVillage()
 		type: "POST",
 		url: "/request/build-improvement?city="+cityId,
 		data: { improvement: 'hamlet' }
+		});
+}
+
+function setBuildingOrders(cityId, buildingId, newOrders)
+{
+	$.ajax({
+		type: "POST",
+		url: "/request/building-orders?city="+cityId+"&building="+buildingId,
+		data: { orders: newOrders }
 		});
 }
 
