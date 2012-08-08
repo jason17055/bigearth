@@ -140,6 +140,29 @@ function discoverCell(playerId, location)
 			}
 			delete mapCell.city.buildingOrders;
 
+var discoverBuilding = function(realBuilding, mapBuilding, playerId)
+{
+	var isNew = false;
+
+	if (realBuilding.buildingType != mapBuilding.buildingType)
+	{
+		isNew = true;
+		mapBuilding.buildingType = realBuilding.buildingType;
+	}
+	if (realBuilding.size != mapBuilding.size)
+	{
+		isNew = true;
+		mapBuilding.size = realBuilding.size;
+	}
+	if (realBuilding.orders != mapBuilding.orders)
+	{
+		isNew = true;
+		mapBuilding.orders = realBuilding.orders
+	}
+	return isNew;
+};
+
+			// check for buildings which no longer exist
 			for (var bt in mapCell.city.buildings)
 			{
 				if (!city.buildings[bt])
@@ -148,12 +171,17 @@ function discoverCell(playerId, location)
 					delete mapCell.city.buildings[bt];
 				}
 			}
+
+			// check for buildings that are new or changed
 			for (var bt in city.buildings)
 			{
-				if (mapCell.city.buildings[bt] != city.buildings[bt])
+				if (!mapCell.city.buildings[bt])
+				{
+					mapCell.city.buildings[bt] = {};
+				}
+				if (discoverBuilding(city.buildings[bt], mapCell.city.buildings[bt], playerId))
 				{
 					isNew = true;
-					mapCell.city.buildings[bt] = city.buildings[bt];
 				}
 			}
 		}
