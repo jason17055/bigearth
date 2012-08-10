@@ -2116,7 +2116,7 @@ function cityEndOfYear(cityId, city)
 		foodConsumed = foodSupply;
 	}
 	subtractFood(city, foodConsumed);
-	var sustenance = Math.sqrt(foodConsumed / foodDemand);
+	var sustenance = foodDemand > 0 ? Math.sqrt(foodConsumed / foodDemand) : 1;
 	city.hunger = 0;
 
 	// calculate deaths
@@ -2583,6 +2583,8 @@ function checkCity(cityId, city)
 	city.population = 0;
 	for (var j in city.workers)
 	{
+		if (isNaN(city.workers[j]))
+			city.workers[j] = 0;
 		city.population += (+city.workers[j]);
 	}
 	if (!city.production)
@@ -2594,9 +2596,11 @@ function checkCity(cityId, city)
 	city.children = 0;
 	for (var i = 0; i < city.childrenByAge.length; i++)
 	{
+		if (isNaN(city.childrenByAge[i]))
+			city.childrenByAge[i] = 0;
 		city.children += (+(city.childrenByAge[i] || 0));
 	}
-	
+
 	if (!city.lastUpdate)
 		city.lastUpdate = G.world.age;
 	if (!city.birth)
