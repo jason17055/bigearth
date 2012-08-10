@@ -87,6 +87,8 @@ function discoverCell(playerId, location)
 		stone: "private floor",
 		wheat: "private floor",
 		wood: "private floor",
+		'stone-block': "private floor",
+		'stone-weapon': "private floor",
 		children: "private floor",
 		activity: "private",
 		activityTime: "private",
@@ -244,8 +246,15 @@ function addAvailableJobs(cityId, jobs)
 	if (!jobs.farm && cell.subcells.farm)
 		jobs.farm = 0;
 
-	if (!jobs.mason && city.buildings['stone-workshop'])
-		jobs.mason = 0;
+	for (var bid in city.buildings)
+	{
+		var b = city.buildings[bid];
+		if (b.orders && b.orders.match(/^make-/))
+		{
+			if (!jobs[b.orders])
+				jobs[b.orders] = 0;
+		}
+	}
 }
 
 // given an associative array, return a new associative array with
@@ -2152,6 +2161,58 @@ function cityEndOfYear(cityId, city)
 	city.deaths = 0;
 }
 
+var FACTORY_RECIPES = {
+	'stone-weapon': { 'rate': 0.01, 'input': { 'stone': 0.25 } },
+	'stone-block': { 'rate': 0.01,  'input': { 'stone': 1.00 } }
+	};
+
+function processManufacturingOutput(city)
+{
+	var ppByOutput = {};
+	for (var job in city.workers)
+	{
+		if (job.match(/^make-(.*)$/))
+		{
+			var outputResource = RegExp.$1;
+			ppByOutput[outputResource] = city.production[job];
+			delete city.production[job];
+		}
+	}
+
+	for (var outputResource in ppByOutput)
+	{
+		var recipe = FACTORY_RECIPES[outputResource];
+		if (!recipe)
+			continue;
+
+		var idealOutput = ppByOutput[outputResource] * (recipe.rate || 0.01);
+		var actualOutput = idealOutput;
+		for (var inputType in recipe.input)
+		{
+			var demand = actualOutput * recipe.input[inputType];
+			var supply = city[inputType] || 0;
+			if (supply < 0) { supply = 0; }
+
+			if (demand > supply)
+			{
+				actualOutput *= supply / demand;
+			}
+		}
+
+		for (var inputType in recipe.input)
+		{
+			var demand = actualOutput * recipe.input[inputType];
+			var newSupply = (city[inputType] || 0) - demand;
+			if (newSupply > 0)
+				city[inputType] = newSupply;
+			else
+				delete city[inputType];
+		}
+
+		city[outputResource] = (city[outputResource] || 0) + actualOutput;
+	}
+}
+
 // prepare a City struct for manipulation; each call to lockCityStruct()
 // should be paired with a call to unlockCityStruct().
 // nesting the calls is ok.
@@ -2181,6 +2242,9 @@ function lockCityStruct(city)
 			city.production[job] = (city.production[job] || 0) +
 				productionPoints;
 		}
+
+		// manufacturing jobs
+		processManufacturingOutput(city);
 
 		// calculate hunger
 		var foodRequired = (FOOD_PER_ADULT * city.population + FOOD_PER_CHILD * city.children) * yearsElapsed;

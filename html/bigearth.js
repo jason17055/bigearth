@@ -442,10 +442,10 @@ function onBuildingChangeOrdersClicked(evt)
 		return;
 
 	var currentOrders = bldg.orders;
-	if (currentOrders == 'make-stone-blocks')
-		currentOrders = 'make-stone-weapons';
+	if (currentOrders == 'make-stone-block')
+		currentOrders = 'make-stone-weapon';
 	else
-		currentOrders = 'make-stone-blocks';
+		currentOrders = 'make-stone-block';
 
 	setBuildingOrders(cityId, buildingId, currentOrders);
 }
@@ -695,7 +695,7 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityChildren').text(city.children);
 	$('#cityPane .cityWorkersCount').text(city.population);
 	$('#cityResourcesContainer div').remove();
-	var RESOURCE_TYPES = [ 'food', 'meat', 'wheat', 'wood', 'clay', 'stone', 'fuel' ];
+	var RESOURCE_TYPES = [ 'food', 'meat', 'wheat', 'wood', 'clay', 'stone', 'fuel', 'stone-block', 'stone-weapon' ];
 	var RESOURCE_DISPLAY_NAMES = {
 		food: "Food",
 		meat: "Meat",
@@ -712,7 +712,7 @@ function loadCityInfo(city, location)
 		{
 			var $x = $('<div><img src=""><span class="cityResourceType"></span>: <span class="cityResourceAmount"></span></div>');
 			$('img', $x).attr('src', 'resource_icons/'+t+'.png');
-			$('.cityResourceType', $x).text(RESOURCE_DISPLAY_NAMES[t]);
+			$('.cityResourceType', $x).text(RESOURCE_DISPLAY_NAMES[t] || t);
 			$('.cityResourceAmount', $x).text(city[t]);
 			$('#cityResourcesContainer').append($x);
 		}
@@ -746,8 +746,8 @@ function loadCityInfo(city, location)
 			$('.cityBuildingName', $x).text(bt);
 
 			var orders = q.orders;
-			var $y = $(orders == 'make-stone-blocks' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone_block.png"></div>' :
-				orders == 'make-stone-weapons' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone_weapon.png"></div>' :
+			var $y = $(orders == 'make-stone-block' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone-block.png"></div>' :
+				orders == 'make-stone-weapon' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone-weapon.png"></div>' :
 				('<div class="cityBuildingOrdersBtn">'+ (orders || '(none)') + '</div>'));
 
 			$y.click(onBuildingChangeOrdersClicked);
