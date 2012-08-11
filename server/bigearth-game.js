@@ -2036,7 +2036,8 @@ function cityEndOfYear(cityId, city)
 		if (cityCapacity < 1) cityCapacity = 1;
 		var housingUsage = (city.population + city.children) / cityCapacity;
 
-		var birthRate = 0.125 / (1 + Math.exp(-(0.85-housingUsage)*12));
+		var coreBirthRate = 0.125 + 0.04 * (Math.random() * 2 - 1);
+		var birthRate = coreBirthRate / (1 + Math.exp(-(0.85-housingUsage)*12));
 		var births = city.population * birthRate;
 
 		city.childrenByAge[0] = births;
