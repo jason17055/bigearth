@@ -899,19 +899,18 @@ function updateFleetIcon(fleetId, fleetInfo)
 		$f = $('<div class="fleetIcon"><img class="selectionCircle" src="fleet_selection_circle_front.gif"><img class="unitIcon"><span class="ownerIcon"></span><span class="activityIcon"></span></div>');
 		$f.attr('fleet-id', fleetId);
 		$('#scrollPanel').append($f);
-	}
 
-	$('img.unitIcon',$f).attr('src', 'unit_images/'+fleetInfo.type+'.png');
-	$('img.unitIcon',$f).click(function() {
-		onFleetClicked(fleetId)
-		});
-	{
-		var imgEl = $('img',$f).get(0);
+		var imgEl = $('img.unitIcon',$f).get(0);
+		$(imgEl).click(function() {
+			onFleetClicked(fleetId)
+			});
 		imgEl.addEventListener('dragstart',
 			function(evt) {
 				return onFleetDragStart(fleetId, evt);
 			}, false);
 	}
+
+	$('img.unitIcon',$f).attr('src', 'unit_images/'+fleetInfo.type+'.png');
 
 	var delay = fleetInfo.stepDelay ? (fleetInfo.stepDelay / 2) / 1000 : 0.5;
 	$f.css({
