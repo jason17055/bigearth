@@ -936,16 +936,6 @@ function onFleetMovement(eventData)
 	}
 }
 
-function onFleetActivity(eventData)
-{
-	var fleetId = eventData.fleet;
-	if (fleets[fleetId])
-	{
-		fleets[fleetId].activity = eventData.activity;
-		updateFleetIcon(fleetId, fleets[fleetId]);
-	}
-}
-
 function moveFleetOutOfSight(fleetId, newLoc)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]');
@@ -1059,10 +1049,6 @@ function onEvent(eventData)
 	else if (eventData.event == 'fleet-movement')
 	{
 		return onFleetMovement(eventData);
-	}
-	else if (eventData.event == 'fleet-activity')
-	{
-		return onFleetActivity(eventData);
 	}
 	else if (eventData.event == 'fleet-updated')
 	{

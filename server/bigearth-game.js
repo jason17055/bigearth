@@ -394,12 +394,7 @@ function setFleetActivityFlag(fleetId, fleet, newActivity)
 		delete fleet.activity;
 	}
 
-	notifyPlayer(fleet.owner, {
-		event: 'fleet-activity',
-		fleet: fleetId,
-		activity: fleet.activity
-		});
-	
+	return fleetChanged(fleetId, fleet);
 }
 
 function playerCanSee(playerId, location)
