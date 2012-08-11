@@ -1679,10 +1679,14 @@ function setCityActivity(cityId, city, activity, builders, cost)
 		city.activity = activity;
 
 		var targetWorkerCount = builders;
-		if (targetWorkerCount > city.population - 100 &&
-				city.population - 100 > 0)
+		if (targetWorkerCount > city.population - 50)
 		{
-			targetWorkerCount = city.population - 100;
+			targetWorkerCount = city.population - 50;
+		}
+
+		if (targetWorkerCount < 0)
+		{
+			targetWorkerCount = 0;
 		}
 
 		var curWorkerCount = city.workers.build || 0;
