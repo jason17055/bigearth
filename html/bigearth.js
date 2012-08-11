@@ -1760,7 +1760,7 @@ function onCityNewJob()
 	}
 }
 
-function cityBuildSettler()
+function cityEquipSettler()
 {
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
@@ -1770,7 +1770,7 @@ function cityBuildSettler()
 		});
 }
 
-function cityBuildTrieme()
+function cityEquipTrieme()
 {
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
@@ -1780,7 +1780,7 @@ function cityBuildTrieme()
 		});
 }
 
-function cityBuildFarm()
+function cityDevelopFarm()
 {
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
@@ -1790,7 +1790,7 @@ function cityBuildFarm()
 		});
 }
 
-function cityExpandVillage()
+function cityDevelopHousing()
 {
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
