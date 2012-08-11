@@ -373,10 +373,7 @@ function fleetDisbandInCity(fleetId, fleet)
 
 	if (fleet.population)
 	{
-		lockCityStruct(city);
-		addWorkers(cityId, city, fleet.population/2, 'hunt');
-		addWorkers(cityId, city, fleet.population/2, 'childcare');
-		unlockCityStruct(cityId, city);
+		city_addWorkersAny(cityId, city, fleet.population);
 	}
 
 	destroyFleet(fleetId, 'disband-in-city');

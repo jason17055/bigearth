@@ -1205,28 +1205,24 @@ function tryDevelopLand(cityId, city, landType)
 	}
 }
 
+function city_addWorkersAny(cityId, city, amount)
+{
+	lockCityStruct(city);
+	addWorkers(cityId, city, amount/2, 'hunt');
+	addWorkers(cityId, city, amount/2, 'childcare');
+	unlockCityStruct(cityId, city);
+}
+
 global.roundWorkers = roundWorkers;
 global.addAvailableJobs = addAvailableJobs;
 global.newCity = newCity;
 global.checkCity = checkCity;
-global.addWorkers = addWorkers;
-global.cityActivityError = cityActivityError;
-global.setCityActivity = setCityActivity;
-global.freeWorkers = freeWorkers;
-global.cityActivityWakeup = cityActivityWakeup;
-global.cityChanged = cityChanged;
-global.cityActivityComplete = cityActivityComplete;
-global.cityActivity = cityActivity;
 global.doRenameCity = doRenameCity;
 global.doCityTest = doCityTest;
 global.cityEndOfYear = cityEndOfYear;
-global.processManufacturingOutput = processManufacturingOutput;
-global.lockCityStruct = lockCityStruct;
-global.unlockCityStruct = unlockCityStruct;
-global.getCityPopulationCapacity = getCityPopulationCapacity;
-global.stealWorkers = stealWorkers;
 global.doReassignWorkers = doReassignWorkers;
 global.doCityEquipUnit = doCityEquipUnit;
 global.doCityBuildImprovement = doCityBuildImprovement;
 global.doCityBuildBuilding = doCityBuildBuilding;
 global.doCityBuildingOrders = doCityBuildingOrders;
+global.city_addWorkersAny = city_addWorkersAny;
