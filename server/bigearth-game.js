@@ -2578,20 +2578,26 @@ function checkCity(cityId, city)
 	city.population = 0;
 	for (var j in city.workers)
 	{
-		if (isNaN(city.workers[j]))
-			city.workers[j] = 0;
-		city.population += (+city.workers[j]);
+		if (city.workers[j])
+			city.population += (+city.workers[j]);
+		else
+			delete city.workers[j];
 	}
 	if (!city.production)
 	{
 		city.production = {};
+	}
+	for (var j in city.production)
+	{
+		if (!city.production[j])
+			delete city.production[j];
 	}
 	if (!city.childrenByAge)
 		city.childrenByAge = [];
 	city.children = 0;
 	for (var i = 0; i < city.childrenByAge.length; i++)
 	{
-		if (isNaN(city.childrenByAge[i]))
+		if (!city.childrenByAge[i])
 			city.childrenByAge[i] = 0;
 		city.children += (+(city.childrenByAge[i] || 0));
 	}
