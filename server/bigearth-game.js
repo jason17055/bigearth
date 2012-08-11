@@ -3,6 +3,8 @@ if (typeof require !== 'undefined')
 //require('../html/trains-common.js');
 }
 
+var Scheduler = require('./bigearth_modules/scheduler.js');
+
 var G = {
 	world: {},
 	terrain: {},
@@ -523,7 +525,7 @@ function tryToBuildCity(fleetId, fleet)
 			population: 0,
 			children: 0,
 			childrenByAge: [],
-			lastUpdate: G.year
+			lastUpdate: Scheduler.time
 			};
 		G.cities[tid] = city;
 		G.terrain.cells[fleet.location].city = tid;
@@ -1036,9 +1038,8 @@ function moveFleetOneStep(fleetId, newLoc)
 
 function fleetCooldown(fleetId, fleet, delay)
 {
-	fleet._coolDownTimer = setTimeout(function() {
+	fleet._coolDownTimer = Scheduler.schedule(function() {
 		fleet._coolDownTimer = null;
-		G.year = getYear();
 		fleetActivity(fleetId);
 		}, delay);
 }
@@ -1213,8 +1214,8 @@ function getGameState(request)
 	{
 		return {
 		role: "player",
-		gameYear: G.year,
-		gameSpeed: G.world.oneYear,
+		gameYear: Scheduler.timer,
+		gameSpeed: Scheduler.ticksPerYear,
 		map: "/map/"+request.remote_player,
 		mapSize: G.terrain.size,
 		fleets: "/fleets/"+request.remote_player,
@@ -1596,7 +1597,7 @@ function addWorkers(cityId, city, quantity, toJob)
 		throw new Error("invalid argument for addWorkers");
 	if (quantity > 0)
 	{
-		if (city.lastUpdate != G.year)
+		if (city.lastUpdate != Scheduler.time)
 			throw new Error("not ready for addWorkers");
 
 		city.workers[toJob] = (city.workers[toJob] || 0) + quantity;
@@ -1638,7 +1639,7 @@ function removeWorkers(cityId, city, quantity, fromJob)
 
 	if (quantity > 0)
 	{
-		if (city.lastUpdate != G.year)
+		if (city.lastUpdate != Scheduler.time)
 			throw new Error("not ready for addWorkers");
 
 		if (city.workers[fromJob] > quantity)
@@ -1692,7 +1693,7 @@ function setCityActivity(cityId, city, activity, builders, cost)
 	var rate = city.workerRates.build || 0;
 	var partComplete = city.production.build || 0;
 
-	city.activityTime = G.year;
+	city.activityTime = Scheduler.time;
 	city.activityComplete = (partComplete / cost);
 	city.activitySpeed = (rate / cost);
 	cityChanged(cityId);
@@ -1762,21 +1763,17 @@ function cityActivityWakeup(cityId, city, yearsRemaining)
 {
 	if (city._wakeupTimer)
 	{
-		cancelTimeout(city._wakeupTimer);
-		delete city._timer;
+		Scheduler.cancel(city._wakeupTimer);
+		delete city._wakeupTimer;
 	}
 
-	var targetTime = G.year + yearsRemaining;
+	var targetTime = Scheduler.time + yearsRemaining;
 	if (targetTime < G.world.lastYear+1)
 	{
-		var delay = Math.ceil(yearsRemaining * G.world.oneYear);
-		city._timer = setTimeout(function() {
-				console.log("city "+cityId+" waking up at "+G.year+", targetTime="+targetTime);
-				if (G.year < targetTime)
-					G.year = targetTime;
+		city._wakeupTimer = Scheduler.scheduleYears(function() {
 				lockCityStruct(city);
 				unlockCityStruct(cityId, city);
-			}, delay);
+			}, yearsRemaining);
 	}
 	// otherwise, just wait until cityEndOfYear is called...
 }
@@ -2216,7 +2213,7 @@ function processManufacturingOutput(city)
 // prepare a City struct for manipulation; each call to lockCityStruct()
 // should be paired with a call to unlockCityStruct().
 // nesting the calls is ok.
-// the global value G.year should be properly set when calling
+// the global value Scheduler.time should be properly set when calling
 // lockCityStruct().
 //
 function lockCityStruct(city)
@@ -2254,12 +2251,12 @@ function lockCityStruct(city)
 		city.lastUpdate = aTime;
 	};
 
-	if (!G.year)
-		throw new Error("invalid year ("+G.year+", "+G.world.lastYear+")");
+	if (!Scheduler.time)
+		throw new Error("invalid year ("+Scheduler.time+", "+G.world.lastYear+")");
 
 	if (city._lockLevel)
 	{
-		if (city._lockedWhen != G.year)
+		if (city._lockedWhen != Scheduler.time)
 			throw new Error("lockCityStruct() called on city already locked with a different timestamp");
 
 		city._lockLevel++;
@@ -2267,8 +2264,8 @@ function lockCityStruct(city)
 	else
 	{
 		city._lockLevel = 1;
-		city._lockedWhen = G.year;
-		bringForward(G.year);
+		city._lockedWhen = Scheduler.time;
+		bringForward(Scheduler.time);
 	}
 }
 
@@ -2365,8 +2362,6 @@ exports.getMapFragment = getMapFragment;
 function endOfYear()
 {
 	G.world.lastYear++;
-	if (G.year < G.world.lastYear)
-		G.year = G.world.lastYear;
 
 	// do this year's processing
 	console.log("processing year " + G.world.lastYear);
@@ -2378,15 +2373,15 @@ function endOfYear()
 	}
 
 	// schedule for next end-of-year
-	var nextYearDelay = (Math.round(G.world.lastYear+1) - getYear()) * G.world.oneYear;
-	setTimeout(endOfYear, nextYearDelay > 0 ? nextYearDelay : 0);
+	Scheduler.scheduleAtYear(endOfYear, G.world.lastYear + 1);
 }
 
 function startGame()
 {
 	checkWorldParameters();
 	G.world.realWorldTime = new Date().getTime();
-	G.year = G.world.age;
+	Scheduler.time = G.world.age;
+	Scheduler.ticksPerYear = G.world.oneYear;
 
 	for (var cid in G.terrain.cells)
 	{
@@ -2398,9 +2393,6 @@ function startGame()
 		checkCity(tid, G.cities[tid]);
 	}
 
-	var nextYearDelay = (Math.round(G.world.lastYear+1) - G.world.age) * G.world.oneYear;
-	setTimeout(endOfYear, nextYearDelay > 0 ? nextYearDelay : 0);
-
 	for (var fid in G.fleets)
 	{
 		checkFleet(fid);
@@ -2411,6 +2403,9 @@ function startGame()
 	{
 		checkPlayer(pid, G.players[pid]);
 	}
+
+	// schedule for next end-of-year
+	Scheduler.scheduleAtYear(endOfYear, G.world.lastYear + 1);
 }
 
 // inspect properties from world.txt,

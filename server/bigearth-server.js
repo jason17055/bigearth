@@ -8,6 +8,7 @@ var SESSIONS = require('./sessions.js');
 var EVENTS = require('./events.js');
 var SECRET = CRYPTO.randomBytes(20).toString('hex');
 var SECURE = false;
+var Scheduler = require('./bigearth_modules/scheduler.js');
 
 var GAME = require('./bigearth-game.js');
 var PERSIST = require('./bigearth-persist.js');
@@ -262,7 +263,7 @@ function handleRequest(request,response)
 	request.remote_user = s.identity;
 	request.remote_player = s.identity;
 
-	G.year = getYear();
+	Scheduler.catchup(getYear());
 
 	if (requestPath.pathname == '/')
 	{
