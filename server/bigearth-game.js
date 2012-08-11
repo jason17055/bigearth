@@ -71,123 +71,9 @@ function discoverCell(playerId, location)
 			mapCell.city = { id: refCell.city };
 		}
 
-		if ('fuel' in mapCell.city)
+		if (discoverCity(refCell.city, city, mapCell.city, playerId))
 		{
-			//compatibility fix
 			isNew = true;
-			delete mapCell.city.fuel;
-		}
-
-		var props = {
-		name: "public",
-		size: "public",
-		owner: "public",
-		population: "private floor",
-		food: "private floor",
-		clay: "private floor",
-		meat: "private floor",
-		stone: "private floor",
-		wheat: "private floor",
-		wood: "private floor",
-		'stone-block': "private floor",
-		'stone-weapon': "private floor",
-		children: "private floor",
-		activity: "private",
-		activityTime: "private",
-		activityComplete: "private",
-		activitySpeed: "private"
-		};
-
-		for (var p in props)
-		{
-			if (props[p].match(/private/) && city.owner != playerId)
-				continue;
-
-			var refValue = city[p];
-			if (props[p].match(/floor/))
-				refValue = Math.floor(refValue);
-
-			if (mapCell.city[p] != refValue)
-			{
-				isNew = true;
-				mapCell.city[p] = refValue;
-			}
-		}
-
-		if (city.owner == playerId)
-		{
-			if (!mapCell.city.workers)
-				mapCell.city.workers = {};
-
-			var ww = roundWorkers(city.workers);
-			addAvailableJobs(refCell.city, ww);
-			for (var j in mapCell.city.workers)
-			{
-				if (!(j in ww))
-				{
-					isNew = true;
-					delete mapCell.city.workers[j];
-				}
-			}
-			for (var j in ww)
-			{
-				if (mapCell.city.workers[j] != ww[j])
-				{
-					isNew = true;
-					mapCell.city.workers[j] = ww[j];
-				}
-			}
-
-			if (!mapCell.city.buildings)
-			{
-				mapCell.city.buildings = {};
-			}
-			delete mapCell.city.buildingOrders;
-
-var discoverBuilding = function(realBuilding, mapBuilding, playerId)
-{
-	var isNew = false;
-
-	if (realBuilding.buildingType != mapBuilding.buildingType)
-	{
-		isNew = true;
-		mapBuilding.buildingType = realBuilding.buildingType;
-	}
-	if (realBuilding.size != mapBuilding.size)
-	{
-		isNew = true;
-		mapBuilding.size = realBuilding.size;
-	}
-	if (realBuilding.orders != mapBuilding.orders)
-	{
-		isNew = true;
-		mapBuilding.orders = realBuilding.orders
-	}
-	return isNew;
-};
-
-			// check for buildings which no longer exist
-			for (var bt in mapCell.city.buildings)
-			{
-				if (!city.buildings[bt])
-				{
-					isNew = true;
-					delete mapCell.city.buildings[bt];
-				}
-			}
-
-			// check for buildings that are new or changed
-			for (var bt in city.buildings)
-			{
-				if (!mapCell.city.buildings[bt])
-				{
-					mapCell.city.buildings[bt] = {};
-				}
-				if (discoverBuilding(city.buildings[bt], mapCell.city.buildings[bt], playerId))
-				{
-					isNew = true;
-				}
-			}
 		}
 	}
 
@@ -211,6 +97,134 @@ var discoverBuilding = function(realBuilding, mapBuilding, playerId)
 			discoverEdge(playerId, eId);
 		}
 	}
+}
+
+// updates building information on a map to reflect the actual building
+function discoverBuilding(realBuilding, mapBuilding, playerId)
+{
+	var isNew = false;
+
+	if (realBuilding.buildingType != mapBuilding.buildingType)
+	{
+		isNew = true;
+		mapBuilding.buildingType = realBuilding.buildingType;
+	}
+	if (realBuilding.size != mapBuilding.size)
+	{
+		isNew = true;
+		mapBuilding.size = realBuilding.size;
+	}
+	if (realBuilding.orders != mapBuilding.orders)
+	{
+		isNew = true;
+		mapBuilding.orders = realBuilding.orders
+	}
+	return isNew;
+}
+
+// updates city information on a map to reflect the actual city
+function discoverCity(cityId, realCity, mapCity, playerId)
+{
+	var isNew = false;
+
+	if ('fuel' in mapCity)
+	{
+		//compatibility fix
+		isNew = true;
+		delete mapCity.fuel;
+	}
+
+	var props = {
+		name: "public",
+		size: "public",
+		owner: "public",
+		population: "private floor",
+		food: "private floor",
+		clay: "private floor",
+		meat: "private floor",
+		stone: "private floor",
+		wheat: "private floor",
+		wood: "private floor",
+		'stone-block': "private floor",
+		'stone-weapon': "private floor",
+		children: "private floor",
+		activity: "private",
+		activityTime: "private",
+		activityComplete: "private",
+		activitySpeed: "private"
+		};
+
+	for (var p in props)
+	{
+		if (props[p].match(/private/) && realCity.owner != playerId)
+			continue;
+
+		var refValue = realCity[p];
+		if (props[p].match(/floor/))
+			refValue = Math.floor(refValue);
+
+		if (mapCity[p] != refValue)
+		{
+			isNew = true;
+			mapCity[p] = refValue;
+		}
+	}
+
+	if (realCity.owner == playerId)
+	{
+		if (!mapCity.workers)
+			mapCity.workers = {};
+
+		var ww = roundWorkers(realCity.workers);
+		addAvailableJobs(cityId, ww);
+		for (var j in mapCity.workers)
+		{
+			if (!(j in ww))
+			{
+				isNew = true;
+				delete mapCity.workers[j];
+			}
+		}
+		for (var j in ww)
+		{
+			if (mapCity.workers[j] != ww[j])
+			{
+				isNew = true;
+				mapCity.workers[j] = ww[j];
+			}
+		}
+
+		if (!mapCity.buildings)
+		{
+			mapCity.buildings = {};
+		}
+		delete mapCity.buildingOrders;
+
+		// check for buildings which no longer exist
+		for (var bt in mapCity.buildings)
+		{
+			if (!realCity.buildings[bt])
+			{
+				isNew = true;
+				delete mapCity.buildings[bt];
+			}
+		}
+
+		// check for buildings that are new or changed
+		for (var bt in realCity.buildings)
+		{
+			if (!mapCity.buildings[bt])
+			{
+				mapCity.buildings[bt] = {};
+			}
+			if (discoverBuilding(realCity.buildings[bt], mapCity.buildings[bt], playerId))
+			{
+				isNew = true;
+			}
+		}
+	}
+
+	return isNew;
 }
 
 function addAvailableJobs(cityId, jobs)
