@@ -1204,22 +1204,19 @@ function fleetActivity(fleetId)
 	}
 
 	fleet.message = null;
-	var currentOrder = fleet.orders[0];
-	if (!currentOrder)
-	{
-		return fleetActivityError(fleetId, fleet, "Unrecognized command");
-	}
+	fleetChanged(fleetId, fleet);
 
+	var currentOrder = fleet.orders[0];
 	if (currentOrder.command == 'wander')
 	{
 		console.log("traveler moves!");
 		return moveFleetRandomly(fleetId);
 	}
-	if (currentOrder.command == 'follow-coast')
+	else if (currentOrder.command == 'follow-coast')
 	{
 		return moveFleetAlongCoast(fleetId);
 	}
-	if (currentOrder.command == 'goto')
+	else if (currentOrder.command == 'goto')
 	{
 		return moveFleetTowards(fleetId, currentOrder.location);
 	}
@@ -1230,6 +1227,10 @@ function fleetActivity(fleetId)
 	else if (currentOrder.command == 'disband')
 	{
 		return fleetDisbandInCity(fleetId, fleet);
+	}
+	else
+	{
+		return fleetActivityError(fleetId, fleet, "Unrecognized command");
 	}
 }
 
