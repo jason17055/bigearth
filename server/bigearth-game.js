@@ -1477,13 +1477,13 @@ function checkTerrainCell(cid, cell)
 var actionHandlers = {
 	expose: doExpose,
 	orders: doOrders,
-	'rename-city': doRenameCity,
-	'test-city': doCityTest,
-	'reassign-workers': doReassignWorkers,
-	'equip-unit': doCityEquipUnit,
-	'build-improvement': doCityBuildImprovement,
-	'build-building': doCityBuildBuilding,
-	'building-orders': doCityBuildingOrders
+	'rename-city': city_module.cmd_rename_city,
+	'test-city': city_module.cmd_test_city,
+	'reassign-workers': city_module.cmd_reassign_workers,
+	'equip-unit': city_module.cmd_equip_unit,
+	'build-improvement': city_module.cmd_build_improvement,
+	'build-building': city_module.cmd_build_building,
+	'building-orders': city_module.cmd_building_orders
 	};
 
 if (typeof global !== 'undefined')

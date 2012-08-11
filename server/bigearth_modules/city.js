@@ -478,11 +478,11 @@ console.log("current task is " + currentTask.task);
 	return cityActivityError(cityId, city, "unrecognized task " + currentTask.task);
 }
 
-function doRenameCity(requestData, queryString, remoteUser)
+function cmd_rename_city(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
-		console.log("doRenameCity: invalid query string");
+		console.log("rename-city: invalid query string");
 		return;
 	}
 
@@ -490,13 +490,13 @@ function doRenameCity(requestData, queryString, remoteUser)
 	var city = G.cities[cityId];
 	if (!city)
 	{
-		console.log("doRenameCity: city " + cityId + " not found");
+		console.log("rename-city: city " + cityId + " not found");
 		return;
 	}
 
 	if (city.owner != remoteUser)
 	{
-		console.log("doRenameCity: city " + cityId + " not owned by player " + remoteUser);
+		console.log("rename-city: city " + cityId + " not owned by player " + remoteUser);
 		return;
 	}
 
@@ -504,11 +504,11 @@ function doRenameCity(requestData, queryString, remoteUser)
 	cityChanged(cityId);
 }
 
-function doCityTest(requestData, queryString, remoteUser)
+function cmd_test_city(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
-		console.log("doCityTest: invalid query string");
+		console.log("test-city: invalid query string");
 		return;
 	}
 
@@ -516,7 +516,7 @@ function doCityTest(requestData, queryString, remoteUser)
 	var city = G.cities[cityId];
 	if (!city)
 	{
-		console.log("doCityTest: city " + cityId + " not found");
+		console.log("test-city: city " + cityId + " not found");
 		return;
 	}
 
@@ -926,7 +926,7 @@ function stealWorkers(cityId, city, quantity, toJob)
 	addWorkers(cityId, city, quantity, toJob);
 }
 
-function doReassignWorkers(requestData, queryString, remoteUser)
+function cmd_reassign_workers(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
@@ -963,7 +963,7 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
-function doCityEquipUnit(requestData, queryString, remoteUser)
+function cmd_equip_unit(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
@@ -997,7 +997,7 @@ function doCityEquipUnit(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
-function doCityBuildImprovement(requestData, queryString, remoteUser)
+function cmd_build_improvement(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
@@ -1031,7 +1031,7 @@ function doCityBuildImprovement(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
-function doCityBuildBuilding(requestData, queryString, remoteUser)
+function cmd_build_building(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
@@ -1065,7 +1065,7 @@ function doCityBuildBuilding(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
-function doCityBuildingOrders(requestData, queryString, remoteUser)
+function cmd_building_orders(requestData, queryString, remoteUser)
 {
 	var QS = require('querystring');
 	var args = QS.parse(queryString);
@@ -1217,12 +1217,13 @@ global.roundWorkers = roundWorkers;
 global.addAvailableJobs = addAvailableJobs;
 global.newCity = newCity;
 global.checkCity = checkCity;
-global.doRenameCity = doRenameCity;
-global.doCityTest = doCityTest;
 global.cityEndOfYear = cityEndOfYear;
-global.doReassignWorkers = doReassignWorkers;
-global.doCityEquipUnit = doCityEquipUnit;
-global.doCityBuildImprovement = doCityBuildImprovement;
-global.doCityBuildBuilding = doCityBuildBuilding;
-global.doCityBuildingOrders = doCityBuildingOrders;
 global.city_addWorkersAny = city_addWorkersAny;
+
+exports.cmd_rename_city = cmd_rename_city;
+exports.cmd_test_city = cmd_test_city;
+exports.cmd_reassign_workers = cmd_reassign_workers;
+exports.cmd_equip_unit = cmd_equip_unit;
+exports.cmd_build_improvement = cmd_build_improvement;
+exports.cmd_build_building = cmd_build_building;
+exports.cmd_building_orders = cmd_building_orders;
