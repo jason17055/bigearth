@@ -681,17 +681,6 @@ function animateCityActivityProgressBar(city)
 	$cac.css({ width: 0 });
 }
 
-function loadCityInfo_resourceProduction(city)
-{
-	$('#cityResourcesContainer .resourceProduction').remove();
-
-if (city.buildings['stone-workshop'])
-{
-	var $x = $('<div class="resourceProduction"><div class="building_name">Stone Workshop</div><button type="button">Weapons</button><button type="button">Blocks</button></div>');
-	$('#cityResourcesContainer').append($x);
-}
-}
-
 function loadCityInfo(city, location)
 {
 	var mapCell = map.cells[location];
@@ -730,8 +719,6 @@ function loadCityInfo(city, location)
 			$('#cityResourcesContainer').append($x);
 		}
 	}
-
-	loadCityInfo_resourceProduction(city);
 
 	$('#cityPane .cityFarms').text(mapCell.subcells.farm);
 	if (mapCell.subcells.farm)
