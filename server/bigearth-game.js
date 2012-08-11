@@ -1214,7 +1214,7 @@ function getGameState(request)
 	{
 		return {
 		role: "player",
-		gameYear: Scheduler.timer,
+		gameYear: Scheduler.time,
 		gameSpeed: Scheduler.ticksPerYear,
 		map: "/map/"+request.remote_player,
 		mapSize: G.terrain.size,
