@@ -822,14 +822,23 @@ function onFleetClicked(fleetId)
 	unselect();
 	$('.fleetIcon[fleet-id="'+fleetId+'"]').addClass('selectedFleet');
 
+	loadFleetInfo(fleetId);
+	$('#fleetPane').show();
+}
+
+function loadFleetInfo(fleetId)
+{
 	var fleet = fleets[fleetId];
 	if (!fleet)
 		return;
 
-	$('#fleetPane').attr('fleet-id', fleetId);
-	$('#fleetPane img.icon').attr('src','unit_images/'+fleet.type+'.png');
-	$('#fleetPane .featureType').text(fleet.type);
-	$('#fleetPane').show();
+	var $fleetPane = $('#fleetPane');
+
+	$fleetPane.attr('fleet-id', fleetId);
+	$('img.icon', $fleetPane).attr('src','unit_images/'+fleet.type+'.png');
+	$('.unitType', $fleetPane).text(fleet.type);
+
+	$('.fleetMessage', $fleetPane).text(fleet.message || '');
 
 	$('#fleetPane .atThisLocation').empty();
 	for (var fid in fleets)
@@ -1055,6 +1064,10 @@ function onEvent(eventData)
 	{
 		return onFleetActivity(eventData);
 	}
+	else if (eventData.event == 'fleet-updated')
+	{
+		return onFleetUpdated(eventData);
+	}
 	else if (eventData.event == 'fleet-terminated')
 	{
 		return onFleetTerminated(eventData);
@@ -1125,6 +1138,18 @@ function onFleetSpawned(eventData)
 {
 	fleets[eventData.fleet] = eventData.data;
 	updateFleetIcon(eventData.fleet, eventData.data);
+}
+
+function onFleetUpdated(eventData)
+{
+	var fleetId = eventData.fleet;
+	fleets[fleetId] = eventData.data;
+	updateFleetIcon(fleetId, eventData.data);
+
+	if (fleetId == $('#fleetPane').attr('fleet-id'))
+	{
+		loadFleetInfo(fleetId);
+	}
 }
 
 function fetchFleets()

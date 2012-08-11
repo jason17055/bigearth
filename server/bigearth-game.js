@@ -374,6 +374,15 @@ function fleetHasCapability(fleet, capability)
 	return (fleet.type == 'settler');
 }
 
+function fleetChanged(fleetId, fleet)
+{
+	notifyPlayer(fleet.owner, {
+		event: 'fleet-updated',
+		fleet: fleetId,
+		data: getFleetInfoForPlayer(fleetId, fleet.owner)
+		});
+}
+
 function setFleetActivityFlag(fleetId, fleet, newActivity)
 {
 	if (newActivity)
@@ -425,6 +434,8 @@ function terrainChanged(cellId)
 function fleetActivityError(fleetId, fleet, errorMessage)
 {
 	console.log("fleet #"+fleetId + " error: " + errorMessage);
+	fleet.message = "Unable to complete orders: " + errorMessage;
+	fleetChanged(fleetId, fleet);
 }
 
 function fleetDisbandInCity(fleetId, fleet)
@@ -1192,14 +1203,16 @@ function fleetActivity(fleetId)
 	if (!fleet.orders || fleet.orders.length == 0)
 	{
 		// this fleet does not have any orders
+		fleet.message = 'Orders complete';
+		fleetChanged(fleetId, fleet);
 		return;
 	}
 
+	fleet.message = null;
 	var currentOrder = fleet.orders[0];
 	if (!currentOrder)
 	{
-		console.log("invalid first command", fleet.orders);
-		return;
+		return fleetActivityError(fleetId, fleet, "Unrecognized command");
 	}
 
 	if (currentOrder.command == 'wander')
@@ -2333,6 +2346,8 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		};
 		if (f.activity)
 			_fleet.activity = f.activity;
+		if (f.message)
+			_fleet.message = f.message;
 		return _fleet;
 	}
 	else if (playerCanSee(playerId, f.location))
@@ -2342,6 +2357,8 @@ function getFleetInfoForPlayer(fleetId, playerId)
 			location: f.location,
 			owner: f.owner
 		};
+		if (f.activity)
+			_fleet.activity = f.activity;
 		return _fleet;
 	}
 	else
