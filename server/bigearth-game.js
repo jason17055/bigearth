@@ -2170,6 +2170,15 @@ function cityEndOfYear(cityId, city)
 		city.deaths,
 		newAdults ].join(',') + "\n");
 
+	notifyPlayer(city.owner, {
+		event: 'message',
+		source: cityId,
+		sourceType: 'city',
+		time: Scheduler.time,
+		message: "end of year: "+Math.floor(city.births)+" births, " +
+				Math.floor(city.deaths)+ " deaths"
+		});
+	
 	console.log("  population: adults: " + city.population +
 		", children: " + city.children);
 	console.log("  food: " + city.food);

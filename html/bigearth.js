@@ -77,6 +77,7 @@ var map;
 var coords;
 var fleets;
 var pawn = null;
+var gameMessages = [];
 
 function updateTransformMatrix()
 {
@@ -801,6 +802,19 @@ function loadCityInfo(city, location)
 				$('.jobCount',$jobBox).text('0');
 		}
 	}
+
+	$('#cityMessages').empty();
+	for (var i = 0; i < gameMessages.length; i++)
+	{
+		var m = gameMessages[i];
+		if (m.sourceType == 'city' && m.source == city.id)
+		{
+			var $x = $('<div class="cityMessage"><span class="year"></span>: <span class="messageText"></span></div>');
+			$('.year',$x).text(Math.floor(m.time));
+			$('.messageText',$x).text(m.message);
+			$('#cityMessages').append($x);
+		}
+	}
 }
 
 function onFleetClicked(fleetId)
@@ -1022,6 +1036,11 @@ function onMapCellChanged(location)
 	triggerRepaintCell(location);
 }
 
+function onGameMessage(eventData)
+{
+	gameMessages.push(eventData);
+}
+
 function onEvent(eventData)
 {
 	if (eventData.event == 'fleet-spawned')
@@ -1051,6 +1070,10 @@ function onEvent(eventData)
 		{
 			map.edges[eventData.location] = eventData.data;
 		}
+	}
+	else if (eventData.event == 'message')
+	{
+		return onGameMessage(eventData);
 	}
 	else
 	{

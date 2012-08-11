@@ -326,3 +326,7 @@ body {
 .cityBuildingOrdersBtn img {
 	vertical-align: top;
 }
+
+.cityMessage .year {
+	font-weight: bold;
+}
