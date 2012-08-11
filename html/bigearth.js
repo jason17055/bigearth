@@ -1134,10 +1134,39 @@ function fetchNextEvent()
 	});
 }
 
+function checkFleetMessage(fleetId)
+{
+	var fleet = fleets[fleetId];
+
+	var $msgBox = $('.fleetMessageBox[fleet-id="'+fleetId+'"]');
+	if (!fleet || !fleet.message)
+	{
+		if ($msgBox.length)
+		{
+			$msgBox.remove();
+		}
+		return;
+	}
+	
+	if ($msgBox.length == 0)
+	{
+		$msgBox = $('<div class="fleetMessageBox"><img class="unitIcon" src=""><span class="fleetName"></span><span class="message"></span></div>');
+		$msgBox.attr('fleet-id', fleetId);
+		$('#fleetMessagesContainer').append($msgBox);
+	}
+
+	$('img.unitIcon', $msgBox).attr('src', 'unit_images/'+fleet.type+'.png');
+	$('.fleetName', $msgBox).text(fleet.type);
+	$('.message', $msgBox).text(fleet.message);
+}
+
 function onFleetSpawned(eventData)
 {
-	fleets[eventData.fleet] = eventData.data;
-	updateFleetIcon(eventData.fleet, eventData.data);
+	var fleetId = eventData.fleet;
+	fleets[fleetId] = eventData.data;
+	updateFleetIcon(fleetId, eventData.data);
+
+	checkFleetMessage(fleetId);
 }
 
 function onFleetUpdated(eventData)
@@ -1145,6 +1174,8 @@ function onFleetUpdated(eventData)
 	var fleetId = eventData.fleet;
 	fleets[fleetId] = eventData.data;
 	updateFleetIcon(fleetId, eventData.data);
+
+	checkFleetMessage(fleetId);
 
 	if (fleetId == $('#fleetPane').attr('fleet-id'))
 	{
@@ -1164,6 +1195,11 @@ function fetchFleets()
 			var pt = coords.cells[fleets[fid].location].pt;
 			panToCoords(pt);
 			break;
+		}
+
+		for (var fid in fleets)
+		{
+			checkFleetMessage(fid);
 		}
 	};
 	var onError = function(xhr, status, errorThrown)
