@@ -7,8 +7,9 @@ var VIEWPORT = {
 	translateX: 0,
 	translateY: 0
 	};
+var DESIRED_CELL_SIZE = 64;
 var VIEWPORT_TILE_SIZE = 400;
-var VIEWPORT_TILE_OVERFLOW = 40;
+var VIEWPORT_TILE_OVERFLOW = 80;
 
 var TERRAIN_IMAGES = {};
 var imagesToLoad = 0;
@@ -96,8 +97,7 @@ function updateTransformMatrix()
 	if (geometry)
 	{
 		// desired size of hex in pixels
-		var DESIRED_SIZE = 40;
-		VIEWPORT.scale = Math.round(geometry.size * 5 * DESIRED_SIZE / Math.PI / 2);
+		VIEWPORT.scale = Math.round(geometry.size * 5 * DESIRED_CELL_SIZE / Math.PI / 2);
 	}
 
 	var I = [[ VIEWPORT.scale,0,0 ], [ 0,VIEWPORT.scale,0 ], [ 0,0,1 ]];
