@@ -53,6 +53,25 @@ body {
 	pointer-events: none;
 }
 
+#citiesReport {
+	position: absolute;
+	top: 1em;
+	left: 1em;
+	width: 5in;
+	height: 5in;
+	color: black;
+	background-color: white;
+	border-top:    6px solid #ccc;
+	border-left:   6px solid #ccc;
+	border-bottom: 6px solid #666;
+	border-right:  6px solid #666;
+	font-family: sans-serif;
+}
+
+#citiesReport h1 {
+	font-size: 18pt;
+}
+
 #fleetPane, #cityPane {
 	position: absolute;
 	right: 1em;

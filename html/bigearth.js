@@ -77,6 +77,7 @@ var geometry;
 var map;
 var coords;
 var fleets;
+var cities = {};
 var pawn = null;
 var gameMessages = [];
 
@@ -360,6 +361,17 @@ function onMapReplaced()
 	exposeCanvases();
 	recreateFleetIcons();
 
+	for (var cid in map.cells)
+	{
+		var c = map.cells[cid];
+		if (c.city)
+		{
+			var cityId = c.city.id;
+			c.city.location = cid;
+			cities[cityId] = c.city;
+		}
+	}
+
 	fetchNextEvent();
 }
 
@@ -409,6 +421,7 @@ function unselect()
 	$('.fleetIcon').removeClass('selectedFleet');
 	$('#fleetPane').hide();
 	$('#cityPane').hide();
+	$('#citiesReport').hide();
 }
 
 function onCityClicked(location, city)
@@ -1031,10 +1044,17 @@ function triggerRepaintCell(cellIdx)
 function onMapCellChanged(location)
 {
 	var city = map.cells[location].city;
+	if (city && city.id)
+	{
+		city.location = location;
+		cities[city.id] = city;
+	}
+
 	if (city && city.id == $('#cityPane').attr('city-id'))
 	{
 		loadCityInfo(city, location);
 	}
+
 	triggerRepaintCell(location);
 }
 
@@ -1914,4 +1934,36 @@ function cityBuildStoneWorkshop()
 		url: "/request/build-building?city="+cityId,
 		data: { building: 'stone-workshop' }
 		});
+}
+
+function citiesReportClicked()
+{
+	unselect();
+
+	var $r = $('#citiesReport');
+	$('tr.cityRow', $r).remove();
+	for (var tid in cities)
+	{
+		var city = cities[tid];
+
+		var $d = $('<tr class="cityRow"><td><span class="cityName"></span></td><td><span class="cityPopulation"></span></td><td class="cityZones"></td></tr>');
+		$('.cityName', $d).text(city.name);
+		$('.cityPopulation', $d).text(city.population+city.children);
+
+		var zonesStr = [];
+		var mapCell = map.cells[city.location];
+		if (mapCell.subcells.hamlet)
+		{
+			zonesStr.push(mapCell.subcells.hamlet + " housing");
+		}
+		if (mapCell.subcells.farm)
+		{
+			zonesStr.push(mapCell.subcells.farm + " farmland");
+		}
+
+		$('.cityZones', $d).text(zonesStr.join(', '));
+		$('table', $r).append($d);
+	}
+
+	$r.show();
 }
