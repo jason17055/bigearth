@@ -248,6 +248,9 @@ function addAvailableJobs(cityId, jobs)
 	if (!jobs.farm && cell.subcells.farm)
 		jobs.farm = 0;
 
+	if (!jobs.build && city.activity)
+		jobs.build = 0;
+
 	for (var bid in city.buildings)
 	{
 		var b = city.buildings[bid];
