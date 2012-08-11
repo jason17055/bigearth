@@ -380,6 +380,13 @@ function onGameState()
 
 function recreateFleetIcons()
 {
+	var $selected = $('.fleetIcon.selectedFleet');
+	var selectedFleet = null;
+	if ($selected.length)
+	{
+		selectedFleet = $selected.attr('fleet-id');
+	}
+
 	$('.fleetIcon').remove();
 
 	if (fleets)
@@ -389,6 +396,11 @@ function recreateFleetIcons()
 			var f = fleets[fid];
 			updateFleetIcon(fid, f);
 		}
+	}
+
+	if (selectedFleet)
+	{
+		selectFleet(selectedFleet);
 	}
 }
 
@@ -819,6 +831,11 @@ function loadCityInfo(city, location)
 
 function onFleetClicked(fleetId)
 {
+	selectFleet(fleetId);
+}
+
+function selectFleet(fleetId)
+{
 	unselect();
 	$('.fleetIcon[fleet-id="'+fleetId+'"]').addClass('selectedFleet');
 
@@ -1139,6 +1156,11 @@ function checkFleetMessage(fleetId)
 		$msgBox = $('<div class="fleetMessageBox"><img class="unitIcon" src=""><span class="fleetName"></span><span class="message"></span></div>');
 		$msgBox.attr('fleet-id', fleetId);
 		$('#fleetMessagesContainer').append($msgBox);
+
+		$msgBox.click(function() {
+			scrollToFleet(fleetId);
+			selectFleet(fleetId);
+			});
 	}
 
 	$('img.unitIcon', $msgBox).attr('src', 'unit_images/'+fleet.type+'.png');
@@ -1311,11 +1333,16 @@ function nextUnitClicked()
 
 	if (nextFleet)
 	{
-		var loc = fleets[nextFleet].location;
-		var pt = coords.cells[loc].pt;
-		panToCoords(pt);
-		onFleetClicked(nextFleet);
+		scrollToFleet(nextFleet);
+		selectFleet(nextFleet);
 	}
+}
+
+function scrollToFleet(fleetId)
+{
+	var loc = fleets[fleetId].location;
+	var pt = coords.cells[loc].pt;
+	panToCoords(pt);
 }
 
 function panToCoords(pt)
