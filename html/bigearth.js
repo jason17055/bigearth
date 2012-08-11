@@ -1765,7 +1765,7 @@ function cityBuildSettler()
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
 		type: "POST",
-		url: "/request/build-unit?city="+cityId,
+		url: "/request/equip-unit?city="+cityId,
 		data: { type: 'settler' }
 		});
 }
@@ -1775,7 +1775,7 @@ function cityBuildTrieme()
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
 		type: "POST",
-		url: "/request/build-unit?city="+cityId,
+		url: "/request/equip-unit?city="+cityId,
 		data: { type: 'trieme' }
 		});
 }

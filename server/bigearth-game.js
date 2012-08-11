@@ -1317,11 +1317,11 @@ function doReassignWorkers(requestData, queryString, remoteUser)
 	unlockCityStruct(cityId, city);
 }
 
-function doCityBuildUnit(requestData, queryString, remoteUser)
+function doCityEquipUnit(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^city=(.*)$/))
 	{
-		console.log("build-unit: invalid query string");
+		console.log("equip-unit: invalid query string");
 		return;
 	}
 
@@ -1329,13 +1329,13 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 	var city = G.cities[cityId];
 	if (!city)
 	{
-		console.log("build-unit: city " + cityId + " not found");
+		console.log("equip-unit: city " + cityId + " not found");
 		return;
 	}
 
 	if (city.owner != remoteUser)
 	{
-		console.log("build-unit: city " + cityId + " not owned by player " + remoteUser);
+		console.log("equip-unit: city " + cityId + " not owned by player " + remoteUser);
 		return;
 	}
 
@@ -1344,7 +1344,7 @@ function doCityBuildUnit(requestData, queryString, remoteUser)
 	if (!city.tasks)
 		city.tasks = [];
 	city.tasks.push({
-		task: 'build',
+		task: 'equip',
 		type: requestData.type
 		});
 
@@ -1558,18 +1558,18 @@ function tryMakeBuilding(cityId, city, buildingType)
 	}
 }
 
-function tryBuildTrieme(cityId, city)
+function tryEquipTrieme(cityId, city)
 {
 	var builders = 400;   // number of workers required to build the boat
 	var cost = G.world.triemeCost || 400;
 
-	if (city.activity == 'build-trieme' && city.production.build >= cost)
+	if (city.activity == 'equip-trieme' && city.production.build >= cost)
 	{
 		freeWorkers(cityId, city, 'build');
 
 		if (city.population < 150)
 		{
-			return cityActivityError(cityId, city, "not large enough to build trieme");
+			return cityActivityError(cityId, city, "not large enough to equip trieme");
 		}
 
 		stealWorkers(cityId, city, 50, 'trieme');
@@ -1584,7 +1584,7 @@ function tryBuildTrieme(cityId, city)
 	}
 	else
 	{
-		setCityActivity(cityId, city, 'build-trieme', builders, cost);
+		setCityActivity(cityId, city, 'equip-trieme', builders, cost);
 		return;
 	}
 }
@@ -1727,18 +1727,18 @@ function freeWorkers(cityId, city, job)
 	}
 }
 
-function tryBuildSettler(cityId, city)
+function tryEquipSettler(cityId, city)
 {
 	var builders = 50;   // number of workers to build settlers
 	var cost = G.world.settlerCost || 200;
 
-	if (city.activity == 'build-settler' && city.production.build >= cost)
+	if (city.activity == 'equip-settler' && city.production.build >= cost)
 	{
 		freeWorkers(cityId, city, 'build');
 
 		if (city.population < 200)
 		{
-			return cityActivityError(cityId, city, "not large enough to build settler");
+			return cityActivityError(cityId, city, "not large enough to equip settler");
 		}
 
 		stealWorkers(cityId, city, 100, 'settle');
@@ -1753,7 +1753,7 @@ function tryBuildSettler(cityId, city)
 	}
 	else
 	{
-		setCityActivity(cityId, city, 'build-settler', builders, cost);
+		setCityActivity(cityId, city, 'equip-settler', builders, cost);
 		return;
 	}
 	
@@ -1819,12 +1819,12 @@ console.log("in cityActivity");
 
 console.log("current task is " + currentTask.task);
 
-	if (currentTask.task == 'build')
+	if (currentTask.task == 'equip')
 	{
 		if (currentTask.type == 'settler')
-			return tryBuildSettler(cityId, city);
+			return tryEquipSettler(cityId, city);
 		else if (currentTask.type == 'trieme')
-			return tryBuildTrieme(cityId, city);
+			return tryEquipTrieme(cityId, city);
 	}
 	else if (currentTask.task == 'improvement')
 	{
@@ -2627,7 +2627,7 @@ var actionHandlers = {
 	'rename-city': doRenameCity,
 	'test-city': doCityTest,
 	'reassign-workers': doReassignWorkers,
-	'build-unit': doCityBuildUnit,
+	'equip-unit': doCityEquipUnit,
 	'build-improvement': doCityBuildImprovement,
 	'build-building': doCityBuildBuilding,
 	'building-orders': doCityBuildingOrders
