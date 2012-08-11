@@ -2,6 +2,7 @@ exports = {
 	time: 0,
 	ticksPerYear: 60000
 	};
+module.exports = exports;
 
 var eventQueue = [];
 var wakeupTimer = null;
@@ -91,8 +92,8 @@ function catchup(newTime)
 	rescheduleWakeup();
 }
 
-module.exports.schedule = schedule;
-module.exports.scheduleYears = scheduleYears;
-module.exports.scheduleAtYear = scheduleAtYear;
-module.exports.catchup = catchup;
-module.exports.cancel = cancel;
+exports.schedule = schedule;
+exports.scheduleYears = scheduleYears;
+exports.scheduleAtYear = scheduleAtYear;
+exports.catchup = catchup;
+exports.cancel = cancel;
