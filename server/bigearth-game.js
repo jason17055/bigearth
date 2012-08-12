@@ -1154,16 +1154,6 @@ function getGameState(request)
 	}
 }
 
-function doExpose(requestData, queryString, remoteUser)
-{
-	// TODO- delete this function
-
-	if (requestData.cell)
-	{
-		discoverCell(1, requestData.cell);
-	}
-}
-
 function doOrders(requestData, queryString, remoteUser)
 {
 	if (!queryString.match(/^fleet=(.*)$/))
@@ -1475,7 +1465,6 @@ function checkTerrainCell(cid, cell)
 
 
 var actionHandlers = {
-	expose: doExpose,
 	orders: doOrders,
 	'rename-city': city_module.cmd_rename_city,
 	'test-city': city_module.cmd_test_city,
