@@ -1498,4 +1498,5 @@ if (typeof global !== 'undefined')
 	global.terrainChanged = terrainChanged;
 	global.updateFleetSight = updateFleetSight;
 	global.developLand = developLand;
+	global.createUnit = createUnit;
 }
