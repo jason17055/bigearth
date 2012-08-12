@@ -682,13 +682,21 @@ function cityEndOfYear(cityId, city)
 
 	// distribute net change in adults evenly
 	var netPopChange = newAdults - deaths;
+	var changeApplied = 0;
 	for (var job in city.workers)
 	{
 		var portion = city.workers[job] / city.population;
-		city.workers[job] += portion * netPopChange;
+		var thisChange = portion * netPopChange;
+		city.workers[job] += thisChange;
+		changeApplied += thisChange;
 		cityNewWorkerRate(city, job);
 	}
-	city.population += netPopChange;
+	if (netPopChange > changeApplied)
+	{
+		city.workers.childcare = (city.workers.childcare || 0) + (netPopChange - changeApplied);
+		changeApplied = netPopChange;
+	}
+	city.population += changeApplied;
 
 	// notify interested parties
 	// done changing the city properties
