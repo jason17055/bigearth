@@ -424,6 +424,15 @@ function unselect()
 	$('#citiesReport').hide();
 }
 
+function selectCity(cityId)
+{
+	var city = cities[cityId];
+	if (city)
+	{
+		onCityClicked(city.location, city);
+	}
+}
+
 function onCityClicked(location, city)
 {
 	unselect();
@@ -1343,6 +1352,17 @@ function nextUnitClicked()
 	}
 }
 
+function scrollToCity(cityId)
+{
+	var city = cities[cityId];
+	if (city && city.location)
+	{
+		var loc = city.location;
+		var pt = coords.cells[loc].pt;
+		panToCoords(pt);
+	}
+}
+
 function scrollToFleet(fleetId)
 {
 	var loc = fleets[fleetId].location;
@@ -1945,8 +1965,15 @@ function citiesReportClicked()
 	{
 		var city = cities[tid];
 
-		var $d = $('<tr class="cityRow"><td><span class="cityName"></span></td><td><span class="cityPopulation"></span></td><td class="cityZones"></td></tr>');
+		var $d = $('<tr class="cityRow"><td><img src="city_images/city1.png"><a href="#" class="cityName"></a></td><td><span class="cityPopulation"></span></td><td class="cityZones"></td></tr>');
 		$('.cityName', $d).text(city.name);
+		with({tid:tid}) {
+		$('a.cityName', $d).click(function() {
+			scrollToCity(tid);
+			selectCity(tid);
+			return false;
+			});
+		}
 		$('.cityPopulation', $d).text(city.population+city.children);
 
 		var zonesStr = [];
