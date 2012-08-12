@@ -128,26 +128,22 @@ function discoverCity(cityId, realCity, mapCity, playerId)
 {
 	var isNew = false;
 
-	if ('fuel' in mapCity)
-	{
-		//compatibility fix
-		isNew = true;
-		delete mapCity.fuel;
-	}
+	//compatibility checks
+	delete mapCity.fuel;
+	delete mapCity.wheat;
+	delete mapCity.wood;
+	delete mapCity.meat;
+	delete mapCity.clay;
+	delete mapCity.food;
+	delete mapCity.stone;
+	delete mapCity['stone-block'];
+	delete mapCity['stone-weapon'];
 
 	var props = {
 		name: "public",
 		size: "public",
 		owner: "public",
 		population: "private floor",
-		food: "private floor",
-		clay: "private floor",
-		meat: "private floor",
-		stone: "private floor",
-		wheat: "private floor",
-		wood: "private floor",
-		'stone-block': "private floor",
-		'stone-weapon': "private floor",
 		children: "private floor",
 		activity: "private",
 		activityTime: "private",
@@ -221,6 +217,27 @@ function discoverCity(cityId, realCity, mapCity, playerId)
 			if (discoverBuilding(realCity.buildings[bt], mapCity.buildings[bt], playerId))
 			{
 				isNew = true;
+			}
+		}
+
+		// discover stock held by this city
+		if (!mapCity.stock)
+			mapCity.stock = {};
+		for (var t in mapCity.stock)
+		{
+			if (!realCity.stock[t])
+			{
+				isNew = true;
+				delete mapCity.stock[t];
+			}
+		}
+		for (var t in realCity.stock)
+		{
+			var refValue = Math.floor(+realCity.stock[t]);
+			if (refValue != mapCity.stock[t])
+			{
+				isNew = true;
+				mapCity.stock[t] = refValue;
 			}
 		}
 	}

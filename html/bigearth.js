@@ -709,8 +709,8 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityPopulation').text(city.population + city.children);
 	$('#cityPane .cityChildren').text(city.children);
 	$('#cityPane .cityWorkersCount').text(city.population);
+
 	$('#cityResourcesContainer div').remove();
-	var RESOURCE_TYPES = [ 'food', 'meat', 'wheat', 'wood', 'clay', 'stone', 'fuel', 'stone-block', 'stone-weapon' ];
 	var RESOURCE_DISPLAY_NAMES = {
 		food: "Food",
 		meat: "Meat",
@@ -720,15 +720,14 @@ function loadCityInfo(city, location)
 		stone: "Stone",
 		fuel: "Fuel"
 		};
-	for (var i = 0; i < RESOURCE_TYPES.length; i++)
+	if (city.stock)
 	{
-		var t = RESOURCE_TYPES[i];
-		if (city[t])
+		for (var t in city.stock)
 		{
 			var $x = $('<div><img src=""><span class="cityResourceType"></span>: <span class="cityResourceAmount"></span></div>');
 			$('img', $x).attr('src', 'resource_icons/'+t+'.png');
 			$('.cityResourceType', $x).text(RESOURCE_DISPLAY_NAMES[t] || t);
-			$('.cityResourceAmount', $x).text(city[t]);
+			$('.cityResourceAmount', $x).text(city.stock[t]);
 			$('#cityResourcesContainer').append($x);
 		}
 	}

@@ -120,6 +120,20 @@ function checkCity(cityId, city)
 		}
 	}
 
+	if (!city.stock)
+		city.stock = {};
+
+	var OLD_STOCK_TYPES = [ 'food', 'fuel', 'wheat', 'meat', 'wood', 'clay', 'stone', 'stone-block', 'stone-weapon' ];
+	for (var i = 0; i < OLD_STOCK_TYPES.length; i++)
+	{
+		var st = OLD_STOCK_TYPES[i];
+		if (city[st])
+		{
+			city.stock[st] = city[st];
+			delete city[st];
+		}
+	}
+
 	updateFleetSight(cityId, city);
 }
 
@@ -134,6 +148,7 @@ function City(cityId, location, owner)
 	this.population = 0;
 	this.children = 0;
 	this.childrenByAge = [];
+	this.stock = {};
 	this.lastUpdate = Scheduler.time;
 }
 
@@ -585,7 +600,7 @@ function cityEndOfYear(cityId, city)
 		delete city.production['gather-wood'];
 
 		var woodYield = pts * G.world.woodPerWoodGatherer;
-		city.wood = (city.wood || 0) + woodYield;
+		city.stock.wood = (city.stock.wood || 0) + woodYield;
 
 		console.log("  wood gatherers brought in " + woodYield + " wood");
 	}
@@ -596,7 +611,7 @@ function cityEndOfYear(cityId, city)
 		delete city.production['gather-clay'];
 
 		var clayYield = pts * G.world.clayPerClayGatherer;
-		city.clay = (city.clay || 0) + clayYield;
+		city.stock.clay = (city.stock.clay || 0) + clayYield;
 
 		console.log('  clay gatherers brought in ' + clayYield + " clay");
 	}
@@ -607,7 +622,7 @@ function cityEndOfYear(cityId, city)
 		delete city.production['gather-stone'];
 
 		var stoneYield = pts * G.world.stonePerStoneGatherer;
-		city.stone = (city.stone || 0) + stoneYield;
+		city.stock.stone = (city.stock.stone || 0) + stoneYield;
 
 		console.log('  stone gatherers brought in ' + stoneYield + " stone");
 	}
@@ -624,7 +639,7 @@ function cityEndOfYear(cityId, city)
 		//wildlife counter.
 
 		var foodYield = numHarvested * G.world.foodPerAnimal;
-		city.meat = (city.meat || 0) + foodYield;
+		city.stock.meat = (city.stock.meat || 0) + foodYield;
 
 		console.log("  hunters brought in " + foodYield + " meat");
 	}
@@ -635,7 +650,7 @@ function cityEndOfYear(cityId, city)
 		delete city.production.farm;
 
 		var foodYield = pts * G.world.foodPerFarmer;
-		city.wheat = (city.wheat || 0) + foodYield;
+		city.stock.wheat = (city.stock.wheat || 0) + foodYield;
 
 		console.log("  farmers brought in " + foodYield + " wheat");
 	}
@@ -733,7 +748,7 @@ function processManufacturingOutput(city)
 		for (var inputType in recipe.input)
 		{
 			var demand = actualOutput * recipe.input[inputType];
-			var supply = city[inputType] || 0;
+			var supply = city.stock[inputType] || 0;
 			if (supply < 0) { supply = 0; }
 
 			if (demand > supply)
@@ -745,14 +760,14 @@ function processManufacturingOutput(city)
 		for (var inputType in recipe.input)
 		{
 			var demand = actualOutput * recipe.input[inputType];
-			var newSupply = (city[inputType] || 0) - demand;
+			var newSupply = (city.stock[inputType] || 0) - demand;
 			if (newSupply > 0)
-				city[inputType] = newSupply;
+				city.stock[inputType] = newSupply;
 			else
-				delete city[inputType];
+				delete city.stock[inputType];
 		}
 
-		city[outputResource] = (city[outputResource] || 0) + actualOutput;
+		city.stock[outputResource] = (city.stock[outputResource] || 0) + actualOutput;
 	}
 }
 
@@ -847,7 +862,7 @@ function getTotalFood(city)
 	for (var i = 0; i < FOOD_TYPES.length; i++)
 	{
 		var ft = FOOD_TYPES[i];
-		sum += (city[ft] || 0);
+		sum += (city.stock[ft] || 0);
 	}
 	return sum;
 }
@@ -857,15 +872,15 @@ function subtractFood(city, amount)
 	for (var i = 0; i < FOOD_TYPES.length; i++)
 	{
 		var ft = FOOD_TYPES[i];
-		if (city[ft])
+		if (city.stock[ft])
 		{
-			if (city[ft] > amount)
+			if (city.stock[ft] > amount)
 			{
-				city[ft] -= amount;
+				city.stock[ft] -= amount;
 				return true;
 			}
-			amount -= city[ft];
-			delete city[ft];
+			amount -= city.stock[ft];
+			delete city.stock[ft];
 		}
 	}
 	return false;
