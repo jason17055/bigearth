@@ -29,6 +29,72 @@ var BUILDING_TYPE_COSTS = {
 	'stone-workshop':   [ 25, 50, null ]
 	};
 
+var TECHNOLOGIES;
+function makeTechnologyTree()
+{
+	var baseTechs = [ 'alphabet', 'husbandry', 'smelting',
+		'burial', 'masonry', 'pottery', 'warrior-code' ];
+	TECHNOLOGIES = {};
+	for (var i = 0; i < baseTechs.length; i++)
+	{
+		for (var r = 0; r < 5; r++)
+		{
+			for (var c = 0; c < 5; c++)
+			{
+				var j = r*5+c+1;
+				var techId = baseTechs[i] + '-' + j;
+				var tech = {
+					prereqs: []
+					};
+				if (r % 2 == 1)
+				{
+					var k = (r-1)*5+c+1;
+					var parentTech = baseTechs[i] + '-' + k;
+					tech.prereqs.push(parentTech);
+
+					if (c + 1 < 5)
+					{
+						var k = (r-1)*5+c+2;
+						var parentTech = baseTechs[i] + '-' + k;
+						tech.prereqs.push(parentTech);
+					}
+				}
+				else if (r > 0)
+				{
+					var k = (r-1)*5+c+1;
+					var parentTech = baseTechs[i] + '-' + k;
+					tech.prereqs.push(parentTech);
+
+					if (c - 1 >= 0)
+					{
+						var k = (r-1)*5+c;
+						var parentTech = baseTechs[i] + '-' + k;
+						tech.prereqs.push(parentTech);
+					}
+				}
+
+				if (j%2 == 1)
+				{
+					if (baseTechs[i] == 'husbandry')
+						tech.resourceCost = { 'meat': 5 };
+					else if (baseTechs[i] == 'smelting')
+						tech.resourceCost = { 'copper': 1 };
+					else if (baseTechs[i] == 'masonry')
+						tech.resourceCost = { 'stone': 5 };
+					else if (baseTechs[i] == 'pottery')
+						tech.resourceCost = { 'clay': 2 };
+					else if (baseTechs[i] == 'warrior-code')
+						tech.resourceCost = { 'stone-weapon': 2, 'wood': 1 };
+				}
+
+				TECHNOLOGIES[techId] = tech;
+			}
+		}
+	}
+	console.log(TECHNOLOGIES);
+}
+makeTechnologyTree();
+
 function newCity(location, owner)
 {
 	var tid = nextFleetId();
@@ -134,6 +200,9 @@ function checkCity(cityId, city)
 		}
 	}
 
+	if (!city.science)
+		city.science = {};
+
 	updateFleetSight(cityId, city);
 }
 
@@ -149,6 +218,7 @@ function City(cityId, location, owner)
 	this.children = 0;
 	this.childrenByAge = [];
 	this.stock = {};
+	this.science = {};
 	this.lastUpdate = Scheduler.time;
 }
 
@@ -161,6 +231,8 @@ function addAvailableJobs(cityId, jobs)
 		jobs.hunt = 0;
 	if (!jobs.childcare)
 		jobs.childcare = 0;
+	if (!jobs.research)
+		jobs.research = 0;
 
 	if (!jobs['gather-wood'] && cell.terrain == 'forest')
 		jobs['gather-wood'] = 0;
@@ -460,8 +532,6 @@ function cityActivityComplete(cityId, city)
 
 function cityActivity(cityId, city)
 {
-console.log("in cityActivity");
-
 	if (!city.tasks || city.tasks.length == 0)
 	{
 		// this city does not have any orders
@@ -471,8 +541,6 @@ console.log("in cityActivity");
 	var currentTask = city.tasks[0];
 	if (!currentTask)
 		throw new Error("invalid first task", city.tasks);
-
-console.log("current task is " + currentTask.task);
 
 	if (currentTask.task == 'equip')
 	{
@@ -540,8 +608,6 @@ function cmd_test_city(requestData, queryString, remoteUser)
 
 function cityEndOfYear(cityId, city)
 {
-	console.log("city "+city.name+": end of year");
-
 	lockCityStruct(city);
 
 	var ADULT_AGE = G.world.childYears;
@@ -722,14 +788,89 @@ function cityEndOfYear(cityId, city)
 				Math.floor(city.deaths)+ " deaths"
 		});
 	
-	console.log("  population: adults: " + city.population +
-		", children: " + city.children);
-	console.log("  food: " + city.food);
-	console.log("  births: " + city.births);
-	console.log("  deaths: " + city.deaths);
-	console.log("  new adults: " + newAdults);
 	city.births = 0;
 	city.deaths = 0;
+}
+
+function processResearchingOutput(city)
+{
+	var scienceOutput = city.production.research || 0;
+	delete city.production.research;
+
+	scienceOutput /= 10;
+
+	if (!city.partialScience)
+		city.partialScience = {};
+
+	for (var k in city.partialScience)
+	{
+		if (city.partialScience[k] + scienceOutput >= 1.0)
+		{
+			// completed research
+			scienceOutput -= city.partialScience[k];
+			delete city.partialScience[k];
+			cityLearned(city, k);
+		}
+		else
+		{
+			city.partialScience[k] += scienceOutput;
+			scienceOutput = 0;
+		}
+	}
+
+	if (scienceOutput == 0)
+		return;
+
+	// look for new topics to start research on
+	var candidates = [];
+	for (var techId in TECHNOLOGIES)
+	{
+		if (city.science[techId] || city.partialScience[techId])
+			continue;
+
+		var tech = TECHNOLOGIES[techId];
+		var haveAllPrereqs = true;
+		if (tech.prereqs)
+		{
+			for (var i = 0; i < tech.prereqs.length; i++)
+			{
+				if (!city.science[tech.prereqs[i]])
+					haveAllPrereqs = false;
+			}
+		}
+		if (!haveAllPrereqs)
+			continue;
+
+		candidates.push(techId);
+	}
+
+	// shuffle candidates list
+	shuffleArray(candidates);
+
+	for (var i = 0; i < scienceOutput; i++)
+	{
+		if (i >= candidates.length)
+			break;
+
+		city.partialScience[candidates[i]] = 0;
+	}
+}
+
+function shuffleArray(a)
+{
+	for (var i = 0, l = a.length; i < l; i++)
+	{
+		var j = Math.floor(Math.random() * (l-i)) + i;
+		var t = a[i];
+		a[i] = a[j];
+		a[j] = t;
+	}
+}
+
+function cityLearned(city, technologyId)
+{
+	city.science[technologyId] = 1;
+	console.log("City "+city.name+" learned "+technologyId);
 }
 
 function processManufacturingOutput(city)
@@ -811,6 +952,9 @@ function lockCityStruct(city)
 
 		// manufacturing jobs
 		processManufacturingOutput(city);
+
+		// scientists
+		processResearchingOutput(city);
 
 		// calculate hunger
 		var foodRequired = (FOOD_PER_ADULT * city.population + FOOD_PER_CHILD * city.children) * yearsElapsed;
