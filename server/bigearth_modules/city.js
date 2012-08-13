@@ -78,7 +78,7 @@ function makeTechnologyTree()
 					if (baseTechs[i] == 'husbandry')
 						tech.resourceCost = { 'meat': 5 };
 					else if (baseTechs[i] == 'smelting')
-						tech.resourceCost = { 'copper': 1 };
+						tech.resourceCost = { 'copper-ore': 1 };
 					else if (baseTechs[i] == 'masonry')
 						tech.resourceCost = { 'stone': 5 };
 					else if (baseTechs[i] == 'pottery')
@@ -739,6 +739,9 @@ function cityEndOfYear(cityId, city)
 	var sustenance = foodDemand > 0 ? Math.sqrt(foodConsumed / foodDemand) : 1;
 	city.hunger = 0;
 
+	// scientists
+	processResearchingOutput(city);
+
 	// calculate deaths
 	var sustainRate = 1 - 1/LIFE_EXPECTANCY;
 	sustainRate *= sustenance;
@@ -841,6 +844,20 @@ function processResearchingOutput(city)
 		if (!haveAllPrereqs)
 			continue;
 
+		if (tech.resourceCost)
+		{
+			var canAfford = true;
+			for (var type in tech.resourceCost)
+			{
+				var cost = tech.resourceCost[type]; 
+				var onHand = city.stock[type] || 0;
+				if (cost > onHand)
+					canAfford = false;
+			}
+			if (!canAfford)
+				continue;
+		}
+
 		candidates.push(techId);
 	}
 
@@ -852,7 +869,21 @@ function processResearchingOutput(city)
 		if (i >= candidates.length)
 			break;
 
-		city.partialScience[candidates[i]] = 0;
+		// subtract out the resources this technology costs to learn
+		//
+		var techId = candidates[i];
+		var tech = TECHNOLOGIES[techId];
+		if (tech.resourceCost)
+		{
+			for (var type in tech.resourceCost)
+			{
+				city.stock[type] = (city.stock[type] || 0) - tech.resourceCost[type];
+			}
+		}
+
+		// record the fact that we started learning this tech
+		//
+		city.partialScience[techId] = 0;
 	}
 }
 
@@ -952,9 +983,6 @@ function lockCityStruct(city)
 
 		// manufacturing jobs
 		processManufacturingOutput(city);
-
-		// scientists
-		processResearchingOutput(city);
 
 		// calculate hunger
 		var foodRequired = (FOOD_PER_ADULT * city.population + FOOD_PER_CHILD * city.children) * yearsElapsed;
