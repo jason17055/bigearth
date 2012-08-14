@@ -863,7 +863,17 @@ function loadFleetInfo(fleetId)
 	$('img.icon', $fleetPane).attr('src','unit_images/'+fleet.type+'.png');
 	$('.unitType', $fleetPane).text(fleet.type);
 
-	$('.fleetMessage', $fleetPane).text(fleet.message || '');
+	var m = fleet.message || '';
+	if (fleet.settlementFitness)
+	{
+		m += ' settlement value '+fleet.settlementFitness;
+	}
+	$('.fleetMessage', $fleetPane).text(m);
+
+	if (fleet.canSettle)
+		$('#buildCityBtn').show();
+	else
+		$('#buildCityBtn').hide();
 
 	$('#fleetPane .atThisLocation').empty();
 	for (var fid in fleets)

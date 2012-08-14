@@ -1225,6 +1225,94 @@ function getYear()
 	return G.world.age + (t-G.world.realWorldTime)/G.world.oneYear;
 }
 
+function fleetCanSettle(fleet)
+{
+	return fleet.type == 'settler';
+}
+
+function getSettlementFitness(map, location)
+{
+	var thisCellFitness = 0;
+
+	var c = map.cells[location];
+	if (!c || c.city)
+	{
+		return 0;
+	}
+
+	if (c.terrain == 'grassland' ||
+		c.terrain == 'plains' ||
+		c.terrain == 'forest' ||
+		c.terrain == 'hills')
+	{
+		thisCellFitness = 1;
+	}
+
+	var numGoodNeighbors = 0;
+	var numRivers = 0;
+	var nn = G.geometry.getNeighbors(location);
+	for (var i = 0; i < nn.length; i++)
+	{
+		var n = map.cells[nn[i]];
+		if (!n) continue;
+		if (n.terrain == 'grassland' ||
+			n.terrain == 'plains' ||
+			n.terrain == 'forest' ||
+			n.terrain == 'hills')
+		{
+			numGoodNeighbors++;
+		}
+
+		var eId = G.geometry._makeEdge(location, nn[i]);
+		var e = map.edges[eId];
+		if (e && e.feature == 'river')
+		{
+			numRivers++;
+		}
+	}
+
+	var neighborsFitness = numGoodNeighbors / 5 - 0.3 * Math.abs(numRivers - 2);
+
+	// look up to five cells away for another city
+	var dist = distanceToNearestCity(map, location, 5);
+	var distCityFitness = 2 - 4/dist;
+	return thisCellFitness + neighborsFitness + distCityFitness;
+}
+
+function distanceToNearestCity(map, location, maxDist)
+{
+	var seen = {};
+	var ring = {};
+	ring[location] = true;
+	seen[location] = true;
+
+	for (var dist = 0; dist <= maxDist; dist++)
+	{
+		var nextRing = {};
+		for (var loc in ring)
+		{
+			seen[loc] = true;
+			var c = map.cells[loc];
+			if (c && c.city)
+				return dist;
+
+			var nn = G.geometry.getNeighbors(loc);
+			for (var j = 0; j < nn.length; j++)
+			{
+				var nid = nn[j];
+				if (!seen[nid])
+				{
+					seen[nid] = true;
+					nextRing[nid] = true;
+				}
+			}
+		}
+		ring = nextRing;
+	}
+
+	return maxDist+1;
+}
+
 function getFleetInfoForPlayer(fleetId, playerId)
 {
 	var f = G.fleets[fleetId];
@@ -1240,6 +1328,14 @@ function getFleetInfoForPlayer(fleetId, playerId)
 			_fleet.activity = f.activity;
 		if (f.message)
 			_fleet.message = f.message;
+
+		if (fleetCanSettle(f))
+		{
+			_fleet.canSettle = true;
+			_fleet.settlementFitness = getSettlementFitness(
+				G.maps[f.owner], f.location);
+		}
+
 		return _fleet;
 	}
 	else if (playerCanSee(playerId, f.location))
