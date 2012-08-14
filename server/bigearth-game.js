@@ -464,6 +464,7 @@ function tryToBuildCity(fleetId, fleet)
 		}
 
 		var city = newCity(fleet.location, fleet.owner);
+		var tid = city._id;
 		city.wheat = 100;
 		city.wood = 50;
 		G.terrain.cells[fleet.location].city = tid;
