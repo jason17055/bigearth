@@ -1139,6 +1139,10 @@ function fleetActivity(fleetId)
 	{
 		return tryToBuildCity(fleetId, fleet);
 	}
+	else if (currentOrder.command == 'auto-settle')
+	{
+		return fleetAutoSettle(fleetId, fleet);
+	}
 	else if (currentOrder.command == 'disband')
 	{
 		return fleetDisbandInCity(fleetId, fleet);
@@ -1228,6 +1232,60 @@ function getYear()
 function fleetCanSettle(fleet)
 {
 	return fleet.type == 'settler';
+}
+
+function fleetAutoSettle(fleetId, fleet)
+{
+	var seen = {};
+	var curRing = {};
+	seen[fleet.location] = true;
+	curRing[fleet.location] = true;
+
+	var map = G.maps[fleet.owner];
+
+	var bestValue = getSettlementFitness(map, fleet.location);
+	var best = fleet.location;
+	for (var dist = 0; ; dist++)
+	{
+		var nextRing = {};
+		for (var loc in curRing)
+		{
+			var v = getSettlementFitness(map, loc);
+			if (v > bestValue)
+			{
+				bestValue = v;
+				best = loc;
+			}
+
+			var nn = G.geometry.getNeighbors(loc);
+			for (var j = 0; j < nn.length; j++)
+			{
+				var nid = nn[j];
+				if (!seen[nid])
+				{
+					seen[nid] = true;
+					nextRing[nid] = true;
+				}
+			}
+		}
+		curRing = nextRing;
+
+		if (dist >= 5 && bestValue >= 3.0)
+		{
+			fleet.orders.shift();
+			fleet.orders.unshift({
+				command: 'build-city'
+				});
+			fleet.orders.unshift({
+				command: 'goto',
+				location: best,
+				locationType: 'cell'
+				});
+			return fleetActivity(fleetId, fleet);
+		}
+	}
+
+	return fleetActivityError(fleetId, fleet, "Unable to find a suitable city location.")
 }
 
 function getSettlementFitness(map, location)

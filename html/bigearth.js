@@ -871,9 +871,10 @@ function loadFleetInfo(fleetId)
 	$('.fleetMessage', $fleetPane).text(m);
 
 	if (fleet.canSettle)
-		$('#buildCityBtn').show();
+		$('#buildCityBtn, #autoSettleBtn').show();
+	
 	else
-		$('#buildCityBtn').hide();
+		$('#buildCityBtn, #autoSettleBtn').hide();
 
 	$('#fleetPane .atThisLocation').empty();
 	for (var fid in fleets)
@@ -1804,6 +1805,19 @@ function orderFollowCoast()
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([ { command: "follow-coast" } ]),
+	contentType: "json"
+	});
+}
+
+function orderFleetCommand(buttonEl)
+{
+	var fleetId = $('#fleetPane').attr('fleet-id');
+	var cmd = $(buttonEl).attr('command-name');
+
+	$.ajax({
+	type: "POST",
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([ { command: cmd } ]),
 	contentType: "json"
 	});
 }
