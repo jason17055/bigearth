@@ -701,8 +701,9 @@ function cityEndOfYear(cityId, city)
 
 		var numHarvested = pts;
 
-		//TODO- subtract numHarvested from this cell's
-		//wildlife counter.
+		// record number of animals hunted
+		var cell = G.terrain.cells[city.location];
+		cell.wildlifeHunted += numHarvested;
 
 		var foodYield = numHarvested * G.world.foodPerAnimal;
 		city.stock.meat = (city.stock.meat || 0) + foodYield;

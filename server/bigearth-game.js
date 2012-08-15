@@ -5,6 +5,7 @@ if (typeof require !== 'undefined')
 
 var Scheduler = require('./bigearth_modules/scheduler.js');
 var city_module = require('./bigearth_modules/city.js');
+var mod_terrain = require('./bigearth_modules/terrain.js');
 
 var G = {
 	world: {},
@@ -1461,10 +1462,28 @@ function endOfYear()
 	// do this year's processing
 	console.log("processing year " + G.world.lastYear);
 
+	// prepare phase
+	for (var cid in G.terrain.cells)
+	{
+		terrainEndOfYear_prepare(cid, G.terrain.cells[cid]);
+	}
+
+	// process terrains
+	for (var cid in G.terrain.cells)
+	{
+		terrainEndOfYear_pass1(cid, G.terrain.cells[cid]);
+	}
+
 	// process cities
 	for (var tid in G.cities)
 	{
 		cityEndOfYear(tid, G.cities[tid]);
+	}
+
+	// cleanup phase
+	for (var cid in G.terrain.cells)
+	{
+		terrainEndOfYear_cleanup(cid, G.terrain.cells[cid]);
 	}
 
 	// schedule for next end-of-year
@@ -1632,6 +1651,11 @@ function checkTerrainCell(cid, cell)
 			if (!fleetOrCity)
 				delete cell.seenBy[fid];
 		}
+	}
+
+	if (!('wildlife' in cell))
+	{
+		cell.wildlife = 80;
 	}
 }
 
