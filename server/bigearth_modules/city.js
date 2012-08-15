@@ -340,7 +340,8 @@ var cityWorkerRatesSpecial = {
 		},
 
 	hunt: function(city, baseProduction) {
-		var numWildlife = 80;
+		var cell = G.terrain.cells[city.location];
+		var numWildlife = cell.wildlife || 80;
 		var s = 0.5 * Math.sqrt(numWildlife / 40);
 		return numWildlife - numWildlife * Math.exp(-s * baseProduction / numWildlife);
 		}
@@ -800,9 +801,9 @@ function cityEndOfYear(cityId, city)
 function cityEndOfYear_cleanup(cityId, city)
 {
 	// now that wildlife counters have been updated, recalculate hunter production rate
-	if (city.workers.hunter)
+	if (city.workers.hunt)
 	{
-		cityNewWorkerRate(city, 'hunter');
+		cityNewWorkerRate(city, 'hunt');
 	}
 }
 
