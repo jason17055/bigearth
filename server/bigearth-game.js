@@ -1468,22 +1468,30 @@ function endOfYear()
 		terrainEndOfYear_prepare(cid, G.terrain.cells[cid]);
 	}
 
-	// process terrains
-	for (var cid in G.terrain.cells)
-	{
-		terrainEndOfYear_pass1(cid, G.terrain.cells[cid]);
-	}
-
 	// process cities
 	for (var tid in G.cities)
 	{
 		cityEndOfYear(tid, G.cities[tid]);
 	}
 
+	// process terrains
+	for (var cid in G.terrain.cells)
+	{
+		// terrain processing expects city processing to be done already
+
+		terrainEndOfYear_pass1(cid, G.terrain.cells[cid]);
+	}
+
 	// cleanup phase
 	for (var cid in G.terrain.cells)
 	{
 		terrainEndOfYear_cleanup(cid, G.terrain.cells[cid]);
+	}
+	for (var tid in G.cities)
+	{
+		// city cleanup depends on terrain cleanup already being done
+
+		cityEndOfYear_cleanup(tid, G.cities[tid]);
 	}
 
 	// schedule for next end-of-year

@@ -796,6 +796,16 @@ function cityEndOfYear(cityId, city)
 	city.deaths = 0;
 }
 
+// prereqs- terrain wildlife counters should be updated
+function cityEndOfYear_cleanup(cityId, city)
+{
+	// now that wildlife counters have been updated, recalculate hunter production rate
+	if (city.workers.hunter)
+	{
+		cityNewWorkerRate(city, 'hunter');
+	}
+}
+
 function processResearchingOutput(city)
 {
 	var scienceOutput = city.production.research || 0;
@@ -1414,6 +1424,7 @@ global.addAvailableJobs = addAvailableJobs;
 global.newCity = newCity;
 global.checkCity = checkCity;
 global.cityEndOfYear = cityEndOfYear;
+global.cityEndOfYear_cleanup = cityEndOfYear_cleanup;
 global.city_addWorkersAny = city_addWorkersAny;
 
 exports.cmd_rename_city = cmd_rename_city;
