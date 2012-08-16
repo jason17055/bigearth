@@ -1221,7 +1221,7 @@ function developLand(location, type, amount)
 {
 	var c = G.terrain.cells[location];
 	c.subcells.natural -= amount;
-	c.subcells[type] += amount;
+	c.subcells[type] = (c.subcells[type] || 0) + amount;
 	terrainChanged(location);
 }
 
