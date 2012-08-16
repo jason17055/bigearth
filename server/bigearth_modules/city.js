@@ -447,12 +447,7 @@ function freeWorkers(cityId, city, job)
 	delete city.workerRates[job];
 	city.population -= num;
 
-	var p = city.population;
-	for (var job in city.workers)
-	{
-		var q = num * city.workers[job] / p;
-		addWorkers(cityId, city, q, job);
-	}
+	city_addWorkersAny(cityId, city, num);
 }
 
 function tryEquipSettler(cityId, city)
