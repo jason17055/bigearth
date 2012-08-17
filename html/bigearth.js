@@ -713,7 +713,7 @@ function loadCityInfo(city, location)
 
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane').attr('city-location', location);
-	$('#cityPane .cityName').text(city.name);
+	$('#cityPane .cityName').text(city.name || "(unnamed)");
 	$('#cityPane .citySize').text(mapCell.subcells.hamlet || 0);
 	$('#cityPane .cityPopulation').text(city.population + city.children);
 	$('#cityPane .cityChildren').text(city.children);
