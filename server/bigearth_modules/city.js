@@ -422,6 +422,7 @@ function setCityActivity(cityId, city, activity, builders, cost)
 			stealWorkers(cityId, city,
 				targetWorkerCount-curWorkerCount, 'build');
 		}
+		rebalanceWorkers(cityId, city);
 	}
 
 	var rate = city.workerRates.build || 0;
@@ -453,7 +454,7 @@ function freeWorkers(cityId, city, job)
 	delete city.workerRates[job];
 	city.population -= num;
 
-	city_addWorkersAny(cityId, city, num);
+	addWorkers(cityId, city, num, 'idle');
 }
 
 function tryEquipSettler(cityId, city)
@@ -525,6 +526,7 @@ function cityActivityComplete(cityId, city)
 	{
 		delete city.tasks;
 		cityChanged(cityId);
+		rebalanceWorkers(cityId, city);
 	}
 	else
 	{
@@ -1416,9 +1418,63 @@ function tryDevelopLand(cityId, city, landType)
 function city_addWorkersAny(cityId, city, amount)
 {
 	lockCityStruct(city);
-	addWorkers(cityId, city, amount/2, 'hunt');
-	addWorkers(cityId, city, amount/2, 'childcare');
+
+	addWorkers(cityId, city, amount, 'idle');
+	rebalanceWorkers(cityId, city);
+
 	unlockCityStruct(cityId, city);
+}
+
+function rebalanceWorkers(cityId, city)
+{
+	var amount = city.workers.idle || 0;
+	delete city.workers.idle;
+	delete city.workerRates.idle;
+	city.population -= amount;
+
+	if (amount > 0)
+	{
+		var cell = G.terrain.cells[city.location];
+		var numFarms = cell.subcells.farm || 0;
+		var needForFarmers = numFarms * 15;
+		var q = needForFarmers - (city.workers.farm || 0);
+		if (q > 0)
+		{
+			if (q > amount) { q = amount; }
+			addWorkers(cityId, city, q, 'farm');
+			amount -= q;
+		}
+	}
+
+	if (amount > 0)
+	{
+		var needForChildCaretakers = (city.children || 0) * .4;
+		var q = needForChildCaretakers - (city.workers.childcare || 0);
+		if (q > 0)
+		{
+			if (q > amount) { q = amount; }
+			addWorkers(cityId, city, q, 'childcare');
+			amount -= q;
+		}
+	}
+
+	if (amount > 0)
+	{
+		var needForBuilders = city.activity ? 20 : 0;
+		var q = needForBuilders - (city.workers.build || 0);
+		if (q > 0)
+		{
+			if (q > amount) { q = amount; }
+			addWorkers(cityId, city, q, 'build');
+			amount -= q;
+		}
+	}
+
+	if (amount > 0)
+	{
+		addWorkers(cityId, city, amount/2, 'hunt');
+		addWorkers(cityId, city, amount/2, 'childcare');
+	}
 }
 
 global.roundWorkers = roundWorkers;
