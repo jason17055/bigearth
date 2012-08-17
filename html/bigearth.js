@@ -1794,7 +1794,7 @@ function orderStop()
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([]),
-	contentType: "json"
+	contentType: "text/json"
 	});
 }
 
@@ -1805,7 +1805,7 @@ function orderFollowCoast()
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([ { command: "follow-coast" } ]),
-	contentType: "json"
+	contentType: "text/json"
 	});
 }
 
@@ -1818,7 +1818,7 @@ function orderFleetCommand(buttonEl)
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([ { command: cmd } ]),
-	contentType: "json"
+	contentType: "text/json"
 	});
 }
 
@@ -1829,7 +1829,7 @@ function orderBuildCity()
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([ { command: "build-city" } ]),
-	contentType: "json"
+	contentType: "text/json"
 	});
 }
 
@@ -1840,7 +1840,7 @@ function orderDisband()
 	type: "POST",
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([ { command: "disband" } ]),
-	contentType: "json"
+	contentType: "text/json"
 	});
 }
 
@@ -1854,7 +1854,7 @@ function orderGoTo(fleetId, location)
 		location: location,
 		locationType: "cell"
 		} ]),
-	contentType: "json"
+	contentType: "text/json"
 	});
 }
 
