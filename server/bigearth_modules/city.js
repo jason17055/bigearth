@@ -335,6 +335,9 @@ var cityWorkerRatesSpecial = {
 		var cell = G.terrain.cells[city.location];
 		var numFarms = cell.subcells.farm || 0;
 		var maxYield = numFarms * 30;
+		if (maxYield == 0)
+			return 0;
+
 		var z = maxYield - maxYield * Math.exp(-1 * baseProduction / maxYield);
 		return z;
 		},
@@ -342,6 +345,9 @@ var cityWorkerRatesSpecial = {
 	hunt: function(city, baseProduction) {
 		var cell = G.terrain.cells[city.location];
 		var numWildlife = cell.wildlife || 80;
+		if (numWildlife == 0)
+			return 0;
+
 		var s = 0.5 * Math.sqrt(numWildlife / 40);
 		return numWildlife - numWildlife * Math.exp(-s * baseProduction / numWildlife);
 		}
