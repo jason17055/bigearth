@@ -7,7 +7,7 @@ body {
 	overflow: hidden;
 	background-color: black;
 }
-#scrollPanel {
+.bigearth-scrollPanel {
 	position: absolute;
 	background-color: black;
 }
