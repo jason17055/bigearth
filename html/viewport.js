@@ -98,7 +98,7 @@ BigEarthViewPort.prototype.initialize = function()
 		'-moz-transform':translateRule
 		});
 	CANVASES = [];
-	$('.aCanvas').remove();
+	$('.aCanvas', this.el).remove();
 	this.exposeCanvases();
 	this.recreateFleetIcons();
 
@@ -106,21 +106,20 @@ BigEarthViewPort.prototype.initialize = function()
 
 BigEarthViewPort.prototype.recreateFleetIcons = function()
 {
-	var $selected = $('.fleetIcon.selectedFleet');
+	var $selected = $('.fleetIcon.selectedFleet', this.el);
 	var selectedFleet = null;
 	if ($selected.length)
 	{
 		selectedFleet = $selected.attr('fleet-id');
 	}
 
-	$('.fleetIcon').remove();
+	$('.fleetIcon', this.el).remove();
 
 	if (fleets)
 	{
 		for (var fid in fleets)
 		{
-			var f = fleets[fid];
-			this.updateFleetIcon(fid, f);
+			this.updateFleetIcon(fid);
 		}
 	}
 
@@ -458,7 +457,7 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]', this.el);
 
-	var fleetInfo = fleets[fleetInfo];
+	var fleetInfo = fleets[fleetId];
 	if (!fleetInfo)
 	{
 		$f.remove();
@@ -481,7 +480,10 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 
 		var imgEl = $('img.unitIcon',$f).get(0);
 		$(imgEl).click(function() {
-			self.onFleetClicked(fleetId)
+			if (self.fleetClicked)
+			{
+				(self.fleetClicked)(fleetId);
+			}
 			});
 		imgEl.addEventListener('dragstart',
 			function(evt) {
@@ -615,7 +617,7 @@ BigEarthViewPort.prototype.onFleetDragStart = function(fleetId, evt)
 		return false;
 	};
 
-	var spEl = document.getElementById('scrollPanel');
+	var spEl = $('.bigearth-scrollPanel', this.el).get(0);
 	spEl.addEventListener('dragover', dragHandler, false);
 	spEl.addEventListener('drop', dropHandler, false);
 

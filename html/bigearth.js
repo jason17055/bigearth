@@ -55,6 +55,7 @@ function maybeStartPlaying()
 		VIEWPORT = new BigEarthViewPort(contentDiv, map);
 		VIEWPORT.initialize();
 		VIEWPORT.cityClicked = onCityClicked;
+		VIEWPORT.fleetClicked = onFleetClicked;
 
 		onResize();
 
