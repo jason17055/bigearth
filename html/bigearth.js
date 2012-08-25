@@ -54,6 +54,7 @@ function maybeStartPlaying()
 		var contentDiv = document.getElementById('contentArea');
 		VIEWPORT = new BigEarthViewPort(contentDiv, map);
 		VIEWPORT.initialize();
+		VIEWPORT.cityClicked = onCityClicked;
 
 		onResize();
 
