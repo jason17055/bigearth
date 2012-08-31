@@ -139,6 +139,27 @@ BigEarthViewPort.prototype.toScreenPoint = function(pt)
 	};
 };
 
+BigEarthViewPort.prototype.fromScreenPoint = function(screenPt)
+{
+	var x = screenPt.x / this.scale;
+	var y = screenPt.y / this.scale;
+	var d = 1 - Math.pow(x,2) - Math.pow(y,2);
+	var z = d > 0 ? Math.sqrt(d) : 0;
+	var pt = { x: x, y: y, z: z };
+
+	var M = this.rotMatrixInverse;
+	var rv = {
+	x: M[0][0]*pt.x + M[0][1]*pt.y + M[0][2]*pt.z,
+	y: M[1][0]*pt.x + M[1][1]*pt.y + M[1][2]*pt.z,
+	z: M[2][0]*pt.x + M[2][1]*pt.y + M[2][2]*pt.z
+	};
+
+	rv.latitude = Math.asin(rv.z);
+	rv.longitude = Math.atan2(rv.y, rv.x);
+
+	return rv;
+};
+
 BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 {
 	if (!this.canvases[canvasRow]) return;
@@ -346,16 +367,29 @@ BigEarthViewPort.prototype.repaint = function()
 
 BigEarthViewPort.prototype.updateTransformMatrix = function()
 {
+	// rotate around Z axis for longitude
+
 	var aZ = this.longitude;
 	var rZ = [[ Math.cos(aZ), -Math.sin(aZ), 0 ],
 		[ Math.sin(aZ), Math.cos(aZ), 0 ],
 		[ 0, 0, 1 ]
 		];
+	var rZ_inv = [[ Math.cos(-aZ), -Math.sin(-aZ), 0 ],
+		[ Math.sin(-aZ), Math.cos(-aZ), 0 ],
+		[ 0, 0, 1 ]
+		];
+
+	// rotate around X axis for latitude
 
 	var aX = this.latitude;
 	var rX = [[ 1, 0, 0 ],
 		[ 0, Math.cos(aX), -Math.sin(aX) ],
 		[ 0, Math.sin(aX), Math.cos(aX) ]
+		];
+
+	var rX_inv = [[ 1, 0, 0 ],
+		[ 0, Math.cos(-aX), -Math.sin(-aX) ],
+		[ 0, Math.sin(-aX), Math.cos(-aX) ]
 		];
 
 	if (geometry)
@@ -367,6 +401,8 @@ BigEarthViewPort.prototype.updateTransformMatrix = function()
 
 	var I = [[ this.scale,0,0 ], [ 0,this.scale,0 ], [ 0,0,1 ]];
 	this.rotMatrix = matrixMultiply(I, matrixMultiply(rX, rZ));
+
+	this.rotMatrixInverse = matrixMultiply(rZ_inv, rX_inv);
 };
 
 BigEarthViewPort.prototype.sizeChanged = function(newWidth, newHeight)
@@ -645,6 +681,8 @@ BigEarthViewPort.prototype.onMouseDown = function(evt)
 		y: evt.clientY - this.translateY
 		};
 
+	var worldPt = this.fromScreenPoint(screenPt);
+
 	var xx = this.getNearestFeatureFromScreen(screenPt, false, true, true);
 	if (xx.type == 'cell')
 	{
@@ -657,7 +695,7 @@ BigEarthViewPort.prototype.onMouseDown = function(evt)
 		}
 		else
 		{
-			return this.panToCoords(coords.cells[xx.id].pt);
+			return this.panToCoords(worldPt);
 		}
 	}
 };
