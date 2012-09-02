@@ -86,7 +86,8 @@ function makeMap(geometry)
 		var c = {
 			height: 0,
 			water: 0,
-			moisture: 0
+			summerRains: 0,
+			winterRains: 0
 			};
 		cells[cellIdx] = c;
 
@@ -196,12 +197,12 @@ function LogisticFunction(t)
 	return 1/(1+Math.exp(-t));
 }
 
-function blurMoisture(map, coords)
+function blurMoisture(map, coords, moistureKey)
 {
 	var newValues = {};
 	for (var cid in map.cells)
 	{
-		newValues[cid] = map.cells[cid].moisture;
+		newValues[cid] = map.cells[cid][moistureKey];
 	}
 
 	for (var cid in map.cells)
@@ -219,7 +220,7 @@ function blurMoisture(map, coords)
 			var n_lat = Math.asin(coords.cells[nid].pt.z);
 			var n_lgt = Math.atan2(coords.cells[nid].pt.y, coords.cells[nid].pt.x);
 			var n_dir = Math.atan2(n_lat-c_lat, n_lgt-c_lgt);
-			var diff = c.moisture - n.moisture;
+			var diff = c[moistureKey] - n[moistureKey];
 			if (diff > 0)
 			{
 				var c_height = c.height > 0 ? c.height : 0;
@@ -228,7 +229,7 @@ function blurMoisture(map, coords)
 
 				var wind_aid = Math.cos(n_dir) * winds;
 
-				var xfer = 0.2 * diff * (LogisticFunction(height_diff/2) + wind_aid);
+				var xfer = 0.2 * diff * (LogisticFunction(height_diff/2 + wind_aid));
 				newValues[cid] -= xfer;
 				newValues[nid] += xfer;
 			}
@@ -237,9 +238,31 @@ function blurMoisture(map, coords)
 
 	for (var cid in map.cells)
 	{
-		map.cells[cid].moisture = newValues[cid];
-		//console.log("moisture at "+cid+" is "+Math.round(newValues[cid]));
+		map.cells[cid][moistureKey] = newValues[cid];
 	}
+}
+
+function rainfallStats(map, moistureKey)
+{
+	var minSeen = Infinity;
+	var maxSeen = -Infinity;
+	var count = 0;
+	var sum = 0;
+
+	for (var cid in map.cells)
+	{
+		var m = map.cells[cid][moistureKey];
+		if (m < minSeen)
+			minSeen = m;
+		if (m > maxSeen)
+			maxSeen = m;
+		sum += m;
+		count++;
+	}
+
+	console.log(moistureKey + " avg", sum/count);
+	console.log(moistureKey + " min", minSeen);
+	console.log(moistureKey + " max", maxSeen);
 }
 
 function generateTerrain(map, coords)
@@ -266,20 +289,56 @@ function generateTerrain(map, coords)
 	for (var i = 0; i < 30; i++)
 		bumpMap(map, coords, i%2 ? 2 : -2, "temperature");
 
+	//
+	// determine rainfall levels
+	//
 	// assign initial moisture numbers based on ocean and temperature
 	for (var cid in map.cells)
 	{
 		var c = map.cells[cid];
+		var lat = Math.asin(coords.cells[cid].pt.z);
+
 		if (c.height < 1)
-			c.moisture = 30*Math.pow(.5,(24-c.temperature)/12);
+			c.winterRains = 30*Math.pow(.5,(24-c.temperature)/12);
 		else
-			c.moisture = 0;
+			c.winterRains = 0;
+
+		// middle latitudes will get seasonal variation in rains
+		c.summerRains = c.winterRains + 6*Math.sin(lat/2);
 	}
 	for (var i = 0; i < 50; i++)
-		blurMoisture(map, coords);
-	for (var i = 0; i < 10; i++)
-		bumpMap(map, coords, i%2 ? 1 : -1, "moisture");
+	{
+		blurMoisture(map, coords, 'summerRains');
+		blurMoisture(map, coords, 'winterRains');
+	}
+	for (var i = 0; i < 20; i++)
+	{
+		bumpMap(map, coords, i%2 ? 2 : -2, "summerRains");
+		bumpMap(map, coords, i%2 ? 2 : -2, "winterRains");
+	}
+	// normalize rainfall levels
+	var minRainfall = Infinity;
+	for (var cid in map.cells)
+	{
+		var c = map.cells[cid];
+		if (c.winterRains < minRainfall)
+			minRainfall = c.winterRains;
+		if (c.summerRains < minRainfall)
+			minRainfall = c.summerRains;
+	}
+	for (var cid in map.cells)
+	{
+		var c = map.cells[cid];
+		c.winterRains -= minRainfall;
+		c.summerRains -= minRainfall;
+	}
+	// rainfall stats
+	rainfallStats(map, "summerRains");
+	rainfallStats(map, "winterRains");
 
+	//
+	// determine soil quality
+	//
 	for (var cid in map.cells)
 	{
 		map.cells[cid].soil = 0;
@@ -291,6 +350,7 @@ function generateTerrain(map, coords)
 		map.cells[cid].soil = LogisticFunction(map.cells[cid].soil);
 	}
 
+	var countTerrains = {};
 	for (var cid in map.cells)
 	{
 		var c = map.cells[cid];
@@ -303,6 +363,9 @@ function generateTerrain(map, coords)
 		}
 		sumVar /= nn.length;
 
+		var totalRain = c.summerRains + c.winterRains;
+		var lesserRain = c.summerRains < c.winterRains ? c.summerRains : c.winterRains;
+
 		if (c.height < 1)
 			c.terrain = "ocean";
 		else if (c.temperature < 0)
@@ -311,20 +374,26 @@ function generateTerrain(map, coords)
 			c.terrain = "mountains";
 		else if (sumVar >= 1.8)
 			c.terrain = "hills";
-		else if (c.moisture < 0.5 && c.temperature > 15)
+		else if (totalRain < 15 && c.temperature > 15)
 			c.terrain = "desert";
-		else if (c.moisture < 0.5)
+		else if (totalRain < 15)
 			c.terrain = "tundra";
-		else if (c.moisture >= 6 && c.height >= 2 && c.soil >= 0.65)
-			c.terrain = "swamp";
-		else if (c.soil >= 0.6 && c.temperature >= 20)
+		else if (lesserRain >= 18 && c.temperature >= 20)
 			c.terrain = "jungle";
-		else if (c.soil >= 0.6)
+		else if (lesserRain >= 18 && c.height >= 2 && c.soil >= 0.65)
+			c.terrain = "swamp";
+		else if (lesserRain >= 15 && c.soil >= 0.6)
 			c.terrain = "forest";
-		else if (c.moisture < 1.8)
+		else if (c.temperature > 15)
 			c.terrain = "plains";
 		else
 			c.terrain = "grassland";
+
+		countTerrains[c.terrain] = (countTerrains[c.terrain]||0)+1;
+	}
+	for (var terrainType in countTerrains)
+	{
+		console.log("total "+terrainType, countTerrains[terrainType]);
 	}
 
 	var RF = new RiverFactory(map);
