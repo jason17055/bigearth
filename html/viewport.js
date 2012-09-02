@@ -565,7 +565,7 @@ BigEarthViewPort.prototype.doDeferredRepaint = function()
 		var kk = k.split(/,/);
 		var ix = +kk[0];
 		var iy = +kk[1];
-		//this.repaintOne(iy, ix);
+		this.repaintOne(iy, ix);
 	}
 	this.deferredRepaints.todo = {};
 	this.deferredRepaints.timer = null;
@@ -626,6 +626,8 @@ BigEarthViewPort.prototype.hideDragTargetIndicator = function()
 
 BigEarthViewPort.prototype.onFleetDragStart = function(fleetId, evt)
 {
+	var self = this;
+
 	evt.dataTransfer.effectAllowed = 'move';
 	evt.dataTransfer.setData('applicaton/bigearth+fleet', fleetId);
 	evt.dataTransfer.setDragImage(
@@ -638,8 +640,8 @@ BigEarthViewPort.prototype.onFleetDragStart = function(fleetId, evt)
 		x: evvt.clientX - VIEWPORT.translateX,
 		y: evvt.clientY - VIEWPORT.translateY
 		};
-		var xx = getNearestFeatureFromScreen(screenPt, false, true, true);
-		showDragTargetIndicator(xx.id);
+		var xx = self.getNearestFeatureFromScreen(screenPt, false, true, true);
+		self.showDragTargetIndicator(xx.id);
 		return false;
 	};
 	var dropHandler = function(evvt) {
@@ -648,8 +650,10 @@ BigEarthViewPort.prototype.onFleetDragStart = function(fleetId, evt)
 		x: evvt.clientX - VIEWPORT.translateX,
 		y: evvt.clientY - VIEWPORT.translateY
 		};
-		var xx = getNearestFeatureFromScreen(screenPt, false, true, true);
-		orderGoTo(fleetId, xx.id);
+		var xx = self.getNearestFeatureFromScreen(screenPt, false, true, true);
+		if (self.orderGoTo) {
+			(self.orderGoTo)(fleetId, xx.id);
+		}
 		return false;
 	};
 

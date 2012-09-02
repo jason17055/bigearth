@@ -56,6 +56,7 @@ function maybeStartPlaying()
 		VIEWPORT.initialize();
 		VIEWPORT.cityClicked = onCityClicked;
 		VIEWPORT.fleetClicked = onFleetClicked;
+		VIEWPORT.orderGoTo = orderGoTo;
 
 		onResize();
 
@@ -572,7 +573,7 @@ function onFleetMovement(eventData)
 	{
 		fleets[fleetId].location = eventData.toLocation;
 		fleets[fleetId].stepDelay = eventData.delay;
-		updateFleetIcon(fleetId, fleets[fleetId]);
+		VIEWPORT.updateFleetIcon(fleetId, fleets[fleetId]);
 	}
 }
 
@@ -763,7 +764,7 @@ function onFleetUpdated(eventData)
 {
 	var fleetId = eventData.fleet;
 	fleets[fleetId] = eventData.data;
-	updateFleetIcon(fleetId, eventData.data);
+	VIEWPORT.updateFleetIcon(fleetId, eventData.data);
 
 	checkFleetMessage(fleetId);
 
