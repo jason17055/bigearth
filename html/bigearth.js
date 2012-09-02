@@ -598,15 +598,7 @@ function onFleetTerminated(eventData)
 	var fleetId = eventData.fleet;
 	if (fleets[fleetId])
 	{
-		if (eventData.disposition == 'moved-out-of-sight' && eventData.newLocation)
-		{
-			moveFleetIconOutOfSight(fleetId, eventData.newLocation);
-		}
-		else
-		{
-			removeFleetIcon(fleetId);
-		}
-
+		VIEWPORT.removeFleetIcon(fleetId, eventData);
 		delete fleets[fleetId];
 	}
 

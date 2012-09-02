@@ -483,10 +483,13 @@ BigEarthViewPort.prototype.exposeCanvases = function()
 	}
 };
 
-BigEarthViewPort.prototype.removeFleetIcon = function(fleetId)
+BigEarthViewPort.prototype.removeFleetIcon = function(fleetId, eventData)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]', this.el);
 	$f.remove();
+
+	//TODO
+	// if (eventData.disposition == 'moved-out-of-sight' && eventData.newLocation)
 };
 
 BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
