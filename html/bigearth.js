@@ -1065,23 +1065,13 @@ function onCityNewJob()
 	}
 }
 
-function cityEquipSettler()
+function cityEquipNewUnit(unitType)
 {
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
 		type: "POST",
 		url: "/request/equip-unit?city="+cityId,
-		data: { type: 'settler' }
-		});
-}
-
-function cityEquipTrieme()
-{
-	var cityId = $('#cityPane').attr('city-id');
-	$.ajax({
-		type: "POST",
-		url: "/request/equip-unit?city="+cityId,
-		data: { type: 'trieme' }
+		data: { type: unitType }
 		});
 }
 
