@@ -357,11 +357,29 @@ function terrainChanged(cellId)
 	}
 }
 
+function fleetMessage(fleetId, message)
+{
+	var fleet = G.fleets[fleetId];
+	if (!fleet)
+	{
+		throw new Error("fleet "+fleetId+" not found");
+	}
+
+	if (fleet.message)
+	{
+		fleet.message = fleet.message + "\n" + message;
+	}
+	else
+	{
+		fleet.message = message;
+	}
+
+	fleetChanged(fleetId, fleet);
+}
+
 function fleetActivityError(fleetId, fleet, errorMessage)
 {
-	console.log("fleet #"+fleetId + " error: " + errorMessage);
-	fleet.message = "Unable to complete orders: " + errorMessage;
-	fleetChanged(fleetId, fleet);
+	fleetMessage(fleetId, "Unable to complete orders: " + errorMessage);
 }
 
 function fleetDisbandInCity(fleetId, fleet)
@@ -897,6 +915,7 @@ function moveFleetOneStep(fleetId, newLoc)
 	var oldLoc = fleet.location;
 	fleet.lastLocation = oldLoc;
 	fleet.location = newLoc;
+	delete fleet.hadTerrainEffect;
 
 	{
 		var oldLocStruct = getTerrainLocation(oldLoc);
@@ -1110,6 +1129,67 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 	discoverCellBorder(playerId,f.location);
 }
 
+function fleetTerrainEffect_deaths(fleetId, fleet, deathCount, explanation)
+{
+	fleet.population = Math.floor(fleet.population - deathCount);
+	if (fleet.population > 0)
+	{
+		fleetMessage(fleetId, (deathCount > 1 ? "Some" : "One") + " of your party " + explanation + ".");
+		return fleetCooldown(fleetId, fleet,
+			deathCount > 3 ? 1500 : (500*deathCount));
+	}
+	else
+	{
+		fleet.population = 0;
+		fleetMessage(fleetId, 'Your party ' + explanation + '.');
+		return fleetCooldown(fleetId, fleet, 1500);
+	}
+}
+
+function fleetTerrainEffect(fleetId)
+{
+	var fleet = G.fleets[fleetId];
+	fleet.hadTerrainEffect = true;
+
+	if (fleet.crossedRiver)
+	{
+		if (Math.random() < 0.15)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 1, 'drowned crossing a river');
+		}
+	}
+
+	var location = fleet.location;
+	var terrainCell = G.terrain.cells[location];
+	if (terrainCell)
+	{
+		var terrainType = terrainCell.terrain;
+		if (terrainType == 'tundra' && Math.random() < 0.25)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 5, 'died of exposure');
+		}
+
+		if (terrainType == 'glacier' && Math.random() < 0.5)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 7, 'died of exposure');
+		}
+
+		if ((terrainType == 'jungle' || terrainType == 'swamp') && Math.random() < 0.25)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 5, 'died of malaria');
+		}
+
+		if (terrainCell.wildlife >= 10 &&
+			Math.random() < .001*terrainCell.wildlife)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 1, 'killed by a wild animal');
+		}
+	}
+
+	// no effect
+	return fleetActivity(fleetId);
+}
+
 function fleetActivity(fleetId)
 {
 	var fleet = G.fleets[fleetId];
@@ -1121,15 +1201,23 @@ function fleetActivity(fleetId)
 		return;
 	}
 
+	if (!fleet.hadTerrainEffect)
+	{
+		return fleetTerrainEffect(fleetId);
+	}
+
+	if (!fleet.population)
+	{
+		// fleet has died off
+		return destroyFleet(fleetId, 'died-off');
+	}
+
 	if (!fleet.orders || fleet.orders.length == 0)
 	{
 		// this fleet does not have any orders
-		fleet.message = 'Orders complete';
-		fleetChanged(fleetId, fleet);
-		return;
+		return fleetMessage(fleetId, "Orders complete.");
 	}
 
-	fleet.message = null;
 	fleetChanged(fleetId, fleet);
 
 	var currentOrder = fleet.orders[0];
@@ -1223,6 +1311,7 @@ function doOrders(requestData, queryString, remoteUser)
 	}
 
 	fleet.orders = requestData;
+	delete fleet.message;
 	fleetActivity(fleetId);
 }
 
