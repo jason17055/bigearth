@@ -997,7 +997,7 @@ function findSuitableStartingLocation()
 			c.terrain != 'hills')
 			continue;
 
-		var v = (c.temperature / 20) * (c.moisture / 0.8);
+		var v = (c.temperature / 20) * ((c.summerRains || c.moisture || 0) / 0.8);
 		if (v > 1) v = 1;
 
 		var nn = G.geometry.getNeighbors(cid);
