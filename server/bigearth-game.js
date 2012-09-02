@@ -1391,7 +1391,8 @@ function getFleetInfoForPlayer(fleetId, playerId)
 			type: f.type,
 			location: f.location,
 			owner: f.owner,
-			orders: f.orders
+			orders: f.orders,
+			population: f.population
 		};
 		if (f.activity)
 			_fleet.activity = f.activity;

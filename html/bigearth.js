@@ -533,6 +533,16 @@ function loadFleetInfo(fleetId)
 	$('img.icon', $fleetPane).attr('src','unit_images/'+fleet.type+'.png');
 	$('.unitType', $fleetPane).text(fleet.type);
 
+	if (fleet.population)
+	{
+		$('.population', $fleetPane).text(fleet.population);
+		$('.populationContainer', $fleetPane).show();
+	}
+	else
+	{
+		$('.populationContainer', $fleetPane).hide();
+	}
+
 	var m = fleet.message || '';
 	if (fleet.settlementFitness)
 	{
