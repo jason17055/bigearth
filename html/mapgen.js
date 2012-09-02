@@ -374,17 +374,17 @@ function generateTerrain(map, coords)
 			c.terrain = "mountains";
 		else if (sumVar >= 1.8)
 			c.terrain = "hills";
-		else if (totalRain < 15 && c.temperature > 15)
+		else if (totalRain < 16 && c.temperature >= 13)
 			c.terrain = "desert";
-		else if (totalRain < 15)
+		else if (totalRain < 25 && c.temperature < 10)
 			c.terrain = "tundra";
-		else if (lesserRain >= 18 && c.temperature >= 20)
+		else if (lesserRain >= 17 && c.temperature >= 18)
 			c.terrain = "jungle";
-		else if (lesserRain >= 18 && c.height >= 2 && c.soil >= 0.65)
+		else if (lesserRain >= 15 && c.height < 5)
 			c.terrain = "swamp";
-		else if (lesserRain >= 15 && c.soil >= 0.6)
+		else if (lesserRain >= 12)
 			c.terrain = "forest";
-		else if (c.temperature > 15)
+		else if (c.temperature > 13)
 			c.terrain = "plains";
 		else
 			c.terrain = "grassland";
