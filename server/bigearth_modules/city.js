@@ -29,6 +29,17 @@ var BUILDING_TYPE_COSTS = {
 	'stone-workshop':   [ 25, 50, null ]
 	};
 
+// each value is an object with the following properties:
+//   builders: number of workers to build the unit
+//   productionCost: production points required to build the unit
+//   populationCost: the number of people that are taken from the city and put in the new fleet
+//
+var UNIT_COSTS = {
+	'explorer': { builders: 50, productionCost: 25, populationCost: 25 },
+	'settler': { builders: 50, productionCost: 200, populationCost: 100 },
+	'trieme': { builders: 400, productionCost: 400, populationCost: 50 }
+	};
+
 var TECHNOLOGIES;
 function makeTechnologyTree()
 {
@@ -457,24 +468,31 @@ function freeWorkers(cityId, city, job)
 	addWorkers(cityId, city, num, 'idle');
 }
 
-function tryEquipSettler(cityId, city)
+function tryEquipNewUnit(cityId, city, unitType)
 {
-	var builders = 50;   // number of workers to build settlers
-	var cost = G.world.settlerCost || 200;
+	var costInfo = UNIT_COSTS[unitType];
+	if (!costInfo)
+	{
+		return cityActivityError(cityId, city, "unknown unit type: '"+unitType+"'");
+	}
 
-	if (city.activity == 'equip-settler' && city.production.build >= cost)
+	var builders = costInfo.builders;
+	var cost = costInfo.productionCost;
+	var activityName = 'equip-'+unitType;
+
+	if (city.activity == activityName && city.production.build >= cost)
 	{
 		freeWorkers(cityId, city, 'build');
 
-		if (city.population < 200)
+		if (city.population < 100 + costInfo.populationCost)
 		{
-			return cityActivityError(cityId, city, "not large enough to equip settler");
+			return cityActivityError(cityId, city, "not large enough to equip "+unitType);
 		}
-
-		stealWorkers(cityId, city, 100, 'settle');
 		delete city.production.build;
-		var numSettlers = removeWorkers(cityId, city, Infinity, 'settle');
-		createUnit(city.owner, "settler", city.location, {
+
+		stealWorkers(cityId, city, costInfo.populationCost, 'equip-unit');
+		var numSettlers = removeWorkers(cityId, city, Infinity, 'equip-unit');
+		createUnit(city.owner, unitType, city.location, {
 			population: numSettlers
 			});
 
@@ -483,7 +501,7 @@ function tryEquipSettler(cityId, city)
 	}
 	else
 	{
-		setCityActivity(cityId, city, 'equip-settler', builders, cost);
+		setCityActivity(cityId, city, activityName, builders, cost);
 		return;
 	}
 	
@@ -548,10 +566,7 @@ function cityActivity(cityId, city)
 
 	if (currentTask.task == 'equip')
 	{
-		if (currentTask.type == 'settler')
-			return tryEquipSettler(cityId, city);
-		else if (currentTask.type == 'trieme')
-			return tryEquipTrieme(cityId, city);
+		return tryEquipNewUnit(cityId, city, currentTask.type);
 	}
 	else if (currentTask.task == 'improvement')
 	{
@@ -1348,37 +1363,6 @@ function tryMakeBuilding(cityId, city, buildingType)
 	else
 	{
 		setCityActivity(cityId, city, activityName, builders, cost);
-	}
-}
-
-function tryEquipTrieme(cityId, city)
-{
-	var builders = 400;   // number of workers required to build the boat
-	var cost = G.world.triemeCost || 400;
-
-	if (city.activity == 'equip-trieme' && city.production.build >= cost)
-	{
-		freeWorkers(cityId, city, 'build');
-
-		if (city.population < 150)
-		{
-			return cityActivityError(cityId, city, "not large enough to equip trieme");
-		}
-
-		stealWorkers(cityId, city, 50, 'trieme');
-		delete city.production.build;
-		var numSailers = removeWorkers(cityId, city, Infinity, 'trieme');
-		createUnit(city.owner, "trieme", city.location, {
-			population: numSailers
-			});
-
-		cityActivityComplete(cityId, city);
-		return;
-	}
-	else
-	{
-		setCityActivity(cityId, city, 'equip-trieme', builders, cost);
-		return;
 	}
 }
 
