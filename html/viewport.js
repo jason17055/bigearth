@@ -125,7 +125,7 @@ BigEarthViewPort.prototype.recreateFleetIcons = function()
 
 	if (selectedFleet)
 	{
-		this.selectFleet(selectedFleet);
+		$('.fleetIcon[fleet-id="'+selectedFleet+'"]').addClass('selectedFleet');
 	}
 };
 
