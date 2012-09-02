@@ -1046,6 +1046,14 @@ function newPlayer(playerId)
 		edges: {}
 		};
 
+	if (playerId == 'god')
+	{
+		for (var cid in G.terrain.cells)
+		{
+			discoverCell(playerId, cid);
+		}
+	}
+
 	// pick a location to be this player's home location
 	var loc = findSuitableStartingLocation();
 	createUnit(playerId, "settler", loc, {
