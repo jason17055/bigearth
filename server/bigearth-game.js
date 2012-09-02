@@ -1049,7 +1049,7 @@ function newPlayer(playerId)
 	// pick a location to be this player's home location
 	var loc = findSuitableStartingLocation();
 	createUnit(playerId, "settler", loc, {
-			population: numSettlers
+			population: 100
 			});
 	createUnit(playerId, "explorer", G.geometry.getNeighbors(loc)[0]);
 }
