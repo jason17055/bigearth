@@ -523,7 +523,7 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 			});
 		imgEl.addEventListener('dragstart',
 			function(evt) {
-				return self.onFleetDragStart(fleetId, evt);
+				return self.onFleetDragStart(fleetId, evt, imgEl);
 			}, false);
 	}
 
@@ -612,19 +612,19 @@ BigEarthViewPort.prototype.triggerRepaintCell = function(cellIdx)
 BigEarthViewPort.prototype.showDragTargetIndicator = function(location)
 {
 	var p = this.toScreenPoint(coords.cells[location].pt);
-	$('#dragTargetIndicator', this.el).css({
+	$('.dragTargetIndicator', this.el).css({
 		left: p.x-10,
 		top: p.y-10
 		});
-	$('#dragTargetIndicator', this.el).show();
+	$('.dragTargetIndicator', this.el).show();
 }
 
 BigEarthViewPort.prototype.hideDragTargetIndicator = function()
 {
-	$('#dragTargetIndicator', this.el).hide();
+	$('.dragTargetIndicator', this.el).hide();
 };
 
-BigEarthViewPort.prototype.onFleetDragStart = function(fleetId, evt)
+BigEarthViewPort.prototype.onFleetDragStart = function(fleetId, evt, imgEl)
 {
 	var self = this;
 
@@ -661,15 +661,14 @@ BigEarthViewPort.prototype.onFleetDragStart = function(fleetId, evt)
 	spEl.addEventListener('dragover', dragHandler, false);
 	spEl.addEventListener('drop', dropHandler, false);
 
-	var iconEl = this;
 	var dragEndHandler;
 	dragEndHandler = function() {
 		spEl.removeEventListener('dragover',dragHandler);
 		spEl.removeEventListener('drop', dropHandler);
-		iconEl.removeEventListener('dragend', dragEndHandler);
-		hideDragTargetIndicator();
+		imgEl.removeEventListener('dragend', dragEndHandler);
+		self.hideDragTargetIndicator();
 		};
-	iconEl.addEventListener('dragend', dragEndHandler, false);
+	imgEl.addEventListener('dragend', dragEndHandler, false);
 
 	return false;
 };

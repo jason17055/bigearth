@@ -110,7 +110,7 @@ body {
 	color: black;
 }
 
-#dragTargetIndicator {
+.dragTargetIndicator {
 	position: absolute;
 	display: none;
 	z-index: 2;
