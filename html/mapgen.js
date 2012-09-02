@@ -196,7 +196,7 @@ function LogisticFunction(t)
 	return 1/(1+Math.exp(-t));
 }
 
-function blurMoisture(map)
+function blurMoisture(map, coords)
 {
 	var newValues = {};
 	for (var cid in map.cells)
@@ -207,19 +207,28 @@ function blurMoisture(map)
 	for (var cid in map.cells)
 	{
 		var c = map.cells[cid];
+		var c_lat = Math.asin(coords.cells[cid].pt.z);
+		var c_lgt = Math.atan2(coords.cells[cid].pt.y, coords.cells[cid].pt.x);
+		var winds = Math.cos(c_lat*4);
 
 		var nn = map.geometry.getNeighbors(cid);
 		for (var i = 0, l = nn.length; i < l; i++)
 		{
 			var nid = nn[i];
 			var n = map.cells[nid];
+			var n_lat = Math.asin(coords.cells[nid].pt.z);
+			var n_lgt = Math.atan2(coords.cells[nid].pt.y, coords.cells[nid].pt.x);
+			var n_dir = Math.atan2(n_lat-c_lat, n_lgt-c_lgt);
 			var diff = c.moisture - n.moisture;
 			if (diff > 0)
 			{
 				var c_height = c.height > 0 ? c.height : 0;
 				var n_height = n.height > 0 ? n.height : 0;
 				var height_diff = c_height - n_height;
-				var xfer = 0.2 * diff * LogisticFunction(height_diff/2);
+
+				var wind_aid = Math.cos(n_dir) * winds;
+
+				var xfer = 0.2 * diff * (LogisticFunction(height_diff/2) + wind_aid);
 				newValues[cid] -= xfer;
 				newValues[nid] += xfer;
 			}
@@ -267,7 +276,7 @@ function generateTerrain(map, coords)
 			c.moisture = 0;
 	}
 	for (var i = 0; i < 50; i++)
-		blurMoisture(map);
+		blurMoisture(map, coords);
 	for (var i = 0; i < 10; i++)
 		bumpMap(map, coords, i%2 ? 1 : -1, "moisture");
 
