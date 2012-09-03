@@ -30,7 +30,7 @@ function onMapReplaced()
 		if (c.city)
 		{
 			var cityId = c.city.id;
-			c.city.location = cid;
+			c.city.location = Location.fromCellId(cid);
 			cities[cityId] = c.city;
 		}
 	}
@@ -43,6 +43,15 @@ function getFirstFleet()
 	for (var fid in fleets)
 	{
 		return fid;
+	}
+	return null;
+}
+
+function getFirstCity()
+{
+	for (var tid in cities)
+	{
+		return tid;
 	}
 	return null;
 }
@@ -61,10 +70,20 @@ function maybeStartPlaying()
 		onResize();
 
 		var fid = getFirstFleet();
+		var tid = getFirstCity();
 		if (fid)
 		{
-			var pt = coords.cells[fleets[fid].location].pt;
+			var pt = Location.toPoint(fleets[fid].location);
 			VIEWPORT.panToCoords(pt);
+		}
+		else if (tid)
+		{
+			var pt = Location.toPoint(cities[tid].location);
+			VIEWPORT.panToCoords(pt);
+		}
+		else
+		{
+			VIEWPORT.panToCoords({x:1,y:0,z:0});
 		}
 
 		fetchNextEvent();
@@ -375,7 +394,7 @@ function animateCityActivityProgressBar(city)
 
 function loadCityInfo(city, location)
 {
-	var mapCell = map.cells[location];
+	var mapCell = map.cells[Location.toCellId(location)];
 	if (!mapCell)
 		return;
 	if (!mapCell.subcells)
@@ -620,7 +639,7 @@ function onFleetTerminated(eventData)
 
 function onMapCellChanged(location)
 {
-	var city = map.cells[location].city;
+	var city = map.cells[Location.toCellId(location)].city;
 	if (city && city.id)
 	{
 		city.location = location;
@@ -660,14 +679,14 @@ function onEvent(eventData)
 	}
 	else if (eventData.event == 'map-update')
 	{
-		if (eventData.locationType == 'cell')
+		if (Location.isCell(eventData.location))
 		{
-			map.cells[eventData.location] = eventData.data;
+			map.cells[Location.toCellId(eventData.location)] = eventData.data;
 			onMapCellChanged(eventData.location);
 		}
-		else if (eventData.locationType == 'edge')
+		else if (Location.isEdge(eventData.location))
 		{
-			map.edges[eventData.location] = eventData.data;
+			map.edges[Location.toEdgeId(eventData.location)] = eventData.data;
 		}
 	}
 	else if (eventData.event == 'message')
@@ -811,11 +830,11 @@ function fetchMap()
 		};
 		for (var k in data)
 		{
-			if (k.match(/^(\d+)$/))
+			if (Location.isCell(k))
 			{
 				map.cells[k]=data[k];
 			}
-			else if (k.match(/^(\d+)-(\d+)$/))
+			else if (Location.isEdge(k))
 			{
 				map.edges[k]=data[k];
 			}
@@ -921,17 +940,19 @@ function scrollToCity(cityId)
 	var city = cities[cityId];
 	if (city && city.location)
 	{
-		var loc = city.location;
-		var pt = coords.cells[loc].pt;
+		var pt = Location.toPoint(city.location);
 		VIEWPORT.panToCoords(pt);
 	}
 }
 
 function scrollToFleet(fleetId)
 {
-	var loc = fleets[fleetId].location;
-	var pt = coords.cells[loc].pt;
-	VIEWPORT.panToCoords(pt);
+	var fleet = fleets[fleetId];
+	if (fleet && fleet.location)
+	{
+		var pt = Location.toPoint(fleet.location);
+		VIEWPORT.panToCoords(pt);
+	}
 }
 
 function doOneExpose(cellIdx)
@@ -1020,8 +1041,7 @@ function orderGoTo(fleetId, location)
 	url: "/request/orders?fleet="+fleetId,
 	data: JSON.stringify([ {
 		command: "goto",
-		location: location,
-		locationType: "cell"
+		location: location
 		} ]),
 	contentType: "text/json"
 	});
@@ -1160,7 +1180,7 @@ function citiesReportClicked()
 		$('.cityPopulation', $d).text(city.population+city.children);
 
 		var zonesStr = [];
-		var mapCell = map.cells[city.location];
+		var mapCell = map.cells[Location.toCellId(city.location)];
 		if (mapCell.subcells.hamlet)
 		{
 			zonesStr.push(mapCell.subcells.hamlet + " housing");

@@ -252,7 +252,7 @@ BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 		{
 			citiesToDraw.push({
 				city: c.city,
-				location: cid,
+				location: Location.fromCellId(cid),
 				screenPt: centerP
 				});
 		}
@@ -503,7 +503,7 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 		return;
 	}
 
-	var p = this.toScreenPoint(coords.cells[fleetInfo.location].pt);
+	var p = this.toScreenPoint(Location.toPoint(fleetInfo.location));
 	if (p.z < 0.5)
 	{
 		$f.remove();
@@ -614,7 +614,7 @@ BigEarthViewPort.prototype.triggerRepaintCell = function(cellIdx)
 
 BigEarthViewPort.prototype.showDragTargetIndicator = function(location)
 {
-	var p = this.toScreenPoint(coords.cells[location].pt);
+	var p = this.toScreenPoint(Location.toPoint(location));
 	$('.dragTargetIndicator', this.el).css({
 		left: p.x-10,
 		top: p.y-10
