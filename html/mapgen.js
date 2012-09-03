@@ -154,6 +154,43 @@ function bumpMap(map, coords, d, attrName)
 	}
 }
 
+function findRiverThreshold(map, desiredRiverCount)
+{
+	var countRiversAt = function(threshold)
+	{
+		var numRivers = 0;
+		for (var eId in map.edges)
+		{
+			var edge = map.edges[eId];
+			if ((edge.riverVolume || 0) >= threshold)
+				numRivers++;
+		}
+		return numRivers;
+	};
+
+	var low = Infinity;
+	var high = -Infinity;
+	for (var eId in map.edges)
+	{
+		var edge = map.edges[eId];
+		if ((edge.riverVolume || 0) < low)
+			low = edge.riverVolume || 0;
+		if ((edge.riverVolume || 0) > high)
+			high = edge.riverVolume || 0;
+	}
+
+	while (high - low > 0.5)
+	{
+		var t = (high + low) / 2;
+		var count = countRiversAt(t);
+		if (count >= desiredRiverCount)
+			low = t;
+		else
+			high = t;
+	}
+	return (high+low)/2;
+}
+
 function findSeaLevel(map, desiredSeaCoverage)
 {
 	var getSeaCoverageAt = function(lev)
@@ -202,7 +239,7 @@ function blurMoisture(map, coords, moistureKey)
 	var newValues = {};
 	for (var cid in map.cells)
 	{
-		newValues[cid] = map.cells[cid][moistureKey];
+		newValues[cid] = map.cells[cid][moistureKey] || 0;
 	}
 
 	for (var cid in map.cells)
@@ -220,7 +257,7 @@ function blurMoisture(map, coords, moistureKey)
 			var n_lat = Math.asin(coords.cells[nid].pt.z);
 			var n_lgt = Math.atan2(coords.cells[nid].pt.y, coords.cells[nid].pt.x);
 			var n_dir = Math.atan2(n_lat-c_lat, n_lgt-c_lgt);
-			var diff = c[moistureKey] - n[moistureKey];
+			var diff = (c[moistureKey] || 0) - (n[moistureKey] || 0);
 			if (diff > 0)
 			{
 				var c_height = c.height > 0 ? c.height : 0;
@@ -290,6 +327,20 @@ function generateTerrain(map, coords)
 		bumpMap(map, coords, i%2 ? 2 : -2, "temperature");
 
 	//
+	// determine soil quality
+	//
+	for (var cid in map.cells)
+	{
+		map.cells[cid].soil = 0;
+	}
+	for (var i = 0; i < 21; i++)
+		bumpMap(map, coords, i%2 ? 1 : -1, "soil");
+	for (var cid in map.cells)
+	{
+		map.cells[cid].soil = LogisticFunction(map.cells[cid].soil);
+	}
+
+	//
 	// determine rainfall levels
 	//
 	// assign initial moisture numbers based on ocean and temperature
@@ -337,18 +388,77 @@ function generateTerrain(map, coords)
 	rainfallStats(map, "winterRains");
 
 	//
-	// determine soil quality
+	// make rivers
 	//
-	for (var cid in map.cells)
+	var RF = new RiverFactory(map);
+	RF.generateRivers();
+
+	var lakes = {};
+	var cellCount = map.geometry.getCellCount();
+	for (var i = 0; i < 30; i++)
 	{
-		map.cells[cid].soil = 0;
+		for (var cellIdx in map.cells)
+		{
+
+			var cellsAlongThisRiver = {};
+			var addMoistureToCell = function(cid, water)
+			{
+				if (!cellsAlongThisRiver[cid])
+				{
+					cellsAlongThisRiver[cid] = true;
+					map.cells[cid].riverMoisture = (map.cells[cid].riverMoisture||0)+water;
+				}
+			};
+
+			var water = (map.cells[cellIdx].summerRains + map.cells[cellIdx].winterRains)/300;
+			var vv = map.geometry.getVerticesAdjacentToCell(cellIdx);
+			var vId = vv[i % vv.length];
+			while (vId)
+			{
+				var nextVId = RF.nextVertex[vId];
+				if (!nextVId)
+				{
+					lakes[vId] = (lakes[vId]||0)+1;
+					break;
+				}
+
+				var eId = map.geometry.makeEdgeFromEndpoints(vId, nextVId);
+				var edge = map.edges[eId];
+
+				var cc = map.geometry.getCellsAdjacentToEdge(eId);
+				if (map.cells[cc[0]].height < 1)
+					break;
+				if (map.cells[cc[1]].height < 1)
+					break;
+
+				addMoistureToCell(cc[0], water);
+				addMoistureToCell(cc[1], water);
+
+				edge.riverVolume = (edge.riverVolume||0)+water;
+				vId = nextVId;
+			}
+
+		}
 	}
-	for (var i = 0; i < 21; i++)
-		bumpMap(map, coords, i%2 ? 1 : -1, "soil");
-	for (var cid in map.cells)
+	for (var i = 0; i < 25; i++)
 	{
-		map.cells[cid].soil = LogisticFunction(map.cells[cid].soil);
+		blurMoisture(map, coords, 'riverMoisture');
 	}
+	rainfallStats(map, "riverMoisture");
+
+	var riverThreshold = findRiverThreshold(map, cellCount*0.125);
+	var numRivers = 0;
+	for (var eId in map.edges)
+	{
+		var edge = map.edges[eId];
+		if (edge.riverVolume >= riverThreshold)
+		{
+			edge.feature = 'river';
+			numRivers++;
+		}
+		delete edge.riverVolume;
+	}
+	console.log("created "+numRivers+" rivers");
 
 	var countTerrains = {};
 	for (var cid in map.cells)
@@ -363,7 +473,7 @@ function generateTerrain(map, coords)
 		}
 		sumVar /= nn.length;
 
-		var totalRain = c.summerRains + c.winterRains;
+		var totalWater = c.summerRains + c.winterRains + (c.riverMoisture||0);
 		var lesserRain = c.summerRains < c.winterRains ? c.summerRains : c.winterRains;
 
 		if (c.height < 1)
@@ -374,9 +484,9 @@ function generateTerrain(map, coords)
 			c.terrain = "mountains";
 		else if (sumVar >= 1.8)
 			c.terrain = "hills";
-		else if (totalRain < 16 && c.temperature >= 13)
+		else if (totalWater < 20 && c.temperature >= 13)
 			c.terrain = "desert";
-		else if (totalRain < 25 && c.temperature < 10)
+		else if (totalWater < 30 && c.temperature < 10)
 			c.terrain = "tundra";
 		else if (lesserRain >= 17 && c.temperature >= 18)
 			c.terrain = "jungle";
@@ -394,38 +504,6 @@ function generateTerrain(map, coords)
 	for (var terrainType in countTerrains)
 	{
 		console.log("total "+terrainType, countTerrains[terrainType]);
-	}
-
-	var RF = new RiverFactory(map);
-	RF.generateRivers();
-
-	var numRivers = 0;
-	var cellCount = map.geometry.getCellCount();
-	while (numRivers < 380)
-	{
-		var cellIdx = 1+Math.floor(Math.random()*cellCount);
-		var vv = map.geometry.getVerticesAdjacentToCell(cellIdx);
-		var vId = vv[Math.floor(Math.random()*vv.length)];
-		while (vId)
-		{
-			var nextVId = RF.nextVertex[vId];
-			if (!nextVId)
-				break;
-
-			var eId = map.geometry.makeEdgeFromEndpoints(vId, nextVId);
-			if (map.edges[eId].feature)
-				break;
-
-			var cc = map.geometry.getCellsAdjacentToEdge(eId);
-			if (map.cells[cc[0]].height < 1)
-				break;
-			if (map.cells[cc[1]].height < 1)
-				break;
-
-			map.edges[eId].feature = "river";
-			numRivers++;
-			vId = nextVId;
-		}
 	}
 }
 
