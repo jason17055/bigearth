@@ -1017,6 +1017,9 @@ function findSuitableStartingLocation()
 			c.terrain != 'hills')
 			continue;
 
+		if (c.city)
+			continue;
+
 		var v = (c.temperature / 20) * ((c.summerRains || c.moisture || 0) / 0.8);
 		if (v > 1) v = 1;
 
