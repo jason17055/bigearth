@@ -683,15 +683,16 @@ var UNIT_MOVEMENT_RULES = {
 		glacier: 1200,
 		hills: 1800,
 		mountains: 2400,
-		across_river: 1200,
+		across_river: 2000,
 		other_terrain: 600
 		},
 	trieme: {
-		ocean: 800,
+		ocean: 600,
 		other_terrain: 15000
 		},
 	'*': {
 		ocean: 15000,
+		across_river: 3600,
 		'other_terrain': 3600
 		},
 	};
