@@ -19,7 +19,7 @@ Location.toCellId = function(l)
 
 Location.toPoint = function(l)
 {
-	return coords.cells[Location.toCellId(l)].pt;
+	return BE.coords.cells[Location.toCellId(l)].pt;
 };
 
 Location.isCell = function(l)

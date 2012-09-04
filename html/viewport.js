@@ -187,7 +187,7 @@ BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 		if (!c)
 			continue;
 
-		var co = coords.cells[cid];
+		var co = BE.coords.cells[cid];
 		var centerP = this.toScreenPoint(co.pt);
 		if (centerP.z < 0)
 			continue;
@@ -271,7 +271,7 @@ BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 	for (var eId in map.edges)
 	{
 		var ed = map.edges[eId];
-		var p = this.toScreenPoint(coords.edges[eId].pt);
+		var p = this.toScreenPoint(BE.coords.edges[eId].pt);
 		if (p.z < .4)
 			continue;
 
@@ -280,9 +280,9 @@ BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 
 		if (ed.feature == 'river')
 		{
-			var vv = geometry.getVerticesAdjacentToEdge(eId);
-			var p1 = this.toScreenPoint(coords.vertices[vv[0]].pt);
-			var p2 = this.toScreenPoint(coords.vertices[vv[1]].pt);
+			var vv = BE.geometry.getVerticesAdjacentToEdge(eId);
+			var p1 = this.toScreenPoint(BE.coords.vertices[vv[0]].pt);
+			var p2 = this.toScreenPoint(BE.coords.vertices[vv[1]].pt);
 			ctx.save();
 			ctx.lineWidth = 4;
 			ctx.strokeStyle = '#00f';
@@ -297,7 +297,7 @@ BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 	for (var vId in map.vertices)
 	{
 		var v = map.vertices[vId];
-		var p = this.toScreenPoint(coords.vertices[vId].pt);
+		var p = this.toScreenPoint(BE.coords.vertices[vId].pt);
 		if (p.z < 0)
 			continue;
 
@@ -392,11 +392,11 @@ BigEarthViewPort.prototype.updateTransformMatrix = function()
 		[ 0, Math.sin(-aX), Math.cos(-aX) ]
 		];
 
-	if (geometry)
+	if (BE.geometry)
 	{
 		// desired size of hex in pixels
 		var desiredCellSize = this.cellSize || DESIRED_CELL_SIZE;
-		this.scale = Math.round(geometry.size * 5 * desiredCellSize / Math.PI / 2);
+		this.scale = Math.round(BE.geometry.size * 5 * desiredCellSize / Math.PI / 2);
 	}
 
 	var I = [[ this.scale,0,0 ], [ 0,this.scale,0 ], [ 0,0,1 ]];
@@ -588,7 +588,7 @@ BigEarthViewPort.prototype.triggerRepaintCanvasTile = function(x, y)
 
 BigEarthViewPort.prototype.triggerRepaintCell = function(cellIdx)
 {
-	var p = this.toScreenPoint(coords.cells[cellIdx].pt);
+	var p = this.toScreenPoint(BE.coords.cells[cellIdx].pt);
 	if (p.z <= 0) return;
 
 	if (p.x < this.offsetX)
@@ -715,7 +715,7 @@ BigEarthViewPort.prototype.getNearestFeatureFromScreen = function(screenPt, noCe
 	{
 	for (var vId in map.vertices)
 	{
-		var p = this.toScreenPoint(coords.vertices[vId].pt);
+		var p = this.toScreenPoint(BE.coords.vertices[vId].pt);
 		if (p.z < 0)
 			continue;
 
@@ -733,9 +733,9 @@ BigEarthViewPort.prototype.getNearestFeatureFromScreen = function(screenPt, noCe
 
 	if (!noCells)
 	{
-	for (var cid in coords.cells)
+	for (var cid in BE.coords.cells)
 	{
-		var co = coords.cells[cid];
+		var co = BE.coords.cells[cid];
 
 		var p = this.toScreenPoint(co.pt);
 		if (p.z < 0)
@@ -754,9 +754,9 @@ BigEarthViewPort.prototype.getNearestFeatureFromScreen = function(screenPt, noCe
 
 	if (!noEdges)
 	{
-	for (var eid in coords.edges)
+	for (var eid in BE.coords.edges)
 	{
-		var eco = coords.edges[eid];
+		var eco = BE.coords.edges[eid];
 		var p = this.toScreenPoint(eco.pt);
 		if (p.z < 0)
 			continue;

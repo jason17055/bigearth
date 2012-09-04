@@ -1,8 +1,7 @@
 var VIEWPORT = null;
 
-var geometry;
+var BE = {};
 var map;
-var coords;
 var fleets;
 var cities = {};
 var gameMessages = [];
@@ -92,8 +91,8 @@ function maybeStartPlaying()
 
 function onGameState()
 {
-	geometry = new SphereGeometry(gameState.mapSize);
-	coords = makeCoords(geometry);
+	BE.geometry = new SphereGeometry(gameState.mapSize);
+	BE.coords = makeCoords(BE.geometry);
 	if (gameState.map)
 		fetchMap();
 	if (gameState.fleets)
@@ -609,7 +608,7 @@ function onFleetMovement(eventData)
 function moveFleetOutOfSight(fleetId, newLoc)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]');
-	var p = toScreenPoint(coords.cells[eventData.newLocation].pt);
+	var p = toScreenPoint(BE.coords.cells[eventData.newLocation].pt);
 	$f.css({
 		'-webkit-transition': 'all 0.5s ease-out',
 		'-moz-transition': 'all 0.5s ease-out',
@@ -908,7 +907,7 @@ function pauseClicked()
 function testBtnClicked()
 {
 	var x = parseInt(document.getElementById('numEntry').value);
-	var adj = geometry.getNeighbors(x);
+	var adj = BE.geometry.getNeighbors(x);
 	alert('adjacent to ' + x + ' is ' + adj.join(', '));
 }
 
