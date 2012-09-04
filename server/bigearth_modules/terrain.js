@@ -19,7 +19,7 @@ function hasRiver(edgeId)
 	return (e && e.feature == 'river')
 }
 
-function terrainEndOfYear_prepare(loc, cell)
+function terrainEndOfYear_prepare(cellId, cell)
 {
 	cell.wildlifeImmigrants = 0;
 	cell.wildlifeHunted = 0;
@@ -27,7 +27,7 @@ function terrainEndOfYear_prepare(loc, cell)
 
 //prereqs: wildlifeHunted should be calculated before this function is called
 //
-function terrainEndOfYear_pass1(loc, cell)
+function terrainEndOfYear_pass1(cellId, cell)
 {
 	var terrainType = cell.terrain;
 	var quota = WILDLIFE_QUOTA[terrainType] || WILDLIFE_QUOTA.other_terrain || 0;
@@ -35,7 +35,7 @@ function terrainEndOfYear_pass1(loc, cell)
 
 	if (!(cell.wildlifeHunted >= 0 && cell.wildlifeHunted <= curCount))
 	{
-		console.log("WARNING! wildlifeHunted for "+loc+" is impossible ("+cell.wildlifeHunted+"/"+curCount+")");
+		console.log("WARNING! wildlifeHunted for "+cellId+" is impossible ("+cell.wildlifeHunted+"/"+curCount+")");
 		cell.wildlifeHunted = curCount;
 	}
 
@@ -51,7 +51,7 @@ function terrainEndOfYear_pass1(loc, cell)
 	var emigrantsBase = 0.5 * adjustedCount * (adjustedCount / quota);
 	cell.wildlifeEmigrants = 0;
 
-	var nn = G.geometry.getNeighbors(loc);
+	var nn = G.geometry.getNeighbors(cellId);
 	for (var i = 0, l = nn.length; i < l; i++)
 	{
 		var n = G.terrain.cells[nn[i]];
@@ -71,7 +71,7 @@ function terrainEndOfYear_pass1(loc, cell)
 			emigrants *= 0.5;
 
 			// check for presence of a river
-			var eId = G.geometry._makeEdge(loc, nn[i]);
+			var eId = G.geometry._makeEdge(cellId, nn[i]);
 			if (hasRiver(eId))
 			{
 				emigrants = 0;
@@ -83,11 +83,11 @@ function terrainEndOfYear_pass1(loc, cell)
 	}
 }
 
-function terrainEndOfYear_cleanup(loc, cell)
+function terrainEndOfYear_cleanup(cellId, cell)
 {
 	if (cell.wildlifeHunted)
 	{
-		console.log("cell "+loc);
+		console.log("cell "+cellId);
 		console.log("  wildlife count:     "+cell.wildlife);
 		console.log("  wildlife births:    "+cell.wildlifeBirths);
 		console.log("  wildlife hunted:    "+cell.wildlifeHunted);

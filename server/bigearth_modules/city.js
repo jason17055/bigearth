@@ -1,4 +1,5 @@
 var Scheduler = require('./scheduler.js');
+var Location = require('../../html/location.js');
 
 function onFarmCompleted(cityId, city)
 {
@@ -236,7 +237,7 @@ function City(cityId, location, owner)
 function addAvailableJobs(cityId, jobs)
 {
 	var city = G.cities[cityId];
-	var cell = G.terrain.cells[city.location];
+	var cell = G.terrain.cells[Location.toCellId(city.location)];
 
 	if (!jobs.hunt)
 		jobs.hunt = 0;
@@ -343,7 +344,7 @@ function addWorkers(cityId, city, quantity, toJob)
 var cityWorkerRatesSpecial = {
 
 	farm: function(city, baseProduction) {
-		var cell = G.terrain.cells[city.location];
+		var cell = G.terrain.cells[Location.toCellId(city.location)];
 		var numFarms = cell.subcells.farm || 0;
 		var maxYield = numFarms * 30;
 		if (maxYield == 0)
@@ -354,7 +355,7 @@ var cityWorkerRatesSpecial = {
 		},
 
 	hunt: function(city, baseProduction) {
-		var cell = G.terrain.cells[city.location];
+		var cell = G.terrain.cells[Location.toCellId(city.location)];
 		var numWildlife = cell.wildlife || 80;
 		if (numWildlife == 0)
 			return 0;
@@ -532,7 +533,7 @@ function cityChanged(cityId)
 	if (!city)
 		throw new Error("oops! city "+cityId+" not found");
 
-	terrainChanged(city.location);
+	terrainChanged(Location.toCellId(city.location));
 }
 
 function cityActivityComplete(cityId, city)
@@ -721,7 +722,7 @@ function cityEndOfYear(cityId, city)
 		var numHarvested = pts;
 
 		// record number of animals hunted
-		var cell = G.terrain.cells[city.location];
+		var cell = G.terrain.cells[Location.toCellId(city.location)];
 		cell.wildlifeHunted += numHarvested;
 
 		var foodYield = numHarvested * G.world.foodPerAnimal;
@@ -1062,7 +1063,7 @@ function unlockCityStruct(cityId, city)
 
 function getCityPopulationCapacity(city)
 {
-	var c = G.terrain.cells[city.location];
+	var c = G.terrain.cells[Location.toCellId(city.location)];
 	return (c.subcells.hamlet || 0) * 200;
 }
 
@@ -1418,7 +1419,7 @@ function rebalanceWorkers(cityId, city)
 
 	if (amount > 0)
 	{
-		var cell = G.terrain.cells[city.location];
+		var cell = G.terrain.cells[Location.toCellId(city.location)];
 		var numFarms = cell.subcells.farm || 0;
 		var needForFarmers = numFarms * 15;
 		var q = needForFarmers - (city.workers.farm || 0);
