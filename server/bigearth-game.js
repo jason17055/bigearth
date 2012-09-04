@@ -90,12 +90,12 @@ function discoverCell(playerId, cellId)
 			});
 	}
 
-	var nn = G.geometry.getNeighbors(cellId);
+	var nn = BE.geometry.getNeighbors(cellId);
 	for (var i = 0; i < nn.length; i++)
 	{
 		if (map.cells[nn[i]])
 		{
-			var eId = G.geometry._makeEdge(cellId, nn[i]);
+			var eId = BE.geometry._makeEdge(cellId, nn[i]);
 			discoverEdge(playerId, eId);
 		}
 	}
@@ -280,13 +280,13 @@ function discoverEdge(playerId, eId)
 
 function discoverCellBorder(playerId, cellId)
 {
-	var ee = G.geometry.getEdgesAdjacentToCell(cellId);
+	var ee = BE.geometry.getEdgesAdjacentToCell(cellId);
 	for (var i = 0; i < ee.length; i++)
 	{
 		discoverEdge(playerId, ee[i]);
 	}
 
-	var nn = G.geometry.getNeighbors(cellId);
+	var nn = BE.geometry.getNeighbors(cellId);
 	for (var i = 0; i < nn.length; i++)
 	{
 		discoverCell(playerId, nn[i]);
@@ -391,7 +391,7 @@ function fleetDisbandInCity(fleetId, fleet)
 	if (!city && G.terrain.cells[cellId].terrain == 'ocean')
 	{
 		// try to find a city in an adjoining cell
-		var nn = G.geometry.getNeighbors(cellId);
+		var nn = BE.geometry.getNeighbors(cellId);
 		for (var i = 0; i < nn.length; i++)
 		{
 			var c = G.terrain.cells[nn[i]];
@@ -510,7 +510,7 @@ function moveFleetAlongCoast(fleetId)
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
 
-	var nn = G.geometry.getNeighbors(Location.toCellId(oldLoc));
+	var nn = BE.geometry.getNeighbors(Location.toCellId(oldLoc));
 	var lastLoc = fleet.lastLocation;
 
 	var i;
@@ -633,9 +633,9 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 			continue;
 		seen[curLoc] = cur[1];
 
-		var nn = G.geometry.getNeighbors(curLoc);
+		var nn = BE.geometry.getNeighbors(curLoc);
 		if (!baseDist)
-			baseDist = G.geometry.distanceBetween(curLoc, nn[0]);
+			baseDist = BE.geometry.distanceBetween(curLoc, nn[0]);
 
 		for (var i = 0, l = nn.length; i < l; i++)
 		{
@@ -649,7 +649,7 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 			}
 
 			var accumDist = cur[2] + getFleetMovementCostByMap(fleet, curLoc, nn[i], map);
-			var estRemainDistSteps = G.geometry.distanceBetween(nn[i], toLoc) / baseDist;
+			var estRemainDistSteps = BE.geometry.distanceBetween(nn[i], toLoc) / baseDist;
 			var estRemainDist = estRemainDistSteps * 3000;
 
 			Q.push([ nn[i], curLoc, accumDist, estRemainDist ]);
@@ -727,7 +727,7 @@ function getUnitMovementCostByMap(unitType, oldLoc, newLoc, map)
 
 	// consider cost of crossing a river, if there is one.
 
-	var eId = G.geometry._makeEdge(oldLoc, newLoc);
+	var eId = BE.geometry._makeEdge(oldLoc, newLoc);
 	var e = map.edges[eId];
 	var riverCrossing = false;
 	if (e && e.feature && e.feature == 'river')
@@ -772,7 +772,7 @@ function getUnitMovementCost(unitType, oldLoc, newLoc)
 
 		// TODO - consider cost of crossing a river, if there is
 		// one.
-		var eId = G.geometry._makeEdge(ol.location, ne.location);
+		var eId = BE.geometry._makeEdge(ol.location, ne.location);
 		var e = G.terrain.edges[eId];
 		var riverCrossing = false;
 		if (e && e.feature && e.feature == 'river')
@@ -878,7 +878,7 @@ function updateFleetSight(fid, fleet)
 	var newVisibility = {};
 
 	newVisibility[fleet.location] = true;
-	var nn = G.geometry.getNeighbors(Location.toCellId(fleet.location));
+	var nn = BE.geometry.getNeighbors(Location.toCellId(fleet.location));
 	for (var i = 0; i < nn.length; i++)
 	{
 		var n = nn[i];
@@ -1028,7 +1028,7 @@ function findSuitableStartingLocation()
 		var v = (c.temperature / 20) * ((c.summerRains || c.moisture || 0) / 0.8);
 		if (v > 1) v = 1;
 
-		var nn = G.geometry.getNeighbors(cid);
+		var nn = BE.geometry.getNeighbors(cid);
 		var numGoodNeighbors = 0;
 		var numRivers = 0;
 		for (var i = 0; i < nn.length; i++)
@@ -1041,7 +1041,7 @@ function findSuitableStartingLocation()
 			{
 				numGoodNeighbors++;
 			}
-			var eId = G.geometry._makeEdge(cid,nn[i]);
+			var eId = BE.geometry._makeEdge(cid,nn[i]);
 			var e = G.terrain.edges[eId];
 			if (e && e.feature == 'river')
 			{
@@ -1087,7 +1087,7 @@ function newPlayer(playerId)
 	createUnit(playerId, "settler", loc, {
 			population: 100
 			});
-	createUnit(playerId, "explorer", G.geometry.getNeighbors(loc)[0]);
+	createUnit(playerId, "explorer", BE.geometry.getNeighbors(loc)[0]);
 }
 
 function nextFleetId()
@@ -1367,7 +1367,7 @@ function fleetAutoSettle(fleetId, fleet)
 				best = loc;
 			}
 
-			var nn = G.geometry.getNeighbors(cid);
+			var nn = BE.geometry.getNeighbors(cid);
 			for (var j = 0; j < nn.length; j++)
 			{
 				var nid = nn[j];
@@ -1417,7 +1417,7 @@ function getSettlementFitness(map, cellId)
 
 	var numGoodNeighbors = 0;
 	var numRivers = 0;
-	var nn = G.geometry.getNeighbors(cellId);
+	var nn = BE.geometry.getNeighbors(cellId);
 	for (var i = 0; i < nn.length; i++)
 	{
 		var n = map.cells[nn[i]];
@@ -1430,7 +1430,7 @@ function getSettlementFitness(map, cellId)
 			numGoodNeighbors++;
 		}
 
-		var eId = G.geometry._makeEdge(cellId, nn[i]);
+		var eId = BE.geometry._makeEdge(cellId, nn[i]);
 		var e = map.edges[eId];
 		if (e && e.feature == 'river')
 		{
@@ -1463,7 +1463,7 @@ function distanceToNearestCity(map, cellId, maxDist)
 			if (c && c.city)
 				return dist;
 
-			var nn = G.geometry.getNeighbors(cid);
+			var nn = BE.geometry.getNeighbors(cid);
 			for (var j = 0; j < nn.length; j++)
 			{
 				var nid = nn[j];
@@ -1699,7 +1699,7 @@ function checkPlayer(pid, player)
 			continue;
 
 		player.canSee[city.location] = true;
-		var nn = G.geometry.getNeighbors(Location.toCellId(city.location));
+		var nn = BE.geometry.getNeighbors(Location.toCellId(city.location));
 		for (var i = 0; i < nn.length; i++)
 		{
 			var n = nn[i];
@@ -1714,7 +1714,7 @@ function checkPlayer(pid, player)
 			continue;
 
 		player.canSee[fleet.location] = true;;
-		var nn = G.geometry.getNeighbors(Location.toCellId(fleet.location));
+		var nn = BE.geometry.getNeighbors(Location.toCellId(fleet.location));
 		for (var i = 0; i < nn.length; i++)
 		{
 			var n = nn[i];

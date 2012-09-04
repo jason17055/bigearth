@@ -51,7 +51,7 @@ function terrainEndOfYear_pass1(cellId, cell)
 	var emigrantsBase = 0.5 * adjustedCount * (adjustedCount / quota);
 	cell.wildlifeEmigrants = 0;
 
-	var nn = G.geometry.getNeighbors(cellId);
+	var nn = BE.geometry.getNeighbors(cellId);
 	for (var i = 0, l = nn.length; i < l; i++)
 	{
 		var n = G.terrain.cells[nn[i]];
@@ -71,7 +71,7 @@ function terrainEndOfYear_pass1(cellId, cell)
 			emigrants *= 0.5;
 
 			// check for presence of a river
-			var eId = G.geometry._makeEdge(cellId, nn[i]);
+			var eId = BE.geometry._makeEdge(cellId, nn[i]);
 			if (hasRiver(eId))
 			{
 				emigrants = 0;

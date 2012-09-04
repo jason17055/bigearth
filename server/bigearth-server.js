@@ -13,6 +13,8 @@ var Scheduler = require('./bigearth_modules/scheduler.js');
 var GAME = require('./bigearth-game.js');
 var PERSIST = require('./bigearth-persist.js');
 
+// Big Earth globals, used by both client and server code
+global.BE = {};
 
 function handleStaticFileRequest(requestPath,request,response)
 {
@@ -343,8 +345,7 @@ function loadTerrain()
 	if (G.terrain.geometry == 'sphere')
 	{
 		var SG = require('../html/sphere-geometry.js');
-		G.geometry = new SG.SphereGeometry(G.terrain.size);
-		G.terrain.geometry = G.geometry;
+		BE.geometry = new SG.SphereGeometry(G.terrain.size);
 	}
 	else
 	{

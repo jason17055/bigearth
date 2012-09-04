@@ -25,7 +25,7 @@ function saveWorld(G)
 		edges: G.terrain.edges,
 		vertices: G.terrain.vertices,
 		size: G.terrain.size,
-		geometry: G.terrain.geometry.name
+		geometry: BE.geometry.name
 		};
 	for (var cid in G.terrain.cells)
 	{
