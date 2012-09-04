@@ -6,6 +6,7 @@ if (typeof require !== 'undefined')
 var Scheduler = require('./bigearth_modules/scheduler.js');
 var city_module = require('./bigearth_modules/city.js');
 var mod_terrain = require('./bigearth_modules/terrain.js');
+var Location = require('../html/location.js');
 
 var G = {
 	world: {},
@@ -15,13 +16,13 @@ var G = {
 	fleets: {}
 	};
 
-function discoverCell(playerId, location)
+function discoverCell(playerId, cellId)
 {
 	var isNew = false;
-	var refCell = G.terrain.cells[location];
+	var refCell = G.terrain.cells[cellId];
 
 	var map = G.maps[playerId];
-	var mapCell = map.cells[location];
+	var mapCell = map.cells[cellId];
 	if (!mapCell)
 	{
 		isNew = true;
@@ -81,21 +82,20 @@ function discoverCell(playerId, location)
 
 	if (isNew)
 	{
-		map.cells[location] = mapCell;
+		map.cells[cellId] = mapCell;
 		notifyPlayer(playerId, {
 			event: 'map-update',
-			location: location,
-			locationType: 'cell',
+			location: Location.fromCellId(cellId),
 			data: mapCell
 			});
 	}
 
-	var nn = G.geometry.getNeighbors(location);
+	var nn = G.geometry.getNeighbors(cellId);
 	for (var i = 0; i < nn.length; i++)
 	{
 		if (map.cells[nn[i]])
 		{
-			var eId = G.geometry._makeEdge(location, nn[i]);
+			var eId = G.geometry._makeEdge(cellId, nn[i]);
 			discoverEdge(playerId, eId);
 		}
 	}
@@ -272,22 +272,21 @@ function discoverEdge(playerId, eId)
 		map.edges[eId] = mapEdge;
 		notifyPlayer(playerId, {
 			event: 'map-update',
-			location: eId,
-			locationType: 'edge',
+			location: Location.fromEdgeId(eId),
 			data: mapEdge
 			});
 	}
 }
 
-function discoverCellBorder(playerId, cellIdx)
+function discoverCellBorder(playerId, cellId)
 {
-	var ee = G.geometry.getEdgesAdjacentToCell(cellIdx);
+	var ee = G.geometry.getEdgesAdjacentToCell(cellId);
 	for (var i = 0; i < ee.length; i++)
 	{
 		discoverEdge(playerId, ee[i]);
 	}
 
-	var nn = G.geometry.getNeighbors(cellIdx);
+	var nn = G.geometry.getNeighbors(cellId);
 	for (var i = 0; i < nn.length; i++)
 	{
 		discoverCell(playerId, nn[i]);
@@ -385,12 +384,14 @@ function fleetActivityError(fleetId, fleet, errorMessage)
 function fleetDisbandInCity(fleetId, fleet)
 {
 	var location = fleet.location;
-	var cityId = G.terrain.cells[location].city;
+	var cellId = Location.toCellId(location);
+
+	var cityId = G.terrain.cells[cellId].city;
 	var city = G.cities[cityId];
-	if (!city && G.terrain.cells[location].terrain == 'ocean')
+	if (!city && G.terrain.cells[cellId].terrain == 'ocean')
 	{
 		// try to find a city in an adjoining cell
-		var nn = G.geometry.getNeighbors(location);
+		var nn = G.geometry.getNeighbors(cellId);
 		for (var i = 0; i < nn.length; i++)
 		{
 			var c = G.terrain.cells[nn[i]];
@@ -477,7 +478,8 @@ function tryToBuildCity(fleetId, fleet)
 
 	if (fleet.activity == 'build-city')
 	{
-		if (G.terrain.cells[fleet.location].city)
+		var terrainCell = G.terrain.cells[Location.toCellId(fleet.location)];
+		if (terrainCell.city)
 		{
 			return fleetActivityError(fleetId, fleet, "There is already a city here.");
 		}
@@ -486,8 +488,8 @@ function tryToBuildCity(fleetId, fleet)
 		var tid = city._id;
 		city.wheat = 100;
 		city.wood = 50;
-		G.terrain.cells[fleet.location].city = tid;
-		terrainChanged(fleet.location);
+		terrainCell.city = tid;
+		terrainChanged(Location.toCellId(fleet.location));
 		updateFleetSight(tid, city);
 
 		setFleetActivityFlag(fleetId, fleet, null);
@@ -505,7 +507,7 @@ function moveFleetAlongCoast(fleetId)
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
 
-	var nn = G.geometry.getNeighbors(oldLoc);
+	var nn = G.geometry.getNeighbors(Location.toCellId(oldLoc));
 	var lastLoc = fleet.lastLocation;
 
 	var i;
@@ -694,7 +696,7 @@ function isNavigableByMap(map, fleet, location)
 {
 	var unitType = fleet.type;
 	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
-	var c = map.cells[location];
+	var c = map.cells[Location.toCellId(location)];
 	if (!c)
 		return false;
 
@@ -738,11 +740,11 @@ function getUnitMovementCost(unitType, oldLoc, newLoc)
 {
 	var locationInfo = function(loc)
 	{
-		if ((""+loc).match(/^(\d+)$/))
+		if (Location.isCell(loc))
 		{
 			return { locationType: 'cell', location: +loc };
 		}
-		else if ((""+loc).match(/^(\d+)-(\d+)$/))
+		else if (Location.isEdge(loc))
 		{
 			return { locationType: 'edge', location: loc };
 		}
@@ -797,7 +799,7 @@ function getFleetMovementCost(fleet, oldLoc, newLoc)
 
 function getTerrainLocation(location)
 {
-	return G.terrain.cells[location];
+	return G.terrain.cells[Location.toCellId(location)];
 }
 
 function addPlayerCanSee(playerId, location)
@@ -873,7 +875,7 @@ function updateFleetSight(fid, fleet)
 	var newVisibility = {};
 
 	newVisibility[fleet.location] = true;
-	var nn = G.geometry.getNeighbors(fleet.location);
+	var nn = G.geometry.getNeighbors(Location.toCellId(fleet.location));
 	for (var i = 0; i < nn.length; i++)
 	{
 		var n = nn[i];
@@ -933,8 +935,8 @@ function moveFleetOneStep(fleetId, newLoc)
 	var costOfMovement = getFleetMovementCost(fleet, oldLoc, newLoc);
 	console.log("cost is " + Math.round(costOfMovement));
 
-	discoverCell(fleet.owner, newLoc);
-	discoverCellBorder(fleet.owner, newLoc);
+	discoverCell(fleet.owner, Location.toCellId(newLoc));
+	discoverCellBorder(fleet.owner, Location.toCellId(newLoc));
 
 	notifyPlayer(fleet.owner, {
 		event: 'fleet-movement',
@@ -1128,8 +1130,8 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 			});
 	}
 	
-	discoverCell(playerId,f.location);
-	discoverCellBorder(playerId,f.location);
+	discoverCell(playerId, Location.toCellId(f.location));
+	discoverCellBorder(playerId, Location.toCellId(f.location));
 }
 
 function fleetTerrainEffect_deaths(fleetId, fleet, deathCount, explanation)
@@ -1163,7 +1165,7 @@ function fleetTerrainEffect(fleetId)
 	}
 
 	var location = fleet.location;
-	var terrainCell = G.terrain.cells[location];
+	var terrainCell = G.terrain.cells[Location.toCellId(location)];
 	if (terrainCell)
 	{
 		var terrainType = terrainCell.terrain;
@@ -1320,10 +1322,11 @@ function doOrders(requestData, queryString, remoteUser)
 
 function developLand(location, type, amount)
 {
-	var c = G.terrain.cells[location];
+	var cellId = Location.toCellId(location);
+	var c = G.terrain.cells[cellId];
 	c.subcells.natural -= amount;
 	c.subcells[type] = (c.subcells[type] || 0) + amount;
-	terrainChanged(location);
+	terrainChanged(cellId);
 }
 
 function getYear()
@@ -1341,26 +1344,27 @@ function fleetAutoSettle(fleetId, fleet)
 {
 	var seen = {};
 	var curRing = {};
-	seen[fleet.location] = true;
-	curRing[fleet.location] = true;
+	var fleetCellId = Location.toCellId(fleet.location);
+	seen[fleetCellId] = true;
+	curRing[fleetCellId] = true;
 
 	var map = G.maps[fleet.owner];
 
-	var bestValue = getSettlementFitness(map, fleet.location);
+	var bestValue = getSettlementFitness(map, fleetCellId);
 	var best = fleet.location;
 	for (var dist = 0; ; dist++)
 	{
 		var nextRing = {};
-		for (var loc in curRing)
+		for (var cid in curRing)
 		{
-			var v = getSettlementFitness(map, loc);
+			var v = getSettlementFitness(map, cid);
 			if (v > bestValue)
 			{
 				bestValue = v;
 				best = loc;
 			}
 
-			var nn = G.geometry.getNeighbors(loc);
+			var nn = G.geometry.getNeighbors(cid);
 			for (var j = 0; j < nn.length; j++)
 			{
 				var nid = nn[j];
@@ -1381,8 +1385,7 @@ function fleetAutoSettle(fleetId, fleet)
 				});
 			fleet.orders.unshift({
 				command: 'goto',
-				location: best,
-				locationType: 'cell'
+				location: best
 				});
 			return fleetActivity(fleetId, fleet);
 		}
@@ -1391,11 +1394,11 @@ function fleetAutoSettle(fleetId, fleet)
 	return fleetActivityError(fleetId, fleet, "Unable to find a suitable city location.")
 }
 
-function getSettlementFitness(map, location)
+function getSettlementFitness(map, cellId)
 {
 	var thisCellFitness = 0;
 
-	var c = map.cells[location];
+	var c = map.cells[cellId];
 	if (!c || c.city)
 	{
 		return 0;
@@ -1411,7 +1414,7 @@ function getSettlementFitness(map, location)
 
 	var numGoodNeighbors = 0;
 	var numRivers = 0;
-	var nn = G.geometry.getNeighbors(location);
+	var nn = G.geometry.getNeighbors(cellId);
 	for (var i = 0; i < nn.length; i++)
 	{
 		var n = map.cells[nn[i]];
@@ -1424,7 +1427,7 @@ function getSettlementFitness(map, location)
 			numGoodNeighbors++;
 		}
 
-		var eId = G.geometry._makeEdge(location, nn[i]);
+		var eId = G.geometry._makeEdge(cellId, nn[i]);
 		var e = map.edges[eId];
 		if (e && e.feature == 'river')
 		{
@@ -1435,29 +1438,29 @@ function getSettlementFitness(map, location)
 	var neighborsFitness = numGoodNeighbors / 5 - 0.3 * Math.abs(numRivers - 2);
 
 	// look up to five cells away for another city
-	var dist = distanceToNearestCity(map, location, 5);
+	var dist = distanceToNearestCity(map, cellId, 5);
 	var distCityFitness = 2 - 4/dist;
 	return thisCellFitness + neighborsFitness + distCityFitness;
 }
 
-function distanceToNearestCity(map, location, maxDist)
+function distanceToNearestCity(map, cellId, maxDist)
 {
 	var seen = {};
 	var ring = {};
-	ring[location] = true;
-	seen[location] = true;
+	ring[cellId] = true;
+	seen[cellId] = true;
 
 	for (var dist = 0; dist <= maxDist; dist++)
 	{
 		var nextRing = {};
-		for (var loc in ring)
+		for (var cid in ring)
 		{
-			seen[loc] = true;
-			var c = map.cells[loc];
+			seen[cid] = true;
+			var c = map.cells[cid];
 			if (c && c.city)
 				return dist;
 
-			var nn = G.geometry.getNeighbors(loc);
+			var nn = G.geometry.getNeighbors(cid);
 			for (var j = 0; j < nn.length; j++)
 			{
 				var nid = nn[j];
@@ -1495,7 +1498,7 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		{
 			_fleet.canSettle = true;
 			_fleet.settlementFitness = getSettlementFitness(
-				G.maps[f.owner], f.location);
+				G.maps[f.owner], Location.toCellId(f.location));
 		}
 
 		return _fleet;
@@ -1693,7 +1696,7 @@ function checkPlayer(pid, player)
 			continue;
 
 		player.canSee[city.location] = true;
-		var nn = G.geometry.getNeighbors(city.location);
+		var nn = G.geometry.getNeighbors(Location.toCellId(city.location));
 		for (var i = 0; i < nn.length; i++)
 		{
 			var n = nn[i];
@@ -1708,7 +1711,7 @@ function checkPlayer(pid, player)
 			continue;
 
 		player.canSee[fleet.location] = true;;
-		var nn = G.geometry.getNeighbors(fleet.location);
+		var nn = G.geometry.getNeighbors(Location.toCellId(fleet.location));
 		for (var i = 0; i < nn.length; i++)
 		{
 			var n = nn[i];

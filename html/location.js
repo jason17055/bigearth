@@ -7,6 +7,11 @@ Location.fromCellId = function(cellId)
 	return cellId;
 };
 
+Location.fromEdgeId = function(edgeId)
+{
+	return edgeId;
+};
+
 Location.toCellId = function(l)
 {
 	return l;
