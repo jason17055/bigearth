@@ -329,11 +329,11 @@ function setFleetActivityFlag(fleetId, fleet, newActivity)
 
 function playerCanSee(playerId, location)
 {
-	var cell = getTerrainLocation(location);
-	if (!cell.seenBy)
+	var terrainCell = getTerrainLocation(location);
+	if (!terrainCell.seenBy)
 		return false;
 
-	for (var fid in cell.seenBy)
+	for (var fid in terrainCell.seenBy)
 	{
 		var f = G.fleets[fid] || G.cities[fid];
 		if (!f)
@@ -418,12 +418,12 @@ function fleetDisbandInCity(fleetId, fleet)
 
 function allPlayersWhoCanSee(location)
 {
-	var cell = getTerrainLocation(location);
-	if (!cell.seenBy)
+	var terrainCell = getTerrainLocation(location);
+	if (!terrainCell.seenBy)
 		return {};
 
 	var seenByPid = {};
-	for (var fid in cell.seenBy)
+	for (var fid in terrainCell.seenBy)
 	{
 		var fleet = G.fleets[fid] || G.cities[fid];
 		if (fleet.owner)
@@ -845,10 +845,10 @@ function addFleetCanSee(fleetId, fleet, location)
 
 	fleet.canSee[location] = true;
 
-	var cell = getTerrainLocation(location);
-	if (!cell.seenBy)
-		cell.seenBy = {};
-	cell.seenBy[fleetId] = true;
+	var terrainCell = getTerrainLocation(location);
+	if (!terrainCell.seenBy)
+		terrainCell.seenBy = {};
+	terrainCell.seenBy[fleetId] = true;
 
 	if (!couldSeeBefore)
 	{
@@ -860,9 +860,9 @@ function removeFleetCanSee(fleetId, fleet, location)
 {
 	delete fleet.canSee[location];
 
-	var cell = getTerrainLocation(location);
-	if (cell.seenBy)
-		delete cell.seenBy[fleetId];
+	var terrainCell = getTerrainLocation(location);
+	if (terrainCell.seenBy)
+		delete terrainCell.seenBy[fleetId];
 
 	if (!playerCanSee(fleet.owner, location))
 	{
@@ -920,14 +920,14 @@ function moveFleetOneStep(fleetId, newLoc)
 	delete fleet.hadTerrainEffect;
 
 	{
-		var oldLocStruct = getTerrainLocation(oldLoc);
-		if (oldLocStruct.fleets)
-			delete oldLocStruct.fleets[fleetId];
+		var oldLocTerrain = getTerrainLocation(oldLoc);
+		if (oldLocTerrain.fleets)
+			delete oldLocTerrain.fleets[fleetId];
 
-		var newLocStruct = getTerrainLocation(newLoc);
-		if (!newLocStruct.fleets)
-			newLocStruct.fleets = {};
-		newLocStruct.fleets[fleetId] = true;
+		var newLocTerrain = getTerrainLocation(newLoc);
+		if (!newLocTerrain.fleets)
+			newLocTerrain.fleets = {};
+		newLocTerrain.fleets[fleetId] = true;
 	}
 
 	fleetMoved(fleetId, fleet, oldLoc, newLoc);
