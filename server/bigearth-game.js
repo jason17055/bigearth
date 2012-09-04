@@ -648,7 +648,8 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 				return buildPath(toLoc);
 			}
 
-			var accumDist = cur[2] + getFleetMovementCostByMap(fleet, curLoc, nn[i], map);
+			var costInfo = getFleetMovementCost_byMap(fleet, curLoc, nn[i], map);
+			var accumDist = cur[2] + costInfo.delay;
 			var estRemainDistSteps = BE.geometry.distanceBetween(nn[i], toLoc) / baseDist;
 			var estRemainDist = estRemainDistSteps * 3000;
 
@@ -707,8 +708,9 @@ function isNavigableByMap(map, fleet, location)
 	return cost < 15000;
 }
 
-function getUnitMovementCostByMap(unitType, oldLoc, newLoc, map)
+function getFleetMovementCost_byMap(fleet, oldLoc, newLoc, map)
 {
+	var unitType = fleet.type;
 	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
 
 	var oldLocCell = map.cells[oldLoc];
@@ -736,12 +738,7 @@ function getUnitMovementCostByMap(unitType, oldLoc, newLoc, map)
 		cost += (UM.across_river || 0);
 	}
 
-	return cost;
-}
-
-function getFleetMovementCostByMap(fleet, oldLoc, newLoc, map)
-{
-	return getUnitMovementCostByMap(fleet.type, oldLoc, newLoc, map);
+	return { delay: cost };
 }
 
 function getFleetMovementCost_real(fleet, oldLoc, newLoc)
