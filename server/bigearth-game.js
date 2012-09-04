@@ -739,8 +739,14 @@ function getUnitMovementCostByMap(unitType, oldLoc, newLoc, map)
 	return cost;
 }
 
-function getUnitMovementCost(unitType, oldLoc, newLoc)
+function getFleetMovementCostByMap(fleet, oldLoc, newLoc, map)
 {
+	return getUnitMovementCostByMap(fleet.type, oldLoc, newLoc, map);
+}
+
+function getFleetMovementCost_real(fleet, oldLoc, newLoc)
+{
+	var unitType = fleet.type;
 	var locationInfo = function(loc)
 	{
 		if (Location.isCell(loc))
@@ -785,20 +791,11 @@ function getUnitMovementCost(unitType, oldLoc, newLoc)
 			(riverCrossing ? " (w/ river)" : "") +
 			" cost is " + cost);
 
-		return cost;
+		return { delay: cost, crossedRiver: riverCrossing };
 	}
-	return Infinity;
+	return { delay: Infinity };
 }
 
-function getFleetMovementCostByMap(fleet, oldLoc, newLoc, map)
-{
-	return getUnitMovementCostByMap(fleet.type, oldLoc, newLoc, map);
-}
-
-function getFleetMovementCost(fleet, oldLoc, newLoc)
-{
-	return getUnitMovementCost(fleet.type, oldLoc, newLoc);
-}
 
 function getTerrainLocation(location)
 {
@@ -921,6 +918,7 @@ function moveFleetOneStep(fleetId, newLoc)
 	fleet.lastLocation = oldLoc;
 	fleet.location = newLoc;
 	delete fleet.hadTerrainEffect;
+	delete fleet.crossedRiver;
 
 	{
 		var oldLocTerrain = getTerrainLocation(oldLoc);
@@ -933,11 +931,14 @@ function moveFleetOneStep(fleetId, newLoc)
 		newLocTerrain.fleets[fleetId] = true;
 	}
 
-	fleetMoved(fleetId, fleet, oldLoc, newLoc);
-
-	var costOfMovement = getFleetMovementCost(fleet, oldLoc, newLoc);
+	var movementCostInfo = getFleetMovementCost_real(fleet, oldLoc, newLoc);
+	var costOfMovement = movementCostInfo.delay;
 	console.log("cost is " + Math.round(costOfMovement));
 
+	if (movementCostInfo.crossedRiver)
+		fleet.crossedRiver = movementCostInfo.crossedRiver;
+
+	fleetMoved(fleetId, fleet, oldLoc, newLoc);
 	discoverCell(fleet.owner, Location.toCellId(newLoc));
 	discoverCellBorder(fleet.owner, Location.toCellId(newLoc));
 
