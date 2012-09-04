@@ -74,52 +74,6 @@ function makeCoords(geometry)
 	};
 }
 
-function makeMap(geometry)
-{
-	var cells = {};
-	var vertices = {};
-	var edges = {};
-
-	var numCells = geometry.getCellCount();
-	for (var cellIdx = 1; cellIdx <= numCells; cellIdx++)
-	{
-		var c = {
-			height: 0,
-			water: 0,
-			summerRains: 0,
-			winterRains: 0
-			};
-		cells[cellIdx] = c;
-
-		var adj = geometry.getNeighbors(cellIdx);
-		for (var j = 0, l = adj.length; j < l; j++)
-		{
-			var other1 = adj[j];
-			var other2 = adj[(j+1)%l];
-
-			var eId = geometry._makeEdge(cellIdx,other1);
-			if (!(eId in edges))
-			{
-				edges[eId] = {};
-			}
-
-			var vId = geometry._makeVertex(cellIdx,other1,other2);
-			if (!(vId in vertices))
-			{
-				vertices[vId] = {};
-			}
-		}
-	}
-
-	return {
-	cells: cells,
-	vertices: vertices,
-	edges: edges,
-	size: geometry.size,
-	geometry: geometry
-	};
-}
-
 function bumpMap(map, coords, d, attrName)
 {
 	var M = Math.sqrt(1/3);
@@ -615,7 +569,6 @@ RiverFactory.prototype.generateRivers = function()
 
 if (typeof exports !== 'undefined')
 {
-	exports.makeMap = makeMap;
 	exports.makeCoords = makeCoords;
 	exports.bumpMap = bumpMap;
 	exports.generateTerrain = generateTerrain;
