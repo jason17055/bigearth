@@ -559,6 +559,16 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 	{
 		$('.ownerIcon',$f).hide();
 	}
+
+	var c = map.cells[fleetInfo.location];
+	if (c && c.city)
+	{
+		$f.addClass('inCity');
+	}
+	else
+	{
+		$f.removeClass('inCity');
+	}
 };
 
 BigEarthViewPort.prototype.doDeferredRepaint = function()

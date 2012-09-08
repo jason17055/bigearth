@@ -44,6 +44,14 @@ body {
 	background-image: url("fleet_selection_circle_back.gif");
 }
 
+.fleetIcon.inCity {
+	visibility: hidden;
+}
+
+.fleetIcon.inCity.selectedFleet {
+	visibility: visible;
+}
+
 .fleetIcon.selectedFleet .selectionCircle {
 	display: block;
 	position: absolute;
