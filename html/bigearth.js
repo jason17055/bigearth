@@ -578,12 +578,26 @@ function loadFleetInfo(fleetId)
 		$('.populationContainer', $fleetPane).hide();
 	}
 
-	var m = fleet.message || '';
+	$('.fleetMessage', $fleetPane).remove();
+	if (fleet.messages)
+	{
+		for (var i = 0, l = fleet.messages.length; i < l && i < 3; i++)
+		{
+			var m = fleet.messages[i];
+			var $m = $('<div class="fleetMessage"></div>');
+			$m.text(m.message);
+			$('.fleetMessagesContainer', $fleetPane).append($m);
+		}
+	}
+
 	if (fleet.settlementFitness)
 	{
-		m += ' settlement value '+fleet.settlementFitness;
+		$('.terrainInfo', $fleetPane).text('settlement value '+fleet.settlementFitness);
 	}
-	$('.fleetMessage', $fleetPane).text(m);
+	else
+	{
+		$('.terrainInfo', $fleetPane).text('');
+	}
 
 	if (fleet.canSettle)
 		$('#buildCityBtn, #autoSettleBtn').show();

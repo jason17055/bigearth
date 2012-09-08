@@ -364,14 +364,17 @@ function fleetMessage(fleetId, message)
 		throw new Error("fleet "+fleetId+" not found");
 	}
 
-	if (fleet.message)
+	if (!fleet.messages)
 	{
-		fleet.message = fleet.message + "\n" + message;
+		fleet.messages = [];
 	}
-	else
-	{
-		fleet.message = message;
-	}
+
+	fleet.messages.unshift({
+		message: message,
+		time: Scheduler.time
+		});
+	while (fleet.messages.length > 12)
+		fleet.messages.pop();
 
 	fleetChanged(fleetId, fleet);
 }
@@ -1493,8 +1496,11 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		};
 		if (f.activity)
 			_fleet.activity = f.activity;
-		if (f.message)
-			_fleet.message = f.message;
+		if (f.messages)
+		{
+			_fleet.messages = f.messages;
+			_fleet.message = _fleet.messages[0].message;
+		}
 
 		if (fleetCanSettle(f))
 		{
