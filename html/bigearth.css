@@ -378,3 +378,13 @@ body {
 	width: 120px;
 	display: inline-block;
 }
+
+.fleetTile {
+	border: 1px solid black;
+	width: 1.5in;
+	float: left;
+}
+
+.fleetTile:hover {
+	background-color: yellow;
+}

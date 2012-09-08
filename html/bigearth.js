@@ -523,6 +523,23 @@ function loadCityInfo(city, location)
 			$('#cityMessages').append($x);
 		}
 	}
+
+	$('#cityPane .atThisLocation .fleetTile').remove();
+	for (var fid in fleets)
+	{
+		if (fleets[fid].location == location)
+		{
+			var $x = $('<div class="otherFleet fleetTile"><img class="icon" align="left"><span class="owner"></span></div>');
+			$('img.icon', $x).attr('src', 'unit_images/'+fleets[fid].type+'.png');
+			$('.owner', $x).text(fleets[fid].owner);
+			with ({otherFleetId: fid}) {
+			$x.click(function() {
+				onFleetClicked(otherFleetId);
+				});
+			}
+			$('#cityPane .atThisLocation').append($x);
+		}
+	}
 }
 
 function onFleetClicked(fleetId)
