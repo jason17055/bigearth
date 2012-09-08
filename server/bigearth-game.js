@@ -492,7 +492,7 @@ function tryToBuildCity(fleetId, fleet)
 		var city = newCity(fleet.location, fleet.owner);
 		var tid = city._id;
 		terrainCell.city = tid;
-		terrainChanged(Location.toCellId(fleet.location));
+		developLand(fleet.location, 'hamlet', 1);
 		updateFleetSight(tid, city);
 
 		setFleetActivityFlag(fleetId, fleet, null);
