@@ -269,6 +269,11 @@ body {
 	min-height: 16pt;
 }
 
+.atThisLocationHeader {
+	font-size: 7pt;
+	margin-top: 8pt;
+}
+
 .buttonBarSectionHeader {
 	font-size: 7pt;
 }

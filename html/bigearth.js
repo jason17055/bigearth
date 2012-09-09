@@ -517,6 +517,8 @@ function loadCityInfo(city, location)
 
 function loadAtThisLocation(cityOrFleetId, location, $box)
 {
+	var anyFound = false;
+
 	$('.fleetTile', $box).remove();
 	for (var fid in fleets)
 	{
@@ -534,8 +536,14 @@ function loadAtThisLocation(cityOrFleetId, location, $box)
 				});
 			}
 			$box.append($x);
+			anyFound = true;
 		}
 	}
+
+	if (anyFound)
+		$box.show();
+	else
+		$box.hide();
 }
 
 function onFleetClicked(fleetId)
