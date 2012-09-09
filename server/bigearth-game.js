@@ -8,6 +8,7 @@ var city_module = require('./bigearth_modules/city.js');
 var mod_terrain = require('./bigearth_modules/terrain.js');
 var Location = require('../html/location.js');
 var Settler = require('./bigearth_modules/settler.js');
+var Fleet = require('./bigearth_modules/fleet.js');
 
 var G = {
 	world: {},
@@ -315,40 +316,6 @@ function discoverCellBorder(playerId, cellId)
 	}
 }
 
-function fleetCurrentCommandFinished(fleetId, fleet)
-{
-	fleet.orders.shift();
-	fleetActivity(fleetId);
-}
-
-function fleetHasCapability(fleet, capability)
-{
-	return (fleet.type == 'settler');
-}
-
-function fleetChanged(fleetId, fleet)
-{
-	notifyPlayer(fleet.owner, {
-		event: 'fleet-updated',
-		fleet: fleetId,
-		data: getFleetInfoForPlayer(fleetId, fleet.owner)
-		});
-}
-
-function setFleetActivityFlag(fleetId, fleet, newActivity)
-{
-	if (newActivity)
-	{
-		fleet.activity = newActivity;
-	}
-	else
-	{
-		delete fleet.activity;
-	}
-
-	return fleetChanged(fleetId, fleet);
-}
-
 function playerCanSee(playerId, location)
 {
 	var terrainCell = getTerrainLocation(location);
@@ -378,34 +345,6 @@ function terrainChanged(cellId)
 	}
 }
 
-function fleetMessage(fleetId, message)
-{
-	var fleet = G.fleets[fleetId];
-	if (!fleet)
-	{
-		throw new Error("fleet "+fleetId+" not found");
-	}
-
-	if (!fleet.messages)
-	{
-		fleet.messages = [];
-	}
-
-	fleet.messages.unshift({
-		message: message,
-		time: Scheduler.time
-		});
-	while (fleet.messages.length > 12)
-		fleet.messages.pop();
-
-	fleetChanged(fleetId, fleet);
-}
-
-function fleetActivityError(fleetId, fleet, errorMessage)
-{
-	fleetMessage(fleetId, "Unable to complete orders: " + errorMessage);
-}
-
 function allPlayersWhoCanSee(location)
 {
 	var terrainCell = getTerrainLocation(location);
@@ -422,43 +361,6 @@ function allPlayersWhoCanSee(location)
 		}
 	}
 	return seenByPid;
-}
-
-function destroyFleet(fleetId, disposition)
-{
-	var fleet = G.fleets[fleetId];
-	var location = fleet.location;
-
-	notifyPlayer(fleet.owner, {
-		event: 'fleet-terminated',
-		fleet: fleetId,
-		location: location,
-		disposition: disposition
-		});
-
-	var pp = allPlayersWhoCanSee(location);
-	for (var pid in pp)
-	{
-		if (pid != fleet.owner)
-		{
-			// notify foreign player that can also see this fleet
-			notifyPlayer(pid, {
-				event: 'fleet-terminated',
-				fleet: fleetId,
-				location: location,
-				disposition: disposition
-				});
-		}
-	}
-
-	if (fleet.canSee)
-	{
-		for (var loc in fleet.canSee)
-		{
-			removeFleetCanSee(fleetId, fleet, loc);
-		}
-	}
-	delete G.fleets[fleetId];
 }
 
 function moveFleetAlongCoast(fleetId)
@@ -956,14 +858,6 @@ function moveFleetOneStep(fleetId, newLoc)
 	fleetCooldown(fleetId, fleet, Math.round(costOfMovement));
 }
 
-function fleetCooldown(fleetId, fleet, delay)
-{
-	fleet._coolDownTimer = Scheduler.schedule(function() {
-		fleet._coolDownTimer = null;
-		fleetActivity(fleetId);
-		}, delay);
-}
-
 function findSuitableStartingLocation()
 {
 	var best = 1;
@@ -1153,68 +1047,6 @@ function fleetTerrainEffect(fleetId)
 	return fleetActivity(fleetId);
 }
 
-function fleetActivity(fleetId)
-{
-	var fleet = G.fleets[fleetId];
-	if (fleet._coolDownTimer)
-	{
-		// this fleet is still performing last step.
-		// not to worry, this function will be called automatically
-		// when the fleet finishes its current task
-		return;
-	}
-
-	if (!fleet.hadTerrainEffect)
-	{
-		return fleetTerrainEffect(fleetId);
-	}
-
-	if (!fleet.population)
-	{
-		// fleet has died off
-		return destroyFleet(fleetId, 'died-off');
-	}
-
-	if (!fleet.orders || fleet.orders.length == 0)
-	{
-		// this fleet does not have any orders
-		return fleetMessage(fleetId, "Orders complete.");
-	}
-
-	fleetChanged(fleetId, fleet);
-
-	var currentOrder = fleet.orders[0];
-	if (currentOrder.command == 'wander')
-	{
-		console.log("traveler moves!");
-		return moveFleetRandomly(fleetId);
-	}
-	else if (currentOrder.command == 'follow-coast')
-	{
-		return moveFleetAlongCoast(fleetId);
-	}
-	else if (currentOrder.command == 'goto')
-	{
-		return moveFleetTowards(fleetId, currentOrder.location);
-	}
-	else if (currentOrder.command == 'build-city')
-	{
-		return Settler.buildCity(fleetId, fleet, currentOrder);
-	}
-	else if (currentOrder.command == 'auto-settle')
-	{
-		return Settler.autoSettle(fleetId, fleet, currentOrder);
-	}
-	else if (currentOrder.command == 'disband')
-	{
-		return Settler.disbandInCity(fleetId, fleet, currentOrder);
-	}
-	else
-	{
-		return fleetActivityError(fleetId, fleet, "Unrecognized command");
-	}
-}
-
 function getGameState(request)
 {
 	if (request.remote_player)
@@ -1291,57 +1123,6 @@ function getYear()
 {
 	var t = new Date().getTime();
 	return G.world.age + (t-G.world.realWorldTime)/G.world.oneYear;
-}
-
-function fleetCanSettle(fleet)
-{
-	return fleet.type == 'settler';
-}
-
-function getFleetInfoForPlayer(fleetId, playerId)
-{
-	var f = G.fleets[fleetId];
-	if (f.owner == playerId)
-	{
-		var _fleet = {
-			type: f.type,
-			location: f.location,
-			owner: f.owner,
-			orders: f.orders,
-			population: f.population
-		};
-		if (f.activity)
-			_fleet.activity = f.activity;
-		if (f.messages)
-		{
-			_fleet.messages = f.messages;
-			_fleet.message = _fleet.messages[0].message;
-		}
-
-		if (fleetCanSettle(f))
-		{
-			_fleet.canSettle = true;
-			_fleet.settlementFitness = Settler.getSettlementFitness(
-				G.maps[f.owner], Location.toCellId(f.location));
-		}
-
-		return _fleet;
-	}
-	else if (playerCanSee(playerId, f.location))
-	{
-		var _fleet = {
-			type: f.type,
-			location: f.location,
-			owner: f.owner
-		};
-		if (f.activity)
-			_fleet.activity = f.activity;
-		return _fleet;
-	}
-	else
-	{
-		return null;
-	}
 }
 
 function getFleets(playerId, callback)
@@ -1621,10 +1402,5 @@ if (typeof global !== 'undefined')
 	global.updateFleetSight = updateFleetSight;
 	global.developLand = developLand;
 	global.createUnit = createUnit;
-
-	global.fleetHasCapability = fleetHasCapability;
-	global.fleetActivityError = fleetActivityError;
-	global.setFleetActivityFlag = setFleetActivityFlag;
-	global.fleetCooldown = fleetCooldown;
-	global.destroyFleet = destroyFleet;
+	global.playerCanSee = playerCanSee;
 }
