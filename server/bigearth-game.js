@@ -170,6 +170,23 @@ function discoverCity(cityId, realCity, mapCity, playerId)
 
 	if (realCity.owner == playerId)
 	{
+		// messages
+		if (realCity.messages)
+		{
+			if (!mapCity.messages)
+				mapCity.messages = [];
+			for (var i = 0, l = realCity.messages.length; i<l; i++)
+			{
+				if (!mapCity.messages[i]
+					|| mapCity.messages[i].time != realCity.messages[i].time
+					|| mapCity.messages[i].message != realCity.messages[i].message)
+				{
+					isNew = true;
+					mapCity.messages[i] = realCity.messages[i];
+				}
+			}
+		}
+
 		if (!mapCity.workers)
 			mapCity.workers = {};
 
@@ -241,6 +258,10 @@ function discoverCity(cityId, realCity, mapCity, playerId)
 				mapCity.stock[t] = refValue;
 			}
 		}
+	}
+	else
+	{
+		delete mapCity.messages;
 	}
 
 	return isNew;

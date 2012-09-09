@@ -405,10 +405,39 @@ function removeWorkers(cityId, city, quantity, fromJob)
 	return quantity;
 }
 
-function cityActivityError(cityId, city, message)
+function cityMessage(cityId, message)
 {
-	console.log("city " + cityId + ": " + message);
-	return;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		throw new Error("city "+cityId+" not found");
+	}
+
+	if (!city.messages)
+	{
+		city.messages = [];
+	}
+
+	city.messages.unshift({
+		message: message,
+		time: Scheduler.time
+		});
+	while (city.messages.length > 12)
+		city.messages.pop();
+
+	notifyPlayer(city.owner, {
+		event: 'message',
+		source: cityId,
+		sourceType: 'city',
+		time: Scheduler.time,
+		message: message
+		});
+	cityChanged(cityId);
+}
+
+function cityActivityError(cityId, city, errorMessage)
+{
+	cityMessage(cityId, "Unable to complete orders: " + errorMessage);
 }
 
 function setCityActivity(cityId, city, activity, builders, cost)
@@ -544,6 +573,7 @@ function cityActivityComplete(cityId, city)
 	if (city.tasks.length == 0)
 	{
 		delete city.tasks;
+		cityMessage(cityId, 'Orders complete.');
 		cityChanged(cityId);
 		rebalanceWorkers(cityId, city);
 	}
@@ -803,14 +833,9 @@ function cityEndOfYear(cityId, city)
 		city.deaths,
 		newAdults ].join(',') + "\n");
 
-	notifyPlayer(city.owner, {
-		event: 'message',
-		source: cityId,
-		sourceType: 'city',
-		time: Scheduler.time,
-		message: "end of year: "+Math.floor(city.births)+" births, " +
-				Math.floor(city.deaths)+ " deaths"
-		});
+	cityMessage(cityId,
+		"end of year: "+Math.floor(city.births)+" births, " +
+				Math.floor(city.deaths)+ " deaths");
 	
 	city.births = 0;
 	city.deaths = 0;

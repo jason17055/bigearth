@@ -4,7 +4,6 @@ var BE = {};
 var map;
 var fleets;
 var cities = {};
-var gameMessages = [];
 
 function onResize()
 {
@@ -511,22 +510,19 @@ function loadCityInfo(city, location)
 		}
 	}
 
-	$('#cityMessages').empty();
-	for (var i = 0; i < gameMessages.length; i++)
-	{
-		var m = gameMessages[i];
-		if (m.sourceType == 'city' && m.source == city.id)
-		{
-			var $x = $('<div class="cityMessage"><span class="year"></span>: <span class="messageText"></span></div>');
-			$('.year',$x).text(Math.floor(m.time));
-			$('.messageText',$x).text(m.message);
-			$('#cityMessages').append($x);
-		}
-	}
+	loadFleetOrCityMessages(city.messages, $('#cityMessages'));
 
-	$('#cityPane .atThisLocation .fleetTile').remove();
+	loadAtThisLocation(city, location, $('#cityPane .atThisLocation'));
+}
+
+function loadAtThisLocation(cityOrFleetId, location, $box)
+{
+	$('.fleetTile', $box).remove();
 	for (var fid in fleets)
 	{
+		if (fid == cityOrFleetId)
+			continue;
+
 		if (fleets[fid].location == location)
 		{
 			var $x = $('<div class="otherFleet fleetTile"><img class="icon" align="left"><span class="owner"></span></div>');
@@ -537,7 +533,7 @@ function loadCityInfo(city, location)
 				onFleetClicked(otherFleetId);
 				});
 			}
-			$('#cityPane .atThisLocation').append($x);
+			$box.append($x);
 		}
 	}
 }
@@ -554,6 +550,21 @@ function selectFleet(fleetId)
 
 	loadFleetInfo(fleetId);
 	$('#fleetPane').show();
+}
+
+function loadFleetOrCityMessages(messagesArray, $box)
+{
+	$('.fleetMessage', $box).remove();
+	if (messagesArray)
+	{
+		for (var i = 0, l = messagesArray.length; i < l && i < 3; i++)
+		{
+			var m = messagesArray[i];
+			var $m = $('<div class="fleetMessage"><span class="messageText"></span></div>');
+			$('.messageText', $m).text(m.message);
+			$box.append($m);
+		}
+	}
 }
 
 function loadFleetInfo(fleetId)
@@ -578,17 +589,7 @@ function loadFleetInfo(fleetId)
 		$('.populationContainer', $fleetPane).hide();
 	}
 
-	$('.fleetMessage', $fleetPane).remove();
-	if (fleet.messages)
-	{
-		for (var i = 0, l = fleet.messages.length; i < l && i < 3; i++)
-		{
-			var m = fleet.messages[i];
-			var $m = $('<div class="fleetMessage"></div>');
-			$m.text(m.message);
-			$('.fleetMessagesContainer', $fleetPane).append($m);
-		}
-	}
+	loadFleetOrCityMessages(fleet.messages, $('.fleetMessagesContainer', $fleetPane));
 
 	if (fleet.settlementFitness)
 	{
@@ -605,24 +606,7 @@ function loadFleetInfo(fleetId)
 	else
 		$('#buildCityBtn, #autoSettleBtn').hide();
 
-	$('#fleetPane .atThisLocation').empty();
-	for (var fid in fleets)
-	{
-		if (fid == fleetId)
-			continue;
-
-		if (fleets[fid].location == fleet.location)
-		{
-			var $x = $('<div class="otherFleet"></div>');
-			$x.text('Fleet ' + fleets[fid].type + ' (' + fleets[fid].owner + ')');
-			with ({otherFleetId: fid}) {
-			$x.click(function() {
-				onFleetClicked(otherFleetId);
-				});
-			}
-			$('#fleetPane .atThisLocation').append($x);
-		}
-	}
+	loadAtThisLocation(fleetId, fleet.location, $('#fleetPane .atThisLocation'));
 }
 
 function onFleetMovement(eventData)
@@ -686,7 +670,7 @@ function onMapCellChanged(location)
 
 function onGameMessage(eventData)
 {
-	gameMessages.push(eventData);
+	//FIXME
 }
 
 function onEvent(eventData)
