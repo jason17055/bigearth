@@ -324,6 +324,17 @@ function roundWorkers(aa)
 	return result;
 }
 
+function reassignWorkers(cityId, city, quantity, fromJob, toJob)
+{
+	lockCityStruct(city);
+
+	quantity = removeWorkers(cityId, city, quantity, fromJob);
+	addWorkers(cityId, city, quantity, toJob);
+
+	unlockCityStruct(cityId, city);
+	return quantity;
+}
+
 // adds new people to the city, given a particular job
 //
 function addWorkers(cityId, city, quantity, toJob)
@@ -818,6 +829,9 @@ function cityEndOfYear(cityId, city)
 	}
 	city.population += changeApplied;
 
+	// let governor adjust workers assignment
+	governor_endOfYear(cityId, city);
+
 	// notify interested parties
 	// done changing the city properties
 	unlockCityStruct(cityId, city);
@@ -849,6 +863,145 @@ function cityEndOfYear_cleanup(cityId, city)
 	{
 		cityNewWorkerRate(city, 'hunt');
 	}
+}
+
+function governor_endOfYear(cityId, city)
+{
+	var jobLevels = governor_determineJobLevels(cityId, city);
+	governor_dispatchJobAssignments(cityId, city, jobLevels);
+}
+
+function governor_dispatchJobAssignments(cityId, city, jobLevels)
+{
+	// group job requests by priority
+	var priorities = [];
+	var jobsByPriority = {};
+	var totalByPriority = {};
+
+	for (var i = 0; i < jobLevels.length; i++)
+	{
+		var jl = jobLevels[i];
+		var p = jl.priority;
+
+		if (!jobsByPriority[p])
+		{
+			priorities.push(p);
+			jobsByPriority[p] = [];
+			totalByPriority[p] = 0;
+		}
+		jobsByPriority[p].push(jl);
+		totalByPriority[p] += jl.quantity;
+	}
+
+	priorities.sort(function(a,b) { return -(a - b); });
+
+	var workersLeft = city.population;
+	var assignments = {};
+
+	for (var i = 0; i < priorities.length; i++)
+	{
+		var p = priorities[i];
+		var totalDemand = totalByPriority[p];
+
+		if (workersLeft <= 0) continue;
+
+		var rations = totalDemand > workersLeft ? totalDemand / workersLeft : 1;
+
+		for (var j = 0; j < jobsByPriority[p].length; j++)
+		{
+			var jl = jobsByPriority[p][j];
+			assignments[jl.job] = (assignments[jl.job] || 0) + jl.quantity * rations;
+			workersLeft -= jl.quantity * rations;
+		}
+	}
+
+	// look for any jobs with extra workers; when we assign workers to jobs that need
+	// extra people, we will take them from the ones we find here
+	var jobsWithExtra = [];
+	if (city.workers.idle)
+	{
+		jobsWithExtra.push('idle');
+	}
+	for (var job in city.workers)
+	{
+		if (job == 'idle')
+			continue;
+
+		var wanted = assignments[job] || 0;
+		if (city.workers[job] > wanted)
+		{
+			jobsWithExtra.push(job);
+		}
+	}
+
+	// look for any jobs where additional workers need to be assigned
+	for (var job in assignments)
+	{
+		var actual = city.workers[job] || 0;
+		if (actual < assignments[job])
+		{
+			var amountShort = assignments[job] - actual;
+			while (amountShort > 0 && jobsWithExtra.length > 0)
+			{
+				var fromJob = jobsWithExtra[0];
+				var extraThere = city.workers[fromJob] - (assignments[fromJob] || 0);
+				if (extraThere >= amountShort)
+				{
+					reassignWorkers(cityId, city, amountShort, fromJob, job);
+					amountShort = 0;
+				}
+				else
+				{
+					reassignWorkers(cityId, city, extraThere, fromJob, job);
+					amountShort -= extraThere;
+					jobsWithExtra.shift();
+				}
+			}
+		}
+	}
+}
+
+function governor_determineJobLevels(cityId, city)
+{
+	var jobLevels = [];
+
+	var foodInStorage = getTotalFood(city);
+	var oneYearFood = G.world.hungerPerAdult * city.population +
+			G.world.hungerPerChild * city.children;
+
+	var DESIRED_STOCK = 1.5;
+	var MAX_ASSIGN = 4/3;
+
+	var desiredFoodNextYear = oneYearFood * (
+			MAX_ASSIGN + (1-MAX_ASSIGN) * (foodInStorage / oneYearFood) / DESIRED_STOCK);
+	if (desiredFoodNextYear < 0)
+		desiredFoodNextYear = 0;
+
+	// first consider farms
+	var mandatoryFarmers = Math.ceil(desiredFoodNextYear / G.world.foodPerFarmer);
+	var numFarms = getFarmCount(city);
+	if (mandatoryFarmers > numFarms * 15)
+	{
+		mandatoryFarmers = numFarms * 15;
+	}
+	var optionalFarmers = numFarms * 10;
+	desiredFoodNextYear -= mandatoryFarmers * G.world.foodPerFarmer;
+
+	jobLevels.push({ priority: 100, job: 'farm', quantity: mandatoryFarmers });
+	jobLevels.push({ priority: 1, job: 'farm', quantity: optionalFarmers });
+
+	// remaining food must come from hunting
+	var mandatoryHunters = Math.ceil(desiredFoodNextYear / G.world.foodPerAnimal);
+	var optionalHunters = mandatoryHunters < 20 ? 20 - mandatoryHunters : 0;
+
+	jobLevels.push({ priority: 100, job: 'hunt', quantity: mandatoryHunters });
+	jobLevels.push({ priority: 5, job: 'hunt', quantity: optionalHunters });
+
+	// consider child care
+	var mandatoryChildCaretakers = Math.ceil(city.children / 2);
+	jobLevels.push({ priority: 90, job: 'childcare', quantity: mandatoryChildCaretakers });
+
+	return jobLevels;
 }
 
 function processResearchingOutput(city)
@@ -1208,8 +1361,7 @@ function cmd_reassign_workers(requestData, queryString, remoteUser)
 	if (quantity + 1 >= +(city.workers[fromJob] || 0))
 		quantity = quantity+1;
 
-	quantity = removeWorkers(cityId, city, quantity, fromJob);
-	addWorkers(cityId, city, quantity, toJob);
+	reassignWorkers(cityId, city, quantity, fromJob, toJob);
 
 	unlockCityStruct(cityId, city);
 }
@@ -1435,6 +1587,13 @@ function city_addWorkersAny(cityId, city, amount)
 	unlockCityStruct(cityId, city);
 }
 
+function getFarmCount(city)
+{
+	var cell = G.terrain.cells[Location.toCellId(city.location)];
+	var numFarms = cell.subcells.farm || 0;
+	return numFarms;
+}
+
 function rebalanceWorkers(cityId, city)
 {
 	var amount = city.workers.idle || 0;
@@ -1444,8 +1603,7 @@ function rebalanceWorkers(cityId, city)
 
 	if (amount > 0)
 	{
-		var cell = G.terrain.cells[Location.toCellId(city.location)];
-		var numFarms = cell.subcells.farm || 0;
+		var numFarms = getFarmCount(city);
 		var needForFarmers = numFarms * 15;
 		var q = needForFarmers - (city.workers.farm || 0);
 		if (q > 0)
