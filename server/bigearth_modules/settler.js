@@ -251,3 +251,4 @@ function disbandInCity(fleetId, fleet, currentOrder)
 exports.buildCity = buildCity;
 exports.autoSettle = autoSettle;
 exports.disbandInCity = disbandInCity;
+exports.getSettlementFitness = getSettlementFitness;

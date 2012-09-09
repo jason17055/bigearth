@@ -1,5 +1,6 @@
 var Scheduler = require('./scheduler.js');
 var Location = require('../../html/location.js');
+var Settler = require('./settler.js');
 
 function fleetMessage(fleetId, message)
 {
