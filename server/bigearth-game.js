@@ -1342,4 +1342,5 @@ if (typeof global !== 'undefined')
 	global.developLand = developLand;
 	global.createUnit = createUnit;
 	global.playerCanSee = playerCanSee;
+	global.moveFleetTowards = moveFleetTowards;
 }

@@ -444,6 +444,30 @@ function generateTerrain(map, coords)
 	}
 }
 
+function putWildlife(map)
+{
+	for (var cid in map.cells)
+	{
+		var cell = map.cells[cid];
+		cell.wildlife = 65;
+
+		if ((cell.terrain == 'plains' || cell.terrain == 'grassland'))
+		{
+			if (Math.random() < 0.3)
+			{
+				cell.hasWildSheep = Math.round(10 + 40 * Math.random());
+			}
+		}
+		if (cell.terrain == 'hills')
+		{
+			if (Math.random() < 0.6)
+			{
+				cell.hasWildSheep = Math.round(15 + 50 * Math.random());
+			}
+		}
+	}
+}
+
 function RiverFactory(map)
 {
 	this.map = map;
@@ -560,6 +584,8 @@ function createTerrain()
 	var map = makeMap(BE.geometry);
 	BE.coords = MG.makeCoords(BE.geometry);
 	generateTerrain(map, BE.coords);
+
+	putWildlife(map);
 
 	var worldFile = worldName + '/world.txt';
 	fs.writeFileSync(worldFile,

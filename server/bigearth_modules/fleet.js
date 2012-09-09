@@ -198,6 +198,12 @@ function getFleetInfoForPlayer(fleetId, playerId)
 				G.maps[f.owner], Location.toCellId(f.location));
 		}
 
+		var terrainCell = G.terrain.cells[Location.toCellId(f.location)];
+		if (terrainCell && terrainCell.hasWildSheep && terrainCell.hasWildSheep >= 25)
+		{
+			_fleet.sheepBeHere = true;
+		}
+
 		return _fleet;
 	}
 	else if (playerCanSee(playerId, f.location))

@@ -603,6 +603,10 @@ function loadFleetInfo(fleetId)
 	{
 		$('.terrainInfo', $fleetPane).text('settlement value '+fleet.settlementFitness);
 	}
+	else if (fleet.sheepBeHere)
+	{
+		$('.terrainInfo', $fleetPane).text('Sheep spotted at this location.');
+	}
 	else
 	{
 		$('.terrainInfo', $fleetPane).text('');
