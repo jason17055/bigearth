@@ -1343,4 +1343,6 @@ if (typeof global !== 'undefined')
 	global.createUnit = createUnit;
 	global.playerCanSee = playerCanSee;
 	global.moveFleetTowards = moveFleetTowards;
+	global.allPlayersWhoCanSee = allPlayersWhoCanSee;
+	global.removeFleetCanSee = removeFleetCanSee;
 }

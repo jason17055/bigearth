@@ -204,7 +204,7 @@ function buildCity(fleetId, fleet, currentOrder)
 		updateFleetSight(tid, city);
 
 		setFleetActivityFlag(fleetId, fleet, null);
-		return fleetDisbandInCity(fleetId, fleet);
+		return disbandInCity(fleetId, fleet);
 	}
 	else
 	{
@@ -252,3 +252,4 @@ exports.buildCity = buildCity;
 exports.autoSettle = autoSettle;
 exports.disbandInCity = disbandInCity;
 exports.getSettlementFitness = getSettlementFitness;
+exports.fleetD
