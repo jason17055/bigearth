@@ -760,10 +760,23 @@ function cityEndOfYear(cityId, city)
 		var pts = city.production.hunt;
 		delete city.production.hunt;
 
+		// check if there are any wild animals that can be captured
+		var cell = G.terrain.cells[Location.toCellId(city.location)];
+		if (cell.hasWildSheep && Math.random() < 1/cell.hasWildSheep && pts >= 8)
+		{
+			// found a sheep!
+			city.stock.sheep = (city.stock.sheep || 0) + 1;
+			cell.hasWildSheep -= 1;
+			if (cell.hasWildSheep < 1)
+				delete cell.hasWildSheep;
+
+			cityMessage(cityId, 'Your hunters found and captured a sheep!');
+			pts -= 2;
+		}
+
 		var numHarvested = pts;
 
 		// record number of animals hunted
-		var cell = G.terrain.cells[Location.toCellId(city.location)];
 		cell.wildlifeHunted += numHarvested;
 
 		var foodYield = numHarvested * G.world.foodPerAnimal;
