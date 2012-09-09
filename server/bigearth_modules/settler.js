@@ -138,6 +138,43 @@ function distanceToNearestCity(map, cellId, maxDist)
 	return maxDist+1;
 }
 
+var CITY_NAMES_DICTIONARY = [
+	'Beijing', 'Bogota', 'Buenos Aires', 'Cairo', 'Delhi', 'Dhaka',
+	'Guangzhou', 'Istanbul', 'Jakarta', 'Karachi', 'Kinshasa', 'Kolkata',
+	'Lagos', 'Lima', 'London', 'Los Angeles', 'Manila', 'Mexico City',
+	'Moscow', 'Mumbai', 'New York', 'Osaka', 'Rio de Janeiro', 'Sao Paulo',
+	'Seoul', 'Shanghai', 'Shenzhen', 'Tehran', 'Tianjin', 'Tokyo'
+	];
+
+function pickCityName(map)
+{
+	var taken = {};
+	for (var cid in map.cells)
+	{
+		var c = map.cells[cid];
+		if (c.city && c.city.name)
+		{
+			taken[c.city.name] = true;
+		}
+	}
+
+	var l = CITY_NAMES_DICTIONARY.length;
+	while (l>0)
+	{
+		var i = Math.floor(Math.random() * l);
+		var name = CITY_NAMES_DICTIONARY[i];
+
+		if (!taken[name])
+			return name;
+
+		CITY_NAMES_DICTIONARY[i] = CITY_NAMES_DICTIONARY[l-1];
+		CITY_NAMES_DICTIONARY[l-1] = name;
+		l--;
+	}
+
+	return null;
+}
+
 function buildCity(fleetId, fleet, currentOrder)
 {
 	if (!fleetHasCapability(fleet, 'build-city'))
@@ -158,6 +195,10 @@ function buildCity(fleetId, fleet, currentOrder)
 
 		var city = newCity(fleet.location, fleet.owner);
 		var tid = city._id;
+
+		var map = G.maps[fleet.owner];
+		city.name = pickCityName(G.maps[fleet.owner]);
+
 		terrainCell.city = tid;
 		developLand(fleet.location, 'hamlet', 1);
 		updateFleetSight(tid, city);
