@@ -222,6 +222,67 @@ function fleetCanSettle(fleet)
 	return fleet.type == 'settler';
 }
 
+function fleetTerrainEffect_deaths(fleetId, fleet, deathCount, explanation)
+{
+	fleet.population = Math.floor(fleet.population - deathCount);
+	if (fleet.population > 0)
+	{
+		fleetMessage(fleetId, (deathCount > 1 ? "Some" : "One") + " of your party " + explanation + ".");
+		return fleetCooldown(fleetId, fleet,
+			deathCount > 3 ? 1500 : (500*deathCount));
+	}
+	else
+	{
+		fleet.population = 0;
+		fleetMessage(fleetId, 'Your party ' + explanation + '.');
+		return fleetCooldown(fleetId, fleet, 1500);
+	}
+}
+
+function fleetTerrainEffect(fleetId)
+{
+	var fleet = G.fleets[fleetId];
+	fleet.hadTerrainEffect = true;
+
+	if (fleet.crossedRiver)
+	{
+		if (Math.random() < 0.15)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 1, 'drowned crossing a river');
+		}
+	}
+
+	var location = fleet.location;
+	var terrainCell = G.terrain.cells[Location.toCellId(location)];
+	if (terrainCell)
+	{
+		var terrainType = terrainCell.terrain;
+		if (terrainType == 'tundra' && Math.random() < 0.25)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 5, 'died of exposure');
+		}
+
+		if (terrainType == 'glacier' && Math.random() < 0.5)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 7, 'died of exposure');
+		}
+
+		if ((terrainType == 'jungle' || terrainType == 'swamp') && Math.random() < 0.25)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 5, 'died of malaria');
+		}
+
+		if (terrainCell.wildlife >= 10 &&
+			Math.random() < .001*terrainCell.wildlife)
+		{
+			return fleetTerrainEffect_deaths(fleetId, fleet, 1, 'killed by a wild animal');
+		}
+	}
+
+	// no effect
+	return fleetActivity(fleetId);
+}
+
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
 global.fleetCooldown = fleetCooldown;
