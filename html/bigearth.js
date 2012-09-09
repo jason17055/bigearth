@@ -617,6 +617,12 @@ function onFleetMovement(eventData)
 		fleets[fleetId].location = eventData.toLocation;
 		fleets[fleetId].stepDelay = eventData.delay;
 		VIEWPORT.updateFleetIcon(fleetId, fleets[fleetId]);
+
+		var terrain = map.cells[eventData.toLocation];
+		if (terrain && terrain.city && terrain.city.id == $('#cityPane').attr('city-id'))
+		{
+			loadCityInfo(terrain.city, eventData.toLocation);
+		}
 	}
 }
 
