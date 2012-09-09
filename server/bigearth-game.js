@@ -1387,7 +1387,7 @@ function fleetAutoSettle(fleetId, fleet)
 			if (v > bestValue)
 			{
 				bestValue = v;
-				best = loc;
+				best = cid;
 			}
 
 			var nn = BE.geometry.getNeighbors(cid);
