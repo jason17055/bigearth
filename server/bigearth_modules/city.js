@@ -367,7 +367,7 @@ var cityWorkerRatesSpecial = {
 
 	hunt: function(city, baseProduction) {
 		var cell = G.terrain.cells[Location.toCellId(city.location)];
-		var numWildlife = cell.wildlife || 80;
+		var numWildlife = cell.wildlife || 0;
 		if (numWildlife == 0)
 			return 0;
 
@@ -867,6 +867,8 @@ function cityEndOfYear_cleanup(cityId, city)
 
 function governor_endOfYear(cityId, city)
 {
+	// TODO- check for actionable problems and announce them as appropriate
+
 	var jobLevels = governor_determineJobLevels(cityId, city);
 	governor_dispatchJobAssignments(cityId, city, jobLevels);
 }
