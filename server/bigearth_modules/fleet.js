@@ -1,6 +1,7 @@
 var Scheduler = require('./scheduler.js');
 var Location = require('../../html/location.js');
 var Settler = require('./settler.js');
+var Terrain = require('./terrain.js');
 
 function fleetMessage(fleetId, message)
 {
@@ -43,6 +44,8 @@ function setFleetActivityFlag(fleetId, fleet, newActivity)
 	if (newActivity)
 	{
 		fleet.activity = newActivity;
+		fleet.currentActivityInfo = {};
+		fleet.currentActivityInfo.started = Scheduler.time;
 	}
 	else
 	{
@@ -106,6 +109,10 @@ function fleetActivity(fleetId)
 	else if (currentOrder.command == 'goto')
 	{
 		return moveFleetTowards(fleetId, currentOrder.location);
+	}
+	else if (currentOrder.command == 'hunt')
+	{
+		return fleetHunt(fleetId, fleet, currentOrder);
 	}
 	else if (currentOrder.command == 'build-city')
 	{
@@ -221,6 +228,33 @@ function getFleetInfoForPlayer(fleetId, playerId)
 	{
 		return null;
 	}
+}
+
+function fleetHunt(fleetId, fleet, currentOrder)
+{
+	var cell = G.terrain.cells[Location.toCellId(fleet.location)];
+	var huntingRate = Terrain.calculateHuntingRate(cell, fleet.population);
+	var requiredTime = ((1/G.world.foodPerAnimal) / huntingRate) * 20000;
+
+console.log('mobile hunter, time required is ' + requiredTime);
+
+	if (fleet.activity != 'hunt')
+	{
+		setFleetActivityFlag(fleetId, fleet, 'hunt');
+		fleetCooldown(fleetId, fleet, requiredTime);
+		return;
+	}
+
+	if (!fleet.stock)
+		fleet.stock = {};
+
+	if (Math.random() < 0.25)
+		fleet.stock.sheep = (fleet.stock.sheep || 0) + 1;
+	else
+		fleet.stock.meat = (fleet.stock.meat || 0) + 1;
+
+	setFleetActivityFlag(fleetId, fleet, null);
+	return fleetCurrentCommandFinished(fleetId, fleet);
 }
 
 function fleetCanSettle(fleet)

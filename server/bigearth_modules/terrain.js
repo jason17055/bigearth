@@ -109,6 +109,18 @@ function Randomizer(x)
 	return x * Math.exp( -Math.log((1/t)-1) / 15 );
 }
 
+function calculateHuntingRate(terrainCell, numWorkers)
+{
+	var numWildlife = terrainCell.wildlife || 0;
+	if (numWildlife == 0)
+		return 0;
+
+	var s = 0.5 * Math.sqrt(numWildlife / 40);
+	return numWildlife - numWildlife * Math.exp(-s * numWorkers / numWildlife);
+}
+
 global.terrainEndOfYear_prepare = terrainEndOfYear_prepare;
 global.terrainEndOfYear_pass1 = terrainEndOfYear_pass1;
 global.terrainEndOfYear_cleanup = terrainEndOfYear_cleanup;
+
+exports.calculateHuntingRate = calculateHuntingRate;

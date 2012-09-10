@@ -1,5 +1,6 @@
 var Scheduler = require('./scheduler.js');
 var Location = require('../../html/location.js');
+var Terrain = require('./terrain.js');
 
 function onFarmCompleted(cityId, city)
 {
@@ -367,12 +368,7 @@ var cityWorkerRatesSpecial = {
 
 	hunt: function(city, baseProduction) {
 		var cell = G.terrain.cells[Location.toCellId(city.location)];
-		var numWildlife = cell.wildlife || 0;
-		if (numWildlife == 0)
-			return 0;
-
-		var s = 0.5 * Math.sqrt(numWildlife / 40);
-		return numWildlife - numWildlife * Math.exp(-s * baseProduction / numWildlife);
+		return Terrain.calculateHuntingRate(cell, baseProduction);
 		}
 	};
 
