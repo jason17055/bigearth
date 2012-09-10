@@ -272,6 +272,9 @@ function addAvailableJobs(cityId, jobs)
 	if (!jobs.farm && cell.subcells.farm)
 		jobs.farm = 0;
 
+	if (!jobs.shepherd && city.stock && city.stock.sheep)
+		jobs.shepherd = 0;
+
 	if (!jobs.build && city.activity)
 		jobs.build = 0;
 
@@ -762,6 +765,7 @@ function cityEndOfYear(cityId, city)
 		{
 			// found a sheep!
 			city.stock.sheep = (city.stock.sheep || 0) + 1;
+			city.newSheep = (city.newSheep || 0) + 1;
 			cell.hasWildSheep -= 1;
 			if (cell.hasWildSheep < 1)
 				delete cell.hasWildSheep;
@@ -812,6 +816,38 @@ function cityEndOfYear(cityId, city)
 
 	// scientists
 	processResearchingOutput(city);
+
+	// livestock
+	if (city.stock && city.stock.sheep)
+	{
+		var numSheep = city.stock.sheep;
+		var numShepherds = (city.production.shepherd || 0);
+
+		var vulnerableSheep = numSheep -
+			(city.newSheep || 0) -
+			numShepherds * 8;
+		if (vulnerableSheep > 0)
+		{
+			if (Math.random() < vulnerableSheep / 4)
+			{
+				var lostSheep = (Math.random() < 0.25 ? vulnerableSheep : Math.round(vulnerableSheep / 3));
+				if (lostSheep > 0)
+				{
+					// some sheep run away
+					cityMessage(cityId, lostSheep + " sheep have run away.");
+					city.stock.sheep -= lostSheep;
+				}
+			}
+		}
+
+		if (numSheep >= 2)
+		{
+			var newSheep = Math.floor(numSheep / 3) + (Math.random() < 0.25 ? 1 : 0);
+			city.stock.sheep += newSheep;
+		}
+
+		delete city.newSheep;
+	}
 
 	// calculate deaths
 	var sustainRate = 1 - 1/LIFE_EXPECTANCY;
@@ -1011,6 +1047,11 @@ function governor_determineJobLevels(cityId, city)
 	// consider child care
 	var mandatoryChildCaretakers = Math.ceil(city.children / 2);
 	jobLevels.push({ priority: 90, job: 'childcare', quantity: mandatoryChildCaretakers });
+
+	// consider livestock care
+	var numSheep = city.stock ? (city.stock.sheep || 0) : 0;
+	var mandatoryShepherds = Math.ceil(numSheep / 8);
+	jobLevels.push({ priority: 85, job: 'shepherd', quantity: mandatoryShepherds });
 
 	return jobLevels;
 }
