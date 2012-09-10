@@ -211,6 +211,15 @@ function getFleetInfoForPlayer(fleetId, playerId)
 			_fleet.sheepBeHere = true;
 		}
 
+		_fleet.stock = {};
+		if (f.stock)
+		{
+			for (var resourceType in f.stock)
+			{
+				_fleet.stock[resourceType] = f.stock[resourceType];
+			}
+		}
+
 		return _fleet;
 	}
 	else if (playerCanSee(playerId, f.location))

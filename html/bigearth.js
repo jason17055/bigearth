@@ -390,6 +390,33 @@ function animateCityActivityProgressBar(city)
 	$cac.css({ width: 0 });
 }
 
+function loadFleetResources($box, fleet)
+{
+	$('div.aResource', $box).remove();
+	var RESOURCE_DISPLAY_NAMES = {
+		clay: "Clay",
+		meat: "Meat",
+		sheep: "Sheep",
+		stone: "Stone",
+		wheat: "Wheat",
+		wood: "Wood"
+		};
+
+	if (fleet.stock)
+	{
+		for (var resourceType in fleet.stock)
+		{
+			var amount = fleet.stock[resourceType];
+
+			var $r = $('<div class="aResource"><img src=""><span class="resourceType"></span>: <span class="resourceAmount"></span></div>');
+			$('img', $r).attr('src', 'resource_icons/'+resourceType+'.png');
+			$('.resourceType', $r).text(RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
+			$('.resourceAmount', $r).text(amount);
+			$box.append($r);
+		}
+	}
+}
+
 function loadCityInfo(city, location)
 {
 	var mapCell = map.cells[Location.toCellId(location)];
@@ -406,27 +433,7 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityChildren').text(city.children);
 	$('#cityPane .cityWorkersCount').text(city.population);
 
-	$('#cityResourcesContainer div').remove();
-	var RESOURCE_DISPLAY_NAMES = {
-		food: "Food",
-		meat: "Meat",
-		wheat: "Wheat",
-		wood: "Wood",
-		clay: "Clay",
-		stone: "Stone",
-		fuel: "Fuel"
-		};
-	if (city.stock)
-	{
-		for (var t in city.stock)
-		{
-			var $x = $('<div><img src=""><span class="cityResourceType"></span>: <span class="cityResourceAmount"></span></div>');
-			$('img', $x).attr('src', 'resource_icons/'+t+'.png');
-			$('.cityResourceType', $x).text(RESOURCE_DISPLAY_NAMES[t] || t);
-			$('.cityResourceAmount', $x).text(city.stock[t]);
-			$('#cityResourcesContainer').append($x);
-		}
-	}
+	loadFleetResources($('#cityPane .resourcesContainer'), city);
 
 	$('#cityPane .cityFarms').text(mapCell.subcells.farm);
 	if (mapCell.subcells.farm)
@@ -597,6 +604,7 @@ function loadFleetInfo(fleetId)
 		$('.populationContainer', $fleetPane).hide();
 	}
 
+	loadFleetResources($('.resourcesContainer', $fleetPane), fleet);
 	loadFleetOrCityMessages(fleet.messages, $('.fleetMessagesContainer', $fleetPane));
 
 	if (fleet.settlementFitness)
