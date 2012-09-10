@@ -842,8 +842,18 @@ function cityEndOfYear(cityId, city)
 
 		if (numSheep >= 2)
 		{
-			var newSheep = Math.floor(numSheep / 3) + (Math.random() < 0.25 ? 1 : 0);
+			var newSheep = Math.floor(numSheep / 5) + Math.round((numSheep + 7*Math.random()) / 11);
 			city.stock.sheep += newSheep;
+
+			// hard code a limit of 1000 sheep, for now,
+			// since sheep have no useful purpose
+			if (city.stock.sheep > 1000)
+				city.stock.sheep = 1000;
+
+			// Note: I read somewhere that you want one acre of grazing land for
+			// every 3-6 sheep. There are 640 acres in a square mile.
+			// Assuming 1 sq. mi. == 1 zone, then that's 1920-3840 sheep per zone.
+			// Could round that off to max. 3000 sheep per zone.
 		}
 
 		delete city.newSheep;
