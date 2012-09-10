@@ -240,6 +240,16 @@ function disbandInCity(fleetId, fleet, currentOrder)
 		return fleetActivityError(fleetId, fleet, "No city at this location");
 	}
 
+	if (fleet.stock)
+	{
+		if (!city.stock) { city.stock = {}; }
+		for (var resourceType in fleet.stock)
+		{
+			city.stock[resourceType] = (city.stock[resourceType] || 0) + fleet.stock[resourceType];
+		}
+		delete fleet.stock;
+	}
+
 	if (fleet.population)
 	{
 		city_addWorkersAny(cityId, city, fleet.population);
