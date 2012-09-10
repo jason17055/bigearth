@@ -245,8 +245,6 @@ function fleetHunt(fleetId, fleet, currentOrder)
 	var huntingRate = Terrain.calculateHuntingRate(cell, fleet.population);
 	var requiredTime = ((1/G.world.foodPerAnimal) / huntingRate) * 20000;
 
-console.log('mobile hunter, time required is ' + requiredTime);
-
 	if (fleet.activity != 'hunt')
 	{
 		setFleetActivityFlag(fleetId, fleet, 'hunt');
