@@ -1063,6 +1063,9 @@ function governor_determineJobLevels(cityId, city)
 	var mandatoryShepherds = Math.ceil(numSheep / 8);
 	jobLevels.push({ priority: 85, job: 'shepherd', quantity: mandatoryShepherds });
 
+	// some other jobs that people like to do...
+	jobLevels.push({ priority: 10, job: 'research', quantity: Math.floor(city.population / 10) });
+
 	return jobLevels;
 }
 
