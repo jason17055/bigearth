@@ -119,8 +119,30 @@ function calculateHuntingRate(terrainCell, numWorkers)
 	return numWildlife - numWildlife * Math.exp(-s * numWorkers / numWildlife);
 }
 
+var ZONE_TYPES = {
+	'hamlet': { description: 'about 20 primitive mud houses', maxHousing: 200 },
+	'wood-hamlet': { description: 'about 20 primitive wooden houses', maxHousing: 200 },
+	'forest': { },
+	};
+
+function getHousing(cellId)
+{
+	var c = G.terrain.cells[cellId];
+	if (!c) return 0;
+
+	var sum = 0;
+	for (var zoneType in c.subcells)
+	{
+		var zi = ZONE_TYPES[zoneType];
+		if (zi && zi.maxHousing)
+			sum += zi.maxHousing;
+	}
+	return sum;
+}
+
 global.terrainEndOfYear_prepare = terrainEndOfYear_prepare;
 global.terrainEndOfYear_pass1 = terrainEndOfYear_pass1;
 global.terrainEndOfYear_cleanup = terrainEndOfYear_cleanup;
 
 exports.calculateHuntingRate = calculateHuntingRate;
+exports.getHousing = getHousing;

@@ -1325,8 +1325,8 @@ function unlockCityStruct(cityId, city)
 
 function getCityPopulationCapacity(city)
 {
-	var c = G.terrain.cells[Location.toCellId(city.location)];
-	return (c.subcells.hamlet || 0) * 200;
+	var cid = Location.toCellId(city.location);
+	return Terrain.getHousing(cid);
 }
 
 function getCityPopulation(city)
