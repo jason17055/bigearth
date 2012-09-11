@@ -924,6 +924,15 @@ function governor_endOfYear(cityId, city)
 {
 	// TODO- check for actionable problems and announce them as appropriate
 
+	// check population levels
+	var cityCapacity = getCityPopulationCapacity(city);
+	if (getCityPopulation(city) > cityCapacity * .85
+		&& city.population > cityCapacity * 0.7)
+	{
+		// need more housing
+		cityMessage(cityId, 'need more housing');
+	}
+	
 	var jobLevels = governor_determineJobLevels(cityId, city);
 	governor_dispatchJobAssignments(cityId, city, jobLevels);
 }
@@ -1308,6 +1317,11 @@ function getCityPopulationCapacity(city)
 {
 	var c = G.terrain.cells[Location.toCellId(city.location)];
 	return (c.subcells.hamlet || 0) * 200;
+}
+
+function getCityPopulation(city)
+{
+	return (city.population || 0) + (city.children || 0);
 }
 
 function getTotalFood(city)
