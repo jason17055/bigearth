@@ -21,7 +21,7 @@ var FACTORY_RECIPES = {
 	'stone-block': { 'rate': 0.01,  'input': { 'stone': 1.00 } }
 	};
 
-var FOOD_TYPES = [ 'food', 'meat', 'wheat' ];
+var FOOD_TYPES = [ 'food', 'meat', 'wheat', 'sheep', 'pig' ];
 
 // [0]: number of builders to assign when task starts
 // [1]: production cost
@@ -215,6 +215,16 @@ function checkCity(cityId, city)
 
 	if (!city.science)
 		city.science = {};
+
+	if (!city.policy)
+		city.policy = {};
+
+	if (!city.policy.foodPriority)
+		city.policy.foodPriority = {
+			'wheat': 10,
+			'meat': 15,
+			'sheep': 2
+			};
 
 	updateFleetSight(cityId, city);
 }
@@ -810,7 +820,7 @@ function cityEndOfYear(cityId, city)
 		// not enough food, some people gonna die
 		foodConsumed = foodSupply;
 	}
-	subtractFood(city, foodConsumed);
+	consumeFood(city, foodConsumed);
 	var sustenance = foodDemand > 0 ? Math.sqrt(foodConsumed / foodDemand) : 1;
 	city.hunger = 0;
 
@@ -1330,28 +1340,107 @@ function getTotalFood(city)
 	for (var i = 0; i < FOOD_TYPES.length; i++)
 	{
 		var ft = FOOD_TYPES[i];
-		sum += (city.stock[ft] || 0);
+		if (city.policy.foodPriority[ft])
+		{
+			sum += (city.stock[ft] || 0);
+		}
 	}
 	return sum;
 }
 
-function subtractFood(city, amount)
+function consumeFood(city, amount)
 {
-	for (var i = 0; i < FOOD_TYPES.length; i++)
+	var foodTypesInOrder = [];
+	for (var ft in city.policy.foodPriority)
 	{
-		var ft = FOOD_TYPES[i];
-		if (city.stock[ft])
+		foodTypesInOrder.push(ft);
+	}
+	foodTypesInOrder.sort(function(a,b) { return a-b; });
+
+	var amountConsumed = 0;
+	var eatFood = function(ft, amt)
 		{
-			if (city.stock[ft] > amount)
+			console.log("consuming "+amt+" "+ft);
+			if (amt >= (city.stock[ft] || 0))
 			{
-				city.stock[ft] -= amount;
-				return true;
+				amountConsumed += amt;
+				amount -= amt;
+				delete city.stock[ft];
 			}
-			amount -= city.stock[ft];
-			delete city.stock[ft];
+			else
+			{
+				amountConsumed += amt;
+				amount -= amt;
+				city.stock[ft] -= amt;
+			}
+		};
+
+	while (amount > 0)
+	{
+		var min_multiplier = Infinity;
+		var min_type;
+		for (var ft in city.policy.foodPriority)
+		{
+			var avail = city.stock[ft] || 0;
+			if (avail)
+			{
+				var r = avail / city.policy.foodPriority[ft];
+				if (r < min_multiplier)
+				{
+					min_multiplier = r;
+					min_type = ft;
+				}
+			}
+		}
+
+		if (!min_type)
+		{
+			// nothing actually available
+			return amountConsumed;
+		}
+
+		var canTake = 0;
+		for (var ft in city.policy.foodPriority)
+		{
+			var avail = city.stock[ft] || 0;
+			if (avail)
+			{
+				canTake += min_multiplier * city.policy.foodPriority[ft];
+			}
+		}
+
+		if (canTake < amount)
+		{
+			for (var i = 0, l = foodTypesInOrder.length; i<l; i++)
+			{
+				var ft = foodTypesInOrder[i];
+				var avail = city.stock[ft] || 0;
+				if (!avail) continue;
+
+				var toTake = Math.floor(avail * min_multiplier);
+				if (toTake > amount)
+					toTake = amount;
+
+				eatFood(ft, ft == min_type ? avail : toTake);
+			}
+		}
+		else
+		{
+			for (var i = foodTypesInOrder.length-1; i >= 0; i--)
+			{
+				var ft = foodTypesInOrder[i];
+				var avail = city.stock[ft] || 0;
+				if (!avail) continue;
+
+				var toTake = Math.ceil(avail * min_multiplier);
+				if (toTake > amount)
+					toTake = amount;
+
+				eatFood(ft, toTake);
+			}
 		}
 	}
-	return false;
+	return amountConsumed;
 }
 
 function nextRandomWorkerRate()
