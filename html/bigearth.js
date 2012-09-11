@@ -430,8 +430,16 @@ function loadCityInfo(city, location)
 	$('#cityPane .cityName').text(city.name || "(unnamed)");
 	$('#cityPane .citySize').text(mapCell.subcells.hamlet || 0);
 	$('#cityPane .cityPopulation').text(city.population + city.children);
-	$('#cityPane .cityChildren').text(city.children);
-	$('#cityPane .cityWorkersCount').text(city.population);
+	if (city.children || city.population)
+	{
+		$('#cityPane .cityChildren').text(city.children || 0);
+		$('#cityPane .cityWorkersCount').text(city.population || 0);
+		$('#cityPane .cityPopulationDetail').show();
+	}
+	else
+	{
+		$('#cityPane .cityPopulationDetail').hide();
+	}
 
 	loadFleetResources($('#cityPane .resourcesContainer'), city);
 
