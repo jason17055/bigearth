@@ -422,13 +422,13 @@ function loadCityInfo(city, location)
 	var mapCell = map.cells[Location.toCellId(location)];
 	if (!mapCell)
 		return;
-	if (!mapCell.subcells)
-		mapCell.subcells = {};
+	if (!mapCell.zones)
+		mapCell.zones = {};
 
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane').attr('city-location', location);
 	$('#cityPane .cityName').text(city.name || "(unnamed)");
-	$('#cityPane .citySize').text(mapCell.subcells.hamlet || 0);
+	$('#cityPane .citySize').text(mapCell.zones.hamlet || 0);
 	$('#cityPane .cityPopulation').text(city.population + city.children);
 	if (city.children || city.population)
 	{
@@ -443,8 +443,8 @@ function loadCityInfo(city, location)
 
 	loadFleetResources($('#cityPane .resourcesContainer'), city);
 
-	$('#cityPane .cityFarms').text(mapCell.subcells.farm);
-	if (mapCell.subcells.farm)
+	$('#cityPane .cityFarms').text(mapCell.zones.farm);
+	if (mapCell.zones.farm)
 		$('#cityPane .cityFarmsContainer').show();
 	else
 		$('#cityPane .cityFarmsContainer').hide();
@@ -1229,13 +1229,13 @@ function citiesReportClicked()
 
 		var zonesStr = [];
 		var mapCell = map.cells[Location.toCellId(city.location)];
-		if (mapCell.subcells.hamlet)
+		if (mapCell.zones.hamlet)
 		{
-			zonesStr.push(mapCell.subcells.hamlet + " housing");
+			zonesStr.push(mapCell.zones.hamlet + " housing");
 		}
-		if (mapCell.subcells.farm)
+		if (mapCell.zones.farm)
 		{
-			zonesStr.push(mapCell.subcells.farm + " farmland");
+			zonesStr.push(mapCell.zones.farm + " farmland");
 		}
 
 		$('.cityZones', $d).text(zonesStr.join(', '));

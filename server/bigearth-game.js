@@ -30,33 +30,37 @@ function discoverCell(playerId, cellId)
 		isNew = true;
 		mapCell = {};
 	}
+
+	//compatibility checks
+	delete mapCell.subcells;
+
 	if (mapCell.terrain != refCell.terrain)
 	{
 		isNew = true;
 		mapCell.terrain = refCell.terrain;
 	}
 
-	for (var subcellType in refCell.subcells)
+	for (var subcellType in refCell.zones)
 	{
 		if (subcellType == 'natural')
 			continue;
 
-		if (!mapCell.subcells)
-			mapCell.subcells = {};
+		if (!mapCell.zones)
+			mapCell.zones = {};
 
-		if (refCell.subcells[subcellType] != mapCell.subcells[subcellType])
+		if (refCell.zones[subcellType] != mapCell.zones[subcellType])
 		{
-			mapCell.subcells[subcellType] = refCell.subcells[subcellType];
+			mapCell.zones[subcellType] = refCell.zones[subcellType];
 			isNew = true;
 		}
 	}
-	if (mapCell.subcells)
+	if (mapCell.zones)
 	{
-		for (var subcellType in mapCell.subcells)
+		for (var subcellType in mapCell.zones)
 		{
-			if (!mapCell.subcells[subcellType])
+			if (!mapCell.zones[subcellType])
 			{
-				delete mapCell.subcells[subcellType];
+				delete mapCell.zones[subcellType];
 				isNew = true;
 			}
 		}
@@ -1053,8 +1057,8 @@ function developLand(location, type, amount)
 {
 	var cellId = Location.toCellId(location);
 	var c = G.terrain.cells[cellId];
-	c.subcells.natural -= amount;
-	c.subcells[type] = (c.subcells[type] || 0) + amount;
+	c.zones.natural -= amount;
+	c.zones[type] = (c.zones[type] || 0) + amount;
 	terrainChanged(cellId);
 }
 
@@ -1274,30 +1278,36 @@ function checkFleet(fleetId, fleet)
 
 function checkTerrainCell(cid, cell)
 {
-	if (!cell.subcells)
+	if (cell.subcells)
 	{
-		cell.subcells = { natural: 64 };
+		cell.zones = cell.subcells;
+		delete cell.subcells;
+	}
+
+	if (!cell.zones)
+	{
+		cell.zones = { natural: 64 };
 		if (cell.city)
 		{
 			var city = G.cities[cell.city];
 			if (city && city.farms)
 			{
-				cell.subcells.natural -= city.farms;
-				cell.subcells.farm = city.farms;
+				cell.zones.natural -= city.farms;
+				cell.zones.farm = city.farms;
 				delete city.farms;
 			}
 			if (city)
 			{
-				cell.subcells.natural -= 1;
-				cell.subcells.hamlet = 1;
+				cell.zones.natural -= 1;
+				cell.zones.hamlet = 1;
 			}
 		}
 	}
 
-	if (cell.subcells.farms)
+	if (cell.zones.farms)
 	{
-		cell.subcells.farm = cell.subcells.farms;
-		delete cell.subcells.farms;
+		cell.zones.farm = cell.zones.farms;
+		delete cell.zones.farms;
 	}
 
 	if (cell.seenBy)

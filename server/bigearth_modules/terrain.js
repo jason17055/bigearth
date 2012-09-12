@@ -131,7 +131,7 @@ function getHousing(cellId)
 	if (!c) return 0;
 
 	var sum = 0;
-	for (var zoneType in c.subcells)
+	for (var zoneType in c.zones)
 	{
 		var zi = ZONE_TYPES[zoneType];
 		if (zi && zi.maxHousing)

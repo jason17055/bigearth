@@ -279,7 +279,7 @@ function addAvailableJobs(cityId, jobs)
 			cell.terrain == 'tundra'))
 		jobs['gather-stone'] = 0;
 
-	if (!jobs.farm && cell.subcells.farm)
+	if (!jobs.farm && cell.zones.farm)
 		jobs.farm = 0;
 
 	if (!jobs.shepherd && city.stock && city.stock.sheep)
@@ -370,7 +370,7 @@ var cityWorkerRatesSpecial = {
 
 	farm: function(city, baseProduction) {
 		var cell = G.terrain.cells[Location.toCellId(city.location)];
-		var numFarms = cell.subcells.farm || 0;
+		var numFarms = cell.zones.farm || 0;
 		var maxYield = numFarms * 30;
 		if (maxYield == 0)
 			return 0;
@@ -1758,7 +1758,7 @@ function city_addWorkersAny(cityId, city, amount)
 function getFarmCount(city)
 {
 	var cell = G.terrain.cells[Location.toCellId(city.location)];
-	var numFarms = cell.subcells.farm || 0;
+	var numFarms = cell.zones.farm || 0;
 	return numFarms;
 }
 
