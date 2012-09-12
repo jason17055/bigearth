@@ -234,6 +234,12 @@ function City(cityId, location, owner)
 	this.stock = {};
 	this.science = {};
 	this.lastUpdate = Scheduler.time;
+	this.policy = {};
+	this.policy.foodPriority = {
+		'wheat': 10,
+		'meat': 15,
+		'sheep': 2
+		};
 }
 
 function addAvailableJobs(cityId, jobs)
