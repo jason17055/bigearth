@@ -131,6 +131,12 @@ var ZONE_TYPES = {
 		productionCost: 120,
 		resourceCost: { wood: 100 }
 		},
+	'stone-cottages': { description: 'about 20 primitive stone houses',
+		maxHousing: 200,
+		builders: 60,
+		productionCost: 180,
+		resourceCost: { 'stone-block': 200 }
+		},
 	'farm': { description: 'land cultivated for growing wheat',
 		builders: 25,
 		productionCost: 50

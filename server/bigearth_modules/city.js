@@ -449,49 +449,99 @@ function cityMessage(cityId, message)
 function cityActivityError(cityId, city, errorMessage)
 {
 	cityMessage(cityId, "Unable to complete orders: " + errorMessage);
+
+	delete city.activity;
+	if (city.activityResources)
+	{
+		for (var rt in city.activityResources)
+		{
+			city.stock[rt] += city.activityResources[rt];
+		}
+		delete city.activityResources;
+	}
+
+	if (!city.tasks)
+	{
+		console.log("WARNING: unexpected... city.tasks is not defined, in cityActivityError");
+		return;
+	}
+
+	city.tasks.shift();
+	if (city.tasks.length == 0)
+	{
+		delete city.tasks;
+		cityChanged(cityId);
+		rebalanceWorkers(cityId, city);
+	}
+	else
+	{
+		return cityActivity(cityId, city);
+	}
 }
 
-function setCityActivity(cityId, city, activity, builders, cost)
+function startCityActivity(cityId, city, activity, builders, productionCost, resourceCost)
+{
+	if (resourceCost)
+	{
+		city.activityResources = {};
+		for (var rt in resourceCost)
+		{
+			if ((city.stock[rt] || 0) < resourceCost[rt])
+			{
+				cityMessage(cityId, "Not enough "+rt+" for "+activity);
+				return cityActivityError(cityId, city, "Not enough "+rt+" for "+activity);
+			}
+			else
+			{
+				city.stock[rt] -= resourceCost[rt];
+				city.activityResources[rt] = resourceCost[rt];
+			}
+		}
+	}
+	city.activity = activity;
+
+	var targetWorkerCount = builders;
+	if (targetWorkerCount > city.population - 50)
+	{
+		targetWorkerCount = city.population - 50;
+	}
+
+	if (targetWorkerCount < 0)
+	{
+		targetWorkerCount = 0;
+	}
+
+	var curWorkerCount = city.workers.build || 0;
+	if (curWorkerCount < targetWorkerCount)
+	{
+		stealWorkers(cityId, city,
+			targetWorkerCount-curWorkerCount, 'build');
+	}
+	rebalanceWorkers(cityId, city);
+}
+
+function setCityActivity(cityId, city, activity, builders, productionCost, resourceCost)
 {
 	if (city.activity != activity)
 	{
-		city.activity = activity;
-
-		var targetWorkerCount = builders;
-		if (targetWorkerCount > city.population - 50)
-		{
-			targetWorkerCount = city.population - 50;
-		}
-
-		if (targetWorkerCount < 0)
-		{
-			targetWorkerCount = 0;
-		}
-
-		var curWorkerCount = city.workers.build || 0;
-		if (curWorkerCount < targetWorkerCount)
-		{
-			stealWorkers(cityId, city,
-				targetWorkerCount-curWorkerCount, 'build');
-		}
-		rebalanceWorkers(cityId, city);
+		startCityActivity(cityId, city, activity, builders, productionCost, resourceCost);
 	}
 
 	var rate = city.workerRates.build || 0;
 	var partComplete = city.production.build || 0;
 
 	city.activityTime = Scheduler.time;
-	city.activityComplete = (partComplete / cost);
-	city.activitySpeed = (rate / cost);
+	city.activityComplete = (partComplete / productionCost);
+	city.activitySpeed = (rate / productionCost);
 	cityChanged(cityId);
 
 	if (rate > 0)
 	{
-		var remaining = cost - partComplete;
+		var remaining = productionCost - partComplete;
 		var timeRemaining = remaining / rate;
 		if (timeRemaining < 0.001)
 		{
-			console.log("warning: city "+cityId+" ("+city.name+") activity "+activity+" has "+(city.production.build||0)+" of "+cost+" already");
+			console.log("warning: city "+cityId+" ("+city.name+") activity "+activity+" has "+(city.production.build||0)+" of "+productionCost+" already");
 			timeRemaining = 0.001;
 		}
 		return cityActivityWakeup(cityId, city, timeRemaining);
@@ -579,6 +629,7 @@ function cityChanged(cityId)
 function cityActivityComplete(cityId, city)
 {
 	delete city.activity;
+	delete city.activityResources;
 
 	city.tasks.shift();
 	if (city.tasks.length == 0)
@@ -1732,7 +1783,7 @@ function tryDevelopLand(cityId, city, landType)
 	}
 	else
 	{
-		setCityActivity(cityId, city, activityName, builders, cost);
+		setCityActivity(cityId, city, activityName, builders, cost, ltc.resourceCost);
 	}
 }
 

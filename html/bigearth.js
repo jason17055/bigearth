@@ -1153,23 +1153,13 @@ function cityEquipNewUnit(unitType)
 		});
 }
 
-function cityDevelopFarm()
+function cityDevelopLand(landType)
 {
 	var cityId = $('#cityPane').attr('city-id');
 	$.ajax({
 		type: "POST",
 		url: "/request/build-improvement?city="+cityId,
-		data: { improvement: 'farm' }
-		});
-}
-
-function cityDevelopHousing()
-{
-	var cityId = $('#cityPane').attr('city-id');
-	$.ajax({
-		type: "POST",
-		url: "/request/build-improvement?city="+cityId,
-		data: { improvement: 'mud-cottages' }
+		data: { improvement: landType }
 		});
 }
 
