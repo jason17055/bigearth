@@ -120,9 +120,11 @@ function calculateHuntingRate(terrainCell, numWorkers)
 }
 
 var ZONE_TYPES = {
-	'hamlet': { description: 'about 20 primitive mud houses', maxHousing: 200 },
-	'wood-hamlet': { description: 'about 20 primitive wooden houses', maxHousing: 200 },
-	'forest': { },
+	'mud-cottages': { description: 'about 20 primitive mud houses', maxHousing: 200 },
+	'wood-cottages': { description: 'about 20 primitive wooden houses', maxHousing: 200 },
+	'farm': { description: 'land cultivated for growing wheat' },
+	'natural': { description: 'the natural land type for this terrain' },
+	'forest': { },  //unused
 	};
 
 function getHousing(cellId)

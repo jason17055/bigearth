@@ -1299,7 +1299,7 @@ function checkTerrainCell(cid, cell)
 			if (city)
 			{
 				cell.zones.natural -= 1;
-				cell.zones.hamlet = 1;
+				cell.zones['mud-cottages'] = 1;
 			}
 		}
 	}
@@ -1308,6 +1308,12 @@ function checkTerrainCell(cid, cell)
 	{
 		cell.zones.farm = cell.zones.farms;
 		delete cell.zones.farms;
+	}
+
+	if (cell.zones.hamlet)
+	{
+		cell.zones['mud-cottages'] = cell.zones.hamlet;
+		delete cell.zones.hamlet;
 	}
 
 	if (cell.seenBy)

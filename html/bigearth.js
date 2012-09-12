@@ -428,7 +428,7 @@ function loadCityInfo(city, location)
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane').attr('city-location', location);
 	$('#cityPane .cityName').text(city.name || "(unnamed)");
-	$('#cityPane .citySize').text(mapCell.zones.hamlet || 0);
+	$('#cityPane .citySize').text(mapCell.zones['mud-cottages'] || 0);
 	$('#cityPane .cityPopulation').text(city.population + city.children);
 	if (city.children || city.population)
 	{
@@ -1169,7 +1169,7 @@ function cityDevelopHousing()
 	$.ajax({
 		type: "POST",
 		url: "/request/build-improvement?city="+cityId,
-		data: { improvement: 'hamlet' }
+		data: { improvement: 'mud-cottages' }
 		});
 }
 
@@ -1229,9 +1229,9 @@ function citiesReportClicked()
 
 		var zonesStr = [];
 		var mapCell = map.cells[Location.toCellId(city.location)];
-		if (mapCell.zones.hamlet)
+		if (mapCell.zones['mud-cottages'])
 		{
-			zonesStr.push(mapCell.zones.hamlet + " housing");
+			zonesStr.push(mapCell.zones['mud-cottages'] + " housing");
 		}
 		if (mapCell.zones.farm)
 		{

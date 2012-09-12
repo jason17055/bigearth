@@ -200,7 +200,7 @@ function buildCity(fleetId, fleet, currentOrder)
 		city.name = pickCityName(G.maps[fleet.owner]);
 
 		terrainCell.city = tid;
-		developLand(fleet.location, 'hamlet', 1);
+		developLand(fleet.location, 'mud-cottages', 1);
 		updateFleetSight(tid, city);
 
 		setFleetActivityFlag(fleetId, fleet, null);

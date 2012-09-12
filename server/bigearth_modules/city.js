@@ -13,7 +13,7 @@ function onFarmCompleted(cityId, city)
 //
 var LAND_TYPE_COSTS = {
 	farm:   [ 25, 50, onFarmCompleted ],
-	hamlet: [ 50, 100, null ]
+	'mud-cottages': [ 50, 100, null ]
 	};
 
 var FACTORY_RECIPES = {
