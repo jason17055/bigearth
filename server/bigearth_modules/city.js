@@ -214,7 +214,8 @@ function checkCity(cityId, city)
 		city.policy.foodPriority = {
 			'wheat': 10,
 			'meat': 15,
-			'sheep': 2
+			'sheep': 2,
+			'pig': 2
 			};
 
 	updateFleetSight(cityId, city);
@@ -238,7 +239,8 @@ function City(cityId, location, owner)
 	this.policy.foodPriority = {
 		'wheat': 10,
 		'meat': 15,
-		'sheep': 2
+		'sheep': 2,
+		'pig': 2
 		};
 }
 
@@ -279,7 +281,7 @@ function addAvailableJobs(cityId, jobs)
 	if (!jobs.farm && cell.zones.farm)
 		jobs.farm = 0;
 
-	if (!jobs.shepherd && city.stock && city.stock.sheep)
+	if (!jobs.shepherd && city.stock && (city.stock.sheep || city.stock.pig))
 		jobs.shepherd = 0;
 
 	if (!jobs.build && city.activity)
@@ -724,6 +726,53 @@ function cmd_test_city(requestData, queryString, remoteUser)
 	throw new Error("not implemented");
 }
 
+// Example usage:
+//   processLivestock(city, 'sheep', 'newSheep');
+//
+function processLivestock(city, livestockType, newLivestockKey)
+{
+	if (city.stock && city.stock[livestockType])
+	{
+		var numSheep = city.stock[livestockType];
+		var numShepherds = (city.production.shepherd || 0);
+
+		var vulnerableSheep = numSheep -
+			(city[newLivestockKey] || 0) -
+			numShepherds * 8;
+		if (vulnerableSheep > 0)
+		{
+			if (Math.random() < vulnerableSheep / 4)
+			{
+				var lostSheep = (Math.random() < 0.25 ? vulnerableSheep : Math.round(vulnerableSheep / 3));
+				if (lostSheep > 0)
+				{
+					// some sheep run away
+					cityMessage(cityId, lostSheep + " " + livestockType + " have run away.");
+					city.stock[livestockType] -= lostSheep;
+				}
+			}
+		}
+
+		if (numSheep >= 2)
+		{
+			var newSheep = Math.floor(numSheep / 5) + Math.round((numSheep + 7*Math.random()) / 11);
+			city.stock[livestockType] += newSheep;
+
+			// hard code a limit of 1000 sheep, for now,
+			// since sheep have no useful purpose
+			if (city.stock[livestockType] > 1000)
+				city.stock[livestockType] = 1000;
+
+			// Note: I read somewhere that you want one acre of grazing land for
+			// every 3-6 sheep. There are 640 acres in a square mile.
+			// Assuming 1 sq. mi. == 1 zone, then that's 1920-3840 sheep per zone.
+			// Could round that off to max. 3000 sheep per zone.
+		}
+
+		delete city[newLivestockKey];
+	}
+}
+
 function cityEndOfYear(cityId, city)
 {
 	lockCityStruct(city);
@@ -831,6 +880,18 @@ function cityEndOfYear(cityId, city)
 			cityMessage(cityId, 'Your hunters found and captured a sheep!');
 			pts -= 2;
 		}
+		else if (cell.hasWildPig && Math.random() < 1/cell.hasWildPig && pts >= 8)
+		{
+			// found a pig!
+			city.stock.pig = (city.stock.pig || 0) + 1;
+			city.newPig = (city.newPig || 0) + 1;
+			cell.hasWildPig -= 1;
+			if (cell.hasWildPig < 1)
+				delete cell.hasWildPig;
+
+			cityMessage(cityId, 'Your hunters found and captured a pig!');
+			pts -= 2;
+		}
 
 		var numHarvested = pts;
 
@@ -876,46 +937,8 @@ function cityEndOfYear(cityId, city)
 	processResearchingOutput(city);
 
 	// livestock
-	if (city.stock && city.stock.sheep)
-	{
-		var numSheep = city.stock.sheep;
-		var numShepherds = (city.production.shepherd || 0);
-
-		var vulnerableSheep = numSheep -
-			(city.newSheep || 0) -
-			numShepherds * 8;
-		if (vulnerableSheep > 0)
-		{
-			if (Math.random() < vulnerableSheep / 4)
-			{
-				var lostSheep = (Math.random() < 0.25 ? vulnerableSheep : Math.round(vulnerableSheep / 3));
-				if (lostSheep > 0)
-				{
-					// some sheep run away
-					cityMessage(cityId, lostSheep + " sheep have run away.");
-					city.stock.sheep -= lostSheep;
-				}
-			}
-		}
-
-		if (numSheep >= 2)
-		{
-			var newSheep = Math.floor(numSheep / 5) + Math.round((numSheep + 7*Math.random()) / 11);
-			city.stock.sheep += newSheep;
-
-			// hard code a limit of 1000 sheep, for now,
-			// since sheep have no useful purpose
-			if (city.stock.sheep > 1000)
-				city.stock.sheep = 1000;
-
-			// Note: I read somewhere that you want one acre of grazing land for
-			// every 3-6 sheep. There are 640 acres in a square mile.
-			// Assuming 1 sq. mi. == 1 zone, then that's 1920-3840 sheep per zone.
-			// Could round that off to max. 3000 sheep per zone.
-		}
-
-		delete city.newSheep;
-	}
+	processLivestock(city, 'sheep', 'newSheep');
+	processLivestock(city, 'pig', 'newPig');
 
 	// calculate deaths
 	var sustainRate = 1 - 1/LIFE_EXPECTANCY;
