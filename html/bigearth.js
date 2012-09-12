@@ -417,6 +417,13 @@ function loadFleetResources($box, fleet)
 	}
 }
 
+function getCitySize(mapCell)
+{
+	return (mapCell.zones['mud-cottages'] || 0) +
+		(mapCell.zones['wood-cottages'] || 0) +
+		(mapCell.zones['stone-cottages'] || 0);
+}
+
 function loadCityInfo(city, location)
 {
 	var mapCell = map.cells[Location.toCellId(location)];
@@ -428,7 +435,7 @@ function loadCityInfo(city, location)
 	$('#cityPane').attr('city-id', city.id);
 	$('#cityPane').attr('city-location', location);
 	$('#cityPane .cityName').text(city.name || "(unnamed)");
-	$('#cityPane .citySize').text(mapCell.zones['mud-cottages'] || 0);
+	$('#cityPane .citySize').text(getCitySize(mapCell));
 	$('#cityPane .cityPopulation').text(city.population + city.children);
 	if (city.children || city.population)
 	{
