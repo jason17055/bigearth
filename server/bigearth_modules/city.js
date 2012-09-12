@@ -7,15 +7,6 @@ function onFarmCompleted(cityId, city)
 	stealWorkers(cityId, city, 15, 'farm');
 }
 
-// [0]: number of builders to assign when task starts
-// [1]: production cost
-// [2]: function to call after land has been developed (can be null)
-//
-var LAND_TYPE_COSTS = {
-	farm:   [ 25, 50, onFarmCompleted ],
-	'mud-cottages': [ 50, 100, null ]
-	};
-
 var FACTORY_RECIPES = {
 	'stone-weapon': { 'rate': 0.01, 'input': { 'stone': 0.25 } },
 	'stone-block': { 'rate': 0.01,  'input': { 'stone': 1.00 } }
@@ -1714,14 +1705,14 @@ function tryMakeBuilding(cityId, city, buildingType)
 
 function tryDevelopLand(cityId, city, landType)
 {
-	var ltc = LAND_TYPE_COSTS[landType];
+	var ltc = Terrain.getLandTypeInfo(landType);
 	if (!ltc)
 	{
 		return cityActivityError(cityId, city, "invalid land type: "+landType);
 	}
 
-	var builders = ltc[0];
-	var cost = ltc[1];
+	var builders = ltc.builders;
+	var cost = ltc.productionCost;
 	var activityName = 'build-'+landType;
 
 	if (city.activity == activityName && city.production.build >= cost)
@@ -1732,9 +1723,9 @@ function tryDevelopLand(cityId, city, landType)
 		developLand(city.location, landType, 1);
 		cityActivityComplete(cityId, city);
 
-		if (ltc[2])
+		if (landType == 'farm')
 		{
-			ltc[2](cityId, city);
+			onFarmCompleted(cityId, city);
 		}
 
 		return;

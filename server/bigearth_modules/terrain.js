@@ -120,12 +120,29 @@ function calculateHuntingRate(terrainCell, numWorkers)
 }
 
 var ZONE_TYPES = {
-	'mud-cottages': { description: 'about 20 primitive mud houses', maxHousing: 200 },
-	'wood-cottages': { description: 'about 20 primitive wooden houses', maxHousing: 200 },
-	'farm': { description: 'land cultivated for growing wheat' },
+	'mud-cottages': { description: 'about 20 primitive mud houses',
+		maxHousing: 200,
+		builders: 50,
+		productionCost: 100
+		},
+	'wood-cottages': { description: 'about 20 primitive wooden houses',
+		maxHousing: 200,
+		builders: 60,
+		productionCost: 120,
+		resourceCost: { wood: 100 }
+		},
+	'farm': { description: 'land cultivated for growing wheat',
+		builders: 25,
+		productionCost: 50
+		},
 	'natural': { description: 'the natural land type for this terrain' },
 	'forest': { },  //unused
 	};
+
+function getLandTypeInfo(landType)
+{
+	return ZONE_TYPES[landType];
+}
 
 function getHousing(cellId)
 {
@@ -148,3 +165,4 @@ global.terrainEndOfYear_cleanup = terrainEndOfYear_cleanup;
 
 exports.calculateHuntingRate = calculateHuntingRate;
 exports.getHousing = getHousing;
+exports.getLandTypeInfo = getLandTypeInfo;
