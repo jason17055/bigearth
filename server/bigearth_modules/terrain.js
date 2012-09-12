@@ -160,7 +160,7 @@ function getHousing(cellId)
 	{
 		var zi = ZONE_TYPES[zoneType];
 		if (zi && zi.maxHousing)
-			sum += zi.maxHousing;
+			sum += c.zones[zoneType] * zi.maxHousing;
 	}
 	return sum;
 }
