@@ -868,7 +868,7 @@ function cityEndOfYear(cityId, city)
 
 		// check if there are any wild animals that can be captured
 		var cell = G.terrain.cells[Location.toCellId(city.location)];
-		if (cell.hasWildSheep && Math.random() < 1/cell.hasWildSheep && pts >= 8)
+		if (cell.hasWildSheep && Math.random() < 2/cell.hasWildSheep && pts >= 8)
 		{
 			// found a sheep!
 			city.stock.sheep = (city.stock.sheep || 0) + 1;
@@ -880,7 +880,7 @@ function cityEndOfYear(cityId, city)
 			cityMessage(cityId, 'Your hunters found and captured a sheep!');
 			pts -= 2;
 		}
-		else if (cell.hasWildPig && Math.random() < 1/cell.hasWildPig && pts >= 8)
+		else if (cell.hasWildPig && Math.random() < 2/cell.hasWildPig && pts >= 8)
 		{
 			// found a pig!
 			city.stock.pig = (city.stock.pig || 0) + 1;

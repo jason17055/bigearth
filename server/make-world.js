@@ -453,9 +453,14 @@ function putWildlife(map)
 
 		if ((cell.terrain == 'plains' || cell.terrain == 'grassland'))
 		{
-			if (Math.random() < 0.3)
+			var r = Math.random();
+			if (r < 0.2)
 			{
 				cell.hasWildSheep = Math.round(10 + 40 * Math.random());
+			}
+			else if (r < 0.4)
+			{
+				cell.hasWildPig = Math.round(10 + 40 * Math.random());
 			}
 		}
 		if (cell.terrain == 'hills')
@@ -463,6 +468,13 @@ function putWildlife(map)
 			if (Math.random() < 0.6)
 			{
 				cell.hasWildSheep = Math.round(15 + 50 * Math.random());
+			}
+		}
+		if (cell.terrain == 'forest')
+		{
+			if (Math.random() < 0.6)
+			{
+				cell.hasWildPig = Math.round(15 + 50 * Math.random());
 			}
 		}
 	}

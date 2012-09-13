@@ -396,6 +396,7 @@ function loadFleetResources($box, fleet)
 	var RESOURCE_DISPLAY_NAMES = {
 		clay: "Clay",
 		meat: "Meat",
+		pig: "Pig",
 		sheep: "Sheep",
 		stone: "Stone",
 		wheat: "Wheat",
@@ -629,6 +630,10 @@ function loadFleetInfo(fleetId)
 	else if (fleet.sheepBeHere)
 	{
 		$('.terrainInfo', $fleetPane).text('Sheep spotted at this location.');
+	}
+	else if (fleet.pigBeHere)
+	{
+		$('.terrainInfo', $fleetPane).text('Pig spotted at this location.');
 	}
 	else
 	{

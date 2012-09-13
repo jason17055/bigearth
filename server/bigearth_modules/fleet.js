@@ -210,6 +210,10 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		{
 			_fleet.sheepBeHere = true;
 		}
+		if (terrainCell && terrainCell.hasWildPig && terrainCell.hasWildPig >= 25)
+		{
+			_fleet.pigBeHere = true;
+		}
 
 		_fleet.stock = {};
 		if (f.stock)
@@ -255,10 +259,26 @@ function fleetHunt(fleetId, fleet, currentOrder)
 	if (!fleet.stock)
 		fleet.stock = {};
 
-	if (Math.random() < 0.25)
+	var r = Math.random();
+	if (cell.hasWildSheep && r < 5/cell.hasWildSheep)
+	{
 		fleet.stock.sheep = (fleet.stock.sheep || 0) + 1;
+		cell.hasWildSheep -= 1;
+		if (cell.hasWildSheep < 1)
+			delete cell.hasWildSheep;
+	}
+	else if (cell.hasWildPig && r < 5 / cell.hasWildPig)
+	{
+		fleet.stock.pig = (fleet.stock.pig || 0) + 1;
+		cell.hasWildPig -= 1;
+		if (cell.hasWildPig < 1)
+			delete cell.hasWildPig;
+	}
 	else
+	{
 		fleet.stock.meat = (fleet.stock.meat || 0) + 1;
+		cell.wildlifeHunted += 1/G.world.foodPerAnimal;
+	}
 
 	setFleetActivityFlag(fleetId, fleet, null);
 	return fleetCurrentCommandFinished(fleetId, fleet);
