@@ -723,9 +723,9 @@ function cmd_test_city(requestData, queryString, remoteUser)
 }
 
 // Example usage:
-//   processLivestock(city, 'sheep', 'newSheep');
+//   processLivestock(cityId, city, 'sheep', 'newSheep');
 //
-function processLivestock(city, livestockType, newLivestockKey)
+function processLivestock(cityId, city, livestockType, newLivestockKey)
 {
 	if (city.stock && city.stock[livestockType])
 	{
@@ -933,8 +933,8 @@ function cityEndOfYear(cityId, city)
 	processResearchingOutput(city);
 
 	// livestock
-	processLivestock(city, 'sheep', 'newSheep');
-	processLivestock(city, 'pig', 'newPig');
+	processLivestock(cityId, city, 'sheep', 'newSheep');
+	processLivestock(cityId, city, 'pig', 'newPig');
 
 	// calculate deaths
 	var sustainRate = 1 - 1/LIFE_EXPECTANCY;
