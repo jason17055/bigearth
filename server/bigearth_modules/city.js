@@ -213,9 +213,7 @@ function checkCity(cityId, city)
 	if (!city.policy.foodPriority)
 		city.policy.foodPriority = {
 			'wheat': 10,
-			'meat': 15,
-			'sheep': 2,
-			'pig': 2
+			'meat': 15
 			};
 
 	updateFleetSight(cityId, city);
@@ -238,9 +236,7 @@ function City(cityId, location, owner)
 	this.policy = {};
 	this.policy.foodPriority = {
 		'wheat': 10,
-		'meat': 15,
-		'sheep': 2,
-		'pig': 2
+		'meat': 15
 		};
 }
 
@@ -1014,6 +1010,24 @@ function governor_endOfYear(cityId, city)
 		cityMessage(cityId, 'need more housing');
 	}
 	
+	if ((city.stock.sheep || 0) >= 100)
+	{
+		city.policy.foodPriority.sheep = 2;
+	}
+	else if ((city.stock.sheep || 0) < 10)
+	{
+		delete city.policy.foodPriority.sheep;
+	}
+
+	if ((city.stock.pig || 0) >= 100)
+	{
+		city.policy.foodPriority.pig = 2;
+	}
+	else if ((city.stock.pig || 0) < 10)
+	{
+		delete city.policy.foodPriority.pig;
+	}
+
 	var jobLevels = governor_determineJobLevels(cityId, city);
 	governor_dispatchJobAssignments(cityId, city, jobLevels);
 }
