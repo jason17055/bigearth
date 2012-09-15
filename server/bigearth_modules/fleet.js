@@ -211,6 +211,17 @@ function fleetEncumbrance(fleet)
 	return totalWeight + totalLivestock * 20;
 }
 
+function fleetEncumbranceLevel(fleet)
+{
+	var encumb = fleetEncumbrance(fleet);
+	var carryingCapacity = fleet.population * 20;
+
+	if (carryingCapacity > 0)
+		return encumb / carryingCapacity;
+	else
+		return Infinity;
+}
+
 function getFleetInfoForPlayer(fleetId, playerId)
 {
 	var f = G.fleets[fleetId];
@@ -257,14 +268,13 @@ function getFleetInfoForPlayer(fleetId, playerId)
 			}
 		}
 
-		var encumb = fleetEncumbrance(f);
-		var carryingCapacity = f.population * 20;
+		var encumbLevel = fleetEncumbranceLevel(f);
 		_fleet.encumbranceCategory = (
-			encumb <= carryingCapacity ? "Unencumbered" :
-			encumb <= 1.5*carryingCapacity ? "Burdened" :
-			encumb <= 2*carryingCapacity ? "Stressed" :
-			encumb <= 2.5*carryingCapacity ? "Strained" :
-			encumb <= 3*carryingCapacity ? "Overtaxed" :
+			encumbLevel <= 1   ? "Unencumbered" :
+			encumbLevel <= 1.5 ? "Burdened" :
+			encumbLevel <= 2   ? "Stressed" :
+			encumbLevel <= 2.5 ? "Strained" :
+			encumbLevel <= 3   ? "Overtaxed" :
 			"Overloaded"
 			);
 
@@ -431,6 +441,49 @@ function fleetTerrainEffect_deaths(fleetId, fleet, deathCount, explanation)
 	}
 }
 
+function fleetTerrainEffect_lossOfStock(fleetId, fleet, portion, explanation)
+{
+	if (!fleet.stock)
+		return fleetCooldown(fleetId, fleet, 0);
+
+	var countGoods = 0;
+	for (var commod in fleet.stock)
+	{
+		countGoods += fleet.stock[commod];
+	}
+
+	var toLose = Math.ceil(countGoods * portion);
+	var actualLoss = 0;
+	for (var commod in fleet.stock)
+	{
+		if (countGoods < 1) break;
+		if (toLose < 1) break;
+
+		var toLoseThis = Math.round(fleet.stock[commod] * toLose / countGoods);
+		if (toLoseThis > 0)
+		{
+			if (toLoseThis < fleet.stock[commod])
+				fleet.stock[commod] -= toLoseThis;
+			else
+				delete fleet.stock[commod];
+
+			toLose -= toLoseThis;
+			countGoods -= toLoseThis;
+			actualLoss += toLoseThis;
+		}
+	}
+
+	if (actualLoss > 0)
+	{
+		fleetMessage(fleetId, actualLoss + ' ' + (actualLoss == 1 ? 'good' : 'goods') + ' ' + explanation);
+		return fleetCooldown(fleetId, fleet, 1500);
+	}
+	else
+	{
+		return fleetCooldown(fleetId, fleet, 0);
+	}
+}
+
 function fleetTerrainEffect(fleetId)
 {
 	var fleet = G.fleets[fleetId];
@@ -438,6 +491,40 @@ function fleetTerrainEffect(fleetId)
 
 	if (fleet.crossedRiver)
 	{
+		var encumbLevel = fleetEncumbranceLevel(fleet);
+		if (encumbLevel <= 1)
+		{
+			if (Math.random() < 0.1)
+			{
+				return fleetTerrainEffect_lossOfStock(fleetId, fleet, 0.10, 'lost while crossing a river');
+			}
+		}
+		else if (encumbLevel <= 1.5)
+		{
+			if (Math.random() < 0.25)
+			{
+				return fleetTerrainEffect_lossOfStock(fleetId, fleet, 0.10, 'lost while crossing a river');
+			}
+		}
+		else if (encumbLevel <= 2)
+		{
+			if (Math.random() < 0.5)
+			{
+				return fleetTerrainEffect_lossOfStock(fleetId, fleet, 0.25, 'lost while crossing a river');
+			}
+		}
+		else if (encumbLevel <= 2.5)
+		{
+			return fleetTerrainEffect_lossOfStock(fleetId, fleet,
+				(Math.random() < 0.75 ? 0.5 : 0.1),
+				'lost while crossing a river');
+		}
+		else
+		{
+			return fleetTerrainEffect_lossOfStock(fleetId, fleet, 0.75, 'lost while crossing a river');
+		}
+
+		// if no goods were lost, still a small chance that someone will drown crossing the river
 		if (Math.random() < 0.15)
 		{
 			return fleetTerrainEffect_deaths(fleetId, fleet, 1, 'drowned crossing a river');
