@@ -654,6 +654,15 @@ function loadFleetInfo(fleetId)
 		$('.populationContainer', $fleetPane).hide();
 	}
 
+	if (fleet.encumbranceCategory)
+	{
+		$('.encumbranceLabel', $fleetPane).text(fleet.encumbranceCategory).show();
+	}
+	else
+	{
+		$('.encumbranceLabel', $fleetPane).hide();
+	}
+
 	loadFleetResources($('.fleetResourceExchange .ResourceExchange-left .resourcesList', $fleetPane), fleet, doDropResource);
 	loadTerrainResources($('.fleetResourceExchange .ResourceExchange-right .resourcesList', $fleetPane), fleet.location, doTakeResource);
 

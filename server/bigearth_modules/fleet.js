@@ -3,6 +3,7 @@ var Location = require('../../html/location.js');
 var Settler = require('./settler.js');
 var Terrain = require('./terrain.js');
 var City = require('./city.js');
+var Commodity = require('./commodity.js');
 
 function fleetMessage(fleetId, message)
 {
@@ -187,6 +188,29 @@ function destroyFleet(fleetId, disposition)
 	delete G.fleets[fleetId];
 }
 
+function fleetEncumbrance(fleet)
+{
+	var totalWeight = 0;
+	var totalLivestock = 0;
+
+	for (var commod in fleet.stock)
+	{
+		var commodInfo = Commodity.getCommodityTypeInfo(commod);
+		var amt = fleet.stock[commod];
+
+		if (commodInfo.isLivestock)
+		{
+			totalLivestock += amt;
+		}
+		else
+		{
+			totalWeight += (commodInfo.weight || 10) * amt;
+		}
+	}
+
+	return totalWeight + totalLivestock * 20;
+}
+
 function getFleetInfoForPlayer(fleetId, playerId)
 {
 	var f = G.fleets[fleetId];
@@ -232,6 +256,17 @@ function getFleetInfoForPlayer(fleetId, playerId)
 				_fleet.stock[resourceType] = f.stock[resourceType];
 			}
 		}
+
+		var encumb = fleetEncumbrance(f);
+		var carryingCapacity = f.population * 20;
+		_fleet.encumbranceCategory = (
+			encumb <= carryingCapacity ? "Unencumbered" :
+			encumb <= 1.5*carryingCapacity ? "Burdened" :
+			encumb <= 2*carryingCapacity ? "Stressed" :
+			encumb <= 2.5*carryingCapacity ? "Strained" :
+			encumb <= 3*carryingCapacity ? "Overtaxed" :
+			"Overloaded"
+			);
 
 		return _fleet;
 	}
