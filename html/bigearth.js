@@ -402,7 +402,7 @@ function loadTerrainResources($box, location)
 
 function loadFleetResources($box, fleet)
 {
-	$('div.aResource', $box).remove();
+	$('.aResource', $box).remove();
 	var RESOURCE_DISPLAY_NAMES = {
 		clay: "Clay",
 		meat: "Meat",
@@ -419,11 +419,26 @@ function loadFleetResources($box, fleet)
 		{
 			var amount = fleet.stock[resourceType];
 
-			var $r = $('<div class="aResource"><img src=""><span class="resourceType"></span>: <span class="resourceAmount"></span></div>');
+			if (amount >= 5)
+			{
+			var $r = $('<div class="aResource"><img class="resourceIcon" src="">&times;<span class="resourceAmount"></span></div>');
 			$('img', $r).attr('src', 'resource_icons/'+resourceType+'.png');
-			$('.resourceType', $r).text(RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
+			$('img', $r).attr('title', RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
 			$('.resourceAmount', $r).text(amount);
 			$box.append($r);
+			}
+			else
+			{
+				var $r = $('<span class="aResource"></span>');
+				for (var i = 0; i < amount; i++)
+				{
+					var $m = $('<img class="resourceIcon" src="">');
+					$m.attr('src', 'resource_icons/'+resourceType+'.png');
+					$m.attr('title', RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
+					$r.append($m);
+				}
+				$box.append($r);
+			}
 		}
 	}
 }

@@ -419,3 +419,7 @@ body {
 	clear: both;
 	visibility: hidden;
 }
+
+.resourceIcon {
+	vertical-align: middle;
+}
