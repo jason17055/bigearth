@@ -390,17 +390,17 @@ function animateCityActivityProgressBar(city)
 	$cac.css({ width: 0 });
 }
 
-function loadTerrainResources($box, location)
+function loadTerrainResources($box, location, onResourceClicked)
 {
 	var mapCell = map.cells[Location.toCellId(location)];
 	if (mapCell.city)
 	{
 		mapCell = mapCell.city;
 	}
-	return loadFleetResources($box, mapCell);
+	return loadFleetResources($box, mapCell, onResourceClicked);
 }
 
-function loadFleetResources($box, fleet)
+function loadFleetResources($box, fleet, onResourceClicked)
 {
 	$('.aResource', $box).remove();
 	var RESOURCE_DISPLAY_NAMES = {
@@ -413,6 +413,17 @@ function loadFleetResources($box, fleet)
 		wood: "Wood"
 		};
 
+	var resourceIcon = function($m, resourceType)
+	{
+		$m.attr('resource-type', resourceType);
+		$m.attr('src', 'resource_icons/'+resourceType+'.png');
+		$m.attr('title', RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
+		if (onResourceClicked)
+		{
+			$m.click(onResourceClicked);
+		}
+	};
+
 	if (fleet.stock)
 	{
 		for (var resourceType in fleet.stock)
@@ -422,8 +433,7 @@ function loadFleetResources($box, fleet)
 			if (amount >= 5)
 			{
 			var $r = $('<div class="aResource"><img class="resourceIcon" src="">&times;<span class="resourceAmount"></span></div>');
-			$('img', $r).attr('src', 'resource_icons/'+resourceType+'.png');
-			$('img', $r).attr('title', RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
+			resourceIcon($('img',$r), resourceType);
 			$('.resourceAmount', $r).text(amount);
 			$box.append($r);
 			}
@@ -433,8 +443,7 @@ function loadFleetResources($box, fleet)
 				for (var i = 0; i < amount; i++)
 				{
 					var $m = $('<img class="resourceIcon" src="">');
-					$m.attr('src', 'resource_icons/'+resourceType+'.png');
-					$m.attr('title', RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
+					resourceIcon($m, resourceType);
 					$r.append($m);
 				}
 				$box.append($r);
@@ -645,8 +654,8 @@ function loadFleetInfo(fleetId)
 		$('.populationContainer', $fleetPane).hide();
 	}
 
-	loadFleetResources($('.fleetResourceExchange .ResourceExchange-left .resourcesList', $fleetPane), fleet);
-	loadTerrainResources($('.fleetResourceExchange .ResourceExchange-right .resourcesList', $fleetPane), fleet.location);
+	loadFleetResources($('.fleetResourceExchange .ResourceExchange-left .resourcesList', $fleetPane), fleet, doDropResource);
+	loadTerrainResources($('.fleetResourceExchange .ResourceExchange-right .resourcesList', $fleetPane), fleet.location, doTakeResource);
 
 	loadFleetOrCityMessages(fleet.messages, $('.fleetMessagesContainer', $fleetPane));
 
@@ -674,6 +683,25 @@ function loadFleetInfo(fleetId)
 		$('#buildCityBtn, #autoSettleBtn').hide();
 
 	loadAtThisLocation(fleetId, fleet.location, $('#fleetPane .atThisLocation'));
+}
+
+function doDropResource()
+{
+}
+
+function doTakeResource(evt)
+{
+	var tmpEl = this;
+	var resourceType = null;
+	for (var tmpEl = this; tmpEl; tmpEl = tmpEl.parentNode)
+	{
+		if (!resourceType && tmpEl.hasAttribute('resource-type'))
+		{
+			resourceType = tmpEl.getAttribute('resource-type');
+		}
+	}
+
+	orderTakeResource(resourceType);
 }
 
 function onFleetMovement(eventData)
@@ -1062,6 +1090,21 @@ function makeRiversClicked()
 	var R = new RiverFactory();
 	while (R.step());
 	repaint();
+}
+
+function orderTakeResource(resourceType)
+{
+	var fleetId = $('#fleetPane').attr('fleet-id');
+	$.ajax({
+	type: "POST",
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([ {
+		command: "take",
+		resourceType: resourceType,
+		amount: 1
+		} ]),
+	contentType: "text/json"
+	});
 }
 
 function orderStop()

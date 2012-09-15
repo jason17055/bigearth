@@ -126,6 +126,10 @@ function fleetActivity(fleetId)
 	{
 		return Settler.disbandInCity(fleetId, fleet, currentOrder);
 	}
+	else if (currentOrder.command == 'take')
+	{
+		return fleetTakeResource(fleetId, fleet, currentOrder);
+	}
 	else
 	{
 		return fleetActivityError(fleetId, fleet, "Unrecognized command");
@@ -241,6 +245,42 @@ function getFleetInfoForPlayer(fleetId, playerId)
 	{
 		return null;
 	}
+}
+
+function fleetTakeResource(fleetId, fleet, currentOrder)
+{
+	var cell = G.terrain.cells[Location.toCellId(fleet.location)];
+	if (cell.city)
+	{
+		cell = G.cities[cell.city];
+	}
+	if (!cell)
+	{
+		return fleetActivityError(fleetId, fleet, 'invalid location');
+	}
+
+	var resourceType = currentOrder.resourceType;
+	var amountWanted = currentOrder.amount;
+
+	var avail = cell.stock ? (cell.stock[resourceType] || 0) : 0;
+	if (avail == 0)
+	{
+		return fleetActivityError(fleetId, fleet, 'that resource not available here');
+	}
+
+	if (amountWanted > avail)
+	{
+		return fleetActivityError(fleetId, fleet, 'not enough of that resource here');
+	}
+
+	cell.stock[resourceType] -= amountWanted;
+	if (!cell.stock[resourceType])
+	{
+		delete cell.stock[resourceType];
+	}
+	fleet.stock[resourceType] = (fleet.stock[resourceType] || 0) + amountWanted;
+
+	return fleetCurrentCommandFinished(fleetId, fleet);
 }
 
 function fleetHunt(fleetId, fleet, currentOrder)
