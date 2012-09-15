@@ -2,6 +2,7 @@ var Scheduler = require('./scheduler.js');
 var Location = require('../../html/location.js');
 var Settler = require('./settler.js');
 var Terrain = require('./terrain.js');
+var City = require('./city.js');
 
 function fleetMessage(fleetId, message)
 {
@@ -254,9 +255,11 @@ function getFleetInfoForPlayer(fleetId, playerId)
 function fleetDropResource(fleetId, fleet, currentOrder)
 {
 	var cell = G.terrain.cells[Location.toCellId(fleet.location)];
+	var cityId = null;
 	if (cell.city)
 	{
-		cell = G.cities[cell.city];
+		cityId = cell.city;
+		cell = G.cities[cityId];
 	}
 	if (!cell)
 	{
@@ -279,15 +282,22 @@ function fleetDropResource(fleetId, fleet, currentOrder)
 	}
 	cell.stock[resourceType] = (cell.stock[resourceType] || 0) + amountToDrop;
 
+	if (cityId)
+	{
+		City.cityChanged(cityId);
+	}
+
 	return fleetCurrentCommandFinished(fleetId, fleet);
 }
 
 function fleetTakeResource(fleetId, fleet, currentOrder)
 {
 	var cell = G.terrain.cells[Location.toCellId(fleet.location)];
+	var cityId = null;
 	if (cell.city)
 	{
-		cell = G.cities[cell.city];
+		cityId = cell.city;
+		cell = G.cities[cityId];
 	}
 	if (!cell)
 	{
@@ -314,6 +324,11 @@ function fleetTakeResource(fleetId, fleet, currentOrder)
 		delete cell.stock[resourceType];
 	}
 	fleet.stock[resourceType] = (fleet.stock[resourceType] || 0) + amountWanted;
+
+	if (cityId)
+	{
+		City.cityChanged(cityId);
+	}
 
 	return fleetCurrentCommandFinished(fleetId, fleet);
 }

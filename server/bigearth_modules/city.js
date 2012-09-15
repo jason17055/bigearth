@@ -1913,3 +1913,4 @@ exports.cmd_equip_unit = cmd_equip_unit;
 exports.cmd_build_improvement = cmd_build_improvement;
 exports.cmd_build_building = cmd_build_building;
 exports.cmd_building_orders = cmd_building_orders;
+exports.cityChanged = cityChanged;
