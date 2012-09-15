@@ -101,7 +101,7 @@ body {
 }
 
 #cityPane {
-	width: 4in;
+	width: 5in;
 	height: 4in;
 }
 
@@ -422,4 +422,12 @@ body {
 
 .resourceIcon {
 	vertical-align: middle;
+}
+
+.cityVisualOutskirts {
+	background-image: url("terrain_textures/forest.png");
+}
+
+.cityVisualClearedArea {
+	background-image: url("terrain_textures/plains.png");
 }
