@@ -274,6 +274,10 @@ body {
 	margin-top: 8pt;
 }
 
+.miniHeader {
+	font-size: 7pt;
+}
+
 .buttonBarSectionHeader {
 	font-size: 7pt;
 }
@@ -392,4 +396,26 @@ body {
 
 .fleetTile:hover {
 	background-color: yellow;
+}
+
+.fleetResourceExchange .resourcesList {
+	border: 1px solid #ccc;
+}
+
+.fleetResourceExchange .ResourceExchange-left {
+	float: left;
+	width: 1.4;
+}
+
+.fleetResourceExchange .ResourceExchange-right {
+	float: right;
+	width: 1.4;
+}
+
+.fleetResourceExchange:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
 }

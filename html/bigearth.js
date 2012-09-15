@@ -390,6 +390,16 @@ function animateCityActivityProgressBar(city)
 	$cac.css({ width: 0 });
 }
 
+function loadTerrainResources($box, location)
+{
+	var mapCell = map.cells[Location.toCellId(location)];
+	if (mapCell.city)
+	{
+		mapCell = mapCell.city;
+	}
+	return loadFleetResources($box, mapCell);
+}
+
 function loadFleetResources($box, fleet)
 {
 	$('div.aResource', $box).remove();
@@ -620,7 +630,9 @@ function loadFleetInfo(fleetId)
 		$('.populationContainer', $fleetPane).hide();
 	}
 
-	loadFleetResources($('.resourcesContainer', $fleetPane), fleet);
+	loadFleetResources($('.fleetResourceExchange .ResourceExchange-left .resourcesList', $fleetPane), fleet);
+	loadTerrainResources($('.fleetResourceExchange .ResourceExchange-right .resourcesList', $fleetPane), fleet.location);
+
 	loadFleetOrCityMessages(fleet.messages, $('.fleetMessagesContainer', $fleetPane));
 
 	if (fleet.settlementFitness)
