@@ -687,6 +687,17 @@ function loadFleetInfo(fleetId)
 
 function doDropResource()
 {
+	var tmpEl = this;
+	var resourceType = null;
+	for (var tmpEl = this; tmpEl; tmpEl = tmpEl.parentNode)
+	{
+		if (!resourceType && tmpEl.hasAttribute('resource-type'))
+		{
+			resourceType = tmpEl.getAttribute('resource-type');
+		}
+	}
+
+	orderDropResource(resourceType);
 }
 
 function doTakeResource(evt)
@@ -1090,6 +1101,21 @@ function makeRiversClicked()
 	var R = new RiverFactory();
 	while (R.step());
 	repaint();
+}
+
+function orderDropResource(resourceType)
+{
+	var fleetId = $('#fleetPane').attr('fleet-id');
+	$.ajax({
+	type: "POST",
+	url: "/request/orders?fleet="+fleetId,
+	data: JSON.stringify([ {
+		command: "drop",
+		resourceType: resourceType,
+		amount: 1
+		} ]),
+	contentType: "text/json"
+	});
 }
 
 function orderTakeResource(resourceType)

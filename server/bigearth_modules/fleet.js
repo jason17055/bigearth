@@ -126,6 +126,10 @@ function fleetActivity(fleetId)
 	{
 		return Settler.disbandInCity(fleetId, fleet, currentOrder);
 	}
+	else if (currentOrder.command == 'drop')
+	{
+		return fleetDropResource(fleetId, fleet, currentOrder);
+	}
 	else if (currentOrder.command == 'take')
 	{
 		return fleetTakeResource(fleetId, fleet, currentOrder);
@@ -245,6 +249,37 @@ function getFleetInfoForPlayer(fleetId, playerId)
 	{
 		return null;
 	}
+}
+
+function fleetDropResource(fleetId, fleet, currentOrder)
+{
+	var cell = G.terrain.cells[Location.toCellId(fleet.location)];
+	if (cell.city)
+	{
+		cell = G.cities[cell.city];
+	}
+	if (!cell)
+	{
+		return fleetActivityError(fleetId, fleet, 'invalid location');
+	}
+
+	var resourceType = currentOrder.resourceType;
+	var amountToDrop = currentOrder.amount;
+
+	var avail = fleet.stock ? (fleet.stock[resourceType] || 0) : 0;
+	if (avail == 0 || avail < amountToDrop)
+	{
+		return fleetActivityError(fleetId, fleet, 'not enough of that resource in your possession');
+	}
+
+	fleet.stock[resourceType] -= amountToDrop;
+	if (!fleet.stock[resourceType])
+	{
+		delete fleet.stock[resourceType];
+	}
+	cell.stock[resourceType] = (cell.stock[resourceType] || 0) + amountToDrop;
+
+	return fleetCurrentCommandFinished(fleetId, fleet);
 }
 
 function fleetTakeResource(fleetId, fleet, currentOrder)
