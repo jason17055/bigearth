@@ -484,16 +484,21 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 			bestSoFarScore = cur[3];
 		}
 
-		if (++countIterations > 500)
-		{
-			console.log("shortestPath taking too long, aborting");
-			
-			return buildPath(bestSoFar);
-		}
-
 		if (seen[curLoc])
 			continue;
 		seen[curLoc] = cur[1];
+
+		if (curLoc == toLoc)
+		{
+			// success!
+			return buildPath(toLoc);
+		}
+		else if (++countIterations > 500)
+		{
+			// failure...
+			console.log("shortestPath taking too long, aborting");
+			break;
+		}
 
 		var nn = BE.geometry.getNeighbors(curLoc);
 		if (!baseDist)
@@ -504,15 +509,9 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 			if (seen[nn[i]])
 				continue;
 
-			if (nn[i] == toLoc)
-			{
-				seen[nn[i]] = curLoc;
-				return buildPath(toLoc);
-			}
-
 			var costInfo = Fleet.getMovementCost_byMap(fleet, curLoc, nn[i], map);
 			var accumDist = cur[2] + costInfo.delay;
-			var estRemainDistSteps = BE.geometry.distanceBetween(nn[i], toLoc) / baseDist;
+			var estRemainDistSteps = nn[i] == toLoc ? 0 : BE.geometry.distanceBetween(nn[i], toLoc) / baseDist;
 			var estRemainDist = estRemainDistSteps * 3000;
 
 			Q.push([ nn[i], curLoc, accumDist, estRemainDist ]);
@@ -524,7 +523,10 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 	}
 
 	// ran out of options to try
-	return [];
+	if (bestSoFar)
+		return buildPath(bestSoFar);
+	else
+		return [];
 }
 
 function moveFleetRandomly(fleetId)
