@@ -331,6 +331,9 @@ function fleetDropResource(fleetId, fleet, currentOrder)
 	{
 		delete fleet.stock[resourceType];
 	}
+
+	if (!cell.stock)
+		cell.stock = {};
 	cell.stock[resourceType] = (cell.stock[resourceType] || 0) + amountToDrop;
 
 	if (cityId)
@@ -642,14 +645,9 @@ function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
 		// consider also the risk of losing goods crossing the river
 		var RISK_LOST_GOODS_PENALTY = 4000;
 		var extraPenalty = RISK_LOST_GOODS_PENALTY*Math.pow(encumbLevel,2);
-	console.log("adding extra penalty of "+extraPenalty+" for river crossing");
 		cost += extraPenalty;
 	}
-	else {
-	console.log("no river at "+eId);
-	}
 
-console.log("query movement cost from "+oldLoc+" to "+newLoc+" : cost is "+cost);
 	return { delay: cost };
 }
 
