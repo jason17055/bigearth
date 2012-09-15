@@ -1102,11 +1102,11 @@ function checkWorldParameters()
 		G.world.foodPerFarmer = 0.1;
 
 	if (!G.world.woodPerWoodGatherer)
-		G.world.woodPerWoodGatherer = 0.01;
+		G.world.woodPerWoodGatherer = 0.05;
 	if (!G.world.clayPerClayGatherer)
-		G.world.clayPerClayGatherer = 0.01;
+		G.world.clayPerClayGatherer = 0.05;
 	if (!G.world.stonePerStoneGatherer)
-		G.world.stonePerStoneGatherer = 0.01;
+		G.world.stonePerStoneGatherer = 0.05;
 }
 
 // inspect properties of Player struct

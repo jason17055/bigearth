@@ -108,6 +108,10 @@ function fleetActivity(fleetId)
 	{
 		return moveFleetAlongCoast(fleetId);
 	}
+	else if (currentOrder.command == 'gather-wood')
+	{
+		return fleetGatherWood(fleetId, fleet, currentOrder);
+	}
 	else if (currentOrder.command == 'goto')
 	{
 		return moveFleetTowards(fleetId, currentOrder.location);
@@ -384,6 +388,25 @@ function fleetTakeResource(fleetId, fleet, currentOrder)
 		City.cityChanged(cityId);
 	}
 
+	return fleetCurrentCommandFinished(fleetId, fleet);
+}
+
+function fleetGatherWood(fleetId, fleet, currentOrder)
+{
+	var requiredTime = (1/G.world.woodPerWoodGatherer) * 2000;
+
+	if (fleet.activity != 'gather-wood')
+	{
+		setFleetActivityFlag(fleetId, fleet, 'gather-wood');
+		fleetCooldown(fleetId, fleet, requiredTime);
+		return;
+	}
+
+	if (!fleet.stock)
+		fleet.stock = {};
+	fleet.stock.wood = (fleet.stock.wood || 0) + 1;
+
+	setFleetActivityFlag(fleetId, fleet, null);
 	return fleetCurrentCommandFinished(fleetId, fleet);
 }
 
