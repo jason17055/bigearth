@@ -475,6 +475,131 @@ function fleetTerrainEffect(fleetId)
 	return fleetActivity(fleetId);
 }
 
+var UNIT_MOVEMENT_RULES = {
+	explorer: {
+		plains:  600,
+		grassland: 600,
+		desert: 600,
+		forest: 1200,
+		swamp: 2400,
+		ocean: 15000,
+		tundra: 1200,
+		jungle: 2400,
+		glacier: 1200,
+		hills: 1800,
+		mountains: 2400,
+		across_river: 2000,
+		other_terrain: 600
+		},
+	trieme: {
+		ocean: 600,
+		other_terrain: 15000
+		},
+	'*': {
+		ocean: 15000,
+		across_river: 3600,
+		'other_terrain': 3600
+		},
+	};
+
+function isNavigableByMap(map, fleet, location)
+{
+	var unitType = fleet.type;
+	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
+	var c = map.cells[Location.toCellId(location)];
+	if (!c)
+		return false;
+
+	var cost = UM[c.terrain] || UM.other_terrain;
+	return cost < 15000;
+}
+
+function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
+{
+	var unitType = fleet.type;
+	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
+
+	var oldLocCell = map.cells[oldLoc];
+	var newLocCell = map.cells[newLoc];
+
+	var UNKNOWN_TERRAIN_COST = 1100;
+	var costOldCell = oldLocCell && oldLocCell.terrain ?
+		((UM[oldLocCell.terrain] || UM.other_terrain) / 2) :
+		UNKNOWN_TERRAIN_COST;
+;
+	var costNewCell = newLocCell && newLocCell.terrain ?
+		((UM[newLocCell.terrain] || UM.other_terrain) / 2) :
+		UNKNOWN_TERRAIN_COST;
+
+	var cost = costOldCell + costNewCell;
+
+	// consider cost of crossing a river, if there is one.
+
+	var eId = BE.geometry._makeEdge(oldLoc, newLoc);
+	var e = map.edges[eId];
+	var riverCrossing = false;
+	if (e && e.feature && e.feature == 'river')
+	{
+		riverCrossing = true;
+		cost += (UM.across_river || 0);
+	}
+
+	return { delay: cost };
+}
+
+function getMovementCost_real(fleet, oldLoc, newLoc)
+{
+	var unitType = fleet.type;
+	var locationInfo = function(loc)
+	{
+		if (Location.isCell(loc))
+		{
+			return { locationType: 'cell', location: +loc };
+		}
+		else if (Location.isEdge(loc))
+		{
+			return { locationType: 'edge', location: loc };
+		}
+		else
+		{
+			return { locationType: 'vertex', location: loc };
+		}
+	};
+
+	var ol = locationInfo(oldLoc);
+	var ne = locationInfo(newLoc);
+	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
+
+	if (ol.locationType == 'cell' && ne.locationType == 'cell')
+	{
+		//CASE 1 : from center hex to center of neighboring hex
+
+		var costOldCell = (UM[G.terrain.cells[ol.location].terrain] || UM.other_terrain) / 2;
+		var costNewCell = (UM[G.terrain.cells[ne.location].terrain] || UM.other_terrain) / 2;
+
+		var cost = costOldCell + costNewCell;
+
+		// TODO - consider cost of crossing a river, if there is
+		// one.
+		var eId = BE.geometry._makeEdge(ol.location, ne.location);
+		var e = G.terrain.edges[eId];
+		var riverCrossing = false;
+		if (e && e.feature && e.feature == 'river')
+		{
+			riverCrossing = true;
+			cost += (UM.across_river || 0);
+		}
+
+		console.log("from " + G.terrain.cells[ol.location].terrain + " to " + G.terrain.cells[ne.location].terrain +
+			(riverCrossing ? " (w/ river)" : "") +
+			" cost is " + cost);
+
+		return { delay: cost, crossedRiver: riverCrossing };
+	}
+	return { delay: Infinity };
+}
+
+
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
 global.fleetCooldown = fleetCooldown;
@@ -485,3 +610,7 @@ global.fleetActivity = fleetActivity;
 global.fleetChanged = fleetChanged;
 global.destroyFleet = destroyFleet;
 global.getFleetInfoForPlayer = getFleetInfoForPlayer;
+
+exports.isNavigableByMap = isNavigableByMap;
+exports.getMovementCost_byMap = getMovementCost_byMap;
+exports.getMovementCost_real = getMovementCost_real;

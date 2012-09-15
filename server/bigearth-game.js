@@ -421,7 +421,7 @@ console.log("moving fleet "+fleetId+" from " + oldLoc + " to " + targetLocation)
 console.log("using memoized path (length " + fleet.path.length + ")");
 
 		var nextLoc = fleet.path.shift();
-		if (isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
+		if (Fleet.isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
 			return moveFleetOneStep(fleetId, nextLoc);
 		delete fleet.path;
 	}
@@ -437,7 +437,7 @@ if (fleet.path.length > 50)
 	fleet.path.splice(0,50);
 
 	var nextLoc = fleet.path.shift();
-	if (nextLoc && isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
+	if (nextLoc && Fleet.isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
 		return moveFleetOneStep(fleetId, nextLoc);
 	else
 		return fleetActivityError(fleetId, fleet, "Cannot reach destination");
@@ -510,7 +510,7 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 				return buildPath(toLoc);
 			}
 
-			var costInfo = getFleetMovementCost_byMap(fleet, curLoc, nn[i], map);
+			var costInfo = Fleet.getMovementCost_byMap(fleet, curLoc, nn[i], map);
 			var accumDist = cur[2] + costInfo.delay;
 			var estRemainDistSteps = BE.geometry.distanceBetween(nn[i], toLoc) / baseDist;
 			var estRemainDist = estRemainDistSteps * 3000;
@@ -531,131 +531,6 @@ function moveFleetRandomly(fleetId)
 {
 	//broken
 }
-
-var UNIT_MOVEMENT_RULES = {
-	explorer: {
-		plains:  600,
-		grassland: 600,
-		desert: 600,
-		forest: 1200,
-		swamp: 2400,
-		ocean: 15000,
-		tundra: 1200,
-		jungle: 2400,
-		glacier: 1200,
-		hills: 1800,
-		mountains: 2400,
-		across_river: 2000,
-		other_terrain: 600
-		},
-	trieme: {
-		ocean: 600,
-		other_terrain: 15000
-		},
-	'*': {
-		ocean: 15000,
-		across_river: 3600,
-		'other_terrain': 3600
-		},
-	};
-
-function isNavigableByMap(map, fleet, location)
-{
-	var unitType = fleet.type;
-	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
-	var c = map.cells[Location.toCellId(location)];
-	if (!c)
-		return false;
-
-	var cost = UM[c.terrain] || UM.other_terrain;
-	return cost < 15000;
-}
-
-function getFleetMovementCost_byMap(fleet, oldLoc, newLoc, map)
-{
-	var unitType = fleet.type;
-	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
-
-	var oldLocCell = map.cells[oldLoc];
-	var newLocCell = map.cells[newLoc];
-
-	var UNKNOWN_TERRAIN_COST = 1100;
-	var costOldCell = oldLocCell && oldLocCell.terrain ?
-		((UM[oldLocCell.terrain] || UM.other_terrain) / 2) :
-		UNKNOWN_TERRAIN_COST;
-;
-	var costNewCell = newLocCell && newLocCell.terrain ?
-		((UM[newLocCell.terrain] || UM.other_terrain) / 2) :
-		UNKNOWN_TERRAIN_COST;
-
-	var cost = costOldCell + costNewCell;
-
-	// consider cost of crossing a river, if there is one.
-
-	var eId = BE.geometry._makeEdge(oldLoc, newLoc);
-	var e = map.edges[eId];
-	var riverCrossing = false;
-	if (e && e.feature && e.feature == 'river')
-	{
-		riverCrossing = true;
-		cost += (UM.across_river || 0);
-	}
-
-	return { delay: cost };
-}
-
-function getFleetMovementCost_real(fleet, oldLoc, newLoc)
-{
-	var unitType = fleet.type;
-	var locationInfo = function(loc)
-	{
-		if (Location.isCell(loc))
-		{
-			return { locationType: 'cell', location: +loc };
-		}
-		else if (Location.isEdge(loc))
-		{
-			return { locationType: 'edge', location: loc };
-		}
-		else
-		{
-			return { locationType: 'vertex', location: loc };
-		}
-	};
-
-	var ol = locationInfo(oldLoc);
-	var ne = locationInfo(newLoc);
-	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
-
-	if (ol.locationType == 'cell' && ne.locationType == 'cell')
-	{
-		//CASE 1 : from center hex to center of neighboring hex
-
-		var costOldCell = (UM[G.terrain.cells[ol.location].terrain] || UM.other_terrain) / 2;
-		var costNewCell = (UM[G.terrain.cells[ne.location].terrain] || UM.other_terrain) / 2;
-
-		var cost = costOldCell + costNewCell;
-
-		// TODO - consider cost of crossing a river, if there is
-		// one.
-		var eId = BE.geometry._makeEdge(ol.location, ne.location);
-		var e = G.terrain.edges[eId];
-		var riverCrossing = false;
-		if (e && e.feature && e.feature == 'river')
-		{
-			riverCrossing = true;
-			cost += (UM.across_river || 0);
-		}
-
-		console.log("from " + G.terrain.cells[ol.location].terrain + " to " + G.terrain.cells[ne.location].terrain +
-			(riverCrossing ? " (w/ river)" : "") +
-			" cost is " + cost);
-
-		return { delay: cost, crossedRiver: riverCrossing };
-	}
-	return { delay: Infinity };
-}
-
 
 function getTerrainLocation(location)
 {
@@ -791,7 +666,7 @@ function moveFleetOneStep(fleetId, newLoc)
 		newLocTerrain.fleets[fleetId] = true;
 	}
 
-	var movementCostInfo = getFleetMovementCost_real(fleet, oldLoc, newLoc);
+	var movementCostInfo = Fleet.getMovementCost_real(fleet, oldLoc, newLoc);
 	var costOfMovement = movementCostInfo.delay;
 	console.log("cost is " + Math.round(costOfMovement));
 
