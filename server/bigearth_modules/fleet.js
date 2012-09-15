@@ -222,6 +222,12 @@ function fleetEncumbranceLevel(fleet)
 		return Infinity;
 }
 
+function fleetSpeedModifier(fleet)
+{
+	var encumbLevel = fleetEncumbranceLevel(fleet);
+	return 1-1/(1+Math.exp(3*(1.75-encumbLevel)));
+}
+
 function getFleetInfoForPlayer(fleetId, playerId)
 {
 	var f = G.fleets[fleetId];
@@ -604,6 +610,7 @@ function isNavigableByMap(map, fleet, location)
 function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
 {
 	var unitType = fleet.type;
+	var encumbLevel = fleetEncumbranceLevel(fleet);
 	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
 
 	var oldLocCell = map.cells[oldLoc];
@@ -628,9 +635,21 @@ function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
 	if (e && e.feature && e.feature == 'river')
 	{
 		riverCrossing = true;
+
+		// consider the extra time required to cross the river
 		cost += (UM.across_river || 0);
+
+		// consider also the risk of losing goods crossing the river
+		var RISK_LOST_GOODS_PENALTY = 4000;
+		var extraPenalty = RISK_LOST_GOODS_PENALTY*Math.pow(encumbLevel,2);
+	console.log("adding extra penalty of "+extraPenalty+" for river crossing");
+		cost += extraPenalty;
+	}
+	else {
+	console.log("no river at "+eId);
 	}
 
+console.log("query movement cost from "+oldLoc+" to "+newLoc+" : cost is "+cost);
 	return { delay: cost };
 }
 
@@ -666,8 +685,7 @@ function getMovementCost_real(fleet, oldLoc, newLoc)
 
 		var cost = costOldCell + costNewCell;
 
-		// TODO - consider cost of crossing a river, if there is
-		// one.
+		// consider cost of crossing a river, if there is one.
 		var eId = BE.geometry._makeEdge(ol.location, ne.location);
 		var e = G.terrain.edges[eId];
 		var riverCrossing = false;
@@ -677,9 +695,7 @@ function getMovementCost_real(fleet, oldLoc, newLoc)
 			cost += (UM.across_river || 0);
 		}
 
-		console.log("from " + G.terrain.cells[ol.location].terrain + " to " + G.terrain.cells[ne.location].terrain +
-			(riverCrossing ? " (w/ river)" : "") +
-			" cost is " + cost);
+		cost /= fleetSpeedModifier(fleet);
 
 		return { delay: cost, crossedRiver: riverCrossing };
 	}
