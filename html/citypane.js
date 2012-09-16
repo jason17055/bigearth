@@ -134,6 +134,21 @@ function loadCityOverheadView(cityId, city, $cityPane)
 		}
 	}
 
+	var mapCell = map.cells[Location.toCellId(city.location)];
+	if (mapCell && mapCell.terrain)
+	{
+		$('.cityVisualOutskirts', $cityPane).css({ 'background-image': 'url("terrain_textures/'+mapCell.terrain+'.png")' });
+
+		if (isAdjacentToRiver(cityId, city))
+		{
+			$('.cityVisualShoreline', $cityPane).show();
+		}
+		else
+		{
+			$('.cityVisualShoreline', $cityPane).hide();
+		}
+	}
+
 	var setCell = function(x,y,imageId)
 	{
 		var $td = $('.ovCell[ovcell-id="'+y+','+x+'"]', $t);
@@ -160,4 +175,19 @@ function loadCityOverheadView(cityId, city, $cityPane)
 	setCell(7,1,'road');
 	setCell(8,1,'road');
 	setCell(9,1,'road');
+}
+
+function isAdjacentToRiver(cityId, city)
+{
+	var location = city.location;
+	var cellId = Location.toCellId(location);
+	var ee = BE.geometry.getEdgesAdjacentToCell(cellId);
+	for (var i = 0; i < ee.length; i++)
+	{
+		var eId = ee[i];
+		var edge = map.edges[eId];
+		if (edge && edge.feature == 'river')
+			return true;
+	}
+	return false;
 }
