@@ -122,24 +122,8 @@ function loadCityInfo(city, location)
 
 function loadCityOverheadView(cityId, city, $cityPane)
 {
-	var $t = $('#cityPaneOverheadViewTab .ovTable', $cityPane);
-
-	// check whether overhead table was initialized yet
-	if (!$('.ovCell', $t).length)
-	{
-		$t.empty();
-		for (var row = 0; row < 6; row++)
-		{
-			var $tr = $('<tr></tr>');
-			for (var col = 0; col < 10; col++)
-			{
-				var $td = $('<td class="ovCell"></td>');
-				$td.attr('ovcell-id', row+','+col);
-				$tr.append($td);
-			}
-			$t.append($tr);
-		}
-	}
+	var $t = $('#cityPaneOverheadViewTab .cityVisualClearedArea', $cityPane);
+	$('.cityVisualFloater', $t).remove();
 
 	var mapCell = map.cells[Location.toCellId(city.location)];
 	if (mapCell && mapCell.terrain)
@@ -168,28 +152,38 @@ function loadCityOverheadView(cityId, city, $cityPane)
 		$td.append($img);
 	};
 
+	var setImage = function(x, y, w, h, imageId)
+	{
+		var $d = $('<div class="cityVisualFloater"></div>');
+		$d.css({
+			left: (32*x)+"px",
+			top: (32*y)+"px",
+			width: (32*w)+"px",
+			height: (32*h)+"px",
+			'background-image': 'url("building_images/'+imageId+'.png")'
+			});
+		$t.append($d);
+		return $d;
+	};
+
 	var numCottages = mapCell.zones['mud-cottages'] || 0;
-	var offs = Math.floor(5 - numCottages/2);
-	if (offs < 0) offs = 0;
 	for (var i = 0; i < numCottages; i++)
 	{
-		setCell(offs+i,0,'mud-cottage');
+		setImage(4+(i%6),Math.floor(i/6),1,1,'mud-cottage');
 	}
 
-	var $td = $('.ovCell[ovcell-id="2,4"]', $t);
-	$td.empty();
-
-	var $d = $('<div class="cityVisualStockyardContainer"><div class="cityVisualStockyard"></div></div>');
-	$td.append($d);
+	var $d = setImage(4,2,3,3,'stockyard');
+	$d.append('<div class="cityVisualStockyard"></div>');
 
 	showCityResources($('.cityVisualStockyard',$d), city);
 
-	$('.ovCell[ovcell-id="1,4"]', $t).css({
-		'background-color': '#0cc'
-		});
-	$('.ovCell[ovcell-id="5,4"]', $t).css({
-		'background-color': '#0cc'
-		});
+	var numFarms = mapCell.zones.farm || 0;
+	for (var i = 0; i < numFarms; i++)
+	{
+		var x = i%2;
+		var y = Math.floor(i/2);
+		setImage(x*2,y*2,2,2,'wheat_field');
+	}
 }
 
 function showCityResources($container, city)

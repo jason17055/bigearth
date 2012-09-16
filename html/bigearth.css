@@ -435,8 +435,8 @@ body {
 .cityVisualClearedArea {
 	background-image: url("terrain_textures/plains.png");
 	left: 80px;
-	right: 60px;
 	top: 32px;
+	width: 320px;
 	height: 192px;
 	position: absolute;
 }
@@ -454,6 +454,11 @@ body {
 	position: absolute;
 	top: 224px;
 	display: none;
+}
+
+.cityVisualFloater {
+	position: absolute;
+	overflow: hidden;
 }
 
 .cityVisualStockyard {
