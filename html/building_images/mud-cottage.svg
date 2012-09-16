@@ -150,7 +150,9 @@
        d="m 25.127544,1048.2923 c 1.606773,-2.404 3.55591,-4.8395 4.241815,-7.7644 0.68967,-2.9409 -0.717138,-5.6229 -3.245005,-7.0711 -2.352356,-1.3477 -4.786864,-1.905 -7.436531,-1.6742"
        id="path3794"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cssc" />
+       sodipodi:nodetypes="cssc"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:url(#linearGradient3772);fill-opacity:1;stroke:#000000;stroke-width:0.30000001;stroke-miterlimit:4;stroke-opacity:1"
        d="m 1.199556,1035.2527 c 0,0 4.9244936,3.2199 12.184965,3.283 7.260472,0.063 11.67989,-3.283 11.67989,-3.283 l 0,13.2583 c 0,0 -3.914342,3.1567 -11.806159,3.2199 -7.8918168,0.063 -12.058696,-3.2199 -12.058696,-3.2199 z"
