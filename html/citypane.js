@@ -1,3 +1,10 @@
+function getCitySize(mapCell)
+{
+	return (mapCell.zones['mud-cottages'] || 0) +
+		(mapCell.zones['wood-cottages'] || 0) +
+		(mapCell.zones['stone-cottages'] || 0);
+}
+
 function loadCityInfo(city, location)
 {
 	var mapCell = map.cells[Location.toCellId(location)];
@@ -149,6 +156,8 @@ function loadCityOverheadView(cityId, city, $cityPane)
 		}
 	}
 
+	$('img', $t).remove();
+
 	var setCell = function(x,y,imageId)
 	{
 		var $td = $('.ovCell[ovcell-id="'+y+','+x+'"]', $t);
@@ -159,22 +168,50 @@ function loadCityOverheadView(cityId, city, $cityPane)
 		$td.append($img);
 	};
 
-	setCell(2,0,'mud-cottage');
-	setCell(3,0,'mud-cottage');
-	setCell(4,0,'mud-cottage');
-	setCell(5,0,'mud-cottage');
-	setCell(6,0,'mud-cottage');
+	var numCottages = mapCell.zones['mud-cottages'] || 0;
+	var offs = Math.floor(5 - numCottages/2);
+	if (offs < 0) offs = 0;
+	for (var i = 0; i < numCottages; i++)
+	{
+		setCell(offs+i,0,'mud-cottage');
+	}
 
-	setCell(0,1,'road');
-	setCell(1,1,'road');
-	setCell(2,1,'road');
-	setCell(3,1,'road');
-	setCell(4,1,'road');
-	setCell(5,1,'road');
-	setCell(6,1,'road');
-	setCell(7,1,'road');
-	setCell(8,1,'road');
-	setCell(9,1,'road');
+	var $td = $('.ovCell[ovcell-id="2,4"]', $t);
+	$td.empty();
+
+	var $d = $('<div class="cityVisualStockyardContainer"><div class="cityVisualStockyard"></div></div>');
+	$td.append($d);
+
+	showCityResources($('.cityVisualStockyard',$d), city);
+
+	$('.ovCell[ovcell-id="1,4"]', $t).css({
+		'background-color': '#0cc'
+		});
+	$('.ovCell[ovcell-id="5,4"]', $t).css({
+		'background-color': '#0cc'
+		});
+}
+
+function showCityResources($container, city)
+{
+	$('.aResource', $container).remove();
+
+	if (!city.stock) return;
+	for (var commodType in city.stock)
+	{
+		var amount = city.stock[commodType];
+		if (amount > 4) { amount = 4; }
+
+		var $r = $('<span class="aResource"></span>');
+		for (var i = 0; i < amount; i++)
+		{
+			var $m = $('<img class="resourceIcon" width="16" height="16" src="">');
+			$m.attr('src', 'commodity_images/'+commodType+'.png');
+			$m.attr('title', commodType);
+			$r.append($m);
+		}
+		$container.append($r);
+	}
 }
 
 function isAdjacentToRiver(cityId, city)

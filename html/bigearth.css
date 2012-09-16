@@ -444,6 +444,7 @@ body {
 .ovTable td.ovCell {
 	width: 32px;
 	height: 32px;
+	vertical-align: top;
 }
 
 .cityVisualShoreline {
@@ -453,4 +454,16 @@ body {
 	position: absolute;
 	top: 224px;
 	display: none;
+}
+
+.cityVisualStockyard {
+	padding: 8px;
+}
+
+.cityVisualStockyardContainer {
+	position: absolute;
+	width: 96px;
+	height: 96px;
+	overflow: hidden;
+	background-image: url("building_images/stockyard.png");
 }

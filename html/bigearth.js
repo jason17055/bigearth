@@ -452,13 +452,6 @@ function loadFleetResources($box, fleet, onResourceClicked)
 	}
 }
 
-function getCitySize(mapCell)
-{
-	return (mapCell.zones['mud-cottages'] || 0) +
-		(mapCell.zones['wood-cottages'] || 0) +
-		(mapCell.zones['stone-cottages'] || 0);
-}
-
 function loadAtThisLocation(cityOrFleetId, location, $box)
 {
 	var anyFound = false;
