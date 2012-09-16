@@ -9,6 +9,7 @@
 <script type="text/javascript" src="mapgen.js"></script>
 <script type="text/javascript" src="viewport.js"></script>
 <script type="text/javascript" src="bigearth.js"></script>
+<script type="text/javascript" src="citypane.js"></script>
 </head>
 <body>
 <div id="contentArea">
@@ -56,7 +57,7 @@
   <button class="popupTabsButton" popup-page="cityPaneWorkersTab" type="button">Workers</button>
   <button class="popupTabsButton" popup-page="cityPaneConstructionTab" type="button">Construction</button>
   <button class="popupTabsButton" popup-page="cityPaneUnitsTab" type="button">Units</button>
-  <button class="popupTabsButton" popup-page="cityPaneMapTab" type="button">Map</button>
+  <button class="popupTabsButton" popup-page="cityPaneOverheadViewTab" type="button">Map</button>
 </div>
 <div id="cityPaneTabArea">
 
@@ -122,13 +123,12 @@
 </div>
 </div><!-- end of cityPaneUnitsTab -->
 
-<div class="cityPaneTab" id="cityPaneMapTab">
-<table border="0" cellspacing="0" cellpadding="0" width="100%">
-<tr><td colspan="3" class="cityVisualOutskirts" style="height: 60px"></td></tr>
-<tr><td class="cityVisualOutskirts"></td><td class="cityVisualClearedArea" style="height: 150px; width: 300px"></td><td class="cityVisualOutskirts"></td></tr>
-<tr><td colspan="3" class="cityVisualOutskirts" style="height: 60px"></td></tr>
+<div class="cityPaneTab" id="cityPaneOverheadViewTab">
+<div class="cityVisualOutskirts">
+<table border="0" cellspacing="0" cellpadding="0" class="cityVisualClearedArea ovTable">
 </table>
-</div><!-- end of cityPaneMapTab -->
+</div>
+</div><!-- end of cityPaneOverheadViewTab -->
 
 </div><!-- end of cityPaneTabArea -->
 
