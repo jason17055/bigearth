@@ -41,7 +41,7 @@ body {
 
 .fleetIcon.selectedFleet {
 	z-index: 2;
-	background-image: url("fleet_selection_circle_back.gif");
+	background-image: url("ui_images/fleet_selection_circle_back.gif");
 }
 
 .fleetIcon.inCity {

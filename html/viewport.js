@@ -513,7 +513,7 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 	var self = this;
 	if ($f.length == 0)
 	{
-		$f = $('<div class="fleetIcon"><img class="selectionCircle" src="fleet_selection_circle_front.gif"><img class="unitIcon"><span class="ownerIcon"></span><span class="activityIcon"></span></div>');
+		$f = $('<div class="fleetIcon"><img class="selectionCircle" src="ui_images/fleet_selection_circle_front.gif"><img class="unitIcon"><span class="ownerIcon"></span><span class="activityIcon"></span></div>');
 		$f.attr('fleet-id', fleetId);
 		$('.bigearth-scrollPanel', this.el).append($f);
 
