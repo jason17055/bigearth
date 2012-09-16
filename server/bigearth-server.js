@@ -96,7 +96,7 @@ function handleLoginRequest(request,response)
 		response.end();
 		};
 
-		newPlayer(args.id);
+		newPlayer(args.role, args.id);
 		respondToLogin();
 	}
 	else
@@ -415,8 +415,13 @@ function loadCities()
 
 function startListener()
 {
-	HTTP.createServer(handleRequest).listen(8124);
-	console.log('Server running at http://localhost:8124/');
+	var tcpPort = 8124;
+
+	HTTP.createServer(handleRequest).listen(tcpPort);
+	BE.serverBaseUrl = 'http://' + require('os').hostname() + ':' + tcpPort;
+	BE.serverSecret = Math.floor(Math.random()*1000000);
+
+	console.log('Server running at ' + BE.serverBaseUrl);
 }
 
 var worldName = process.argv[2];

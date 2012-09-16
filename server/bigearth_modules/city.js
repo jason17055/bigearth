@@ -29,6 +29,8 @@ var BUILDING_TYPE_COSTS = {
 //
 var UNIT_COSTS = {
 	'explorer': { builders: 50, productionCost: 25, populationCost: 25 },
+	'lion': { builders: 10, productionCost: 10, populationCost: 5 },
+	'warrior': { builders: 50, productionCost: 50, populationCost: 50 },
 	'settler': { builders: 50, productionCost: 200, populationCost: 100 },
 	'trieme': { builders: 400, productionCost: 400, populationCost: 50 }
 	};

@@ -9,6 +9,7 @@ var mod_terrain = require('./bigearth_modules/terrain.js');
 var Location = require('../html/location.js');
 var Settler = require('./bigearth_modules/settler.js');
 var Fleet = require('./bigearth_modules/fleet.js');
+var Lobby = require('./bigearth_modules/lobby.js');
 
 var G = {
 	world: {},
@@ -791,8 +792,17 @@ function findSuitableStartingLocation()
 	return best;
 }
 
-function newPlayer(playerId)
+function newPlayer(requestedRole, playerId)
 {
+	if (requestedRole)
+	{
+		var fleet = G.fleets[requestedRole];
+		if (fleet && !fleet.owner)
+		{
+			fleet.owner = playerId;
+		}
+	}
+
 	if (G.players[playerId])
 		return;
 
@@ -812,12 +822,15 @@ function newPlayer(playerId)
 		}
 	}
 
-	// pick a location to be this player's home location
-	var loc = findSuitableStartingLocation();
-	createUnit(playerId, "settler", loc, {
-			population: 100
-			});
-	createUnit(playerId, "explorer", BE.geometry.getNeighbors(loc)[0]);
+	if (!requestedRole)
+	{
+		// pick a location to be this player's home location
+		var loc = findSuitableStartingLocation();
+		createUnit(playerId, "settler", loc, {
+				population: 100
+				});
+		createUnit(playerId, "explorer", BE.geometry.getNeighbors(loc)[0]);
+	}
 }
 
 function nextFleetId()
@@ -841,6 +854,12 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 			f[k] = extraProperties[k];
 		}
 	}
+
+	if (unitType == 'lion')
+	{
+		f.owner = null;
+	}
+
 	var fid = nextFleetId();
 
 	G.fleets[fid] = f;
@@ -863,8 +882,19 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 			});
 	}
 	
-	discoverCell(playerId, Location.toCellId(f.location));
-	discoverCellBorder(playerId, Location.toCellId(f.location));
+	if (f.owner)
+	{
+		discoverCell(f.owner, Location.toCellId(f.location));
+		discoverCellBorder(f.owner, Location.toCellId(f.location));
+	}
+	else
+	{
+		// post an advertisement
+		Lobby.postAdvertisement({
+			url: BE.serverBaseUrl + '/login?role=' + fid,
+			description: 'Take the role of a dangerous lion, preying on weak humans and undefended livestock.'
+			});
+	}
 }
 
 function getGameState(request)
