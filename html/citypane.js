@@ -50,8 +50,8 @@ function loadCityInfo(city, location)
 			$('.cityBuildingName', $x).text(bt);
 
 			var orders = q.orders;
-			var $y = $(orders == 'make-stone-block' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone-block.png"></div>' :
-				orders == 'make-stone-weapon' ? '<div class="cityBuildingOrdersBtn"><img src="resource_icons/stone.png"> &gt; <img src="resource_icons/stone-weapon.png"></div>' :
+			var $y = $(orders == 'make-stone-block' ? '<div class="cityBuildingOrdersBtn"><img src="commodity_images/stone.png"> &gt; <img src="commodity_images/stone-block.png"></div>' :
+				orders == 'make-stone-weapon' ? '<div class="cityBuildingOrdersBtn"><img src="commodity_images/stone.png"> &gt; <img src="commodity_images/stone-weapon.png"></div>' :
 				('<div class="cityBuildingOrdersBtn">'+ (orders || '(none)') + '</div>'));
 
 			$y.click(onBuildingChangeOrdersClicked);

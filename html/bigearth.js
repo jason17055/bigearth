@@ -416,7 +416,7 @@ function loadFleetResources($box, fleet, onResourceClicked)
 	var resourceIcon = function($m, resourceType)
 	{
 		$m.attr('resource-type', resourceType);
-		$m.attr('src', 'resource_icons/'+resourceType+'.png');
+		$m.attr('src', 'commodity_images/'+resourceType+'.png');
 		$m.attr('title', RESOURCE_DISPLAY_NAMES[resourceType] || resourceType);
 		if (onResourceClicked)
 		{
