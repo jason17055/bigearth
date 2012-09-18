@@ -96,11 +96,6 @@ function onGameState()
 		fetchMap();
 	if (gameState.fleets)
 		fetchFleets();
-
-	if (gameState.role == 'observer')
-	{
-		window.location.href = '/login.html';
-	}
 }
 
 function unselect()
@@ -869,6 +864,11 @@ function fetchMap()
 	});
 }
 
+function onUnauthorized()
+{
+	window.location.href = '/';
+}
+
 function fetchGameState()
 {
 	var onSuccess = function(data,status)
@@ -879,7 +879,15 @@ function fetchGameState()
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
+		if (xhr.status == 401)
+		{
+			return onUnauthorized();
+		}
+		else
+		{
 		//TODO- throw an error
+		alert('gamestate error '+status+' ' + errorThrown + " " + xhr.status);
+		}
 	};
 
 	$.ajax({

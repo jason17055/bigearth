@@ -899,9 +899,7 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 
 function getGameState(request)
 {
-	if (request.remote_player)
-	{
-		return {
+	return {
 		role: "player",
 		gameYear: Scheduler.time,
 		gameSpeed: Scheduler.ticksPerYear,
@@ -910,13 +908,6 @@ function getGameState(request)
 		fleets: "/fleets/"+request.remote_player,
 		identity: request.remote_player
 		};
-	}
-	else
-	{
-		return {
-		role: "observer",
-		};
-	}
 }
 
 function doOrders(requestData, queryString, remoteUser)

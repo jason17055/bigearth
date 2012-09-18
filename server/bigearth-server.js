@@ -55,14 +55,17 @@ function handleStaticFileRequest(requestPath,request,response)
 function handleGameStateRequest(request,response)
 {
 	var s = request.Session;
+	if (!request.remote_player)
+	{
+		response.writeHead(401);
+		response.end();
+		return;
+	}
 
 	var gameState = getGameState(request);
 
-	if (request.remote_player)
-	{
-		var eventStream = EVENTS.createEventStream(request.remote_player);
-		gameState.nextEventUrl = eventStream.getNextEventUrl();
-	}
+	var eventStream = EVENTS.createEventStream(request.remote_player);
+	gameState.nextEventUrl = eventStream.getNextEventUrl();
 
 	response.writeHead(200, {'Content-Type':'text/plain'});
 	response.end(
@@ -89,7 +92,7 @@ function handleLoginRequest(request,response)
 			});
 		var respondToLogin = function() {
 		response.writeHead(303, {
-			'Set-Cookie': SESSIONS.cookieName + "=" + sid,
+			'Set-Cookie': SESSIONS.cookieName + "=" + sid + ';uid=' + args.id,
 			'Content-Type': 'text/plain',
 			'Location': '/bigearth.html'
 			});
@@ -227,6 +230,11 @@ function handleDefaultDocumentRequest(request, response)
 	if (request.remote_user)
 	{
 		response.writeHead(302, {Location:'/bigearth.html'});
+	}
+	else if (SESSIONS.getLoginNameFromCookie(request))
+	{
+		var loginName = SESSIONS.getLoginNameFromCookie(request);
+		response.writeHead(302, {Location:'/login?id='+loginName});
 	}
 	else
 	{

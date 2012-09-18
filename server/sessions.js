@@ -27,6 +27,12 @@ function getSessionIdFromCookie(req)
 	return sid;
 }
 
+function getLoginNameFromCookie(req)
+{
+	var uid = getCookie(req, 'uid');
+	return uid;
+}
+
 function getSession(sid)
 {
 	if (sid && mySessions[sid])
@@ -42,6 +48,7 @@ function newSession(s)
 	return sid;
 }
 
+exports.getLoginNameFromCookie = getLoginNameFromCookie;
 exports.getSessionIdFromCookie = getSessionIdFromCookie;
 exports.getSessionFromCookie = function(req) {
 		return getSession(getSessionIdFromCookie(req));
