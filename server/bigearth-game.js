@@ -1070,6 +1070,7 @@ function startGame()
 	{
 		checkFleet(fid);
 		fleetActivity(fid, G.fleets[fid]);
+		Fleet.maybeAdvertise(fid, G.fleets[fid]);
 	}
 
 	for (var pid in G.players)

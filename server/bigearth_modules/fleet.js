@@ -4,6 +4,7 @@ var Settler = require('./settler.js');
 var Terrain = require('./terrain.js');
 var City = require('./city.js');
 var Commodity = require('./commodity.js');
+var Lobby = require('./lobby.js');
 
 function fleetMessage(fleetId, message)
 {
@@ -723,6 +724,24 @@ function getMovementCost_real(fleet, oldLoc, newLoc)
 	return { delay: Infinity };
 }
 
+function maybeAdvertise(fleetId, fleet)
+{
+	if (!BE.serverBaseUrl)
+		throw new Error("cannot advertise before http server is listening");
+
+	if (fleet.type == 'lion')
+	{
+		fleet.owner = null;
+	}
+
+	if (fleet.owner == null)
+	{
+		Lobby.postAdvertisement({
+			url: BE.serverBaseUrl + '/login?role=' + fleetId,
+			description: fleet.type
+			});
+	}
+}
 
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
@@ -738,3 +757,4 @@ global.getFleetInfoForPlayer = getFleetInfoForPlayer;
 exports.isNavigableByMap = isNavigableByMap;
 exports.getMovementCost_byMap = getMovementCost_byMap;
 exports.getMovementCost_real = getMovementCost_real;
+exports.maybeAdvertise = maybeAdvertise;

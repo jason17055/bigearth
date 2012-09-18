@@ -434,5 +434,5 @@ function startListener()
 
 var worldName = process.argv[2];
 loadWorld(worldName);
-startGame();
 startListener();
+startGame();
