@@ -42,6 +42,20 @@ function fleetCooldown(fleetId, fleet, delay)
 		}, delay);
 }
 
+function getMap(fleetId, fleet)
+{
+	if (fleet.owner && G.maps[fleet.owner])
+	{
+		return G.maps[fleet.owner];
+	}
+
+	// create a temporary empty map to return
+	var tempMap = {
+		cells: {}, edges: {}
+		};
+	return tempMap;
+}
+
 function setFleetActivityFlag(fleetId, fleet, newActivity)
 {
 	if (newActivity)
@@ -758,3 +772,4 @@ exports.isNavigableByMap = isNavigableByMap;
 exports.getMovementCost_byMap = getMovementCost_byMap;
 exports.getMovementCost_real = getMovementCost_real;
 exports.maybeAdvertise = maybeAdvertise;
+exports.getMap = getMap;

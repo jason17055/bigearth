@@ -431,14 +431,15 @@ console.log("using memoized path (length " + fleet.path.length + ")");
 
 console.log("must perform a shortest path search");
 
-	fleet.path = shortestPathByMap(G.maps[fleet.owner], fleet, oldLoc, targetLocation);
+	var map = Fleet.getMap(fleetId, fleet);
+	fleet.path = shortestPathByMap(map, fleet, oldLoc, targetLocation);
 
 console.log("shortest path is", fleet.path);
 if (fleet.path.length > 50)
 	fleet.path.splice(0,50);
 
 	var nextLoc = fleet.path.shift();
-	if (nextLoc && Fleet.isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
+	if (nextLoc && Fleet.isNavigableByMap(map, fleet, nextLoc))
 		return moveFleetOneStep(fleetId, nextLoc);
 	else
 		return fleetActivityError(fleetId, fleet, "Cannot reach destination");
