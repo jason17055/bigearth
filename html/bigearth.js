@@ -379,7 +379,7 @@ function animateCityActivityProgressBar(city)
 function loadTerrainResources($box, location, onResourceClicked)
 {
 	var mapCell = map.cells[Location.toCellId(location)];
-	if (mapCell.city)
+	if (mapCell && mapCell.city)
 	{
 		mapCell = cities[mapCell.city];
 	}
