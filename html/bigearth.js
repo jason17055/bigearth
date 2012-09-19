@@ -102,7 +102,7 @@ function selectCity(cityId)
 	var city = cities[cityId];
 	if (city)
 	{
-		onCityClicked(city.location, city);
+		onCityClicked(city.location, cityId);
 	}
 }
 
@@ -383,6 +383,9 @@ function loadTerrainResources($box, location, onResourceClicked)
 	{
 		mapCell = cities[mapCell.city];
 	}
+	if (!mapCell)
+		return;
+
 	return loadFleetResources($box, mapCell, onResourceClicked);
 }
 

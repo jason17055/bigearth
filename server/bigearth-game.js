@@ -100,11 +100,15 @@ function discoverCell(mapId, cellId, sightLevel)
 	if (isNew)
 	{
 		map.cells[cellId] = mapCell;
-		notifyPlayer(playerId, {
+
+		if (G.players[mapId])
+		{
+		notifyPlayer(mapId, {
 			event: 'map-update',
 			location: Location.fromCellId(cellId),
 			data: mapCell
 			});
+		}
 	}
 
 	var nn = BE.geometry.getNeighbors(cellId);
@@ -966,7 +970,7 @@ function startGame()
 
 	for (var fid in G.fleets)
 	{
-		checkFleet(fid);
+		checkFleet(fid, G.fleets[fid]);
 		fleetActivity(fid, G.fleets[fid]);
 		Fleet.maybeAdvertise(fid, G.fleets[fid]);
 	}
@@ -1071,6 +1075,11 @@ function checkPlayer(pid, player)
 //
 function checkFleet(fleetId, fleet)
 {
+	if (fleet.owner && !fleet.map)
+	{
+		if (G.maps[fleet.owner])
+			fleet.map = fleet.owner;
+	}
 }
 
 function checkTerrainCell(cid, cell)

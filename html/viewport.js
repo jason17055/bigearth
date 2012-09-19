@@ -252,6 +252,7 @@ BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 		{
 			citiesToDraw.push({
 				city: c.city,
+				cityName: c.cityName,
 				location: Location.fromCellId(cid),
 				screenPt: centerP
 				});
@@ -336,19 +337,21 @@ BigEarthViewPort.prototype.repaintOne = function(canvasRow, canvasCol)
 	for (var i = 0; i < citiesToDraw.length; i++)
 	{
 		var cityInfo = citiesToDraw[i];
-		var p = cityInfo.screenPt;
+		if (cityInfo.cityName)
+		{
+			var p = cityInfo.screenPt;
 
-		var cityName = cityInfo.city.name || ('city'+cityInfo.city.id);
-		ctx.font = 'bold 16px sans-serif';
-		var m = ctx.measureText(cityName);
+			ctx.font = 'bold 16px sans-serif';
+			var m = ctx.measureText(cityInfo.cityName);
 
-		ctx.fillStyle = '#000';
-		ctx.globalAlpha = 0.4;
-		ctx.fillRect(p.x-Math.round(m.width/2)-2,p.y+12,Math.round(m.width)+4,19);
+			ctx.fillStyle = '#000';
+			ctx.globalAlpha = 0.4;
+			ctx.fillRect(p.x-Math.round(m.width/2)-2,p.y+12,Math.round(m.width)+4,19);
 
-		ctx.globalAlpha = 1;
-		ctx.fillStyle = '#fff';
-		ctx.fillText(cityName, p.x-m.width/2, p.y+12+15);
+			ctx.globalAlpha = 1;
+			ctx.fillStyle = '#fff';
+			ctx.fillText(cityInfo.cityName, p.x-m.width/2, p.y+12+15);
+		}
 	}
 
 	ctx.restore();
