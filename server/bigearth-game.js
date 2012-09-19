@@ -22,6 +22,12 @@ var G = {
 
 function discoverCell(mapId, cellId, sightLevel)
 {
+	if (!mapId)
+	{
+		console.log("Warning: discoverCell called on null map");
+		return;
+	}
+
 	var isNew = false;
 	var refCell = G.terrain.cells[cellId];
 
@@ -134,10 +140,16 @@ function discoverCity(mapCell, cityId, realCity, sightLevel)
 
 function discoverEdge(mapId, edgeId)
 {
+	if (!mapId)
+	{
+		console.log("Warning: discoverCell called on null map");
+		return;
+	}
+
 	var isNew = false;
 
 	var refEdge = G.terrain.edges[edgeId] || {};
-	var map = G.maps[playerId];
+	var map = G.maps[mapId];
 	var mapEdge = map.edges[edgeId];
 
 	if (!mapEdge)
