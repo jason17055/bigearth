@@ -322,9 +322,19 @@ function moveFleetTowards(fleetId, targetLocation)
 
 	var nextLoc = fleet.path.shift();
 	if (nextLoc && Fleet.isNavigableByMap(map, fleet, nextLoc))
+	{
 		return moveFleetOneStep(fleetId, nextLoc);
-	else
+	}
+	else // our map does not tell us how to get to the destination
+	{
+		// rediscover the current and surrounding cells, just in case the problem
+		// is lack of a map
+		discoverCell(fleet.map, Location.toCellId(fleet.location), "full-sight");
+		discoverCellBorder(fleet.map, Location.toCellId(fleet.location), "full-sight");
+
+		// report the error
 		return fleetActivityError(fleetId, fleet, "Cannot reach destination");
+	}
 }
 
 //FIXME- this function accesses server-side terrain data to
