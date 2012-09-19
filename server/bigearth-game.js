@@ -10,6 +10,7 @@ var Location = require('../html/location.js');
 var Settler = require('./bigearth_modules/settler.js');
 var Fleet = require('./bigearth_modules/fleet.js');
 var Lobby = require('./bigearth_modules/lobby.js');
+var Map = require('./bigearth_modules/map.js');
 
 var G = {
 	world: {},
@@ -19,12 +20,12 @@ var G = {
 	fleets: {}
 	};
 
-function discoverCell(playerId, cellId)
+function discoverCell(mapId, cellId, sightLevel)
 {
 	var isNew = false;
 	var refCell = G.terrain.cells[cellId];
 
-	var map = G.maps[playerId];
+	var map = G.maps[mapId];
 	var mapCell = map.cells[cellId];
 	if (!mapCell)
 	{
@@ -81,7 +82,7 @@ function discoverCell(playerId, cellId)
 			mapCell.city = { id: refCell.city };
 		}
 
-		if (discoverCity(refCell.city, city, mapCell.city, playerId))
+		if (discoverCity(refCell.city, city, mapCell.city, sightLevel))
 		{
 			isNew = true;
 		}
@@ -102,14 +103,14 @@ function discoverCell(playerId, cellId)
 	{
 		if (map.cells[nn[i]])
 		{
-			var eId = BE.geometry._makeEdge(cellId, nn[i]);
-			discoverEdge(playerId, eId);
+			var edgeId = BE.geometry._makeEdge(cellId, nn[i]);
+			discoverEdge(mapId, edgeId);
 		}
 	}
 }
 
 // updates building information on a map to reflect the actual building
-function discoverBuilding(realBuilding, mapBuilding, playerId)
+function discoverBuilding(realBuilding, mapBuilding)
 {
 	var isNew = false;
 
@@ -132,7 +133,7 @@ function discoverBuilding(realBuilding, mapBuilding, playerId)
 }
 
 // updates city information on a map to reflect the actual city
-function discoverCity(cityId, realCity, mapCity, playerId)
+function discoverCity(cityId, realCity, mapCity, sightLevel)
 {
 	var isNew = false;
 
@@ -161,7 +162,7 @@ function discoverCity(cityId, realCity, mapCity, playerId)
 
 	for (var p in props)
 	{
-		if (props[p].match(/private/) && realCity.owner != playerId)
+		if (props[p].match(/private/) && sightLevel != 'full-sight')
 			continue;
 
 		var refValue = realCity[p];
@@ -239,7 +240,7 @@ function discoverCity(cityId, realCity, mapCity, playerId)
 			{
 				mapCity.buildings[bt] = {};
 			}
-			if (discoverBuilding(realCity.buildings[bt], mapCity.buildings[bt], playerId))
+			if (discoverBuilding(realCity.buildings[bt], mapCity.buildings[bt]))
 			{
 				isNew = true;
 			}
@@ -274,13 +275,13 @@ function discoverCity(cityId, realCity, mapCity, playerId)
 	return isNew;
 }
 
-function discoverEdge(playerId, eId)
+function discoverEdge(mapId, edgeId)
 {
 	var isNew = false;
 
-	var refEdge = G.terrain.edges[eId] || {};
+	var refEdge = G.terrain.edges[edgeId] || {};
 	var map = G.maps[playerId];
-	var mapEdge = map.edges[eId];
+	var mapEdge = map.edges[edgeId];
 
 	if (!mapEdge)
 	{
@@ -297,16 +298,16 @@ function discoverEdge(playerId, eId)
 
 	if (isNew)
 	{
-		map.edges[eId] = mapEdge;
+		map.edges[edgeId] = mapEdge;
 		notifyPlayer(playerId, {
 			event: 'map-update',
-			location: Location.fromEdgeId(eId),
+			location: Location.fromEdgeId(edgeId),
 			data: mapEdge
 			});
 	}
 }
 
-function discoverCellBorder(playerId, cellId)
+function discoverCellBorder(playerId, cellId, sightLevel)
 {
 	var ee = BE.geometry.getEdgesAdjacentToCell(cellId);
 	for (var i = 0; i < ee.length; i++)
@@ -317,7 +318,7 @@ function discoverCellBorder(playerId, cellId)
 	var nn = BE.geometry.getNeighbors(cellId);
 	for (var i = 0; i < nn.length; i++)
 	{
-		discoverCell(playerId, nn[i]);
+		discoverCell(playerId, nn[i], sightLevel);
 	}
 }
 
@@ -340,13 +341,19 @@ function playerCanSee(playerId, location)
 
 function terrainChanged(cellId)
 {
-	for (var mapId in G.maps)
+	var terrainCell = G.terrain.cells[cellId];
+	if (!terrainCell.seenBy)
+		return;
+
+	var done = {};
+	for (var fid in terrainCell.seenBy)
 	{
-		var mapOwnerId = mapId;
-		if (playerCanSee(mapOwnerId, cellId))
-		{
-			discoverCell(mapOwnerId, cellId);
-		}
+		var f = G.fleets[fid] || G.cities[fid];
+		if (!f)
+			throw new Error("unexpected- invalid fleet or city id");
+
+		if (f.map && G.maps[f.map])
+			discoverCell(f.map, cellId, "full-sight");
 	}
 }
 
@@ -678,8 +685,8 @@ function moveFleetOneStep(fleetId, newLoc)
 		fleet.crossedRiver = movementCostInfo.crossedRiver;
 
 	fleetMoved(fleetId, fleet, oldLoc, newLoc);
-	discoverCell(fleet.owner, Location.toCellId(newLoc));
-	discoverCellBorder(fleet.owner, Location.toCellId(newLoc));
+	discoverCell(fleet.map, Location.toCellId(newLoc), "full-sight");
+	discoverCellBorder(fleet.map, Location.toCellId(newLoc), "full-sight");
 
 	notifyPlayer(fleet.owner, {
 		event: 'fleet-movement',
@@ -807,19 +814,17 @@ function newPlayer(requestedRole, playerId)
 	if (G.players[playerId])
 		return;
 
+	var mapId = Map.newMap();
 	G.players[playerId] = {
-		type: 'player'
-		};
-	G.maps[playerId] = {
-		cells: {},
-		edges: {}
+		type: 'player',
+		map: mapId
 		};
 
 	if (playerId == 'god')
 	{
 		for (var cid in G.terrain.cells)
 		{
-			discoverCell(playerId, cid);
+			discoverCell(mapId, cid, "full-sight");
 		}
 	}
 
@@ -861,6 +866,15 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 		f.owner = null;
 	}
 
+	if (f.owner)
+	{
+		f.map = G.players[f.owner].map;
+	}
+	if (!f.map)
+	{
+		f.map = Map.newMap();
+	}
+
 	var fid = nextFleetId();
 
 	G.fleets[fid] = f;
@@ -885,8 +899,8 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 	
 	if (f.owner)
 	{
-		discoverCell(f.owner, Location.toCellId(f.location));
-		discoverCellBorder(f.owner, Location.toCellId(f.location));
+		discoverCell(f.map, Location.toCellId(f.location), "full-sight");
+		discoverCellBorder(f.map, Location.toCellId(f.location), "full-sight");
 	}
 	else
 	{
