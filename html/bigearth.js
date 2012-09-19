@@ -649,6 +649,17 @@ function onMapCellChanged(location)
 	VIEWPORT.triggerRepaintCell(location);
 }
 
+function onCityUpdated(eventData)
+{
+	var cityId = eventData.city;
+	cities[cityId] = eventData.data;
+
+	if (cityId == $('#cityPane').attr('city-id'))
+	{
+		loadCityInfo(cityId, eventData.location);
+	}
+}
+
 function onGameMessage(eventData)
 {
 	//FIXME
@@ -656,7 +667,11 @@ function onGameMessage(eventData)
 
 function onEvent(eventData)
 {
-	if (eventData.event == 'fleet-spawned')
+	if (eventData.event == 'city-updated')
+	{
+		return onCityUpdated(eventData);
+	}
+	else if (eventData.event == 'fleet-spawned')
 	{
 		return onFleetSpawned(eventData);
 	}
