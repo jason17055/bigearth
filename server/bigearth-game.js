@@ -100,15 +100,7 @@ function discoverCell(mapId, cellId, sightLevel)
 	if (isNew)
 	{
 		map.cells[cellId] = mapCell;
-
-		if (G.players[mapId])
-		{
-		notifyPlayer(mapId, {
-			event: 'map-update',
-			location: Location.fromCellId(cellId),
-			data: mapCell
-			});
-		}
+		fireMapUpdate(mapId, Location.fromCellId(cellId), mapCell);
 	}
 
 	var nn = BE.geometry.getNeighbors(cellId);
@@ -118,6 +110,22 @@ function discoverCell(mapId, cellId, sightLevel)
 		{
 			var edgeId = BE.geometry._makeEdge(cellId, nn[i]);
 			discoverEdge(mapId, edgeId);
+		}
+	}
+}
+
+function fireMapUpdate(mapId, location, data)
+{
+	// find the player(s) that use this map
+	for (var playerId in G.players)
+	{
+		if (G.players[playerId].map == mapId)
+		{
+			notifyPlayer(mapId, {
+				event: 'map-update',
+				location: location,
+				data: data
+				});
 		}
 	}
 }
@@ -172,11 +180,7 @@ function discoverEdge(mapId, edgeId)
 	if (isNew)
 	{
 		map.edges[edgeId] = mapEdge;
-		notifyPlayer(playerId, {
-			event: 'map-update',
-			location: Location.fromEdgeId(edgeId),
-			data: mapEdge
-			});
+		fireMapUpdate(mapId, Location.fromEdgeId(edgeId), mapEdge);
 	}
 }
 
@@ -1037,6 +1041,14 @@ function checkWorldParameters()
 //
 function checkPlayer(pid, player)
 {
+	if (!player.map)
+	{
+		if (G.maps[pid])
+			player.map = pid;
+		else
+			player.map = Map.newMap();
+	}
+
 	player.canSee = {};
 	for (var tid in G.cities)
 	{
