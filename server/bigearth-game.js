@@ -677,40 +677,48 @@ function findSuitableStartingLocation()
 
 function newPlayer(requestedRole, playerId)
 {
+	if (G.players[playerId])
+		return;
+
+	var playerStruct = {
+		type: 'player'
+		};
+	G.players[playerId] = playerStruct;
+
 	if (requestedRole)
 	{
 		var fleet = G.fleets[requestedRole];
 		if (fleet && !fleet.owner)
 		{
 			fleet.owner = playerId;
+			playerStruct.map = fleet.map;
 		}
-	}
-
-	if (G.players[playerId])
-		return;
-
-	var mapId = Map.newMap();
-	G.players[playerId] = {
-		type: 'player',
-		map: mapId
-		};
-
-	if (playerId == 'god')
-	{
-		for (var cid in G.terrain.cells)
+		else
 		{
-			discoverCell(mapId, cid, "full-sight");
+			console.log("newPlayer: requested fleet already claimed");
+			return;
 		}
 	}
-
-	if (!requestedRole)
+	else
 	{
+		// create a new map
+		var mapId = Map.newMap();
+		playerStruct.map = mapId;
+
 		// pick a location to be this player's home location
 		var loc = findSuitableStartingLocation();
 		createUnit(playerId, "settler", loc, {
 				population: 100
 				});
 		createUnit(playerId, "explorer", BE.geometry.getNeighbors(loc)[0]);
+
+		if (playerId == 'god')
+		{
+			for (var cid in G.terrain.cells)
+			{
+				discoverCell(mapId, cid, "full-sight");
+			}
+		}
 	}
 }
 
