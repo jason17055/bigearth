@@ -235,8 +235,7 @@ function handleMapRequest(pathInfo, request, response)
 	//	
 	//}
 
-	var mapId = pathInfo;
-	GAME.getMapFragment(mapId, processor);
+	GAME.getMapFragment(request.remote_player, processor);
 }
 
 function handleDefaultDocumentRequest(request, response)

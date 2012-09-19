@@ -701,6 +701,7 @@ function newPlayer(requestedRole, playerId)
 		if (fleet && !fleet.owner)
 		{
 			fleet.owner = playerId;
+			fleet.map = fleet.map || Map.newMap();
 			playerStruct.map = fleet.map;
 		}
 		else
@@ -906,14 +907,22 @@ function getFleets(playerId, callback)
 }
 exports.getFleets = getFleets;
 
-function getMapFragment(mapId, callback)
+function getMapFragment(playerId, callback)
 {
-console.log("in getMapFragment");
 	var result = {};
+
+	var playerStruct = G.players[playerId];
+	if (!playerStruct)
+	{
+		// specified player not found
+		return callback(result);
+	}
+
+	var mapId = playerStruct.map;
 	var map = G.maps[mapId];
 	if (!map)
 	{
-		console.log("Warning: map '"+mapId+"' not found");
+		console.log("Warning: map '"+mapId+"' for player '"+playerId+"' not found");
 		return callback(result);
 	}
 
@@ -925,7 +934,6 @@ console.log("in getMapFragment");
 	{
 		result[eid] = map.edges[eid];
 	}
-	console.log("map is "+JSON.stringify(result));
 	return callback(result);
 }
 exports.getMapFragment = getMapFragment;
