@@ -121,7 +121,7 @@ function fireMapUpdate(mapId, location, data)
 	{
 		if (G.players[playerId].map == mapId)
 		{
-			notifyPlayer(mapId, {
+			notifyPlayer(playerId, {
 				event: 'map-update',
 				location: location,
 				data: data
