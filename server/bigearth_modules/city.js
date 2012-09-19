@@ -639,6 +639,7 @@ function getCityInfoForOwner(cityId)
 	var mapCity = {
 		id: cityId,
 		name: realCity.name,
+		location: realCity.location,
 		owner: realCity.owner,
 		population: Math.floor(realCity.population),
 		children: Math.floor(realCity.children),
@@ -688,6 +689,7 @@ function cityChanged(cityId)
 	notifyPlayer(city.owner, {
 		event: 'city-updated',
 		city: cityId,
+		location: city.location,
 		data: getCityInfoForOwner(cityId)
 		});
 
