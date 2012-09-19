@@ -44,9 +44,9 @@ function fleetCooldown(fleetId, fleet, delay)
 
 function getMap(fleetId, fleet)
 {
-	if (fleet.owner && G.maps[fleet.owner])
+	if (fleet.map)
 	{
-		return G.maps[fleet.owner];
+		return G.maps[fleet.map];
 	}
 
 	// create a temporary empty map to return
@@ -742,11 +742,6 @@ function maybeAdvertise(fleetId, fleet)
 {
 	if (!BE.serverBaseUrl)
 		throw new Error("cannot advertise before http server is listening");
-
-	if (fleet.type == 'lion')
-	{
-		fleet.owner = null;
-	}
 
 	if (fleet.owner == null)
 	{
