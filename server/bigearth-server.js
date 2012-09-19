@@ -187,6 +187,20 @@ function handleActionRequest(verb, queryString, request, response)
 		});
 }
 
+function handleCitiesRequest(pathInfo, request, response)
+{
+	var sendResponse = function(resultData) {
+		response.writeHead(200, {
+			'Content-Type': 'text/json'
+			});
+		response.end(
+			JSON.stringify(resultData)
+			);
+	};
+
+	GAME.getCities(pathInfo, sendResponse);
+}
+
 function handleFleetsRequest(pathInfo, request, response)
 {
 	var sendResponse = function(resultData) {
@@ -287,6 +301,11 @@ function handleRequest(request,response)
 	{
 		var pathInfo = RegExp.$1;
 		return handleMapRequest(pathInfo, request, response);
+	}
+	else if (requestPath.pathname.match(/^\/cities\/(.*)$/))
+	{
+		var pathInfo = RegExp.$1;
+		return handleCitiesRequest(pathInfo, request, response);
 	}
 	else if (requestPath.pathname.match(/^\/fleets\/(.*)$/))
 	{

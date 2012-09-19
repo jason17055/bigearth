@@ -1,9 +1,9 @@
 var VIEWPORT = null;
 
 var BE = {};
-var map;
-var fleets;
-var cities = {};
+var map = null;
+var fleets = null;
+var cities = null;
 
 function onResize()
 {
@@ -22,17 +22,6 @@ var gameState;
 
 function onMapReplaced()
 {
-	for (var cid in map.cells)
-	{
-		var c = map.cells[cid];
-		if (c.city)
-		{
-			var cityId = c.city.id;
-			c.city.location = Location.fromCellId(cid);
-			cities[cityId] = c.city;
-		}
-	}
-
 	maybeStartPlaying();
 }
 
@@ -56,7 +45,7 @@ function getFirstCity()
 
 function maybeStartPlaying()
 {
-	if (map && fleets && !VIEWPORT)
+	if (map && fleets && cities && !VIEWPORT)
 	{
 		var contentDiv = document.getElementById('contentArea');
 		VIEWPORT = new BigEarthViewPort(contentDiv, map);
@@ -96,6 +85,8 @@ function onGameState()
 		fetchMap();
 	if (gameState.fleets)
 		fetchFleets();
+	if (gameState.cities)
+		fetchCities();
 }
 
 function unselect()
@@ -115,12 +106,12 @@ function selectCity(cityId)
 	}
 }
 
-function onCityClicked(location, city)
+function onCityClicked(location, cityId)
 {
 	unselect();
 
 	resetCityPane();
-	loadCityInfo(city, location);
+	loadCityInfo(cityId, location);
 
 	$('#cityPane').show();
 }
@@ -150,7 +141,7 @@ function onBuildingChangeOrdersClicked(evt)
 	if (!(buildingId && cityId && cityLocation))
 		return;
 
-	var city = map.cells[cityLocation].city;
+	var city = cities[cityId];
 	if (!city)
 		return;
 
@@ -390,7 +381,7 @@ function loadTerrainResources($box, location, onResourceClicked)
 	var mapCell = map.cells[Location.toCellId(location)];
 	if (mapCell.city)
 	{
-		mapCell = mapCell.city;
+		mapCell = cities[mapCell.city];
 	}
 	return loadFleetResources($box, mapCell, onResourceClicked);
 }
@@ -609,7 +600,7 @@ function onFleetMovement(eventData)
 		VIEWPORT.updateFleetIcon(fleetId, fleets[fleetId]);
 
 		var terrain = map.cells[eventData.toLocation];
-		if (terrain && terrain.city && terrain.city.id == $('#cityPane').attr('city-id'))
+		if (terrain && terrain.city == $('#cityPane').attr('city-id'))
 		{
 			loadCityInfo(terrain.city, eventData.toLocation);
 		}
@@ -649,16 +640,10 @@ function onFleetTerminated(eventData)
 
 function onMapCellChanged(location)
 {
-	var city = map.cells[Location.toCellId(location)].city;
-	if (city && city.id)
+	var cityId = map.cells[Location.toCellId(location)].city;
+	if (cityId == $('#cityPane').attr('city-id'))
 	{
-		city.location = location;
-		cities[city.id] = city;
-	}
-
-	if (city && city.id == $('#cityPane').attr('city-id'))
-	{
-		loadCityInfo(city, location);
+		loadCityInfo(cityId, location);
 	}
 
 	VIEWPORT.triggerRepaintCell(location);
@@ -803,6 +788,26 @@ function onFleetUpdated(eventData)
 	{
 		loadFleetInfo(fleetId);
 	}
+}
+
+function fetchCities()
+{
+	var onSuccess = function(data,status)
+	{
+		cities = data;
+		maybeStartPlaying();
+	};
+	var onError = function(xhr, status, errorThrown)
+	{
+		//TODO- throw an error
+	};
+
+	$.ajax({
+	url: gameState.cities,
+	success: onSuccess,
+	error: onError,
+	dataType: "json"
+	});
 }
 
 function fetchFleets()

@@ -623,11 +623,73 @@ function cityActivityWakeup(cityId, city, yearsRemaining)
 	// otherwise, just wait until cityEndOfYear is called...
 }
 
+function getBuildingInfoForOwner(cityId, buildingType, realBuilding)
+{
+	var mapBuilding = {
+		buildingType: realBuilding.buildingType,
+		size: realBuilding.size,
+		orders: realBuilding.orders
+		};
+	return mapBuilding;
+}
+
+function getCityInfoForOwner(cityId)
+{
+	var realCity = G.cities[cityId];
+	var mapCity = {
+		id: cityId,
+		name: realCity.name,
+		owner: realCity.owner,
+		population: Math.floor(realCity.population),
+		children: Math.floor(realCity.children),
+		activity: realCity.activity,
+		activityTime: realCity.activityTime,
+		activityComplete: realCity.activityComplete,
+		activitySpeed: realCity.activitySpeed
+		};
+
+	// messages
+	mapCity.messages = [];
+	if (realCity.messages)
+	{
+		for (var i = 0, l = realCity.messages.length; i<l; i++)
+		{
+			mapCity.messages[i] = realCity.messages[i];
+		}
+	}
+
+	// workers
+	mapCity.workers = roundWorkers(realCity.workers);
+	addAvailableJobs(cityId, mapCity.workers);
+
+	// buildings
+	mapCity.buildings = {};
+	for (var bt in realCity.buildings)
+	{
+		mapCity.buildings[bt] = getBuildingInfoForOwner(cityId, bt, realCity.buildings[bt]);
+	}
+
+	// stock
+	mapCity.stock = {};
+	for (var commodType in realCity.stock)
+	{
+		mapCity.stock[commodType] = Math.floor(+realCity.stock[commodType]);
+	}
+
+	return mapCity;
+}
+
 function cityChanged(cityId)
 {
 	var city = G.cities[cityId];
 	if (!city)
 		throw new Error("oops! city "+cityId+" not found");
+
+	notifyPlayer(city.owner, {
+		event: 'city-updated',
+		city: cityId,
+		data: getCityInfoForOwner(cityId)
+		});
 
 	terrainChanged(Location.toCellId(city.location));
 }
@@ -1916,3 +1978,4 @@ exports.cmd_build_improvement = cmd_build_improvement;
 exports.cmd_build_building = cmd_build_building;
 exports.cmd_building_orders = cmd_building_orders;
 exports.cityChanged = cityChanged;
+exports.getCityInfoForOwner = getCityInfoForOwner;

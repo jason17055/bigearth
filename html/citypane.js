@@ -5,7 +5,7 @@ function getCitySize(mapCell)
 		(mapCell.zones['stone-cottages'] || 0);
 }
 
-function loadCityInfo(city, location)
+function loadCityInfo(cityId, location)
 {
 	var mapCell = map.cells[Location.toCellId(location)];
 	if (!mapCell)
@@ -13,13 +13,16 @@ function loadCityInfo(city, location)
 	if (!mapCell.zones)
 		mapCell.zones = {};
 
-	$('#cityPane').attr('city-id', city.id);
+	var city = cities[cityId];
+
+	$('#cityPane').attr('city-id', cityId);
 	$('#cityPane').attr('city-location', location);
-	$('#cityPane .cityName').text(city.name || "(unnamed)");
+	$('#cityPane .cityName').text(city ? city.name :
+			(mapCell && mapCell.cityName || "(unnamed)"));
 	$('#cityPane .citySize').text(getCitySize(mapCell));
-	$('#cityPane .cityPopulation').text(city.population + city.children);
-	if (city.children || city.population)
+	if (city)
 	{
+		$('#cityPane .cityPopulation').text(+city.population + city.children);
 		$('#cityPane .cityChildren').text(city.children || 0);
 		$('#cityPane .cityWorkersCount').text(city.population || 0);
 		$('#cityPane .cityPopulationDetail').show();
@@ -29,7 +32,8 @@ function loadCityInfo(city, location)
 		$('#cityPane .cityPopulationDetail').hide();
 	}
 
-	loadFleetResources($('#cityPane .resourcesContainer'), city);
+	if (city)
+		loadFleetResources($('#cityPane .resourcesContainer'), city);
 
 	$('#cityPane .cityFarms').text(mapCell.zones.farm);
 	if (mapCell.zones.farm)
@@ -37,11 +41,15 @@ function loadCityInfo(city, location)
 	else
 		$('#cityPane .cityFarmsContainer').hide();
 	$('#cityPane img.icon').attr('src', 'city_images/city1.png');
-	$('#cityPane .cityActivity').text(city.activity || '');
-	animateCityActivityProgressBar(city);
+
+	if (city)
+	{
+		$('#cityPane .cityActivity').text(city.activity || '');
+		animateCityActivityProgressBar(city);
+	}
 
 	$('#cityBuildingsContainer .cityBuildingItem').remove();
-	if (city.buildings)
+	if (city && city.buildings)
 	{
 		$('#cityBuildingsContainer').show();
 		for (var bt in city.buildings)
@@ -72,7 +80,7 @@ function loadCityInfo(city, location)
 		$('#cityBuildingsContainer').hide();
 	}
 
-	if (city.workers)
+	if (city && city.workers)
 	{
 		for (var job in city.workers)
 		{
@@ -113,11 +121,13 @@ function loadCityInfo(city, location)
 		}
 	}
 
-	loadFleetOrCityMessages(city.messages, $('#cityMessages'));
+	if (city)
+		loadFleetOrCityMessages(city.messages, $('#cityMessages'));
 
-	loadAtThisLocation(city, location, $('#cityPane .atThisLocation'));
+	loadAtThisLocation(cityId, location, $('#cityPane .atThisLocation'));
 
-	loadCityOverheadView(city.id, city, $('#cityPane'));
+	if (city)
+		loadCityOverheadView(city.id, city, $('#cityPane'));
 }
 
 function loadCityOverheadView(cityId, city, $cityPane)

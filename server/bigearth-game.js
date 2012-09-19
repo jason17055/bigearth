@@ -75,14 +75,17 @@ function discoverCell(mapId, cellId, sightLevel)
 	}
 	else if (refCell.city)
 	{
-		var city = G.cities[refCell.city] || {};
-		if (!mapCell.city || mapCell.city.id != refCell.city)
+		if (!mapCell.city || mapCell.city != refCell.city || typeof mapCell.city !== 'Number')
 		{
 			isNew = true;
-			mapCell.city = { id: refCell.city };
+			mapCell.city = refCell.city;
 		}
 
-		if (discoverCity(refCell.city, city, mapCell.city, sightLevel))
+		var realCity = G.cities[refCell.city];
+		if (!realCity)
+			throw new Error("Unexpected- city "+refCell.city+" does not exist");
+
+		if (discoverCity(mapCell, refCell.city, realCity, sightLevel))
 		{
 			isNew = true;
 		}
@@ -109,167 +112,21 @@ function discoverCell(mapId, cellId, sightLevel)
 	}
 }
 
-// updates building information on a map to reflect the actual building
-function discoverBuilding(realBuilding, mapBuilding)
-{
-	var isNew = false;
-
-	if (realBuilding.buildingType != mapBuilding.buildingType)
-	{
-		isNew = true;
-		mapBuilding.buildingType = realBuilding.buildingType;
-	}
-	if (realBuilding.size != mapBuilding.size)
-	{
-		isNew = true;
-		mapBuilding.size = realBuilding.size;
-	}
-	if (realBuilding.orders != mapBuilding.orders)
-	{
-		isNew = true;
-		mapBuilding.orders = realBuilding.orders
-	}
-	return isNew;
-}
-
 // updates city information on a map to reflect the actual city
-function discoverCity(cityId, realCity, mapCity, sightLevel)
+function discoverCity(mapCell, cityId, realCity, sightLevel)
 {
 	var isNew = false;
 
-	//compatibility checks
-	delete mapCity.fuel;
-	delete mapCity.wheat;
-	delete mapCity.wood;
-	delete mapCity.meat;
-	delete mapCity.clay;
-	delete mapCity.food;
-	delete mapCity.stone;
-	delete mapCity['stone-block'];
-	delete mapCity['stone-weapon'];
-
-	var props = {
-		name: "public",
-		size: "public",
-		owner: "public",
-		population: "private floor",
-		children: "private floor",
-		activity: "private",
-		activityTime: "private",
-		activityComplete: "private",
-		activitySpeed: "private"
-		};
-
-	for (var p in props)
+	if (realCity.name != mapCell.cityName)
 	{
-		if (props[p].match(/private/) && sightLevel != 'full-sight')
-			continue;
-
-		var refValue = realCity[p];
-		if (props[p].match(/floor/))
-			refValue = Math.floor(refValue);
-
-		if (mapCity[p] != refValue)
-		{
-			isNew = true;
-			mapCity[p] = refValue;
-		}
+		isNew = true;
+		mapCell.cityName = realCity.name;
 	}
 
-	if (realCity.owner == playerId)
+	if (realCity.owner != mapCell.cityOwner)
 	{
-		// messages
-		if (realCity.messages)
-		{
-			if (!mapCity.messages)
-				mapCity.messages = [];
-			for (var i = 0, l = realCity.messages.length; i<l; i++)
-			{
-				if (!mapCity.messages[i]
-					|| mapCity.messages[i].time != realCity.messages[i].time
-					|| mapCity.messages[i].message != realCity.messages[i].message)
-				{
-					isNew = true;
-					mapCity.messages[i] = realCity.messages[i];
-				}
-			}
-		}
-
-		if (!mapCity.workers)
-			mapCity.workers = {};
-
-		var ww = roundWorkers(realCity.workers);
-		addAvailableJobs(cityId, ww);
-		for (var j in mapCity.workers)
-		{
-			if (!(j in ww))
-			{
-				isNew = true;
-				delete mapCity.workers[j];
-			}
-		}
-		for (var j in ww)
-		{
-			if (mapCity.workers[j] != ww[j])
-			{
-				isNew = true;
-				mapCity.workers[j] = ww[j];
-			}
-		}
-
-		if (!mapCity.buildings)
-		{
-			mapCity.buildings = {};
-		}
-		delete mapCity.buildingOrders;
-
-		// check for buildings which no longer exist
-		for (var bt in mapCity.buildings)
-		{
-			if (!realCity.buildings[bt])
-			{
-				isNew = true;
-				delete mapCity.buildings[bt];
-			}
-		}
-
-		// check for buildings that are new or changed
-		for (var bt in realCity.buildings)
-		{
-			if (!mapCity.buildings[bt])
-			{
-				mapCity.buildings[bt] = {};
-			}
-			if (discoverBuilding(realCity.buildings[bt], mapCity.buildings[bt]))
-			{
-				isNew = true;
-			}
-		}
-
-		// discover stock held by this city
-		if (!mapCity.stock)
-			mapCity.stock = {};
-		for (var t in mapCity.stock)
-		{
-			if (!realCity.stock[t])
-			{
-				isNew = true;
-				delete mapCity.stock[t];
-			}
-		}
-		for (var t in realCity.stock)
-		{
-			var refValue = Math.floor(+realCity.stock[t]);
-			if (refValue != mapCity.stock[t])
-			{
-				isNew = true;
-				mapCity.stock[t] = refValue;
-			}
-		}
-	}
-	else
-	{
-		delete mapCity.messages;
+		isNew = true;
+		mapCell.cityOwner = realCity.owner;
 	}
 
 	return isNew;
@@ -422,28 +279,26 @@ function moveFleetTowards(fleetId, targetLocation)
 		return fleetCurrentCommandFinished(fleetId, fleet);
 	}
 
-console.log("moving fleet "+fleetId+" from " + oldLoc + " to " + targetLocation);
+	// moving fleet from oldLoc to targetLocation
 
+	var map = Fleet.getMap(fleetId, fleet);
 	if (fleet.path && fleet.path.length >= 1)
 	{
-console.log("using memoized path (length " + fleet.path.length + ")");
+		// using memoized path
 
 		var nextLoc = fleet.path.shift();
-		if (Fleet.isNavigableByMap(G.maps[fleet.owner], fleet, nextLoc))
+		if (Fleet.isNavigableByMap(map, fleet, nextLoc))
 			return moveFleetOneStep(fleetId, nextLoc);
 		delete fleet.path;
 	}
 
-// perform a shortest path search for the destination
+	// perform a shortest path search for the destination
 
-console.log("must perform a shortest path search");
-
-	var map = Fleet.getMap(fleetId, fleet);
 	fleet.path = shortestPathByMap(map, fleet, oldLoc, targetLocation);
 
-console.log("shortest path is", fleet.path);
-if (fleet.path.length > 50)
-	fleet.path.splice(0,50);
+	// only memoize 50 steps at a time
+	if (fleet.path.length > 50)
+		fleet.path.splice(0,50);
 
 	var nextLoc = fleet.path.shift();
 	if (nextLoc && Fleet.isNavigableByMap(map, fleet, nextLoc))
@@ -920,6 +775,7 @@ function getGameState(request)
 		gameSpeed: Scheduler.ticksPerYear,
 		map: "/map/"+request.remote_player,
 		mapSize: G.terrain.size,
+		cities: "/cities/"+request.remote_player,
 		fleets: "/fleets/"+request.remote_player,
 		identity: request.remote_player
 		};
@@ -980,6 +836,21 @@ function getYear()
 	var t = new Date().getTime();
 	return G.world.age + (t-G.world.realWorldTime)/G.world.oneYear;
 }
+
+function getCities(playerId, callback)
+{
+	var result = {};
+	for (var cityId in G.cities)
+	{
+		if (G.cities[cityId].owner == playerId)
+		{
+			result[cityId] = city_module.getCityInfoForOwner(cityId);
+		}
+	}
+
+	callback(result);
+}
+exports.getCities = getCities;
 
 function getFleets(playerId, callback)
 {

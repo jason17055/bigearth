@@ -1,5 +1,7 @@
 function newMap()
 {
+	G.world.nextMapId = (G.world.nextMapId || 0);
+
 	var mapId = G.world.nextMapId++;
 	while (G.maps[mapId])
 		mapId = G.world.nextMapId++;
