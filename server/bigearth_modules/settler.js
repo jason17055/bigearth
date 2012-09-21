@@ -1,4 +1,5 @@
 var Location = require('../../html/location.js');
+var Fleet = require('./fleet.js');
 var City = require('./city.js');
 
 function autoSettle(fleetId, fleet, currentOrder)
@@ -197,7 +198,7 @@ function buildCity(fleetId, fleet, currentOrder)
 		var tid = city._id;
 
 		var map = G.maps[fleet.owner];
-		city.name = pickCityName(G.maps[fleet.owner]);
+		city.name = pickCityName(Fleet.getMap(fleetId, fleet));
 
 		terrainCell.city = tid;
 		developLand(fleet.location, 'mud-cottages', 1);
