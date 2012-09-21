@@ -9,6 +9,7 @@ var EVENTS = require('./events.js');
 var SECRET = CRYPTO.randomBytes(20).toString('hex');
 var SECURE = false;
 var Scheduler = require('./bigearth_modules/scheduler.js');
+var Lobby = require('./bigearth_modules/lobby.js');
 
 var GAME = require('./bigearth-game.js');
 var PERSIST = require('./bigearth-persist.js');
@@ -453,4 +454,5 @@ function startListener()
 var worldName = process.argv[2];
 loadWorld(worldName);
 startListener();
+Lobby.postWorldStatus();
 startGame();
