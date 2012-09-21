@@ -271,7 +271,7 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		{
 			_fleet.canSettle = true;
 			_fleet.settlementFitness = Settler.getSettlementFitness(
-				G.maps[f.owner], Location.toCellId(f.location));
+				getMap(fleetId, f), Location.toCellId(f.location));
 		}
 
 		var terrainCell = G.terrain.cells[Location.toCellId(f.location)];
