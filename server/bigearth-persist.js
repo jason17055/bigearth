@@ -39,6 +39,14 @@ function saveWorld(G)
 	filename = G.worldName + '/maps.txt';
 	fs.writeFileSync(filename+'.tmp', JSON.stringify(G.maps));
 
+	filename = G.worldName + '/battles.txt';
+	var _battles = {};
+	for (var bid in G.battles)
+	{
+		_battles[bid] = pruneStruct(G.battles[bid]);
+	}
+	fs.writeFileSync(filename+'.tmp', JSON.stringify(_battles));
+
 	filename = G.worldName + '/fleets.txt';
 	var _fleets = {};
 	for (var fid in G.fleets)
@@ -55,7 +63,7 @@ function saveWorld(G)
 	}
 	fs.writeFileSync(filename+'.tmp', JSON.stringify(_cities));
 
-	var allFiles = ['world.txt','terrain.txt','players.txt','maps.txt','fleets.txt','cities.txt'];
+	var allFiles = ['world.txt','terrain.txt','players.txt','maps.txt','battles.txt','fleets.txt','cities.txt'];
 	for (var i = 0; i < allFiles.length; i++)
 	{
 		var filename = G.worldName + '/' + allFiles[i];

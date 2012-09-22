@@ -352,6 +352,7 @@ function loadWorld(worldName)
 	loadTerrain();
 	loadPlayers();
 	loadMaps();
+	loadBattles();
 	loadFleets();
 	loadCities();
 }
@@ -407,6 +408,21 @@ function loadMaps()
 	catch (err)
 	{
 		G.maps = {};
+	}
+}
+
+function loadBattles()
+{
+	var filename = G.worldName + '/battles.txt';
+
+	try
+	{
+		var rawData = FS.readFileSync(filename);
+		G.battles = JSON.parse(rawData);
+	}
+	catch (err)
+	{
+		G.battles = {};
 	}
 }
 
