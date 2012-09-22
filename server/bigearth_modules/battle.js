@@ -42,4 +42,34 @@ function newBattle(location, side1, side2)
 	return battleId;
 }
 
+function endBattle(battleId)
+{
+	var battle = G.battles[battleId];
+	for (var side in battle.groups)
+	{
+		for (var fid in battle.groups[side])
+		{
+			delete G.fleets[fid].inBattle;
+			delete G.fleets[fid].inBattleGroup;
+		}
+	}
+
+	var terrain = getTerrainLocation(battle.location);
+	delete terrain.battle;
+
+	delete G.battles[battleId];
+	return;
+}
+
+function removeFleet(battleId, fleetId, side)
+{
+	var battle = G.battles[battleId];
+
+	delete battle.groups[side][fleetId];
+
+	//TODO- check whether that completes the battle
+}
+
 exports.newBattle = newBattle;
+exports.endBattle = endBattle;
+exports.removeFleet = removeFleet;

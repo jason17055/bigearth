@@ -211,6 +211,12 @@ function destroyFleet(fleetId, disposition)
 			removeFleetCanSee(fleetId, fleet, loc);
 		}
 	}
+
+	if (fleet.inBattle)
+	{
+		Battle.removeFleet(fleet.inBattle, fleetId, fleet.inBattleGroup);
+	}
+
 	delete G.fleets[fleetId];
 }
 
