@@ -12,7 +12,7 @@ var Terrain = require('./terrain.js');
 var City = require('./city.js');
 var Commodity = require('./commodity.js');
 var Lobby = require('./lobby.js');
-var Battle = require('./bigearth_modules/battle.js');
+var Battle = require('./battle.js');
 
 function fleetMessage(fleetId, message)
 {
