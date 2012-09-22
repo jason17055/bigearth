@@ -117,10 +117,12 @@ BigEarthViewPort.prototype.recreateFleetIcons = function()
 
 	if (fleets)
 	{
+		this.regeneratingFleets = true;
 		for (var fid in fleets)
 		{
 			this.updateFleetIcon(fid);
 		}
+		delete this.regeneratingFleets;
 	}
 
 	if (selectedFleet)
@@ -533,6 +535,22 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 		$f = $('<div class="fleetIcon"><img class="selectionCircle" src="ui_images/fleet_selection_circle_front.gif"><img class="unitIcon"><span class="ownerIcon"></span><span class="activityIcon"></span></div>');
 		$f.attr('fleet-id', fleetId);
 		$('.bigearth-scrollPanel', this.el).append($f);
+
+		if (!this.regeneratingFleets)
+		{
+			// make this element start out hidden but then fade to visible
+			$f.css({
+			opacity: '0'
+			});
+
+			setTimeout(function() {
+				$f.css({
+					'-webkit-transition': 'opacity 0.5s ease-out',
+					'-moz-transition': 'opacity 0.5s ease-out',
+					opacity: '1'
+					});
+				}, 0);
+		}
 
 		var imgEl = $('img.unitIcon',$f).get(0);
 		$(imgEl).click(function() {
