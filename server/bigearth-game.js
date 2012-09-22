@@ -11,6 +11,7 @@ var Settler = require('./bigearth_modules/settler.js');
 var Fleet = require('./bigearth_modules/fleet.js');
 var Lobby = require('./bigearth_modules/lobby.js');
 var Map = require('./bigearth_modules/map.js');
+var Battle = require('./bigearth_modules/battle.js');
 
 var G = {
 	world: {},
@@ -583,6 +584,14 @@ function moveFleetOneStep(fleetId, newLoc)
 {
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
+
+	if (fleet.inBattle)
+	{
+		Battle.removeFleet(fleet.inBattle, fleetId, fleet.inBattleGroup);
+		delete fleet.inBattle;
+		delete fleet.inBattleGroup;
+	}
+
 	fleet.lastLocation = oldLoc;
 	fleet.location = newLoc;
 	delete fleet.hadTerrainEffect;
