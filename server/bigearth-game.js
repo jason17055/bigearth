@@ -941,6 +941,7 @@ exports.getMapFragment = getMapFragment;
 function endOfYear()
 {
 	G.world.lastYear++;
+	G.world.totalPopulation = 0;
 
 	// do this year's processing
 	console.log("processing year " + G.world.lastYear);
@@ -975,6 +976,7 @@ function endOfYear()
 		// city cleanup depends on terrain cleanup already being done
 
 		cityEndOfYear_cleanup(tid, G.cities[tid]);
+		G.world.totalPopulation += G.cities[tid].population + G.cities[tid].children;
 	}
 
 	// schedule for next end-of-year

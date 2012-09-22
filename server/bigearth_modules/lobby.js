@@ -1,5 +1,6 @@
 var Http = require('http');
 var Querystring = require('querystring');
+var Scheduler = require('./scheduler.js');
 
 function postAdvertisement(ad_properties)
 {
@@ -51,7 +52,11 @@ function postWorldStatus(args)
 
 	var post_data = Querystring.stringify({
 		url: BE.serverBaseUrl,
-		secret: BE.serverSecret
+		secret: BE.serverSecret,
+		size: BE.geometry.getCellCount(),
+		year: Scheduler.time,
+		year_real_world_duration: (Scheduler.ticksPerYear/1000),
+		population: G.world.totalPopulation
 		});
 	var responseObject;
 	var responseData = '';
