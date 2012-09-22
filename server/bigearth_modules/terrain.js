@@ -1,3 +1,9 @@
+// TERRAIN DATA STRUCTURE
+//  terrain - the type of terrain
+//  fleets - set of fleet ids, listing anyone that is in this cell
+//  battle - optional, identifies the battle taking place in this cell
+//
+
 var WILDLIFE_QUOTA = {
 	'glacier': 10,
 	'desert': 20,

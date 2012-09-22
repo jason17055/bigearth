@@ -533,6 +533,42 @@ function updateFleetSight(fid, fleet)
 	}
 }
 
+function checkForBattle(location)
+{
+	var terrain = getTerrainLocation(location);
+
+	var lions = {};
+	var countLions = 0;
+	var nonLions = {};
+	var countNonLions = 0;
+	for (var fid in terrain.fleets)
+	{
+		if (G.fleets[fid].type == 'lion')
+		{
+			lions[fid] = true;
+			countLions++;
+		}
+		else
+		{
+			nonLions[fid] = true;
+			countNonLions++;
+		}
+	}
+
+	if (countLions == 0 || countNonLions == 0)
+	{
+		// no battle
+		if (terrain.battle)
+			Battle.endBattle(terrain.battle);
+		return;
+	}
+
+	if (!terrain.battle)
+	{
+		Battle.newBattle(location, lions, nonLions);
+	}
+}
+
 // called after fleet has moved
 // this function is responsible for fleets being able to see each
 // other, and detecting when a fleet can no longer be seen
@@ -540,6 +576,7 @@ function updateFleetSight(fid, fleet)
 function fleetMoved(fleetId, fleet, oldLoc, newLoc)
 {
 	updateFleetSight(fleetId, fleet);
+	checkForBattle(newLoc);
 }
 
 function moveFleetOneStep(fleetId, newLoc)
@@ -1207,4 +1244,5 @@ if (typeof global !== 'undefined')
 	global.moveFleetTowards = moveFleetTowards;
 	global.allPlayersWhoCanSee = allPlayersWhoCanSee;
 	global.removeFleetCanSee = removeFleetCanSee;
+	global.getTerrainLocation = getTerrainLocation;
 }

@@ -1,3 +1,10 @@
+// FLEET DATA STRUCTURE
+//  type - the unit type of this fleet
+//  population - the number of people
+//  inBattle - identifies a battle that this fleet is involved in
+//  inBattleGroup - identifies which team, on the battle, the fleet is on
+//
+
 var Scheduler = require('./scheduler.js');
 var Location = require('../../html/location.js');
 var Settler = require('./settler.js');
