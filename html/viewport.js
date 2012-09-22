@@ -489,6 +489,20 @@ BigEarthViewPort.prototype.exposeCanvases = function()
 BigEarthViewPort.prototype.removeFleetIcon = function(fleetId, eventData)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]', this.el);
+
+	if (eventData.disposition == 'out-of-sight')
+	{
+		$f.css({
+		'-webkit-transition': 'opacity 0.5s ease-out',
+		'-moz-transition': 'opacity 0.5s ease-out',
+		'opacity': '0'
+		});
+		setTimeout(function() {
+			$f.remove();
+			}, 500);
+		return;
+	}
+
 	$f.remove();
 
 	//TODO
