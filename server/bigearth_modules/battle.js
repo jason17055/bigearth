@@ -39,7 +39,36 @@ function newBattle(location, side1, side2)
 	var terrain = getTerrainLocation(location);
 	terrain.battle = battleId;
 
+	fireBattleNotification(battleId,
+		{
+			event: 'battle-created',
+			battle: battleId,
+			location: location,
+			groups: groups
+		});
+
 	return battleId;
+}
+
+function fireBattleNotification(battleId, eventData)
+{
+	var battle = G.battles[battleId];
+
+	var recipients = {};
+	for (var side in battle.groups)
+	{
+		for (var fid in battle.groups[side])
+		{
+			var fleet = G.fleets[fid];
+			if (fleet.owner)
+				recipients[fleet.owner] = true;
+		}
+	}
+
+	for (var playerId in recipients)
+	{
+		notifyPlayer(playerId, eventData);
+	}
 }
 
 function endBattle(battleId)
