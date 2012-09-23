@@ -533,6 +533,49 @@ BigEarthViewPort.prototype.updateBattleIcon = function(battleId, p)
 		});
 };
 
+BigEarthViewPort.prototype.showFleetAttack = function(attackerId, defenderId)
+{
+	var $f = $('.fleetIcon[fleet-id="'+attackerId+'"]', this.el);
+	if ($f.length == 0)
+		return;
+
+	var attackerInfo = fleets[attackerId];
+	if (!attackerInfo)
+		return;
+
+	var defenderInfo = fleets[defenderId];
+	if (!defenderInfo)
+		return;
+
+	var attackerPos = this.toScreenPoint(Location.toPoint(attackerInfo.location));
+	if (attackerInfo.inBattleGroup == 'a')
+	{
+		attackerPos.x -= 24;
+	}
+	else
+	{
+		attackerPos.x += 24;
+	}
+
+	var thrustPos = this.toScreenPoint(Location.toPoint(defenderInfo.location));
+
+	$f.css({
+		'-webkit-transition': 'all 0.2s ease-out',
+		'-moz-transition': 'all 0.2s ease-out',
+		left: (thrustPos.x - 32)+"px",
+		top: (thrustPos.y - 24)+"px"
+		});
+	setTimeout(function() {
+
+	$f.css({
+		'-webkit-transition': 'all 0.4s ease-out',
+		'-moz-transition': 'all 0.4s ease-out',
+		left: (attackerPos.x - 32)+"px",
+		top: (attackerPos.y - 24)+"px"
+		});
+		}, 250);
+};
+
 BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]', this.el);

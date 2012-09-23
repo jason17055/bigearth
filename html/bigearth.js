@@ -635,7 +635,7 @@ function onBattleTerminated(eventData)
 var attackCount = 0;
 function onBattleAttack(eventData)
 {
-	document.title = 'Attack ' + (++attackCount);
+	VIEWPORT.showFleetAttack(eventData.attacker, eventData.defender);
 }
 
 function onFleetMovement(eventData)
