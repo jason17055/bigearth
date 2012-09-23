@@ -196,12 +196,45 @@ function onSkirmish(battleId)
 	var battle = G.battles[battleId];
 	delete battle._skirmishTimer;
 
+	// pick an attacker
+	var candidates = [];
+	for (var side in battle.groups)
+	{
+		for (var fid in battle.groups[side])
+		{
+			candidates.push({ id: fid, group: side });
+		}
+	}
+	var pick = Math.floor(Math.random() * candidates.length);
+	var attackerId = candidates[pick].id;
+	var attackerSide = candidates[pick].group;
+
+	// pick a defender
+	candidates = [];
+	for (var side in battle.groups)
+	{
+		if (side == attackerSide)
+			continue;
+
+		for (var fid in battle.groups[side])
+		{
+			candidates.push({ id: fid, group: side });
+		}
+	}
+	var pick = Math.floor(Math.random() * candidates.length);
+	var defenderId = candidates[pick].id;
+
+	// TODO- deal out damage, etc.
+
 	fireBattleNotification(battleId,
 	{
 		event: 'battle-attack',
 		battle: battleId,
 		location: battle.location,
-		foo: "bar"
+		attacker: attackerId,
+		attackerDamageSustained: 5,
+		defender: defenderId,
+		defenderDamageSustained: 10
 	});
 
 	battle._skirmishTimer = Scheduler.schedule(function() { onSkirmish(battleId); }, 5000);
