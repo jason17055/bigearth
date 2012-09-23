@@ -919,6 +919,137 @@ function moveFleetAlongCoast(fleetId)
 	return fleetCurrentCommandFinished(fleetId, fleet);
 }
 
+function moveFleetTowards(fleetId, targetLocation)
+{
+	var fleet = G.fleets[fleetId];
+	var oldLoc = fleet.location;
+
+	if (!targetLocation || oldLoc == targetLocation)
+	{
+		return fleetCurrentCommandFinished(fleetId, fleet);
+	}
+
+	// moving fleet from oldLoc to targetLocation
+
+	var map = getMap(fleetId, fleet);
+	if (fleet.path && fleet.path.length >= 1)
+	{
+		// using memoized path
+
+		var nextLoc = fleet.path.shift();
+		if (isNavigableByMap(map, fleet, nextLoc))
+			return moveFleetOneStep(fleetId, nextLoc);
+		delete fleet.path;
+	}
+
+	// perform a shortest path search for the destination
+
+	fleet.path = shortestPathByMap(map, fleet, oldLoc, targetLocation);
+
+	// only memoize 50 steps at a time
+	if (fleet.path.length > 50)
+		fleet.path.splice(0,50);
+
+	var nextLoc = fleet.path.shift();
+	if (nextLoc && isNavigableByMap(map, fleet, nextLoc))
+	{
+		return moveFleetOneStep(fleetId, nextLoc);
+	}
+	else // our map does not tell us how to get to the destination
+	{
+		// rediscover the current and surrounding cells, just in case the problem
+		// is lack of a map
+		discoverCell(fleet.map, Location.toCellId(fleet.location), "full-sight");
+		discoverCellBorder(fleet.map, Location.toCellId(fleet.location), "full-sight");
+
+		// report the error
+		return fleetActivityError(fleetId, fleet, "Cannot reach destination");
+	}
+}
+
+function shortestPathByMap(map, fleet, fromLoc, toLoc)
+{
+	var baseDist = null;
+
+	var seen = {};
+	var buildPath = function(loc)
+	{
+		var path = [];
+		while (loc != fromLoc)
+		{
+			path.unshift(loc);
+			loc = seen[loc];
+			if (!loc)
+				throw new Error("unexpected");
+		}
+		return path;
+	};
+
+	// each entry in Q is [ cellId, lastCell, accumDist, estRemainDist ];
+
+	var Q = [];
+	Q.push([ fromLoc, 0, 0, Infinity ]);
+
+	var countIterations = 0;
+	var bestSoFar;               //in case we stop early
+	var bestSoFarScore = Infinity;
+
+	while (Q.length)
+	{
+		var cur = Q.shift();
+		var curLoc = cur[0];
+
+		if (cur[3] < bestSoFarScore)
+		{
+			bestSoFar = curLoc;
+			bestSoFarScore = cur[3];
+		}
+
+		if (seen[curLoc])
+			continue;
+		seen[curLoc] = cur[1];
+
+		if (curLoc == toLoc)
+		{
+			// success!
+			return buildPath(toLoc);
+		}
+		else if (++countIterations > 500)
+		{
+			// failure...
+			console.log("shortestPath taking too long, aborting");
+			break;
+		}
+
+		var nn = BE.geometry.getNeighbors(curLoc);
+		if (!baseDist)
+			baseDist = BE.geometry.distanceBetween(curLoc, nn[0]);
+
+		for (var i = 0, l = nn.length; i < l; i++)
+		{
+			if (seen[nn[i]])
+				continue;
+
+			var costInfo = getMovementCost_byMap(fleet, curLoc, nn[i], map);
+			var accumDist = cur[2] + costInfo.delay;
+			var estRemainDistSteps = nn[i] == toLoc ? 0 : BE.geometry.distanceBetween(nn[i], toLoc) / baseDist;
+			var estRemainDist = estRemainDistSteps * 3000;
+
+			Q.push([ nn[i], curLoc, accumDist, estRemainDist ]);
+		}
+		Q.sort(function(a,b) {
+
+			return (a[2] + a[3]) - (b[2] + b[3]);
+			});
+	}
+
+	// ran out of options to try
+	if (bestSoFar)
+		return buildPath(bestSoFar);
+	else
+		return [];
+}
+
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
 global.fleetCooldown = fleetCooldown;
