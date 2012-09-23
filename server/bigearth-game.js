@@ -564,7 +564,7 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 		f.owner = null;
 	}
 
-	if (f.owner)
+	if (f.owner && !f.map)
 	{
 		f.map = G.players[f.owner].map;
 	}

@@ -13,4 +13,10 @@ function newMap()
 	return mapId;
 }
 
+function copyMap(mapId)
+{
+	return mapId;
+}
+
 exports.newMap = newMap;
+exports.copyMap = copyMap;

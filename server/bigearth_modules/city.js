@@ -1,6 +1,7 @@
 var Scheduler = require('./scheduler.js');
 var Location = require('../../html/location.js');
 var Terrain = require('./terrain.js');
+var Map = require('./map.js');
 
 function onFarmCompleted(cityId, city)
 {
@@ -115,6 +116,12 @@ function newCity(location, owner)
 //
 function checkCity(cityId, city)
 {
+	if (city.owner && !city.map)
+	{
+		if (G.maps[city.owner])
+			city.map = city.owner;
+	}
+
 	if ('fuel' in city)
 	{
 		city.wood = city.fuel;
@@ -590,7 +597,8 @@ function tryEquipNewUnit(cityId, city, unitType)
 		stealWorkers(cityId, city, costInfo.populationCost, 'equip-unit');
 		var numSettlers = removeWorkers(cityId, city, Infinity, 'equip-unit');
 		createUnit(city.owner, unitType, city.location, {
-			population: numSettlers
+			population: numSettlers,
+			map: Map.copyMap(city.map)
 			});
 
 		cityActivityComplete(cityId, city);
