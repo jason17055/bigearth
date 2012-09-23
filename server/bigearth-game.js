@@ -292,10 +292,10 @@ function removePlayerCanSee(playerId, location)
 
 	// notify user that they lost sight of any fleets at this location
 
-	for (var fid in G.fleets)
+	for (var fid in terrain.fleets)
 	{
 		var fleet = G.fleets[fid];
-		if (fleet.location == location && fleet.owner != playerId)
+		if (fleet.owner != playerId)
 		{
 			notifyPlayer(playerId, {
 				event: 'fleet-terminated',
