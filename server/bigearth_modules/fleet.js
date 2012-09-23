@@ -1,8 +1,13 @@
 // FLEET DATA STRUCTURE
 //  type - the unit type of this fleet
+//  location - where the fleet is
 //  population - the number of people
 //  inBattle - identifies a battle that this fleet is involved in
 //  inBattleGroup - identifies which team, on the battle, the fleet is on
+//  messages [] - array of message objects
+//  map - identifies the map that this fleet uses
+//  activity - name of activity the fleet is currently doing
+//  stock {} - commodities this fleet has in its possession
 //
 
 var Scheduler = require('./scheduler.js');
@@ -776,6 +781,107 @@ function maybeAdvertise(fleetId, fleet)
 	}
 }
 
+function moveFleetOneStep(fleetId, newLoc)
+{
+	var fleet = G.fleets[fleetId];
+	var oldLoc = fleet.location;
+
+	if (fleet.inBattle)
+	{
+		Battle.removeFleet(fleet.inBattle, fleetId, fleet.inBattleGroup);
+		delete fleet.inBattle;
+		delete fleet.inBattleGroup;
+	}
+
+	fleet.lastLocation = oldLoc;
+	fleet.location = newLoc;
+	delete fleet.hadTerrainEffect;
+	delete fleet.crossedRiver;
+
+	{
+		var oldLocTerrain = getTerrainLocation(oldLoc);
+		if (oldLocTerrain.fleets)
+			delete oldLocTerrain.fleets[fleetId];
+
+		var newLocTerrain = getTerrainLocation(newLoc);
+		if (!newLocTerrain.fleets)
+			newLocTerrain.fleets = {};
+		newLocTerrain.fleets[fleetId] = true;
+	}
+
+	var movementCostInfo = getMovementCost_real(fleet, oldLoc, newLoc);
+	var costOfMovement = movementCostInfo.delay;
+	console.log("cost is " + Math.round(costOfMovement));
+
+	if (movementCostInfo.crossedRiver)
+		fleet.crossedRiver = movementCostInfo.crossedRiver;
+
+	fleetMoved(fleetId, fleet, oldLoc, newLoc);
+	discoverCell(fleet.map, Location.toCellId(newLoc), "full-sight");
+	discoverCellBorder(fleet.map, Location.toCellId(newLoc), "full-sight");
+
+	notifyPlayer(fleet.owner, {
+		event: 'fleet-movement',
+		fleet: fleetId,
+		fromLocation: oldLoc,
+		toLocation: newLoc,
+		delay: Math.round(costOfMovement),
+		inBattle: fleet.inBattle,
+		inBattleGroup: fleet.inBattleGroup
+		});
+
+	var observersOldLoc = allPlayersWhoCanSee(oldLoc);
+	var observersNewLoc = allPlayersWhoCanSee(newLoc);
+	for (var pid in observersOldLoc)
+	{
+		if (pid == fleet.owner)
+			continue;
+
+		if (observersNewLoc[pid])
+		{
+			// ordinary movement
+			notifyPlayer(pid, {
+				event: 'fleet-movement',
+				fleet: fleetId,
+				fromLocation: oldLoc,
+				toLocation: newLoc,
+				delay: Math.round(costOfMovement)
+				});
+		}
+		else
+		{
+			// observer of fleet at old location, but cannot
+			// see the new location
+			notifyPlayer(pid, {
+				event: 'fleet-terminated',
+				fleet: fleetId,
+				location: oldLoc,
+				newLocation: newLoc,
+				disposition: 'moved-out-of-sight'
+				});
+		}
+	}
+	for (var pid in observersNewLoc)
+	{
+		if (pid == fleet.owner)
+			continue;
+
+		if (!observersOldLoc[pid])
+		{
+			// observer who can see new location, but not
+			// able to see the old location
+			notifyPlayer(pid, {
+				event: 'fleet-spawned',
+				fleet: fleetId,
+				fromLocation: oldLoc,
+				data: getFleetInfoForPlayer(fleetId, pid)
+				});
+		}
+	}
+
+	fleetCooldown(fleetId, fleet, Math.round(costOfMovement));
+}
+
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
 global.fleetCooldown = fleetCooldown;
@@ -792,3 +898,4 @@ exports.getMovementCost_byMap = getMovementCost_byMap;
 exports.getMovementCost_real = getMovementCost_real;
 exports.maybeAdvertise = maybeAdvertise;
 exports.getMap = getMap;
+exports.moveFleetOneStep = moveFleetOneStep;

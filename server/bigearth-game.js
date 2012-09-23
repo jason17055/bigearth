@@ -278,7 +278,7 @@ function moveFleetAlongCoast(fleetId)
 			continue;
 		if (foundSea && c.terrain != 'ocean')
 		{
-			return moveFleetOneStep(fleetId, nid);
+			return Fleet.moveFleetOneStep(fleetId, nid);
 		}
 		else if (c.terrain == 'ocean')
 		{
@@ -309,7 +309,7 @@ function moveFleetTowards(fleetId, targetLocation)
 
 		var nextLoc = fleet.path.shift();
 		if (Fleet.isNavigableByMap(map, fleet, nextLoc))
-			return moveFleetOneStep(fleetId, nextLoc);
+			return Fleet.moveFleetOneStep(fleetId, nextLoc);
 		delete fleet.path;
 	}
 
@@ -324,7 +324,7 @@ function moveFleetTowards(fleetId, targetLocation)
 	var nextLoc = fleet.path.shift();
 	if (nextLoc && Fleet.isNavigableByMap(map, fleet, nextLoc))
 	{
-		return moveFleetOneStep(fleetId, nextLoc);
+		return Fleet.moveFleetOneStep(fleetId, nextLoc);
 	}
 	else // our map does not tell us how to get to the destination
 	{
@@ -597,107 +597,6 @@ function fleetMoved(fleetId, fleet, oldLoc, newLoc)
 {
 	updateFleetSight(fleetId, fleet);
 	checkForBattle(newLoc);
-}
-
-function moveFleetOneStep(fleetId, newLoc)
-{
-	var fleet = G.fleets[fleetId];
-	var oldLoc = fleet.location;
-
-	if (fleet.inBattle)
-	{
-		Battle.removeFleet(fleet.inBattle, fleetId, fleet.inBattleGroup);
-		delete fleet.inBattle;
-		delete fleet.inBattleGroup;
-	}
-
-	fleet.lastLocation = oldLoc;
-	fleet.location = newLoc;
-	delete fleet.hadTerrainEffect;
-	delete fleet.crossedRiver;
-
-	{
-		var oldLocTerrain = getTerrainLocation(oldLoc);
-		if (oldLocTerrain.fleets)
-			delete oldLocTerrain.fleets[fleetId];
-
-		var newLocTerrain = getTerrainLocation(newLoc);
-		if (!newLocTerrain.fleets)
-			newLocTerrain.fleets = {};
-		newLocTerrain.fleets[fleetId] = true;
-	}
-
-	var movementCostInfo = Fleet.getMovementCost_real(fleet, oldLoc, newLoc);
-	var costOfMovement = movementCostInfo.delay;
-	console.log("cost is " + Math.round(costOfMovement));
-
-	if (movementCostInfo.crossedRiver)
-		fleet.crossedRiver = movementCostInfo.crossedRiver;
-
-	fleetMoved(fleetId, fleet, oldLoc, newLoc);
-	discoverCell(fleet.map, Location.toCellId(newLoc), "full-sight");
-	discoverCellBorder(fleet.map, Location.toCellId(newLoc), "full-sight");
-
-	notifyPlayer(fleet.owner, {
-		event: 'fleet-movement',
-		fleet: fleetId,
-		fromLocation: oldLoc,
-		toLocation: newLoc,
-		delay: Math.round(costOfMovement),
-		inBattle: fleet.inBattle,
-		inBattleGroup: fleet.inBattleGroup
-		});
-
-	var observersOldLoc = allPlayersWhoCanSee(oldLoc);
-	var observersNewLoc = allPlayersWhoCanSee(newLoc);
-	for (var pid in observersOldLoc)
-	{
-		if (pid == fleet.owner)
-			continue;
-
-		if (observersNewLoc[pid])
-		{
-			// ordinary movement
-			notifyPlayer(pid, {
-				event: 'fleet-movement',
-				fleet: fleetId,
-				fromLocation: oldLoc,
-				toLocation: newLoc,
-				delay: Math.round(costOfMovement)
-				});
-		}
-		else
-		{
-			// observer of fleet at old location, but cannot
-			// see the new location
-			notifyPlayer(pid, {
-				event: 'fleet-terminated',
-				fleet: fleetId,
-				location: oldLoc,
-				newLocation: newLoc,
-				disposition: 'moved-out-of-sight'
-				});
-		}
-	}
-	for (var pid in observersNewLoc)
-	{
-		if (pid == fleet.owner)
-			continue;
-
-		if (!observersOldLoc[pid])
-		{
-			// observer who can see new location, but not
-			// able to see the old location
-			notifyPlayer(pid, {
-				event: 'fleet-spawned',
-				fleet: fleetId,
-				fromLocation: oldLoc,
-				data: getFleetInfoForPlayer(fleetId, pid)
-				});
-		}
-	}
-
-	fleetCooldown(fleetId, fleet, Math.round(costOfMovement));
 }
 
 function findSuitableStartingLocation()
@@ -1280,4 +1179,7 @@ if (typeof global !== 'undefined')
 	global.allPlayersWhoCanSee = allPlayersWhoCanSee;
 	global.removeFleetCanSee = removeFleetCanSee;
 	global.getTerrainLocation = getTerrainLocation;
+	global.discoverCell = discoverCell;
+	global.discoverCellBorder = discoverCellBorder;
+	global.fleetMoved = fleetMoved;
 }
