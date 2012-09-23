@@ -1262,6 +1262,12 @@ function governor_determineJobLevels(cityId, city)
 	var mandatoryShepherds = numSheep > numPigs ? Math.ceil(numSheep / 8) : Math.ceil(numPigs / 8);
 	jobLevels.push({ priority: 85, job: 'shepherd', quantity: mandatoryShepherds });
 
+	// does the city have tasks to perform?
+	if (city.tasks && city.tasks.length != 0)
+	{
+		jobLevels.push({ priority: 15, job: 'build', quantity: 1000 });
+	}
+
 	// some other jobs that people like to do...
 	jobLevels.push({ priority: 10, job: 'research', quantity: Math.floor(city.population / 10) });
 
