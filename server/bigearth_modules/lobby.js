@@ -54,10 +54,11 @@ function postWorldStatus(args)
 		url: BE.serverBaseUrl,
 		secret: BE.serverSecret,
 		size: BE.geometry.getCellCount(),
-		year: Scheduler.time,
-		year_real_world_duration: (Scheduler.ticksPerYear/1000),
+		year: Scheduler.time || G.world.age,
+		year_real_world_duration: (Scheduler.ticksPerYear || G.world.oneYear) / 1000,
 		population: G.world.totalPopulation
 		});
+console.log(post_data);
 	var responseObject;
 	var responseData = '';
 	var onResponseEnd = function()
