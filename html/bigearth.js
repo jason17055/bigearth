@@ -614,6 +614,21 @@ function onBattleCreated(eventData)
 	}
 }
 
+function onBattleTerminated(eventData)
+{
+	for (var fid in eventData.victors)
+	{
+		if (fleets[fid])
+		{
+			delete fleets[fid].inBattle;
+			delete fleets[fid].inBattleGroup;
+			VIEWPORT.updateFleetIcon(fid, fleets[fid]);
+		}
+	}
+
+	VIEWPORT.removeBattleIcon(eventData.battle);
+}
+
 function onFleetMovement(eventData)
 {
 	var fleetId = eventData.fleet;
@@ -694,6 +709,10 @@ function onEvent(eventData)
 	if (eventData.event == 'battle-created' || eventData.event == 'battle-updated')
 	{
 		return onBattleCreated(eventData);
+	}
+	else if (eventData.event == 'battle-terminated')
+	{
+		return onBattleTerminated(eventData);
 	}
 	else if (eventData.event == 'city-updated')
 	{

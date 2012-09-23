@@ -489,6 +489,12 @@ BigEarthViewPort.prototype.exposeCanvases = function()
 	}
 };
 
+BigEarthViewPort.prototype.removeBattleIcon = function(battleId)
+{
+	var $b = $('.battleIcon[battle-id="'+battleId+'"]', this.el);
+	$b.remove();
+};
+
 BigEarthViewPort.prototype.removeFleetIcon = function(fleetId, eventData)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]', this.el);

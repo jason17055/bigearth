@@ -121,10 +121,54 @@ function addFleet(battleId, fleetId, side)
 function removeFleet(battleId, fleetId, side)
 {
 	var battle = G.battles[battleId];
-
 	delete battle.groups[side][fleetId];
 
-	//TODO- check whether that completes the battle
+	var fleet = G.fleets[fleetId];
+	if (fleet)
+	{
+		delete fleet.inBattle;
+		delete fleet.inBattleGroup;
+
+		//TODO - notify owner of this fleet
+		//fleetChanged(...)
+	}
+
+	// check whether that completes the battle
+	var countSides = 0;
+	var victorGroup = null;
+	for (var side in battle.groups)
+	{
+		var count = 0;
+		for (var fid in battle.groups[side])
+		{
+			count++;
+		}
+
+		if (count == 0)
+		{
+			delete battle.groups[side];
+		}
+		else
+		{
+			victorGroup = side;
+			countSides++;
+		}
+	}
+
+	if (countSides <= 1)
+	{
+		fireBattleNotification(battleId,
+		{
+			event: 'battle-terminated',
+			battle: battleId,
+			location: battle.location,
+			victorsGroup: victorGroup,
+			victors: battle.groups[victorGroup]
+		});
+
+		endBattle(battleId);
+	}
+	return;
 }
 
 exports.newBattle = newBattle;
