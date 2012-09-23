@@ -161,7 +161,20 @@ function removeFleet(battleId, fleetId, side)
 	return;
 }
 
+function playerCanNoLongerSee(battleId, playerId)
+{
+	var battle = G.battles[battleId];
+
+	notifyPlayer(playerId, {
+		event: 'battle-terminated',
+		battle: battleId,
+		location: battle.location,
+		disposition: 'out-of-sight'
+		});
+}
+
 exports.newBattle = newBattle;
 exports.endBattle = endBattle;
 exports.addFleet = addFleet;
 exports.removeFleet = removeFleet;
+exports.playerCanNoLongerSee = playerCanNoLongerSee;

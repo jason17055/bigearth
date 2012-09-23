@@ -616,13 +616,16 @@ function onBattleCreated(eventData)
 
 function onBattleTerminated(eventData)
 {
-	for (var fid in eventData.victors)
+	if (eventData.victors)
 	{
-		if (fleets[fid])
+		for (var fid in eventData.victors)
 		{
-			delete fleets[fid].inBattle;
-			delete fleets[fid].inBattleGroup;
-			VIEWPORT.updateFleetIcon(fid, fleets[fid]);
+			if (fleets[fid])
+			{
+				delete fleets[fid].inBattle;
+				delete fleets[fid].inBattleGroup;
+				VIEWPORT.updateFleetIcon(fid, fleets[fid]);
+			}
 		}
 	}
 

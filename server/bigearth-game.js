@@ -454,6 +454,13 @@ function addPlayerCanSee(playerId, location)
 
 function removePlayerCanSee(playerId, location)
 {
+	// notify user that they lost sight of any battle going on here
+	var terrain = getTerrainLocation(location);
+	if (terrain.battle)
+	{
+		Battle.playerCanNoLongerSee(terrain.battle, playerId);
+	}
+
 	// notify user that they lost sight of any fleets at this location
 
 	for (var fid in G.fleets)
