@@ -275,6 +275,11 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		};
 		if (f.activity)
 			_fleet.activity = f.activity;
+		if (f.inBattle)
+		{
+			_fleet.inBattle = f.inBattle;
+			_fleet.inBattleSide = f.inBattleSide;
+		}
 		if (f.messages)
 		{
 			_fleet.messages = f.messages;
@@ -328,6 +333,11 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		};
 		if (f.activity)
 			_fleet.activity = f.activity;
+		if (f.inBattle)
+		{
+			_fleet.inBattle = f.inBattle;
+			_fleet.inBattleSide = f.inBattleSide;
+		}
 		return _fleet;
 	}
 	else

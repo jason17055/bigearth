@@ -537,7 +537,11 @@ function loadFleetInfo(fleetId)
 
 	loadFleetOrCityMessages(fleet.messages, $('.fleetMessagesContainer', $fleetPane));
 
-	if (fleet.settlementFitness)
+	if (fleet.inBattle)
+	{
+		$('.terrainInfo', $fleetPane).text('In a battle.');
+	}
+	else if (fleet.settlementFitness)
 	{
 		$('.terrainInfo', $fleetPane).text('settlement value '+fleet.settlementFitness);
 	}
@@ -591,6 +595,23 @@ function doTakeResource(evt)
 	}
 
 	orderTakeResource(resourceType);
+}
+
+function onBattleCreated(eventData)
+{
+	for (var side in eventData.groups)
+	{
+		for (var fid in eventData.groups[side])
+		{
+			if (fleets[fid])
+			{
+				fleets[fid].inBattle = eventData.battle;
+				fleets[fid].inBattleSide = side;
+				fleets[fid].location = eventData.location;
+				VIEWPORT.updateFleetIcon(fid, fleets[fid]);
+			}
+		}
+	}
 }
 
 function onFleetMovement(eventData)
@@ -670,7 +691,11 @@ function onGameMessage(eventData)
 
 function onEvent(eventData)
 {
-	if (eventData.event == 'city-updated')
+	if (eventData.event == 'battle-created')
+	{
+		return onBattleCreated(eventData);
+	}
+	else if (eventData.event == 'city-updated')
 	{
 		return onCityUpdated(eventData);
 	}

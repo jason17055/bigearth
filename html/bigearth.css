@@ -28,6 +28,14 @@ body {
 	border: solid 2px #006;
 }
 
+.battleIcon {
+	position: absolute;
+	z-index: 3;
+	width: 24px;
+	height: 24px;
+	background-image: url("unit_images/Crossed_swords.png");
+}
+
 .fleetIcon {
 	position: absolute;
 	z-index: 1;

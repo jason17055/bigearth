@@ -114,6 +114,7 @@ BigEarthViewPort.prototype.recreateFleetIcons = function()
 	}
 
 	$('.fleetIcon', this.el).remove();
+	$('.battleIcon', this.el).remove();
 
 	if (fleets)
 	{
@@ -511,6 +512,20 @@ BigEarthViewPort.prototype.removeFleetIcon = function(fleetId, eventData)
 	// if (eventData.disposition == 'moved-out-of-sight' && eventData.newLocation)
 };
 
+BigEarthViewPort.prototype.updateBattleIcon = function(battleId, p)
+{
+	var $b = $('.battleIcon[battle-id="'+battleId+'"]', this.el);
+	if ($b.length == 0)
+	{
+		$b = $('<div class="battleIcon"></div>');
+		$('.bigearth-scrollPanel', this.el).append($b);
+	}
+	$b.css({
+		left: (p.x - 12) + "px",
+		top: (p.y - 12) + "px"
+		});
+};
+
 BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 {
 	var $f = $('.fleetIcon[fleet-id="'+fleetId+'"]', this.el);
@@ -563,6 +578,19 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 			function(evt) {
 				return self.onFleetDragStart(fleetId, evt, imgEl);
 			}, false);
+	}
+
+	if (fleetInfo.inBattle)
+	{
+		this.updateBattleIcon(fleetInfo.inBattle, p);
+		if (fleetInfo.inBattleSide == 'a')
+		{
+			p.x -= 24;
+		}
+		else
+		{
+			p.x += 24;
+		}
 	}
 
 	$('img.unitIcon',$f).attr('src', 'unit_images/'+fleetInfo.type+'.png');
