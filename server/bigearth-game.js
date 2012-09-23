@@ -253,43 +253,6 @@ function allPlayersWhoCanSee(location)
 	return seenByPid;
 }
 
-function moveFleetAlongCoast(fleetId)
-{
-	var fleet = G.fleets[fleetId];
-	var oldLoc = fleet.location;
-
-	var nn = BE.geometry.getNeighbors(Location.toCellId(oldLoc));
-	var lastLoc = fleet.lastLocation;
-
-	var i;
-	for (i = 0; i < nn.length; i++)
-	{
-		if (lastLoc && nn[i] == lastLoc)
-			break;
-	}
-
-	var foundSea = false;
-	var map = G.maps[fleet.owner];
-	for (var j = 0; j < nn.length + 6; j++)
-	{
-		var nid = nn[(i+1+j)%nn.length];
-		var c = map.cells[nid];
-		if (!c)
-			continue;
-		if (foundSea && c.terrain != 'ocean')
-		{
-			return Fleet.moveFleetOneStep(fleetId, nid);
-		}
-		else if (c.terrain == 'ocean')
-		{
-			foundSea=true;
-		}
-	}
-
-	// don't know where to go
-	return fleetCurrentCommandFinished(fleetId, fleet);
-}
-
 function moveFleetTowards(fleetId, targetLocation)
 {
 	var fleet = G.fleets[fleetId];
