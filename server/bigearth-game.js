@@ -566,8 +566,6 @@ function checkForBattle(location)
 	if (countLions == 0 || countNonLions == 0)
 	{
 		// no battle
-		if (terrain.battle)
-			Battle.endBattle(terrain.battle);
 		return;
 	}
 
