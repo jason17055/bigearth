@@ -606,7 +606,7 @@ function onBattleCreated(eventData)
 			if (fleets[fid])
 			{
 				fleets[fid].inBattle = eventData.battle;
-				fleets[fid].inBattleSide = side;
+				fleets[fid].inBattleGroup = side;
 				fleets[fid].location = eventData.location;
 				VIEWPORT.updateFleetIcon(fid, fleets[fid]);
 			}

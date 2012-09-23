@@ -97,9 +97,9 @@ function addFleet(battleId, fleetId, side)
 
 	if (fleet.inBattle && fleet.inBattle != battleId)
 	{
-		removeFleet(fleet.inBattle, fleetId, fleet.inBattleSide);
+		removeFleet(fleet.inBattle, fleetId, fleet.inBattleGroup);
 		delete fleet.inBattle;
-		delete fleet.inBattleSide;
+		delete fleet.inBattleGroup;
 	}
 
 	if (! battle.groups[side] )
@@ -107,7 +107,7 @@ function addFleet(battleId, fleetId, side)
 	battle.groups[side][fleetId] = true;
 
 	fleet.inBattle = battleId;
-	fleet.inBattleSide = side;
+	fleet.inBattleGroup = side;
 
 	fireBattleNotification(battleId,
 		{

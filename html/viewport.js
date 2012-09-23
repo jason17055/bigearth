@@ -583,7 +583,7 @@ BigEarthViewPort.prototype.updateFleetIcon = function(fleetId)
 	if (fleetInfo.inBattle)
 	{
 		this.updateBattleIcon(fleetInfo.inBattle, p);
-		if (fleetInfo.inBattleSide == 'a')
+		if (fleetInfo.inBattleGroup == 'a')
 		{
 			p.x -= 24;
 		}

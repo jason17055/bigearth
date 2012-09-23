@@ -278,7 +278,7 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		if (f.inBattle)
 		{
 			_fleet.inBattle = f.inBattle;
-			_fleet.inBattleSide = f.inBattleSide;
+			_fleet.inBattleGroup = f.inBattleGroup;
 		}
 		if (f.messages)
 		{
@@ -336,7 +336,7 @@ function getFleetInfoForPlayer(fleetId, playerId)
 		if (f.inBattle)
 		{
 			_fleet.inBattle = f.inBattle;
-			_fleet.inBattleSide = f.inBattleSide;
+			_fleet.inBattleGroup = f.inBattleGroup;
 		}
 		return _fleet;
 	}
