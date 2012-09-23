@@ -428,6 +428,9 @@ function fleetTakeResource(fleetId, fleet, currentOrder)
 	{
 		delete cell.stock[resourceType];
 	}
+
+	if (!fleet.stock)
+		fleet.stock = {};
 	fleet.stock[resourceType] = (fleet.stock[resourceType] || 0) + amountWanted;
 
 	if (cityId)
@@ -663,8 +666,15 @@ var UNIT_MOVEMENT_RULES = {
 		},
 	'*': {
 		ocean: 15000,
+		plains:  1200,
+		grassland: 1200,
+		desert: 1200,
+		forest: 2400,
+		tundra: 3600,
+		glacier: 3600,
+		hills: 3600,
 		across_river: 3600,
-		'other_terrain': 3600
+		'other_terrain': 15000
 		},
 	};
 
