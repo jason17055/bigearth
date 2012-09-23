@@ -1082,6 +1082,26 @@ function governor_endOfYear(cityId, city)
 	{
 		// need more housing
 		cityMessage(cityId, 'need more housing');
+
+		if (!city.tasks || city.tasks.length == 0)
+		{
+			if (cityCapacity < 1000)
+			{
+				city.tasks = [];
+				city.tasks.push({
+					task: 'improvement',
+					type: 'mud-cottages'
+					});
+			}
+			else
+			{
+				city.tasks = [];
+				city.tasks.push({
+					task: 'equip',
+					type: 'settler'
+					});
+			}
+		}
 	}
 	
 	if ((city.stock.sheep || 0) >= 100)
