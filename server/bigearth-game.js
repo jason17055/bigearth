@@ -266,11 +266,12 @@ function getTerrainLocation(location)
 function addPlayerCanSee(playerId, location)
 {
 	// notify user of any fleets found at this location
+	var terrain = getTerrainLocation(location);
 
-	for (var fid in G.fleets)
+	for (var fid in terrain.fleets)
 	{
 		var fleet = G.fleets[fid];
-		if (fleet.location == location && fleet.owner != playerId)
+		if (fleet.owner != playerId)
 		{
 			notifyPlayer(playerId, {
 				event: 'fleet-spawned',
@@ -278,6 +279,12 @@ function addPlayerCanSee(playerId, location)
 				data: getFleetInfoForPlayer(fid, playerId)
 				});
 		}
+	}
+
+	// notify user if there is a battle going on here
+	if (terrain.battle)
+	{
+		Battle.playerCanNowSee(terrain.battle, playerId);
 	}
 }
 
