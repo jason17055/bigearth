@@ -79,6 +79,8 @@ function discoverCell(mapId, cellId, sightLevel)
 	{
 		isNew = true;
 		delete mapCell.city;
+		delete mapCell.cityName;
+		delete mapCell.cityOwner;
 	}
 	else if (refCell.city)
 	{
