@@ -506,6 +506,11 @@ function fleetCanSettle(fleet)
 	return fleet.type == 'settler';
 }
 
+function fleetCanCrossRiver(fleet)
+{
+	return fleet.type == 'explorer';
+}
+
 function fleetTerrainEffect_deaths(fleetId, fleet, deathCount, explanation)
 {
 	fleet.population = Math.floor(fleet.population - deathCount);
@@ -686,6 +691,15 @@ function isNavigableByMap(map, fleet, location)
 	if (!c)
 		return false;
 
+	if (c.terrain == 'jungle')
+		return false;
+	if (c.terrain == 'mountains')
+		return false;
+	if (c.terrain == 'desert')
+		return false;
+	if (c.terrain == 'swamp')
+		return false;
+
 	var cost = UM[c.terrain] || UM.other_terrain;
 	return cost < 15000;
 }
@@ -726,6 +740,11 @@ function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
 		var RISK_LOST_GOODS_PENALTY = 4000;
 		var extraPenalty = RISK_LOST_GOODS_PENALTY*Math.pow(encumbLevel,2);
 		cost += extraPenalty;
+
+		if (!fleetCanCrossRiver(fleet))
+		{
+			cost = Infinity;
+		}
 	}
 
 	return { delay: cost };
@@ -799,6 +818,33 @@ function moveFleetOneStep(fleetId, newLoc)
 	var fleet = G.fleets[fleetId];
 	var oldLoc = fleet.location;
 
+	// check whether new location is navigable
+	var terrain = getTerrainLocation(newLoc);
+	if (terrain.terrain == 'jungle' && !fleet.canEnterJungle)
+	{
+		return fleetActivityError(fleetId, fleet, "cannot enter jungle");
+	}
+	if (terrain.terrain == 'desert' && !fleet.canEnterDesert)
+	{
+		return fleetActivityError(fleetId, fleet, "cannot enter desert");
+	}
+	if (terrain.terrain == 'mountains' && !fleet.canClimbMountain)
+	{
+		return fleetActivityError(fleetId, fleet, "cannot climb mountains");
+	}
+	if (terrain.terrain == 'swamp' && !fleet.canEnterSwamp)
+	{
+		return fleetActivityError(fleetId, fleet, "cannot enter swamp");
+	}
+
+	var movementCostInfo = getMovementCost_real(fleet, oldLoc, newLoc);
+	var costOfMovement = movementCostInfo.delay;
+
+	if (movementCostInfo.crossedRiver && !fleetCanCrossRiver(fleet))
+	{
+		return fleetActivityError(fleetId, fleet, "cannot cross river");
+	}
+
 	if (fleet.inBattle)
 	{
 		Battle.removeFleet(fleet.inBattle, fleetId, fleet.inBattleGroup);
@@ -821,10 +867,6 @@ function moveFleetOneStep(fleetId, newLoc)
 			newLocTerrain.fleets = {};
 		newLocTerrain.fleets[fleetId] = true;
 	}
-
-	var movementCostInfo = getMovementCost_real(fleet, oldLoc, newLoc);
-	var costOfMovement = movementCostInfo.delay;
-	console.log("cost is " + Math.round(costOfMovement));
 
 	if (movementCostInfo.crossedRiver)
 		fleet.crossedRiver = movementCostInfo.crossedRiver;
