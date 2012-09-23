@@ -43,6 +43,10 @@ body {
 	height: 48px;
 }
 
+.fleetIcon img.unitIcon {
+	margin-left: 8px;
+}
+
 .fleetIcon .selectionCircle {
 	display: none;
 }
