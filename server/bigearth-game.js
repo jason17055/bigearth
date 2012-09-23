@@ -271,7 +271,7 @@ function addPlayerCanSee(playerId, location)
 	for (var fid in terrain.fleets)
 	{
 		var fleet = G.fleets[fid];
-		if (fleet.owner != playerId)
+		if (fleet && fleet.owner != playerId)
 		{
 			notifyPlayer(playerId, {
 				event: 'fleet-spawned',
@@ -976,6 +976,15 @@ function checkTerrainCell(cid, cell)
 			var fleetOrCity = G.fleets[fid] || G.cities[fid];
 			if (!fleetOrCity)
 				delete cell.seenBy[fid];
+		}
+	}
+
+	if (cell.fleets)
+	{
+		for (var fid in cell.fleets)
+		{
+			if (!G.fleets[fid])
+				delete cell.fleets[fid];
 		}
 	}
 

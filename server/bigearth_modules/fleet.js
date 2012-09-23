@@ -223,6 +223,9 @@ function destroyFleet(fleetId, disposition)
 		Battle.removeFleet(fleet.inBattle, fleetId, fleet.inBattleGroup);
 	}
 
+	var terrain = getTerrainLocation(fleet.location);
+	delete terrain.fleets[fleetId];
+
 	delete G.fleets[fleetId];
 }
 
