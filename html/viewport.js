@@ -543,6 +543,8 @@ BigEarthViewPort.prototype.showFleetAttack = function(attackerId, defenderId)
 	if (!attackerInfo)
 		return;
 
+	var $f_defender = $('.fleetIcon[fleet-id="'+defenderId+'"]', this.el);
+
 	var defenderInfo = fleets[defenderId];
 	if (!defenderInfo)
 		return;
@@ -559,6 +561,22 @@ BigEarthViewPort.prototype.showFleetAttack = function(attackerId, defenderId)
 
 	var thrustPos = this.toScreenPoint(Location.toPoint(defenderInfo.location));
 
+	var attackerHitImg = new Image();
+	attackerHitImg.src = 'unit_images/' + attackerInfo.type + '_hit.png';
+
+	var restoreAttackerImgFn = function()
+	{
+	$('img.unitIcon',$f).attr('src', 'unit_images/'+attackerInfo.type+'.png');
+	};
+
+	var defenderHitImg = new Image();
+	defenderHitImg.src = 'unit_images/' + defenderInfo.type + '_hit.png';
+
+	var restoreDefenderImgFn = function()
+	{
+	$('img.unitIcon',$f_defender).attr('src', 'unit_images/'+defenderInfo.type+'.png');
+	}
+
 	$f.css({
 		'-webkit-transition': 'all 0.2s ease-out',
 		'-moz-transition': 'all 0.2s ease-out',
@@ -567,12 +585,19 @@ BigEarthViewPort.prototype.showFleetAttack = function(attackerId, defenderId)
 		});
 	setTimeout(function() {
 
+	$('img.unitIcon',$f).attr('src', attackerHitImg.src);
+	$('img.unitIcon',$f_defender).attr('src', defenderHitImg.src);
+
 	$f.css({
 		'-webkit-transition': 'all 0.4s ease-out',
 		'-moz-transition': 'all 0.4s ease-out',
 		left: (attackerPos.x - 32)+"px",
 		top: (attackerPos.y - 24)+"px"
 		});
+
+	setTimeout(restoreAttackerImgFn, 200);
+	setTimeout(restoreDefenderImgFn, 700);
+
 		}, 250);
 };
 
