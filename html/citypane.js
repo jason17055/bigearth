@@ -176,10 +176,16 @@ function loadCityOverheadView(cityId, city, $cityPane)
 		return $d;
 	};
 
-	var numCottages = mapCell.zones['mud-cottages'] || 0;
-	for (var i = 0; i < numCottages; i++)
+	var cottageCount = 0;
+	for (var i = 0; i < (mapCell.zones['mud-cottages'] || 0); i++)
 	{
-		setImage(4+(i%6),Math.floor(i/6),1,1,'mud-cottage');
+		setImage(4+(cottageCount%6),Math.floor(cottageCount/6),1,1,'mud-cottage');
+		cottageCount++;
+	}
+	for (var i = 0; i < (mapCell.zones['wood-cottages'] || 0); i++)
+	{
+		setImage(4+(cottageCount%6),Math.floor(cottageCount/6),1,1,'wood-cottage');
+		cottageCount++;
 	}
 
 	var $d = setImage(4,2,3,3,'stockyard');
