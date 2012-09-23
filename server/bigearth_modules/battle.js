@@ -54,17 +54,7 @@ function fireBattleNotification(battleId, eventData)
 {
 	var battle = G.battles[battleId];
 
-	var recipients = {};
-	for (var side in battle.groups)
-	{
-		for (var fid in battle.groups[side])
-		{
-			var fleet = G.fleets[fid];
-			if (fleet.owner)
-				recipients[fleet.owner] = true;
-		}
-	}
-
+	var recipients = allPlayersWhoCanSee(battle.location);
 	for (var playerId in recipients)
 	{
 		notifyPlayer(playerId, eventData);
