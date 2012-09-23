@@ -568,6 +568,20 @@ function checkForBattle(location)
 	{
 		Battle.newBattle(location, lions, nonLions);
 	}
+	else
+	{
+		// anyone not in the battle should join
+		for (var fid in lions)
+		{
+			if (!G.fleets[fid].inBattle != terrain.battle)
+				Battle.addFleet(terrain.battle, fid, 'a');
+		}
+		for (var fid in nonLions)
+		{
+			if (!G.fleets[fid].inBattle != terrain.battle)
+				Battle.addFleet(terrain.battle, fid, 'b');
+		}
+	}
 }
 
 // called after fleet has moved

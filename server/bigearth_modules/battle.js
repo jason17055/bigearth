@@ -90,6 +90,34 @@ function endBattle(battleId)
 	return;
 }
 
+function addFleet(battleId, fleetId, side)
+{
+	var battle = G.battles[battleId];
+	var fleet = G.fleets[fleetId];
+
+	if (fleet.inBattle && fleet.inBattle != battleId)
+	{
+		removeFleet(fleet.inBattle, fleetId, fleet.inBattleSide);
+		delete fleet.inBattle;
+		delete fleet.inBattleSide;
+	}
+
+	if (! battle.groups[side] )
+		battle.groups[side] = {};
+	battle.groups[side][fleetId] = true;
+
+	fleet.inBattle = battleId;
+	fleet.inBattleSide = side;
+
+	fireBattleNotification(battleId,
+		{
+			event: 'battle-updated',
+			battle: battleId,
+			location: battle.location,
+			groups: battle.groups
+		});
+}
+
 function removeFleet(battleId, fleetId, side)
 {
 	var battle = G.battles[battleId];
@@ -101,4 +129,5 @@ function removeFleet(battleId, fleetId, side)
 
 exports.newBattle = newBattle;
 exports.endBattle = endBattle;
+exports.addFleet = addFleet;
 exports.removeFleet = removeFleet;

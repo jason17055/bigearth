@@ -691,7 +691,7 @@ function onGameMessage(eventData)
 
 function onEvent(eventData)
 {
-	if (eventData.event == 'battle-created')
+	if (eventData.event == 'battle-created' || eventData.event == 'battle-updated')
 	{
 		return onBattleCreated(eventData);
 	}
