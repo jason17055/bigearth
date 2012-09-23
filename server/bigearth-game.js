@@ -1079,6 +1079,11 @@ function startGame()
 		checkPlayer(pid, G.players[pid]);
 	}
 
+	for (var bid in G.battles)
+	{
+		Battle.reviveBattle(bid, G.battles[bid]);
+	}
+
 	// schedule for next end-of-year
 	Scheduler.scheduleAtYear(endOfYear, G.world.lastYear + 1);
 }

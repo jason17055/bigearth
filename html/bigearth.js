@@ -632,6 +632,12 @@ function onBattleTerminated(eventData)
 	VIEWPORT.removeBattleIcon(eventData.battle);
 }
 
+var attackCount = 0;
+function onBattleAttack(eventData)
+{
+	document.title = 'Attack ' + (++attackCount);
+}
+
 function onFleetMovement(eventData)
 {
 	var fleetId = eventData.fleet;
@@ -718,6 +724,10 @@ function onEvent(eventData)
 	else if (eventData.event == 'battle-terminated')
 	{
 		return onBattleTerminated(eventData);
+	}
+	else if (eventData.event == 'battle-attack')
+	{
+		return onBattleAttack(eventData);
 	}
 	else if (eventData.event == 'city-updated')
 	{

@@ -19,11 +19,12 @@ function newBattle(location, side1, side2)
 	};
 
 	var battleId = location;
-	G.battles[battleId] = {
+	var battle = {
 	startTime: Scheduler.time,
 	location: location,
 	groups: groups
 	};
+	G.battles[battleId] = battle;
 
 	for (var fid in side1)
 	{
@@ -47,7 +48,18 @@ function newBattle(location, side1, side2)
 			groups: groups
 		});
 
+	battle._skirmishTimer = Scheduler.schedule(function() { onSkirmish(battleId); }, 2000);
+
 	return battleId;
+}
+
+function reviveBattle(battleId, battle)
+{
+	if (!battle._skirmishTimer)
+	{
+		battle._skirmishTimer = Scheduler.schedule(
+			function() { onSkirmish(battleId); }, 2000);
+	}
 }
 
 function fireBattleNotification(battleId, eventData)
@@ -75,6 +87,12 @@ function endBattle(battleId)
 
 	var terrain = getTerrainLocation(battle.location);
 	delete terrain.battle;
+
+	if (battle._skirmishTimer)
+	{
+		Scheduler.cancel(battle._skirmishTimer);
+		delete battle._skirmishTimer;
+	}
 
 	delete G.battles[battleId];
 	return;
@@ -173,8 +191,25 @@ function playerCanNoLongerSee(battleId, playerId)
 		});
 }
 
+function onSkirmish(battleId)
+{
+	var battle = G.battles[battleId];
+	delete battle._skirmishTimer;
+
+	fireBattleNotification(battleId,
+	{
+		event: 'battle-attack',
+		battle: battleId,
+		location: battle.location,
+		foo: "bar"
+	});
+
+	battle._skirmishTimer = Scheduler.schedule(function() { onSkirmish(battleId); }, 5000);
+}
+
 exports.newBattle = newBattle;
 exports.endBattle = endBattle;
 exports.addFleet = addFleet;
 exports.removeFleet = removeFleet;
 exports.playerCanNoLongerSee = playerCanNoLongerSee;
+exports.reviveBattle = reviveBattle;
