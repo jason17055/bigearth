@@ -1230,7 +1230,8 @@ function governor_determineJobLevels(cityId, city)
 
 	// consider livestock care
 	var numSheep = city.stock ? (city.stock.sheep || 0) : 0;
-	var mandatoryShepherds = Math.ceil(numSheep / 8);
+	var numPigs = city.stock ? (city.stock.pig || 0) : 0;
+	var mandatoryShepherds = numSheep > numPigs ? Math.ceil(numSheep / 8) : Math.ceil(numPigs / 8);
 	jobLevels.push({ priority: 85, job: 'shepherd', quantity: mandatoryShepherds });
 
 	// some other jobs that people like to do...
