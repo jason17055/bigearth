@@ -608,6 +608,8 @@ function createUnit(playerId, unitType, initialLocation, extraProperties)
 			description: 'Take the role of a dangerous lion, preying on weak humans and undefended livestock.'
 			});
 	}
+
+	return fid;
 }
 
 function getGameState(request)

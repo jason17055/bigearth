@@ -2,6 +2,7 @@ var Scheduler = require('./scheduler.js');
 var Location = require('../../html/location.js');
 var Terrain = require('./terrain.js');
 var Map = require('./map.js');
+var Fleet = require('./fleet.js');
 
 function onFarmCompleted(cityId, city)
 {
@@ -572,8 +573,9 @@ function freeWorkers(cityId, city, job)
 	addWorkers(cityId, city, num, 'idle');
 }
 
-function tryEquipNewUnit(cityId, city, unitType)
+function tryEquipNewUnit(cityId, city, currentOrder)
 {
+	var unitType = currentOrder.type;
 	var costInfo = UNIT_COSTS[unitType];
 	if (!costInfo)
 	{
@@ -596,10 +598,15 @@ function tryEquipNewUnit(cityId, city, unitType)
 
 		stealWorkers(cityId, city, costInfo.populationCost, 'equip-unit');
 		var numSettlers = removeWorkers(cityId, city, Infinity, 'equip-unit');
-		createUnit(city.owner, unitType, city.location, {
+		var newFleetId = createUnit(city.owner, unitType, city.location, {
 			population: numSettlers,
 			map: Map.copyMap(city.map)
 			});
+
+		if (currentOrder['delegate-to'] == 'any')
+		{
+			Fleet.setComputerControlled(newFleetId);
+		}
 
 		cityActivityComplete(cityId, city);
 		return;
@@ -737,7 +744,7 @@ function cityActivity(cityId, city)
 
 	if (currentTask.task == 'equip')
 	{
-		return tryEquipNewUnit(cityId, city, currentTask.type);
+		return tryEquipNewUnit(cityId, city, currentTask);
 	}
 	else if (currentTask.task == 'improvement')
 	{
@@ -1098,7 +1105,8 @@ function governor_endOfYear(cityId, city)
 				city.tasks = [];
 				city.tasks.push({
 					task: 'equip',
-					type: 'settler'
+					type: 'settler',
+					'delegate-to': 'any'
 					});
 			}
 		}

@@ -1105,6 +1105,19 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 		return [];
 }
 
+function setComputerControlled(fleetId)
+{
+	var fleet = G.fleets[fleetId];
+	if (fleet.type == 'settler')
+	{
+		fleet.orders = [];
+		fleet.orders.push({
+			command: 'auto-settle'
+			});
+		fleetActivity(fleetId);
+	}
+}
+
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
 global.fleetCooldown = fleetCooldown;
@@ -1122,3 +1135,4 @@ exports.getMovementCost_real = getMovementCost_real;
 exports.maybeAdvertise = maybeAdvertise;
 exports.getMap = getMap;
 exports.moveFleetOneStep = moveFleetOneStep;
+exports.setComputerControlled = setComputerControlled;
