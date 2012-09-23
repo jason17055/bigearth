@@ -638,7 +638,9 @@ function moveFleetOneStep(fleetId, newLoc)
 		fleet: fleetId,
 		fromLocation: oldLoc,
 		toLocation: newLoc,
-		delay: Math.round(costOfMovement)
+		delay: Math.round(costOfMovement),
+		inBattle: fleet.inBattle,
+		inBattleGroup: fleet.inBattleGroup
 		});
 
 	var observersOldLoc = allPlayersWhoCanSee(oldLoc);

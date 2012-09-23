@@ -636,6 +636,8 @@ function onFleetMovement(eventData)
 	{
 		fleets[fleetId].location = eventData.toLocation;
 		fleets[fleetId].stepDelay = eventData.delay;
+		fleets[fleetId].inBattle = eventData.inBattle;
+		fleets[fleetId].inBattleGroup = eventData.inBattleGroup;
 		VIEWPORT.updateFleetIcon(fleetId, fleets[fleetId]);
 
 		var terrain = map.cells[eventData.toLocation];
