@@ -524,6 +524,7 @@ BigEarthViewPort.prototype.updateBattleIcon = function(battleId, p)
 	if ($b.length == 0)
 	{
 		$b = $('<div class="battleIcon"></div>');
+		$b.attr('battle-id', battleId);
 		$('.bigearth-scrollPanel', this.el).append($b);
 	}
 	$b.css({
