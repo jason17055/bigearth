@@ -1111,7 +1111,21 @@ function governor_endOfYear(cityId, city)
 			}
 		}
 	}
-	
+
+	// check if we have any fields
+	var numFarms = getFarmCount(city);
+	if (numFarms == 0)
+	{
+		if (!city.tasks || city.tasks.length == 0)
+		{
+			city.tasks = [];
+			city.tasks.push({
+				task: 'improvement',
+				type: 'farm'
+				});
+		}
+	}
+
 	if ((city.stock.sheep || 0) >= 100)
 	{
 		city.policy.foodPriority.sheep = 2;
