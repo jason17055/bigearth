@@ -73,7 +73,7 @@ body {
 	pointer-events: none;
 }
 
-#citiesReport {
+.reportPane {
 	position: absolute;
 	top: 1em;
 	left: 1em;
@@ -86,6 +86,7 @@ body {
 	border-bottom: 6px solid #666;
 	border-right:  6px solid #666;
 	font-family: sans-serif;
+	overflow: scroll;
 }
 
 #citiesReport h1 {
