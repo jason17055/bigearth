@@ -713,6 +713,14 @@ function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
 	var oldLocCell = map.cells[oldLoc];
 	var newLocCell = map.cells[newLoc];
 
+	if (newLocCell && (newLocCell.terrain == 'jungle'
+		|| newLocCell.terrain == 'mountains'
+		|| newLocCell.terrain == 'desert'
+		|| newLocCell.terrain == 'swamp'))
+	{
+		return { delay: Infinity };
+	}
+
 	var UNKNOWN_TERRAIN_COST = 1100;
 	var costOldCell = oldLocCell && oldLocCell.terrain ?
 		((UM[oldLocCell.terrain] || UM.other_terrain) / 2) :
@@ -1086,6 +1094,9 @@ function shortestPathByMap(map, fleet, fromLoc, toLoc)
 				continue;
 
 			var costInfo = getMovementCost_byMap(fleet, curLoc, nn[i], map);
+			if (costInfo.delay == Infinity)
+				continue;
+
 			var accumDist = cur[2] + costInfo.delay;
 			var estRemainDistSteps = nn[i] == toLoc ? 0 : BE.geometry.distanceBetween(nn[i], toLoc) / baseDist;
 			var estRemainDist = estRemainDistSteps * 3000;
