@@ -18,6 +18,7 @@ function autoSettle(fleetId, fleet, currentOrder)
 	for (var dist = 0; ; dist++)
 	{
 		var nextRing = {};
+		var anyFound = false;
 		for (var cid in curRing)
 		{
 			var v = getSettlementFitness(map, cid);
@@ -35,6 +36,7 @@ function autoSettle(fleetId, fleet, currentOrder)
 				{
 					seen[nid] = true;
 					nextRing[nid] = true;
+					anyFound = true;
 				}
 			}
 		}
@@ -52,6 +54,9 @@ function autoSettle(fleetId, fleet, currentOrder)
 				});
 			return fleetActivity(fleetId, fleet);
 		}
+
+		if (!anyFound)
+			break;
 	}
 
 	return fleetActivityError(fleetId, fleet, "Unable to find a suitable city location.")
