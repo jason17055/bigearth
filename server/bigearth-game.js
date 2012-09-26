@@ -809,8 +809,8 @@ function startGame()
 	for (var fid in G.fleets)
 	{
 		checkFleet(fid, G.fleets[fid]);
-		fleetActivity(fid, G.fleets[fid]);
 		Fleet.maybeAdvertise(fid, G.fleets[fid]);
+		Fleet.reviveFleet(fid, G.fleets[fid]);
 	}
 
 	for (var pid in G.players)

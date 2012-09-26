@@ -1129,6 +1129,11 @@ function setComputerControlled(fleetId)
 	}
 }
 
+function reviveFleet(fleetId, fleet)
+{
+	fleetCooldown(fleetId, fleet, 0);
+}
+
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
 global.fleetCooldown = fleetCooldown;
@@ -1147,3 +1152,4 @@ exports.maybeAdvertise = maybeAdvertise;
 exports.getMap = getMap;
 exports.moveFleetOneStep = moveFleetOneStep;
 exports.setComputerControlled = setComputerControlled;
+exports.reviveFleet = reviveFleet;
