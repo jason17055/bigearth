@@ -511,6 +511,21 @@ function fleetCanCrossRiver(fleet)
 	return fleet.type == 'explorer';
 }
 
+function fleetCanEnterTerrainType(fleet, terrainType)
+{
+	if (terrainType == 'jungle')
+		return false;
+	if (terrainType == 'mountains')
+		return false;
+	if (terrainType == 'desert')
+		return false;
+	if (terrainType == 'swamp')
+		return false;
+	if (terrainType == 'glacier')
+		return false;
+	return true;
+}
+
 function fleetTerrainEffect_deaths(fleetId, fleet, deathCount, explanation)
 {
 	fleet.population = Math.floor(fleet.population - deathCount);
@@ -691,13 +706,7 @@ function isNavigableByMap(map, fleet, location)
 	if (!c)
 		return false;
 
-	if (c.terrain == 'jungle')
-		return false;
-	if (c.terrain == 'mountains')
-		return false;
-	if (c.terrain == 'desert')
-		return false;
-	if (c.terrain == 'swamp')
+	if (!fleetCanEnterTerrainType(fleet, c.terrain))
 		return false;
 
 	var cost = UM[c.terrain] || UM.other_terrain;
@@ -713,10 +722,8 @@ function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
 	var oldLocCell = map.cells[oldLoc];
 	var newLocCell = map.cells[newLoc];
 
-	if (newLocCell && (newLocCell.terrain == 'jungle'
-		|| newLocCell.terrain == 'mountains'
-		|| newLocCell.terrain == 'desert'
-		|| newLocCell.terrain == 'swamp'))
+	if (newLocCell && newLocCell.terrain &&
+		!fleetCanEnterTerrainType(newLocCell.terrain))
 	{
 		return { delay: Infinity };
 	}
