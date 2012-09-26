@@ -1558,17 +1558,21 @@ function getTotalFood(city)
 
 function consumeFood(city, amount)
 {
+	var FP = city.policy.foodPriority;
 	var foodTypesInOrder = [];
-	for (var ft in city.policy.foodPriority)
+	for (var ft in FP)
 	{
 		foodTypesInOrder.push(ft);
 	}
-	foodTypesInOrder.sort(function(a,b) { return a-b; });
+	foodTypesInOrder.sort(function(a,b) { return FP[a]-FP[b]; });
 
 	var amountConsumed = 0;
 	var eatFood = function(ft, amt)
 		{
-			console.log("consuming "+amt+" "+ft);
+			if (!(amt > 0))
+				throw new Error("unexpected- cannot consume 0 of "+ft);
+
+			DEBUG("consuming "+amt+" "+ft);
 			if (amt >= (city.stock[ft] || 0))
 			{
 				amountConsumed += amt;
@@ -1587,12 +1591,12 @@ function consumeFood(city, amount)
 	{
 		var min_multiplier = Infinity;
 		var min_type;
-		for (var ft in city.policy.foodPriority)
+		for (var ft in FP)
 		{
 			var avail = city.stock[ft] || 0;
 			if (avail)
 			{
-				var r = avail / city.policy.foodPriority[ft];
+				var r = avail / FP[ft];
 				if (r < min_multiplier)
 				{
 					min_multiplier = r;
@@ -1608,12 +1612,12 @@ function consumeFood(city, amount)
 		}
 
 		var canTake = 0;
-		for (var ft in city.policy.foodPriority)
+		for (var ft in FP)
 		{
 			var avail = city.stock[ft] || 0;
 			if (avail)
 			{
-				canTake += min_multiplier * city.policy.foodPriority[ft];
+				canTake += min_multiplier * FP[ft];
 			}
 		}
 

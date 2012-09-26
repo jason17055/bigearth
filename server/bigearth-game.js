@@ -998,6 +998,13 @@ function checkTerrainCell(cid, cell)
 	}
 }
 
+function DEBUG(message)
+{
+	var fs = require('fs');
+	var fd = fs.appendFileSync('debug.log', message + "\n");
+	console.log(message);
+}
+
 
 var actionHandlers = {
 	orders: doOrders,
@@ -1030,4 +1037,5 @@ if (typeof global !== 'undefined')
 	global.discoverCell = discoverCell;
 	global.discoverCellBorder = discoverCellBorder;
 	global.fleetMoved = fleetMoved;
+	global.DEBUG = DEBUG;
 }
