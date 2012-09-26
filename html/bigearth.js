@@ -1289,8 +1289,19 @@ function citiesReportClicked()
 
 	var $r = $('#citiesReport');
 	$('tr.cityRow', $r).remove();
+
+	// want cities to be sorted
+	var citiesSorted = [];
 	for (var tid in cities)
+		citiesSorted.push(tid);
+	citiesSorted.sort(function(a,b) {
+		return cities[a].name > cities[b].name ? 1 :
+			cities[a].name < cities[b].name ? -1 : 0;
+		});
+
+	for (var i = 0, l = citiesSorted.length; i < l; i++)
 	{
+		var tid = citiesSorted[i];
 		var city = cities[tid];
 
 		var $d = $('<tr class="cityRow"><td><img src="city_images/city1.png"><a href="#" class="cityName"></a></td><td><span class="cityPopulation"></span></td><td class="cityZones"></td></tr>');
