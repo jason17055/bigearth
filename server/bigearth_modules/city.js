@@ -4,11 +4,6 @@ var Terrain = require('./terrain.js');
 var Map = require('./map.js');
 var Fleet = require('./fleet.js');
 
-function onFarmCompleted(cityId, city)
-{
-	stealWorkers(cityId, city, 15, 'farm');
-}
-
 var FACTORY_RECIPES = {
 	'stone-weapon': { 'rate': 0.01, 'input': { 'stone': 0.25 } },
 	'stone-block': { 'rate': 0.01,  'input': { 'stone': 1.00 } }
@@ -1148,6 +1143,12 @@ function governor_endOfYear(cityId, city)
 	governor_dispatchJobAssignments(cityId, city, jobLevels);
 }
 
+function governor_landDevelopmentCompleted(cityId, city, landType)
+{
+	var jobLevels = governor_determineJobLevels(cityId, city);
+	governor_dispatchJobAssignments(cityId, city, jobLevels);
+}
+
 function governor_dispatchJobAssignments(cityId, city, jobLevels)
 {
 	// group job requests by priority
@@ -1946,11 +1947,7 @@ function tryDevelopLand(cityId, city, landType)
 		developLand(city.location, landType, 1);
 		cityActivityComplete(cityId, city);
 
-		if (landType == 'farm')
-		{
-			onFarmCompleted(cityId, city);
-		}
-
+		governor_landDevelopmentCompleted(cityId, city, landType);
 		return;
 	}
 	else
