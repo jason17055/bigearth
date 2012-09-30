@@ -16,6 +16,7 @@ var PERSIST = require('./bigearth-persist.js');
 
 // Big Earth globals, used by both client and server code
 global.BE = {};
+BE.fleetPace = 1000;
 
 function handleStaticFileRequest(requestPath,request,response)
 {

@@ -5,44 +5,31 @@ var Map = require('./map.js');
 
 function autoSettle(fleetId, fleet, currentOrder)
 {
-	var seen = {};
-	var curRing = {};
 	var fleetCellId = Location.toCellId(fleet.location);
-	seen[fleetCellId] = true;
-	curRing[fleetCellId] = true;
+	var map = Fleet.getMap(fleetId, fleet);
 
-	var map = G.maps[fleet.owner];
-
-	var bestValue = getSettlementFitness(map, fleetCellId);
+	var bestValue = -Infinity;
 	var best = fleet.location;
-	for (var dist = 0; ; dist++)
+	var start = { cell: fleetCellId, distance: 0 };
+	var queue = new Array();
+	queue.push(start);
+
+	var seen = {};
+	seen[fleetCellId] = start;
+
+	while (queue.length > 0)
 	{
-		var nextRing = {};
-		var anyFound = false;
-		for (var cid in curRing)
+		var cur = queue.shift();
+		var v = getSettlementFitness(map, cur.cell);
+		if (v > bestValue)
 		{
-			var v = getSettlementFitness(map, cid);
-			if (v > bestValue)
-			{
-				bestValue = v;
-				best = cid;
-			}
-
-			var nn = BE.geometry.getNeighbors(cid);
-			for (var j = 0; j < nn.length; j++)
-			{
-				var nid = nn[j];
-				if (!seen[nid])
-				{
-					seen[nid] = true;
-					nextRing[nid] = true;
-					anyFound = true;
-				}
-			}
+			bestValue = v;
+			best = cur.cell;
 		}
-		curRing = nextRing;
 
-		if (dist >= 5 && bestValue >= 3.0)
+		if ((cur.distance >= 10 * BE.fleetPace && bestValue >= 3.0) ||
+			(cur.distance >= 20 * BE.fleetPace && bestValue >= 2.2) ||
+			(cur.distance >= 40 * BE.fleetPace && bestValue >= 1.4))
 		{
 			fleet.orders.shift();
 			fleet.orders.unshift({
@@ -55,8 +42,28 @@ function autoSettle(fleetId, fleet, currentOrder)
 			return fleetActivity(fleetId, fleet);
 		}
 
-		if (!anyFound)
-			break;
+		var nn = BE.geometry.getNeighbors(cur.cell);
+		for (var j = 0; j < nn.length; j++)
+		{
+			var nid = nn[j];
+			var cost = Fleet.getMovementCost_byMap(fleet, cur.cell, nid, map);
+			if (cost == Infinity)
+				continue;
+
+			if (!seen[nid])
+			{
+				// this is the first time we've seen a path to this spot
+				seen[nid] = { cell: nid, distance: cur.distance + cost };
+				queue.push(seen[nid]);
+			}
+			else if (cur.distance + cost < seen[nid].distance)
+			{
+				// this is a quicker path to get to this other spot
+				seen[nid].distance = cur.distance + cost;
+			}
+		}
+
+		queue.sort(function(a,b) { return a.distance - b.distance; });
 	}
 
 	return fleetActivityError(fleetId, fleet, "Unable to find a suitable city location.")
@@ -78,6 +85,10 @@ function getSettlementFitness(map, cellId)
 		c.terrain == 'hills')
 	{
 		thisCellFitness = 1;
+	}
+	else
+	{
+		return 0;
 	}
 
 	var numGoodNeighbors = 0;
