@@ -17,6 +17,7 @@ function autoSettle(fleetId, fleet, currentOrder)
 	var seen = {};
 	seen[fleetCellId] = start;
 
+	var biggestDistance = 0;
 	while (queue.length > 0)
 	{
 		var cur = queue.shift();
@@ -26,6 +27,7 @@ function autoSettle(fleetId, fleet, currentOrder)
 			bestValue = v;
 			best = cur.cell;
 		}
+		biggestDistance = cur.distance;
 
 		if ((cur.distance >= 10 * BE.fleetPace && bestValue >= 3.0) ||
 			(cur.distance >= 20 * BE.fleetPace && bestValue >= 2.2) ||
@@ -47,6 +49,7 @@ function autoSettle(fleetId, fleet, currentOrder)
 		{
 			var nid = nn[j];
 			var cost = Fleet.getMovementCost_byMap(fleet, cur.cell, nid, map);
+			cost = cost.delay;
 			if (cost == Infinity)
 				continue;
 
