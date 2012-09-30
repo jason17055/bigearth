@@ -4,7 +4,7 @@ if (typeof require !== 'undefined')
 }
 
 var Scheduler = require('./bigearth_modules/scheduler.js');
-var city_module = require('./bigearth_modules/city.js');
+var City = require('./bigearth_modules/city.js');
 var mod_terrain = require('./bigearth_modules/terrain.js');
 var Location = require('../html/location.js');
 var Settler = require('./bigearth_modules/settler.js');
@@ -689,7 +689,7 @@ function getCities(playerId, callback)
 	{
 		if (G.cities[cityId].owner == playerId)
 		{
-			result[cityId] = city_module.getCityInfoForOwner(cityId);
+			result[cityId] = City.getCityInfoForOwner(cityId);
 		}
 	}
 
@@ -803,12 +803,12 @@ function startGame()
 
 	for (var tid in G.cities)
 	{
-		checkCity(tid, G.cities[tid]);
+		City.checkCity(tid, G.cities[tid]);
 	}
 
 	for (var fid in G.fleets)
 	{
-		checkFleet(fid, G.fleets[fid]);
+		Fleet.checkFleet(fid, G.fleets[fid]);
 		Fleet.maybeAdvertise(fid, G.fleets[fid]);
 		Fleet.reviveFleet(fid, G.fleets[fid]);
 	}
@@ -920,19 +920,6 @@ function checkPlayer(pid, player)
 	}
 }
 
-// inspect properties of a single fleet.
-// add any that are missing,
-// fix any whose semantics have changed.
-//
-function checkFleet(fleetId, fleet)
-{
-	if (fleet.owner && !fleet.map)
-	{
-		if (G.maps[fleet.owner])
-			fleet.map = fleet.owner;
-	}
-}
-
 function checkTerrainCell(cid, cell)
 {
 	if (cell.subcells)
@@ -1008,13 +995,13 @@ function DEBUG(message)
 
 var actionHandlers = {
 	orders: doOrders,
-	'rename-city': city_module.cmd_rename_city,
-	'test-city': city_module.cmd_test_city,
-	'reassign-workers': city_module.cmd_reassign_workers,
-	'equip-unit': city_module.cmd_equip_unit,
-	'build-improvement': city_module.cmd_build_improvement,
-	'build-building': city_module.cmd_build_building,
-	'building-orders': city_module.cmd_building_orders
+	'rename-city': City.cmd_rename_city,
+	'test-city': City.cmd_test_city,
+	'reassign-workers': City.cmd_reassign_workers,
+	'equip-unit': City.cmd_equip_unit,
+	'build-improvement': City.cmd_build_improvement,
+	'build-building': City.cmd_build_building,
+	'building-orders': City.cmd_building_orders
 	};
 
 if (typeof global !== 'undefined')

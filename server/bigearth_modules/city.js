@@ -2028,7 +2028,6 @@ function rebalanceWorkers(cityId, city)
 global.roundWorkers = roundWorkers;
 global.addAvailableJobs = addAvailableJobs;
 global.newCity = newCity;
-global.checkCity = checkCity;
 global.cityEndOfYear = cityEndOfYear;
 global.cityEndOfYear_cleanup = cityEndOfYear_cleanup;
 global.city_addWorkersAny = city_addWorkersAny;
@@ -2042,3 +2041,4 @@ exports.cmd_build_building = cmd_build_building;
 exports.cmd_building_orders = cmd_building_orders;
 exports.cityChanged = cityChanged;
 exports.getCityInfoForOwner = getCityInfoForOwner;
+exports.checkCity = checkCity;

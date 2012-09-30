@@ -1141,6 +1141,19 @@ function reviveFleet(fleetId, fleet)
 	fleetCooldown(fleetId, fleet, 0);
 }
 
+// inspect properties of a single fleet.
+// add any that are missing,
+// fix any whose semantics have changed.
+//
+function checkFleet(fleetId, fleet)
+{
+	if (fleet.owner && !fleet.map)
+	{
+		if (G.maps[fleet.owner])
+			fleet.map = fleet.owner;
+	}
+}
+
 global.fleetMessage = fleetMessage;
 global.fleetActivityError = fleetActivityError;
 global.fleetCooldown = fleetCooldown;
@@ -1160,3 +1173,4 @@ exports.getMap = getMap;
 exports.moveFleetOneStep = moveFleetOneStep;
 exports.setComputerControlled = setComputerControlled;
 exports.reviveFleet = reviveFleet;
+exports.checkFleet = checkFleet;
