@@ -993,22 +993,22 @@ function cityEndOfYear(cityId, city)
 	}
 
 	// feed the population
-	var foodDemand = city.hunger || 0;
+	var foodDemand = city.hunger && city.hunger > 0 ? city.hunger : 0;
 	var foodSupply = getTotalFood(city);
 	var foodConsumed;
 	if (foodSupply >= foodDemand)
 	{
 		// ok, enough to satisfy everyone
-		foodConsumed = foodDemand;
+		foodConsumed = Math.ceil(foodDemand);
 	}
 	else   // city.food < foodDemand
 	{
 		// not enough food, some people gonna die
-		foodConsumed = foodSupply;
+		foodConsumed = Math.ceil(foodSupply);
 	}
-	consumeFood(city, foodConsumed);
-	var sustenance = foodDemand > 0 ? Math.sqrt(foodConsumed / foodDemand) : 1;
-	city.hunger = 0;
+	foodConsumed = consumeFood(city, foodConsumed);
+	var sustenance = foodDemand > 0 && foodConsumed < foodDemand ? Math.sqrt(foodConsumed / foodDemand) : 1;
+	city.hunger = (city.hunger || 0) - foodConsumed;
 
 	// scientists
 	processResearchingOutput(city);
@@ -1558,6 +1558,11 @@ function getTotalFood(city)
 
 function consumeFood(city, amount)
 {
+	if (amount != Math.floor(amount))
+		throw new Error("consumeFood: amount must be an integer");
+	if (amount < 0)
+		throw new Error("consumeFood: amount must be non-negative");
+
 	var FP = city.policy.foodPriority;
 	var foodTypesInOrder = [];
 	for (var ft in FP)
@@ -1590,7 +1595,7 @@ function consumeFood(city, amount)
 	while (amount > 0)
 	{
 		var min_multiplier = Infinity;
-		var min_type;
+		var min_type = null;
 		for (var ft in FP)
 		{
 			var avail = city.stock[ft] || 0;
@@ -1623,22 +1628,19 @@ function consumeFood(city, amount)
 
 		if (canTake < amount)
 		{
-			for (var i = 0, l = foodTypesInOrder.length; i<l; i++)
-			{
-				var ft = foodTypesInOrder[i];
-				var avail = city.stock[ft] || 0;
-				if (!avail) continue;
+			// this allotment of food is not enough to satisfy the demand;
+			// so, start by taking away all of the limiting food type.
+			// then loop back around to work on the rest...
 
-				var toTake = Math.floor(avail * min_multiplier);
-				if (toTake > amount)
-					toTake = amount;
-
-				eatFood(ft, ft == min_type ? avail : toTake);
-			}
+			eatFood(min_type, city.stock[min_type]);
 		}
 		else
 		{
-			for (var i = foodTypesInOrder.length-1; i >= 0; i--)
+			// this allotment can be satisfied.
+			// go in order from highest-priority food, to lowest priority food,
+			// until total demand is satisfied
+
+			for (var i = foodTypesInOrder.length-1; i >= 0 && amount > 0; i--)
 			{
 				var ft = foodTypesInOrder[i];
 				var avail = city.stock[ft] || 0;
