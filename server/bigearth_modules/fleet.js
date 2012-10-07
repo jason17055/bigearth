@@ -700,8 +700,6 @@ var UNIT_MOVEMENT_RULES = {
 
 function isNavigableByMap(map, fleet, location)
 {
-	var unitType = fleet.type;
-	var UM = UNIT_MOVEMENT_RULES[unitType] || UNIT_MOVEMENT_RULES['*'];
 	var c = map.cells[Location.toCellId(location)];
 	if (!c)
 		return false;
@@ -709,8 +707,7 @@ function isNavigableByMap(map, fleet, location)
 	if (!fleetCanEnterTerrainType(fleet, c.terrain))
 		return false;
 
-	var cost = UM[c.terrain] || UM.other_terrain;
-	return cost < 15000;
+	return true;
 }
 
 function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
@@ -723,7 +720,7 @@ function getMovementCost_byMap(fleet, oldLoc, newLoc, map)
 	var newLocCell = map.cells[newLoc];
 
 	if (newLocCell && newLocCell.terrain &&
-		!fleetCanEnterTerrainType(newLocCell.terrain))
+		!fleetCanEnterTerrainType(fleet, newLocCell.terrain))
 	{
 		return { delay: Infinity };
 	}
@@ -1033,7 +1030,7 @@ function moveFleetTowards(fleetId, targetLocation)
 		discoverCellBorder(fleet.map, Location.toCellId(fleet.location), "full-sight");
 
 		// report the error
-		return fleetActivityError(fleetId, fleet, "Cannot reach destination");
+		return fleetActivityError(fleetId, fleet, "Cannot reach destination ("+nextLoc+")");
 	}
 }
 
