@@ -2,14 +2,18 @@ var Location = require('../../html/location.js');
 var Fleet = require('./fleet.js');
 var City = require('./city.js');
 var Map = require('./map.js');
+var Perspective = require('./perspective.js');
 
 function autoSettle(fleetId, fleet, currentOrder)
 {
-	var fleetCellId = Location.toCellId(fleet.location);
-	var map = Fleet.getMap(fleetId, fleet);
+	var perspective = new Perspective(fleetId, fleet);
+	var map = perspective.getMap();
+
+	var fleetLocation = perspective.getLocation();
+	var fleetCellId = Location.toCellId(fleetLocation);
 
 	var bestValue = -Infinity;
-	var best = fleet.location;
+	var best = fleetLocation;
 	var start = { cell: fleetCellId, distance: 0 };
 	var queue = new Array();
 	queue.push(start);
