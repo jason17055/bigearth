@@ -10,26 +10,25 @@ function autoSettle(fleetId, fleet, currentOrder)
 	var map = perspective.getMap();
 
 	var fleetLocation = perspective.getLocation();
-	var fleetCellId = Location.toCellId(fleetLocation);
 
 	var bestValue = -Infinity;
 	var best = fleetLocation;
-	var start = { cell: fleetCellId, distance: 0 };
+	var start = { loc: fleetLocation, distance: 0 };
 	var queue = new Array();
 	queue.push(start);
 
 	var seen = {};
-	seen[fleetCellId] = start;
+	seen[fleetLocation] = start;
 
 	var biggestDistance = 0;
 	while (queue.length > 0)
 	{
 		var cur = queue.shift();
-		var v = getSettlementFitness(map, cur.cell);
+		var v = getSettlementFitness(map, Location.toCellId(cur.loc));
 		if (v > bestValue)
 		{
 			bestValue = v;
-			best = cur.cell;
+			best = cur.loc;
 		}
 		biggestDistance = cur.distance;
 
@@ -48,19 +47,18 @@ function autoSettle(fleetId, fleet, currentOrder)
 			return fleetActivity(fleetId, fleet);
 		}
 
-		var nn = BE.geometry.getNeighbors(cur.cell);
+		var nn = Map.getNeighbors(cur.loc);
 		for (var j = 0; j < nn.length; j++)
 		{
 			var nid = nn[j];
-			var cost = Fleet.getMovementCost_byMap(fleet, cur.cell, nid, map);
-			cost = cost.delay;
+			var cost = perspective.estimateMovementCost(cur.loc, nid, map);
 			if (cost == Infinity)
 				continue;
 
 			if (!seen[nid])
 			{
 				// this is the first time we've seen a path to this spot
-				seen[nid] = { cell: nid, distance: cur.distance + cost };
+				seen[nid] = { loc: nid, distance: cur.distance + cost };
 				queue.push(seen[nid]);
 			}
 			else if (cur.distance + cost < seen[nid].distance)
@@ -287,4 +285,3 @@ exports.buildCity = buildCity;
 exports.autoSettle = autoSettle;
 exports.disbandInCity = disbandInCity;
 exports.getSettlementFitness = getSettlementFitness;
-exports.fleetD
