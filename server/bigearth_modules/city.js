@@ -1270,7 +1270,7 @@ function governor_determineJobLevels(cityId, city)
 	desiredFoodNextYear -= mandatoryFarmers * G.world.foodPerFarmer;
 
 	jobLevels.push({ priority: 100, job: 'farm', quantity: mandatoryFarmers });
-	jobLevels.push({ priority: 1, job: 'farm', quantity: optionalFarmers });
+	jobLevels.push({ priority: 10, job: 'farm', quantity: optionalFarmers });
 
 	// remaining food must come from hunting
 	var mandatoryHunters = Math.ceil(desiredFoodNextYear / G.world.foodPerAnimal);
@@ -1298,6 +1298,10 @@ function governor_determineJobLevels(cityId, city)
 
 	// some other jobs that people like to do...
 	jobLevels.push({ priority: 10, job: 'research', quantity: Math.floor(city.population / 10) });
+
+	// ensure that no one is idle
+	jobLevels.push({ priority: 1, job: 'gather-clay', quantity: city.population });
+	jobLevels.push({ priority: 1, job: 'gather-stone', quantity: city.population });
 
 	return jobLevels;
 }
