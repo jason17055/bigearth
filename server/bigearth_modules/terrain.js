@@ -19,6 +19,24 @@ var WILDLIFE_QUOTA = {
 	other_terrain: 10
 	};
 
+var PEASANTS_QUOTA = {
+	'glacier': 0,
+	'desert': 0,
+	'tundra': 0,
+	'mountain': 100,
+	'plains': 1000,
+	'hills': 1000,
+	'grasslands': 1000,
+	'forest': 500,
+	'swamp': 100,
+	'jungle': 100,
+	'ocean': 0,
+	other_terrain: 0
+	};
+var PEASANTS_LIFESPAN = 30;
+var PEASANTS_EMIGRATION_RATE = 0.15;
+
+
 function hasRiver(edgeId)
 {
 	var e = G.terrain.edges[edgeId];
@@ -29,6 +47,7 @@ function terrainEndOfYear_prepare(cellId, cell)
 {
 	cell.wildlifeImmigrants = 0;
 	cell.wildlifeHunted = 0;
+	cell.peasantImmigrants = 0;
 }
 
 //prereqs: wildlifeHunted should be calculated before this function is called
@@ -36,7 +55,7 @@ function terrainEndOfYear_prepare(cellId, cell)
 function terrainEndOfYear_pass1(cellId, cell)
 {
 	var terrainType = cell.terrain;
-	var quota = WILDLIFE_QUOTA[terrainType] || WILDLIFE_QUOTA.other_terrain || 0;
+	var wildlifeQuota = WILDLIFE_QUOTA[terrainType] || WILDLIFE_QUOTA.other_terrain || 0;
 	var curCount = cell.wildlife || 0;
 
 	if (!(cell.wildlifeHunted >= 0 && cell.wildlifeHunted <= curCount))
@@ -45,8 +64,7 @@ function terrainEndOfYear_pass1(cellId, cell)
 		cell.wildlifeHunted = curCount;
 	}
 
-	var births = Randomizer((quota/5) * Math.pow(0.5 - 0.5*Math.cos(Math.PI * Math.sqrt(curCount / quota)), 2.0));
-	cell.wildlifeBirths = births;
+	cell.wildlifeBirths = Randomizer((wildlifeQuota/5) * Math.pow(0.5 - 0.5*Math.cos(Math.PI * Math.sqrt(curCount / wildlifeQuota)), 2.0));
 
 	var deaths = Randomizer(curCount / 5);
 	cell.wildlifeDeaths = cell.wildlifeHunted > deaths ? 0 :
@@ -54,7 +72,7 @@ function terrainEndOfYear_pass1(cellId, cell)
 			deaths - cell.wildlifeHunted;
 
 	var adjustedCount = curCount - (cell.wildlifeHunted + cell.wildlifeDeaths);
-	var emigrantsBase = 0.5 * adjustedCount * (adjustedCount / quota);
+	var emigrantsBase = 0.5 * adjustedCount * (adjustedCount / wildlifeQuota);
 	cell.wildlifeEmigrants = 0;
 
 	var nn = BE.geometry.getNeighbors(cellId);
@@ -86,6 +104,41 @@ function terrainEndOfYear_pass1(cellId, cell)
 
 		cell.wildlifeEmigrants += emigrants;
 		n.wildlifeImmigrants += emigrants;
+	}
+
+	//
+	// now, do the same thing but for peasants
+	//
+
+	var peasantsQuota = PEASANTS_QUOTA[terrainType] || PEASANTS_QUOTA.other_terrain || 0;
+	var curCount = cell.peasants || 0;
+	cell.peasantsBirths = Randomizer((peasantsQuota/PEASANTS_LIFESPAN) * Math.pow(0.5 - 0.5*Math.cos(Math.PI * Math.sqrt(curCount/peasantsQuota)), 2.0));
+
+	var deaths = Randomizer(curCount / PEASANTS_LIFESPAN);
+	cell.peasantsDeaths = deaths > curCount ? curCount :
+			deaths;
+
+	var adjustedCount = curCount - cell.peasantDeaths;
+	var emigrantsBase = PEASANTS_EMIGRATION_RATE * adjustedCount * (adjustedCount / peasantsQuota);
+	cell.peasantsEmigrants = 0;
+
+	for (var i = 0, l = nn.length; i < l; i++)
+	{
+		var n = G.terrain.cells[nn[i]];
+
+		var emigrants = emigrantsBase / l;
+		if (cell.terrain == 'ocean' || n.terrain == 'ocean')
+		{
+			emigrants = 0;
+		}
+		else if (hasRiver(BE.geometry._makeEdge(cellId, nn[i])))
+		{
+			// no migration across rivers
+			emigrants = 0;
+		}
+			
+		cell.peasantsEmigrants += emigrants;
+		n.peasantsImmigrants += emigrants;
 	}
 }
 
