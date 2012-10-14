@@ -144,21 +144,15 @@ function terrainEndOfYear_pass1(cellId, cell)
 
 function terrainEndOfYear_cleanup(cellId, cell)
 {
-	if (cell.wildlifeHunted)
-	{
-		console.log("cell "+cellId);
-		console.log("  wildlife count:     "+cell.wildlife);
-		console.log("  wildlife births:    "+cell.wildlifeBirths);
-		console.log("  wildlife hunted:    "+cell.wildlifeHunted);
-		console.log("  wildlife deaths:    "+cell.wildlifeDeaths);
-		console.log("  wildlife immigrants:"+cell.wildlifeImmigrants);
-		console.log("  wildlife emigrants: "+cell.wildlifeEmigrants);
-	}
-
 	cell.wildlife += cell.wildlifeBirths - cell.wildlifeDeaths - cell.wildlifeHunted +
 			cell.wildlifeImmigrants - cell.wildlifeEmigrants;
 	if (cell.wildlife < 0)
 		cell.wildlife = 0;
+
+	cell.peasants += cell.peasantsBirths - cell.peasantsDeaths +
+			cell.peasantsImmigrants - cell.peasantsEmigrants;
+	if (cell.peasants < 0)
+		cell.peasants = 0;
 }
 
 function Randomizer(x)
