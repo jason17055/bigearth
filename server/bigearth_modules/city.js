@@ -480,7 +480,8 @@ function cityActivityError(cityId, city, errorMessage)
 	{
 		delete city.tasks;
 		cityChanged(cityId);
-		rebalanceWorkers(cityId, city);
+		governor_onActivityEnd(cityId, city);
+		return;
 	}
 	else
 	{
@@ -508,25 +509,7 @@ function startCityActivity(cityId, city, activity, builders, productionCost, res
 		}
 	}
 	city.activity = activity;
-
-	var targetWorkerCount = builders;
-	if (targetWorkerCount > city.population - 50)
-	{
-		targetWorkerCount = city.population - 50;
-	}
-
-	if (targetWorkerCount < 0)
-	{
-		targetWorkerCount = 0;
-	}
-
-	var curWorkerCount = city.workers.build || 0;
-	if (curWorkerCount < targetWorkerCount)
-	{
-		stealWorkers(cityId, city,
-			targetWorkerCount-curWorkerCount, 'build');
-	}
-	rebalanceWorkers(cityId, city);
+	governor_onActivityStart(cityId, city, activity, builders);
 }
 
 function setCityActivity(cityId, city, activity, builders, productionCost, resourceCost)
@@ -717,7 +700,8 @@ function cityActivityComplete(cityId, city)
 		delete city.tasks;
 		cityMessage(cityId, 'Orders complete.');
 		cityChanged(cityId);
-		rebalanceWorkers(cityId, city);
+		governor_onActivityEnd(cityId, city);
+		return;
 	}
 	else
 	{
@@ -1149,6 +1133,26 @@ function governor_landDevelopmentCompleted(cityId, city, landType)
 	governor_dispatchJobAssignments(cityId, city, jobLevels);
 }
 
+function governor_onNewWorkersAvailable(cityId, city)
+{
+	var jobLevels = governor_determineJobLevels(cityId, city);
+	governor_dispatchJobAssignments(cityId, city, jobLevels);
+}
+
+function governor_onActivityStart(cityId, city, activity, builders)
+{
+	city.desiredBuilders = builders;
+
+	var jobLevels = governor_determineJobLevels(cityId, city);
+	governor_dispatchJobAssignments(cityId, city, jobLevels);
+}
+
+function governor_onActivityEnd(cityId, city)
+{
+	var jobLevels = governor_determineJobLevels(cityId, city);
+	governor_dispatchJobAssignments(cityId, city, jobLevels);
+}
+
 function governor_dispatchJobAssignments(cityId, city, jobLevels)
 {
 	// group job requests by priority
@@ -1288,7 +1292,8 @@ function governor_determineJobLevels(cityId, city)
 	// does the city have tasks to perform?
 	if (city.tasks && city.tasks.length != 0)
 	{
-		jobLevels.push({ priority: 15, job: 'build', quantity: 1000 });
+		jobLevels.push({ priority: 15, job: 'build',
+			quantity: (city.desiredBuilders||1000) });
 	}
 
 	// some other jobs that people like to do...
@@ -1961,7 +1966,7 @@ function city_addWorkersAny(cityId, city, amount)
 	lockCityStruct(city);
 
 	addWorkers(cityId, city, amount, 'idle');
-	rebalanceWorkers(cityId, city);
+	governor_onNewWorkersAvailable(cityId, city);
 
 	unlockCityStruct(cityId, city);
 }
@@ -1971,57 +1976,6 @@ function getFarmCount(city)
 	var cell = G.terrain.cells[Location.toCellId(city.location)];
 	var numFarms = cell.zones.farm || 0;
 	return numFarms;
-}
-
-function rebalanceWorkers(cityId, city)
-{
-	var amount = city.workers.idle || 0;
-	delete city.workers.idle;
-	delete city.workerRates.idle;
-	city.population -= amount;
-
-	if (amount > 0)
-	{
-		var numFarms = getFarmCount(city);
-		var needForFarmers = numFarms * 15;
-		var q = needForFarmers - (city.workers.farm || 0);
-		if (q > 0)
-		{
-			if (q > amount) { q = amount; }
-			addWorkers(cityId, city, q, 'farm');
-			amount -= q;
-		}
-	}
-
-	if (amount > 0)
-	{
-		var needForChildCaretakers = (city.children || 0) * .4;
-		var q = needForChildCaretakers - (city.workers.childcare || 0);
-		if (q > 0)
-		{
-			if (q > amount) { q = amount; }
-			addWorkers(cityId, city, q, 'childcare');
-			amount -= q;
-		}
-	}
-
-	if (amount > 0)
-	{
-		var needForBuilders = city.activity ? 20 : 0;
-		var q = needForBuilders - (city.workers.build || 0);
-		if (q > 0)
-		{
-			if (q > amount) { q = amount; }
-			addWorkers(cityId, city, q, 'build');
-			amount -= q;
-		}
-	}
-
-	if (amount > 0)
-	{
-		addWorkers(cityId, city, amount/2, 'hunt');
-		addWorkers(cityId, city, amount/2, 'childcare');
-	}
 }
 
 global.roundWorkers = roundWorkers;
