@@ -981,6 +981,10 @@ function cityEndOfYear(cityId, city)
 		sustenance = Math.sqrt(foodConsumed / foodDemand);
 		city.hunger = 0;
 	}
+	else
+	{
+		city.hunger = foodDemand - foodConsumed;
+	}
 
 	if (sustenance < 0.85)
 	{
