@@ -1187,7 +1187,7 @@ function governor_dispatchJobAssignments(cityId, city, jobLevels)
 
 		if (workersLeft <= 0) continue;
 
-		var rations = totalDemand > workersLeft ? totalDemand / workersLeft : 1;
+		var rations = totalDemand > workersLeft ? workersLeft / totalDemand : 1;
 
 		for (var j = 0; j < jobsByPriority[p].length; j++)
 		{
