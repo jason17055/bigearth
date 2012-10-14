@@ -989,6 +989,13 @@ function cityEndOfYear(cityId, city)
 	var sustenance = foodDemand > 0 && foodConsumed < foodDemand ? Math.sqrt(foodConsumed / foodDemand) : 1;
 	city.hunger = (city.hunger || 0) - foodConsumed;
 
+	if (sustenance < 0.85)
+	{
+	cityMessage(cityId,
+		"starvation! only "+Math.round(100*sustenance)+"% of needed food available");
+		
+	}
+
 	// scientists
 	processResearchingOutput(city);
 
