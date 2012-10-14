@@ -9,8 +9,25 @@ function autoSettle(fleetId, fleet, currentOrder)
 	var perspective = new Perspective(fleetId, fleet);
 	var map = perspective.getMap();
 
-	var fleetLocation = perspective.getLocation();
+	if (!fleet.autoSettleData)
+		fleet.autoSettleData = {};
+	if (!fleet.autoSettleData.visitedCities)
+		fleet.autoSettleData.visitedCities = {};
 
+	var fleetLocation = perspective.getLocation();
+	if (Map.getCityAt(map, fleetLocation))
+	{
+		var cityName = Map.getCityAt(map, fleetLocation);
+		fleet.autoSettleData.visitedCities[cityName] = true;
+
+		var cityPop = perspective.getCityPopulation();
+		if (cityPop < 250)
+		{
+			return disbandInCity(fleetId, fleet);
+		}
+	}
+
+	var nearestCityLocation = null;
 	var bestValue = -Infinity;
 	var best = fleetLocation;
 	var start = { loc: fleetLocation, distance: 0 };
@@ -32,6 +49,15 @@ function autoSettle(fleetId, fleet, currentOrder)
 		}
 		biggestDistance = cur.distance;
 
+		if (!nearestCityLocation && Map.getCityAt(map, cur.loc))
+		{
+			var cityName = Map.getCityAt(map, cur.loc);
+			if (!fleet.autoSettleData.visitedCities[cityName])
+			{
+				nearestCityLocation = cur.loc;
+			}
+		}
+
 		if ((cur.distance >= 10 * BE.fleetPace && bestValue >= 3.0) ||
 			(cur.distance >= 20 * BE.fleetPace && bestValue >= 2.2) ||
 			(cur.distance >= 40 * BE.fleetPace && bestValue >= 1.4))
@@ -47,7 +73,7 @@ function autoSettle(fleetId, fleet, currentOrder)
 			return fleetActivity(fleetId, fleet);
 		}
 
-		var nn = Map.getNeighbors(cur.loc);
+		var nn = Map.getNeighbors(map, cur.loc);
 		for (var j = 0; j < nn.length; j++)
 		{
 			var nid = nn[j];
@@ -71,7 +97,16 @@ function autoSettle(fleetId, fleet, currentOrder)
 		queue.sort(function(a,b) { return a.distance - b.distance; });
 	}
 
-	return fleetActivityError(fleetId, fleet, "Unable to find a suitable city location.")
+	if (nearestCityLocation)
+	{
+		fleet.orders.unshift({
+			command: 'goto',
+			location: nearestCityLocation
+			});
+		return fleetActivity(fleetId, fleet);
+	}
+
+	return fleetActivityError(fleetId, fleet, "Unable to find a suitable city location (and no nearby cities).")
 }
 
 function getSettlementFitness(map, cellId)

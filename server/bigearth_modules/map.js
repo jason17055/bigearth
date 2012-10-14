@@ -20,6 +20,13 @@ function copyMap(mapId)
 	return mapId;
 }
 
+function getCityAt(map, location)
+{
+	var cellId = Location.toCellId(location);
+	var mapCell = map.cells[cellId];
+	return mapCell ? mapCell.city : null;
+}
+
 function getNeighbors(mapId, location)
 {
 	var cellId = Location.toCellId(location);
@@ -28,4 +35,5 @@ function getNeighbors(mapId, location)
 
 exports.newMap = newMap;
 exports.copyMap = copyMap;
+exports.getCityAt = getCityAt;
 exports.getNeighbors = getNeighbors;
