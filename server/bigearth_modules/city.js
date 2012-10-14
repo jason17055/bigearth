@@ -1064,6 +1064,18 @@ function cityEndOfYear_cleanup(cityId, city)
 	}
 }
 
+function isSettlerAt(location)
+{
+	var cell = getTerrainLocation(location);
+	for (var fid in cell.fleets)
+	{
+		var fleet = G.fleets[fid];
+		if (fleet && fleet.type == 'settler')
+			return true;
+	}
+	return false;
+}
+
 function governor_endOfYear(cityId, city)
 {
 	// TODO- check for actionable problems and announce them as appropriate
@@ -1086,7 +1098,7 @@ function governor_endOfYear(cityId, city)
 					type: 'mud-cottages'
 					});
 			}
-			else
+			else if (!isSettlerAt(city.location))
 			{
 				city.tasks = [];
 				city.tasks.push({
