@@ -973,21 +973,14 @@ function cityEndOfYear(cityId, city)
 
 	// feed the population
 	var foodDemand = city.hunger && city.hunger > 0 ? city.hunger : 0;
-	var foodSupply = getTotalFood(city);
-	var foodConsumed;
-	if (foodSupply >= foodDemand)
+	var foodConsumed = consumeFood(city, Math.ceil(foodDemand));
+
+	var sustenance = 1;
+	if (foodDemand > 0 && foodConsumed < foodDemand)
 	{
-		// ok, enough to satisfy everyone
-		foodConsumed = Math.ceil(foodDemand);
+		sustenance = Math.sqrt(foodConsumed / foodDemand);
+		city.hunger = 0;
 	}
-	else   // city.food < foodDemand
-	{
-		// not enough food, some people gonna die
-		foodConsumed = Math.ceil(foodSupply);
-	}
-	foodConsumed = consumeFood(city, foodConsumed);
-	var sustenance = foodDemand > 0 && foodConsumed < foodDemand ? Math.sqrt(foodConsumed / foodDemand) : 1;
-	city.hunger = (city.hunger || 0) - foodConsumed;
 
 	if (sustenance < 0.85)
 	{
