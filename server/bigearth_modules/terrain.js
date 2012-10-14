@@ -18,6 +18,8 @@ var WILDLIFE_QUOTA = {
 	'ocean': 100,
 	other_terrain: 10
 	};
+var WILDLIFE_LIFESPAN = 5;
+var WILDLIFE_EMIGRATION_RATE = 0.25;
 
 var PEASANTS_QUOTA = {
 	'glacier': 0,
@@ -34,7 +36,7 @@ var PEASANTS_QUOTA = {
 	other_terrain: 0
 	};
 var PEASANTS_LIFESPAN = 30;
-var PEASANTS_EMIGRATION_RATE = 0.15;
+var PEASANTS_EMIGRATION_RATE = 0.10;
 
 
 function hasRiver(edgeId)
@@ -64,15 +66,15 @@ function terrainEndOfYear_pass1(cellId, cell)
 		cell.wildlifeHunted = curCount;
 	}
 
-	cell.wildlifeBirths = Randomizer((wildlifeQuota/5) * Math.pow(0.5 - 0.5*Math.cos(Math.PI * Math.sqrt(curCount / wildlifeQuota)), 2.0));
+	cell.wildlifeBirths = Randomizer((wildlifeQuota/WILDLIFE_LIFESPAN) * Math.pow(0.5 - 0.5*Math.cos(Math.PI * Math.sqrt(curCount / wildlifeQuota)), 2.0));
 
-	var deaths = Randomizer(curCount / 5);
+	var deaths = Randomizer(curCount / WILDLIFE_LIFESPAN);
 	cell.wildlifeDeaths = cell.wildlifeHunted > deaths ? 0 :
 			deaths > curCount ? curCount - cell.wildlifeHunted :
 			deaths - cell.wildlifeHunted;
 
 	var adjustedCount = curCount - (cell.wildlifeHunted + cell.wildlifeDeaths);
-	var emigrantsBase = 0.5 * adjustedCount * (adjustedCount / wildlifeQuota);
+	var emigrantsBase = WILDLIFE_EMIGRATION_RATE * adjustedCount * (adjustedCount / wildlifeQuota);
 	cell.wildlifeEmigrants = 0;
 
 	var nn = BE.geometry.getNeighbors(cellId);
@@ -83,17 +85,15 @@ function terrainEndOfYear_pass1(cellId, cell)
 		var emigrants = emigrantsBase / l;
 		if (cell.terrain == 'ocean' && n.terrain == 'ocean')
 		{
-			emigrants *= 1;
+			// ocean-to-ocean migration, twice as fluid
+			emigrants *= 2;
 		}
 		else if (cell.terrain == 'ocean' || n.terrain == 'ocean')
 		{
 			emigrants = 0;
 		}
-		else
+		else		// land-to-land emigration
 		{
-			// land-to-land emigration
-			emigrants *= 0.5;
-
 			// check for presence of a river
 			var eId = BE.geometry._makeEdge(cellId, nn[i]);
 			if (hasRiver(eId))
