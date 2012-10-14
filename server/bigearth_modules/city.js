@@ -340,6 +340,9 @@ function roundWorkers(aa)
 
 function reassignWorkers(cityId, city, quantity, fromJob, toJob)
 {
+	if (!(quantity >= 0))
+		throw new Error('reassignWorkers- quantity must be non-negative');
+
 	lockCityStruct(city);
 
 	quantity = removeWorkers(cityId, city, quantity, fromJob);
@@ -1236,10 +1239,15 @@ function governor_dispatchJobAssignments(cityId, city, jobLevels)
 					reassignWorkers(cityId, city, amountShort, fromJob, job);
 					amountShort = 0;
 				}
-				else
+				else if (extraThere > 0)
 				{
 					reassignWorkers(cityId, city, extraThere, fromJob, job);
 					amountShort -= extraThere;
+					jobsWithExtra.shift();
+				}
+				else // extraThere <= 0;
+				{
+					// shouldn't happen, but just in case
 					jobsWithExtra.shift();
 				}
 			}
