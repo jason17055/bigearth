@@ -521,11 +521,17 @@ function newPlayer(requestedRole, playerId)
 		playerStruct.map = mapId;
 
 		// pick a location to be this player's home location
-		var loc = findSuitableStartingLocation();
+		var loc = pickStartingTile();
+		if (!loc)
+		{
+			// no tile has at least 150 people;
+			// fall back on old method...
+			loc = findSuitableStartingLocation();
+		}
+
 		createUnit(playerId, "settler", loc, {
 				population: 100
 				});
-		createUnit(playerId, "explorer", BE.geometry.getNeighbors(loc)[0]);
 
 		if (playerId == 'god')
 		{
@@ -535,6 +541,35 @@ function newPlayer(requestedRole, playerId)
 			}
 		}
 	}
+}
+
+function pickStartingTile()
+{
+	var candidates = [];
+	var sumWeights = 0;
+	for (var cityId in G.cities)
+	{
+		var city = G.cities[cityId];
+		var pop = city.population || 0;
+		if (pop < 150)
+			continue;
+		var v = Math.pow(pop,2);
+		sumWeights += v;
+		candidates.push({ location: city.location, weight: v });
+	}
+
+	var r = Math.random() * sumWeights;
+	var i;
+	for (i = 0; i < candidates.length && r >= 0; i++)
+	{
+		r -= candidates[i].weight;
+	}
+
+	if (i < candidates.length)
+	{
+		return candidates[i].location;
+	}
+	return null;
 }
 
 function nextFleetId()
