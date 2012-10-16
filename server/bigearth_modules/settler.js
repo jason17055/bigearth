@@ -23,8 +23,12 @@ function autoSettle(fleetId, fleet, currentOrder)
 		var cityPop = perspective.getCityPopulation();
 		if (cityPop < 250)
 		{
-			return disbandInCity(fleetId, fleet);
+			return disbandInCity(fleetId, fleet, currentOrder);
 		}
+	}
+	else if (fleetLocation == fleet.autoSettleData.targetLoc)
+	{
+		return buildCity(fleetId, fleet, currentOrder);
 	}
 
 	var nearestCityLocation = null;
@@ -62,10 +66,7 @@ function autoSettle(fleetId, fleet, currentOrder)
 			(cur.distance >= 20 * BE.fleetPace && bestValue >= 2.2) ||
 			(cur.distance >= 40 * BE.fleetPace && bestValue >= 1.4))
 		{
-			fleet.orders.shift();
-			fleet.orders.unshift({
-				command: 'build-city'
-				});
+			fleet.autoSettleData.targetLoc = best;
 			fleet.orders.unshift({
 				command: 'goto',
 				location: best
