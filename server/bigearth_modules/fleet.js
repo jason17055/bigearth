@@ -513,6 +513,9 @@ function fleetCanCrossRiver(fleet)
 
 function fleetCanEnterTerrainType(fleet, terrainType)
 {
+	if (fleet.type == 'trieme')
+		return terrainType == 'ocean';
+
 	if (terrainType == 'jungle')
 		return false;
 	if (terrainType == 'mountains')
@@ -523,6 +526,9 @@ function fleetCanEnterTerrainType(fleet, terrainType)
 		return false;
 	if (terrainType == 'glacier')
 		return false;
+	if (terrainType == 'ocean')
+		return false;
+
 	return true;
 }
 
