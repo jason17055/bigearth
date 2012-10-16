@@ -299,6 +299,59 @@ function addAvailableJobs(cityId, jobs)
 	}
 }
 
+function abandonCity(cityId, city)
+{
+	// TODO- any commodities held by the city should be passed
+	// to the terrain tile
+
+	destroyCity(cityId, 'abandoned');
+}
+
+function destroyCity(cityId, disposition)
+{
+	var city = G.cities[cityId];
+
+	notifyPlayer(city.owner, {
+		event: 'city-terminated',
+		city: cityId,
+		location: city.location,
+		disposition: disposition
+		});
+
+	var pp = allPlayersWhoCanSee(city.location);
+	for (var pid in pp)
+	{
+		if (pid != city.owner)
+		{
+			// notify foreign player that can also see this
+			// city
+			notifyPlayer(pid, {
+				event: 'city-terminated',
+				city: cityId,
+				location: city.location,
+				disposition: disposition
+				});
+		}
+	}
+
+	if (city.canSee)
+	{
+		for (var loc in city.canSee)
+		{
+			removeFleetCanSee(cityId, city, loc);
+		}
+	}
+
+	if (city.inBattle)
+		throw new Error('unexpected');
+
+	var terrain = getTerrainLocation(city.location);
+	delete terrain.city;
+	delete G.cities[cityId];
+
+	terrainChanged(Location.toCellId(city.location));
+}
+
 // given an associative array, return a new associative array with
 // all the numbers rounded up, in such a way that the sum of the
 // numbers in the result equals the floored sum of the input.
@@ -1052,6 +1105,11 @@ function cityEndOfYear(cityId, city)
 	
 	city.births = 0;
 	city.deaths = 0;
+
+	if ((city.population || 0) + (city.children || 0) < 0.5)
+	{
+		abandonCity(cityId, city);
+	}
 }
 
 // prereqs- terrain wildlife counters should be updated
