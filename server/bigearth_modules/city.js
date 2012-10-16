@@ -352,6 +352,14 @@ function destroyCity(cityId, disposition)
 	terrainChanged(Location.toCellId(city.location));
 }
 
+function emancipateCity(cityId)
+{
+	var city = G.cities[cityId];
+
+	delete city.owner;
+	cityChanged(cityId);
+}
+
 // given an associative array, return a new associative array with
 // all the numbers rounded up, in such a way that the sum of the
 // numbers in the result equals the floored sum of the input.
@@ -791,6 +799,31 @@ function cityActivity(cityId, city)
 	}
 
 	return cityActivityError(cityId, city, "unrecognized task " + currentTask.task);
+}
+
+function cmd_emancipate_city(requestData, queryString, remoteUser)
+{
+	if (!queryString.match(/^city=(.*)$/))
+	{
+		console.log("emancipate-city: invalid query string");
+		return;
+	}
+
+	var cityId = RegExp.$1;
+	var city = G.cities[cityId];
+	if (!city)
+	{
+		console.log("emancipate-city: city " + cityId + " not found");
+		return;
+	}
+
+	if (city.owner != remoteUser)
+	{
+		console.log("emancipate-city: city " + cityId + " not owned by player " + remoteUser);
+		return;
+	}
+
+	emancipateCity(cityId);
 }
 
 function cmd_rename_city(requestData, queryString, remoteUser)
@@ -2071,6 +2104,7 @@ global.cityEndOfYear = cityEndOfYear;
 global.cityEndOfYear_cleanup = cityEndOfYear_cleanup;
 global.city_addWorkersAny = city_addWorkersAny;
 
+exports.cmd_emancipate_city = cmd_emancipate_city;
 exports.cmd_rename_city = cmd_rename_city;
 exports.cmd_test_city = cmd_test_city;
 exports.cmd_reassign_workers = cmd_reassign_workers;

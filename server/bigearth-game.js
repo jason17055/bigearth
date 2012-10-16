@@ -995,6 +995,7 @@ function DEBUG(message)
 
 var actionHandlers = {
 	orders: doOrders,
+	'emancipate-city': City.cmd_emancipate_city,
 	'rename-city': City.cmd_rename_city,
 	'test-city': City.cmd_test_city,
 	'reassign-workers': City.cmd_reassign_workers,

@@ -1210,6 +1210,16 @@ function transferWorkers(numWorkers, fromJob, toJob)
 		});
 }
 
+function cityEmancipate()
+{
+	var cityId = $('#cityPane').attr('city-id');
+	$.ajax({
+		type: "POST",
+		url: "/request/emancipate-city?city="+cityId,
+		data: {}
+		});
+}
+
 function cityTest()
 {
 	var cityId = $('#cityPane').attr('city-id');
