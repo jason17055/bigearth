@@ -1,0 +1,19 @@
+<web-app>
+<display-name>bigearth</display-name>
+
+<context-param>
+	<param-name>mongo-something-or-other</param-name>
+	<param-value>0</param-value>
+</context-param>
+
+<servlet>
+	<servlet-name>status-servlet</servlet-name>
+	<servlet-class>bigearth.StatusServlet</servlet-class>
+</servlet>
+
+<servlet-mapping>
+	<servlet-name>status-servlet</servlet-name>
+	<url-pattern>/status</url-pattern>
+</servlet-mapping>
+
+</web-app>
