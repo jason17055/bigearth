@@ -94,6 +94,7 @@ public class SphereGeometry implements Geometry
 		this.size = size;
 	}
 
+	//implements Geometry
 	public int getCellCount()
 	{
 		return (10*size+20)*size + 12;
@@ -148,6 +149,7 @@ public class SphereGeometry implements Geometry
 		}
 	}
 
+	//implements Geometry
 	public int [] getNeighbors(int cellId)
 	{
 		if (cellId < 1)
@@ -245,5 +247,114 @@ public class SphereGeometry implements Geometry
 				};
 			return rv;
 		}
+	}
+
+	private class MyVertexId implements VertexId
+	{
+		int cell1;
+		int cell2;
+		int cell3;
+
+		MyVertexId(int cell1, int cell2, int cell3)
+		{
+			assert cell1 < cell2 && cell1 < cell3;
+			this.cell1 = cell1;
+			this.cell2 = cell2;
+			this.cell3 = cell3;
+		}
+
+		//implements Geometry.VertexId
+		public int [] getAdjacentCells()
+		{
+			return new int[] { cell1, cell2, cell3 };
+		}
+	}
+
+	private class MyEdgeId implements EdgeId
+	{
+		int cell1;
+		int cell2;
+
+		MyEdgeId(int cell1, int cell2)
+		{
+			assert cell1 < cell2;
+			this.cell1 = cell1;
+			this.cell2 = cell2;
+		}
+
+		//implements Geometry.EdgeId
+		public int [] getAdjacentCells()
+		{
+			return new int[] { cell1, cell2 };
+		}
+
+		//implements Geometry.EdgeId
+		public VertexId [] getEndpoints()
+		{
+			return getEdgeEndpoints(this);
+		}
+	}
+
+	//implements Geometry
+	public EdgeId getEdgeBetween(int cell1, int cell2)
+	{
+		if (cell1 < cell2)
+			return new MyEdgeId(cell1, cell2);
+		else
+			return new MyEdgeId(cell2, cell1);
+	}
+
+	VertexId getVertexBetween(int cell1, int cell2, int cell3)
+	{
+		if (cell1 < cell2 && cell1 < cell3)
+			return new MyVertexId(cell1, cell2, cell3);
+		else if (cell2 < cell1 && cell2 < cell3)
+			return new MyVertexId(cell2, cell3, cell1);
+		else
+			return new MyVertexId(cell3, cell1, cell2);
+	}
+
+	VertexId [] getEdgeEndpoints(MyEdgeId edgeId)
+	{
+		int [] adj = getNeighbors(edgeId.cell1);
+		for (int i = 0, len = adj.length; i < len; i++)
+		{
+			if (adj[i] == edgeId.cell2)
+			{
+				return new VertexId[] {
+					getVertexBetween(edgeId.cell1, edgeId.cell2, adj[(i+1)%len]),
+					getVertexBetween(edgeId.cell2, edgeId.cell1, adj[(i+len-1)%len])
+					};
+			}
+		}
+		throw new Error("Invalid edge : " + edgeId);
+	}
+
+	//implements Geometry
+	public VertexId [] getSurroundingVertices(int cellId)
+	{
+		int [] nn = getNeighbors(cellId);
+		int len = nn.length;
+
+		VertexId [] rv = new VertexId[len];
+		for (int i = 0; i < len; i++)
+		{
+			rv[i] = getVertexBetween(cellId, nn[i], nn[(i+1)%len]);
+		}
+		return rv;
+	}
+
+	//implements Geometry
+	public EdgeId [] getSurroundingEdges(int cellId)
+	{
+		int [] nn = getNeighbors(cellId);
+		int len = nn.length;
+
+		EdgeId [] rv = new EdgeId[len];
+		for (int i = 0; i < len; i++)
+		{
+			rv[i] = getEdgeBetween(cellId, nn[i]);
+		}
+		return rv;
 	}
 }
