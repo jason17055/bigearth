@@ -444,7 +444,7 @@ public class SphereGeometry implements Geometry
 		}
 	}
 
-	private static Point3d fromPolar(double lgt, double lat)
+	static Point3d fromPolar(double lgt, double lat)
 	{
 		double zz = Math.cos(lat);
 		return new Point3d(
@@ -455,4 +455,24 @@ public class SphereGeometry implements Geometry
 	}
 
 	private static final double ATAN12 = Math.atan(0.5);
+
+	int nearestTo(Point3d pt)
+	{
+		int best = 1;
+		double bestDist = Double.POSITIVE_INFINITY;
+		Vector3d v = new Vector3d();
+
+		for (int i = 0, numCells = getCellCount(); i < numCells; i++)
+		{
+			Point3d p = getCenterPoint(i+1);
+			v.sub(pt,p);
+			double x = v.length();
+			if (x<bestDist)
+			{
+				best=i+1;
+				bestDist=x;
+			}
+		}
+		return best;
+	}
 }

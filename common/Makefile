@@ -1,4 +1,4 @@
-classpath = /usr/share/java/vecmath.jar
+classpath = ../jlib/vecmath.jar
 
 all:
 	mkdir -p classes
