@@ -6,6 +6,8 @@ import javax.vecmath.*;
 
 public class MakeWorld
 {
+	static final int AVERAGE_RAINFALL = 990;
+
 	public static void main(String [] args)
 		throws Exception
 	{
@@ -37,8 +39,8 @@ public class MakeWorld
 
 	SphereGeometry g;
 	int [] elevation;
-	int [] temperature;
-	int [] annualRains;
+	int [] temperature; //in 10th degrees Celsius
+	int [] annualRains; //in millimeters-per-year
 
 	MakeWorld(String worldName, int geometrySize)
 	{
@@ -93,8 +95,16 @@ public class MakeWorld
 		//
 		this.annualRains = new int[numCells];
 		for (int i = 0; i < 20; i++)
+		{
+			status("Generating rains ("+(i*5)+"%)");
 			generateRainfalls_oneStep(annualRains);
+		}
 		normalizeRains(annualRains);
+	}
+
+	void status(String message)
+	{
+		System.out.println(message);
 	}
 
 	void normalizeRains(int [] rainfall)
@@ -119,14 +129,27 @@ public class MakeWorld
 		}
 		double meanRainfall = sum / count;
 
+		// find standard deviation
+		sum = 0.0;
+		for (int i = 0; i < rainfall.length; i++)
+		{
+			if (elevation[i] >= 0)
+			{
+				sum += Math.pow(rainfall[i]-meanRainfall, 2.0);
+			}
+		}
+		double stddevRain = Math.sqrt(sum / count);
+
 		System.out.println("rainfall stats (before normalization):");
-		System.out.printf("  minimum rainfall :%6d\n", minRain);
-		System.out.printf("  maximum rainfall :%6d\n", maxRain);
-		System.out.printf("  average rainfall :%8.1f\n", meanRainfall);
+		System.out.printf("  minimum rainfall  :%6d\n", minRain);
+		System.out.printf("  maximum rainfall  :%6d\n", maxRain);
+		System.out.printf("  average rainfall  :%8.1f\n", meanRainfall);
+		System.out.printf("  standard deviation:%8.1f\n", stddevRain);
 
 		for (int i = 0; i < rainfall.length; i++)
 		{
-			rainfall[i] = (int)Math.round(rainfall[i] * 85.0 / meanRainfall);
+			double x = (rainfall[i] - meanRainfall) / stddevRain;
+			rainfall[i] = (int)Math.round(AVERAGE_RAINFALL * Math.exp(x));
 		}
 	}
 
