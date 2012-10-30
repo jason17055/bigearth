@@ -28,11 +28,14 @@ public class MakeWorld
 
 		String worldName = args[baseArg++];
 
-		new MakeWorld(worldName, geometrySize).run();
+		new MakeWorld(worldName, geometrySize).generate();
 	}
 
 	String worldName;
 	int geometrySize;
+
+	SphereGeometry g;
+	int [] elevation;
 
 	MakeWorld(String worldName, int geometrySize)
 	{
@@ -40,7 +43,7 @@ public class MakeWorld
 		this.geometrySize = geometrySize;
 	}
 
-	public void run()
+	public void generate()
 	{
 	/*	Mongo m;
 		DB db;
@@ -50,10 +53,10 @@ public class MakeWorld
 		DBCollection regions = db.getCollection("regions");
 	*/
 		
-		SphereGeometry g = new SphereGeometry(geometrySize);
+		this.g = new SphereGeometry(geometrySize);
 		int numCells = g.getCellCount();
 
-		int [] elevation = new int[numCells];
+		this.elevation = new int[numCells];
 		int [] temperature = new int[numCells];
 		int [] summerRains = new int[numCells];
 		int [] winterRains = new int[numCells];
@@ -73,7 +76,7 @@ public class MakeWorld
 		// - start by calculating temperature based on latitude
 		for (int i = 0; i < numCells; i++)
 		{
-			Point3d p = getCenterPoint(i+1);
+			Point3d p = g.getCenterPoint(i+1);
 			double lat = Math.asin(p.z);
 			temperature[i] = (int)
 				Math.round(240 - 200 * Math.pow(lat,2));
@@ -102,7 +105,7 @@ public class MakeWorld
 			// middle latitudes will get seasonal variation
 			// in rains
 			summerRains[i] = winterRains[i]
-				+ Math.round(6.0 * Math.sin(lat/2.0));
+				+ (int)Math.round(6.0 * Math.sin(lat/2.0));
 		}
 		for (int i = 0; i < 50; i++)
 		{
