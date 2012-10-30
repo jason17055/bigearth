@@ -17,6 +17,7 @@ public class WorldViewer extends JFrame
 
 	WorldView view;
 	JButton generateBtn;
+	JToggleButton showElevationBtn;
 
 	WorldViewer()
 	{
@@ -24,25 +25,65 @@ public class WorldViewer extends JFrame
 		view = new WorldView();
 		add(view, BorderLayout.CENTER);
 
+		JPanel buttonsPane = new JPanel();
+		add(buttonsPane, BorderLayout.SOUTH);
+
 		generateBtn = new JButton("Generate");
 		generateBtn.addActionListener(this);
-		add(generateBtn, BorderLayout.SOUTH);
+		buttonsPane.add(generateBtn);
+
+		showElevationBtn = new JToggleButton("Show Elevations");
+		showElevationBtn.addActionListener(this);
+		buttonsPane.add(showElevationBtn);
 
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
+	MakeWorld world;
+	boolean showElevations;
+
 	//implements ActionListener
 	public void actionPerformed(ActionEvent ev)
 	{
-		MakeWorld world = new MakeWorld("w1", 20);
-		world.generate();
+		if (ev.getSource() == generateBtn)
+		{
+			this.world = new MakeWorld("w1", 20);
+			world.generate();
+			regenerate();
+	
+		}
+		else if (ev.getSource() == showElevationBtn)
+		{
+			showElevations = showElevationBtn.isSelected();
+			regenerate();
+		}
+	}
+
+	void regenerate()
+	{
+		if (world == null)
+			return;
 
 		int [] colors = new int[world.g.getCellCount()];
 		for (int i = 0; i < colors.length; i++)
 		{
-			colors[i] = world.elevation[i] >= 0 ?
-					0x00ff00 : 0x0000ff;
+			int el = world.elevation[i];
+
+			if (showElevations)
+			{
+				colors[i] = el >= 10 ? 0xffffff :
+					el >= 7 ? 0x885500 :
+					el >= 3 ? 0x00ff00 :
+					el >= 0 ? 0x009900 :
+					el >= -3 ? 0x0000ff :
+					0x000088;
+			}
+			else
+			{
+				colors[i] = el >= 0 ? 0x00ff00 :
+					0x0000ff;
+			}
 		}
 		view.generateImage(world.g, colors);
 		view.repaint();
