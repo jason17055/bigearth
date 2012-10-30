@@ -16,6 +16,11 @@ function onResize()
 		});
 	if (VIEWPORT)
 		VIEWPORT.sizeChanged(newWidth, newHeight);
+
+	$('#regionPage').css({
+		width: newWidth+"px",
+		height: newHeight+"px"
+		});
 }
 
 var gameState;
@@ -1341,4 +1346,15 @@ function citiesReportClicked()
 	}
 
 	$r.show();
+}
+
+function onFleetNameClicked()
+{
+	var fleetId = $('#fleetPane').attr('fleet-id');
+	var u = '/region?follow='+escape(fleetId);
+
+	$('#fleetPane').hide();
+	$('#cityPane').hide();
+	$('.world-view').hide();
+	$('.region-view').show();
 }

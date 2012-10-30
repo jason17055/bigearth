@@ -12,15 +12,18 @@
 <script type="text/javascript" src="citypane.js"></script>
 </head>
 <body>
-<div id="contentArea">
+<div id="regionPage" class="region-view">
+Foo is here
+</div>
+<div id="contentArea" class="world-view">
 <img src="ui_images/cursor_goto.png" id="cursorGotoImg">
 <div class="bigearth-scrollPanel">
 <img src="ui_images/xtarget.png" class="dragTargetIndicator">
 </div>
 <div id="crossHairs"></div>
 </div>
-<div id="fleetMessagesContainer"></div>
-<div id="buttonBar">
+<div id="fleetMessagesContainer" class="world-view"></div>
+<div id="buttonBar" class="world-view">
 <div style="padding:3pt">
 <input id="numEntry" value="">
 <button type="button" onclick="pauseClicked()">Pause</button>
@@ -145,7 +148,7 @@
 
 <div id="fleetPane" style="display:none">
 <div class="closeBtn">X</div>
-<div><img class="icon" align="left"><span class="unitType"></span></div>
+<div><img class="icon" align="left"><a class="unitType" href="" onclick="onFleetNameClicked();return false;"></a></div>
 <div class="populationContainer">Population: <span class="population"></span></div>
 <div style="clear:both"></div>
 <div class="resourcesContainer"></div>

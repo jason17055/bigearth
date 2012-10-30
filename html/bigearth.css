@@ -2,6 +2,12 @@ body {
 	margin: 0;
 	padding: 0;
 }
+#regionPage {
+	background-color: #055;
+}
+.region-view {
+	display: none;
+}
 #contentArea {
 	position: absolute;
 	overflow: hidden;

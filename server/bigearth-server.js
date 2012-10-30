@@ -20,6 +20,11 @@ BE.fleetPace = 1000;
 
 function handleStaticFileRequest(requestPath,request,response)
 {
+	if (requestPath == 'region')
+	{
+		requestPath = 'region.html';
+	}
+
 	var mimeType = requestPath.match('\.png$') ? 'image/png' :
 		requestPath.match('\.html$') ? 'text/html' :
 		requestPath.match('\.css$') ? 'text/css' :
