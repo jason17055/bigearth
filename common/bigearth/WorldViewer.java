@@ -20,6 +20,7 @@ public class WorldViewer extends JFrame
 	JToggleButton showElevationBtn;
 	JToggleButton showTemperatureBtn;
 	JToggleButton showRainfallBtn;
+	JToggleButton showRiversBtn;
 
 	WorldViewer()
 	{
@@ -46,14 +47,15 @@ public class WorldViewer extends JFrame
 		showRainfallBtn.addActionListener(this);
 		buttonsPane.add(showRainfallBtn);
 
+		showRiversBtn = new JToggleButton("Show Rivers");
+		showRiversBtn.addActionListener(this);
+		buttonsPane.add(showRiversBtn);
+
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
 	MakeWorld world;
-	boolean showElevations;
-	boolean showTemperatures;
-	boolean showRainfall;
 
 	//implements ActionListener
 	public void actionPerformed(ActionEvent ev)
@@ -67,19 +69,30 @@ public class WorldViewer extends JFrame
 		}
 		else if (ev.getSource() == showElevationBtn)
 		{
-			showElevations = showElevationBtn.isSelected();
-			showRainfall = false;
+			showTemperatureBtn.setSelected(false);
+			showRainfallBtn.setSelected(false);
+			showRiversBtn.setSelected(false);
 			regenerate();
 		}
 		else if (ev.getSource() == showTemperatureBtn)
 		{
-			showTemperatures = showTemperatureBtn.isSelected();
-			showRainfall = false;
+			showElevationBtn.setSelected(false);
+			showRainfallBtn.setSelected(false);
+			showRiversBtn.setSelected(false);
 			regenerate();
 		}
 		else if (ev.getSource() == showRainfallBtn)
 		{
-			showRainfall = showRainfallBtn.isSelected();
+			showElevationBtn.setSelected(false);
+			showTemperatureBtn.setSelected(false);
+			showRiversBtn.setSelected(false);
+			regenerate();
+		}
+		else if (ev.getSource() == showRiversBtn)
+		{
+			showElevationBtn.setSelected(false);
+			showTemperatureBtn.setSelected(false);
+			showRainfallBtn.setSelected(false);
 			regenerate();
 		}
 	}
@@ -98,7 +111,7 @@ public class WorldViewer extends JFrame
 		if (world == null)
 			return;
 
-		if (showRainfall)
+		if (showRainfallBtn.isSelected())
 		{
 			regenerate_Rainfall(world.annualRains);
 		}
@@ -110,7 +123,7 @@ public class WorldViewer extends JFrame
 		{
 			int el = world.elevation[i];
 
-			if (showTemperatures)
+			if (showTemperatureBtn.isSelected())
 			{
 				int t = world.temperature[i];
 				colors[i] = t >= 280 ? 0xaa0000 :
@@ -122,7 +135,7 @@ public class WorldViewer extends JFrame
 					t >= -20 ? 0x2233aa :
 					0xbb55cc;
 			}
-			else if (showElevations)
+			else if (showElevationBtn.isSelected())
 			{
 				colors[i] = el >= 10 ? 0xffffff :
 					el >= 7 ? 0x885500 :
@@ -130,6 +143,12 @@ public class WorldViewer extends JFrame
 					el >= 0 ? 0x009900 :
 					el >= -3 ? 0x0000ff :
 					0x000088;
+			}
+			else if (showRiversBtn.isSelected())
+			{
+				colors[i] = world.riverVolume[i] > 0 ? 0x000077 :
+					el >= 0 ? 0x00ff00 :
+					0x0000ff;
 			}
 			else
 			{

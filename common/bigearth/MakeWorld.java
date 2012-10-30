@@ -100,6 +100,11 @@ public class MakeWorld
 			generateRainfalls_oneStep(annualRains);
 		}
 		normalizeRains(annualRains);
+
+		generateDrainage();
+
+		status("Generating rivers");
+		generateRivers();
 	}
 
 	void status(String message)
@@ -193,6 +198,58 @@ public class MakeWorld
 					}
 				}
 			}
+		}
+	}
+
+	int [] riverVolume;
+	int [] lakeVolume;
+	void generateRivers()
+	{
+		int numCells = g.getCellCount();
+		this.riverVolume = new int[numCells];
+		this.lakeVolume = new int[numCells];
+
+		for (int i = 0; i < numCells; i++)
+		{
+			if (elevation[i] < 0)
+				continue;
+
+			int water = annualRains[i];
+			int cur = i+1;
+			while (drainage[cur-1] > 0)
+			{
+				cur = drainage[cur-1];
+				riverVolume[cur-1] += water;
+			}
+
+			lakeVolume[cur-1] += water;
+		}
+
+		// normalize river volumes
+		double sum = 0.0;
+		int count = 0;
+		for (int i = 0; i < numCells; i++)
+		{
+			if (elevation[i] < 0)
+				continue;
+
+			sum += riverVolume[i];
+			count++;
+		}
+		double meanRiverVolume = sum / count;
+
+		int threshold = (int) Math.ceil(meanRiverVolume*2);
+		for (int i = 0; i < numCells; i++)
+		{
+			if (elevation[i] >= 0)
+			{
+				if (riverVolume[i] > threshold)
+				{
+					riverVolume[i] -= threshold;
+					continue;
+				}
+			}
+			riverVolume[i] = 0;
 		}
 	}
 
