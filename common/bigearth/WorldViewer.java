@@ -19,7 +19,7 @@ public class WorldViewer extends JFrame
 	JButton generateBtn;
 	JToggleButton showElevationBtn;
 	JToggleButton showTemperatureBtn;
-	JButton makeRainsBtn;
+	JToggleButton showRainfallBtn;
 
 	WorldViewer()
 	{
@@ -42,9 +42,9 @@ public class WorldViewer extends JFrame
 		showTemperatureBtn.addActionListener(this);
 		buttonsPane.add(showTemperatureBtn);
 
-		makeRainsBtn = new JButton("Make Rains");
-		makeRainsBtn.addActionListener(this);
-		buttonsPane.add(makeRainsBtn);
+		showRainfallBtn = new JToggleButton("Show Rains");
+		showRainfallBtn.addActionListener(this);
+		buttonsPane.add(showRainfallBtn);
 
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -77,10 +77,9 @@ public class WorldViewer extends JFrame
 			showRainfall = false;
 			regenerate();
 		}
-		else if (ev.getSource() == makeRainsBtn)
+		else if (ev.getSource() == showRainfallBtn)
 		{
-			world.generateRainfalls();
-			showRainfall = true;
+			showRainfall = showRainfallBtn.isSelected();
 			regenerate();
 		}
 	}
@@ -101,7 +100,7 @@ public class WorldViewer extends JFrame
 
 		if (showRainfall)
 		{
-			regenerate_Rainfall(world.summerRains);
+			regenerate_Rainfall(world.annualRains);
 		}
 		else
 		{
@@ -145,34 +144,12 @@ public class WorldViewer extends JFrame
 
 	void regenerate_Rainfall(int [] rainfall)
 	{
-		// find mean rainfall amount
-		double sum = 0.0;
-		int count = 0;
-		for (int i = 0; i < rainfall.length; i++)
-		{
-			if (world.elevation[i] >= 0)
-			{
-				sum += rainfall[i];
-				count++;
-			}
-		}
-		double meanRainfall = sum / count;
-
-		// find standard deviation rainfall amount
-		sum = 0.0;
-		for (int i = 0; i < rainfall.length; i++)
-		{
-			if (world.elevation[i] >= 0)
-				sum += Math.pow(rainfall[i] - meanRainfall, 2.0);
-		}
-		double stddevRainfall = Math.sqrt(sum / count);
-
 		int [] colors = new int[rainfall.length];
 		for (int i = 0; i < rainfall.length; i++)
 		{
 			if (world.elevation[i] >= 0)
 			{
-				int x = 11+(int)Math.round(8.0 * (rainfall[i] - meanRainfall) / stddevRainfall);
+				int x = (int)Math.floor(Math.log((double)rainfall[i] / MakeWorld.AVERAGE_RAINFALL) * 4) + RAINFALL_COLORS.length / 2;
 				if (x < 0)
 					x = 0;
 				if (x >= RAINFALL_COLORS.length)
