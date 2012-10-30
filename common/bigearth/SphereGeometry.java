@@ -1,5 +1,7 @@
 package bigearth;
 
+import javax.vecmath.*;
+
 public class SphereGeometry implements Geometry
 {
 	int size;
@@ -357,4 +359,100 @@ public class SphereGeometry implements Geometry
 		}
 		return rv;
 	}
+
+	public Point3d getCenterPoint(int cellIdx)
+	{
+		if (cellIdx <= 12)
+		{
+			//pent cell
+			if (cellIdx == 1)
+				return fromPolar(0, Math.PI/2);
+			else if (cellIdx <= 6)
+				return fromPolar(
+					Math.PI * 2.0/5.0 * (cellIdx-1),
+					ATAN12);
+			else if (cellIdx <= 11)
+				return fromPolar(
+					Math.PI * 2.0/5.0 * (cellIdx-5.5),
+					-ATAN12);
+			else
+				return fromPolar(0, -Math.PI/2);
+		}
+		else if (cellIdx <= 30 * size + 12)
+		{
+			//edge cell
+
+			int edgeId = (cellIdx-13) / size + 1;
+			int idx = (cellIdx-13) % size + 1;
+
+			Vector3d beginPt = new Vector3d(getCenterPoint(EDGE_INFO[edgeId-1][0]));
+			Vector3d endPt = new Vector3d(getCenterPoint(EDGE_INFO[edgeId-1][1]));
+
+			double dp = beginPt.dot(endPt);
+			double angl = Math.acos(dp);
+
+			Vector3d proj = new Vector3d(beginPt);
+			proj.scale(dp);
+
+			Vector3d orth = new Vector3d(endPt);
+			orth.sub(proj);
+			orth.normalize();
+
+			double desireAngl = idx * angl / (size+1);
+			beginPt.scale(Math.cos(desireAngl));
+			orth.scale(Math.sin(desireAngl));
+			beginPt.add(orth);
+			return new Point3d(beginPt);
+		}
+		else
+		{
+			// face cell
+
+			int baseAllFaces = 13 + 30 * size;
+			int eachFaceSize = size * (size-1) / 2;
+
+			int faceId = (cellIdx - baseAllFaces) / eachFaceSize;
+			int i = (cellIdx - baseAllFaces) % eachFaceSize;
+			int j = eachFaceSize - i;
+
+			int row = size - 1 - (int)Math.floor((-1 + Math.sqrt(8 * (j-1) + 1))/2);
+			int n = size - row;
+			int b = (size * (size - 1) - n * (n+1)) / 2;
+			int idx = i - b + 1;
+
+			int refCell1 = getFaceCell(faceId, row, 0);
+			int refCell2 = getFaceCell(faceId, row, size + 1 - row);
+
+			Vector3d beginPt = new Vector3d(getCenterPoint(refCell1));
+			Vector3d endPt = new Vector3d(getCenterPoint(refCell2));
+
+			double dp = beginPt.dot(endPt);
+			double angl = Math.acos(dp);
+
+			Vector3d proj = new Vector3d(beginPt);
+			proj.scale(dp);
+
+			Vector3d orth = new Vector3d(endPt);
+			orth.sub(proj);
+			orth.normalize();
+
+			double desireAngl = idx * angl / (size+1-row);
+			beginPt.scale(Math.cos(desireAngl));
+			orth.scale(Math.sin(desireAngl));
+			beginPt.add(orth);
+			return new Point3d(beginPt);
+		}
+	}
+
+	private static Point3d fromPolar(double lgt, double lat)
+	{
+		double zz = Math.cos(lat);
+		return new Point3d(
+			Math.cos(lgt) * zz,
+			Math.sin(lgt) * zz,
+			Math.sin(lat)
+			);
+	}
+
+	private static final double ATAN12 = Math.atan(0.5);
 }
