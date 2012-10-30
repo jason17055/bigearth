@@ -162,9 +162,12 @@ public class MakeWorld
 		{
 			int start = rw.next();
 
-			int dist = (int) Math.floor(Math.random() * 30) + 3;
-			for (int i = 0; i < dist; i++)
+			int startRaining = (int) Math.floor(Math.random() * 50) + 10;
+			int stopRaining = startRaining + (int) Math.floor(Math.random() * 14) + 2;
+
+			for (int dist = 0; dist < stopRaining; dist++)
 			{
+				int c_height = elevation[start-1];
 				Point3d c_pt = g.getCenterPoint(start);
 				double c_lat = Math.asin(c_pt.z);
 				double c_lgt = Math.atan2(c_pt.y, c_pt.x);
@@ -180,16 +183,22 @@ public class MakeWorld
 					double n_dir = Math.atan2(n_lat-c_lat, n_lgt-c_lgt);
 					double wind_aid = Math.cos(n_dir) * winds;
 
-					double height_diff = elevation[n-1] - elevation[start-1];
+					double height_diff = elevation[n-1] - c_height;
 					double xfer = LogisticFunction(height_diff/2.0 * wind_aid);
 
 					rw2.add(n, xfer);
 				}
 
 				start = rw2.next();
-			}
 
-			summerRains[start-1]++;
+				int new_height_diff = elevation[start-1] - c_height;
+				if (new_height_diff >= 1)
+					dist += new_height_diff; // as clouds move over higher land, they
+							// are more likely to rain
+
+				if (dist >= startRaining)
+					summerRains[start-1]++;
+			}
 		}
 	}
 

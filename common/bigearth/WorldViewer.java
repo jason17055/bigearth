@@ -85,10 +85,26 @@ public class WorldViewer extends JFrame
 		}
 	}
 
+	int [] RAINFALL_COLORS = {
+		0xc2533c, 0xc95c34, 0xd46e2c, 0xde7f23,
+		0xe7951d, 0xeca815, 0xf0bd11, 0xf5d40e,
+		0xf6ea17, 0xf1f418, 0xb8de14, 0x7ac221,
+		0x3ba42a, 0x199332, 0x0d8e35, 0x1c9744,
+		0x1e9c65, 0x199980, 0x219592, 0x1a7f90,
+		0x186388, 0x1a4780, 0x112d7a
+		};
+
 	void regenerate()
 	{
 		if (world == null)
 			return;
+
+		if (showRainfall)
+		{
+			regenerate_Rainfall(world.summerRains);
+		}
+		else
+		{
 
 		int [] colors = new int[world.g.getCellCount()];
 		for (int i = 0; i < colors.length; i++)
@@ -116,20 +132,57 @@ public class WorldViewer extends JFrame
 					el >= -3 ? 0x0000ff :
 					0x000088;
 			}
-			else if (showRainfall)
-			{
-				int t = world.summerRains[i];
-				colors[i] =  el < 0 ? 0x0000ff : //ocean
-					t <= 0 ? 0x00ff00 : // no rainfall
-					t <= 2 ? 0xaa0000 :
-					t <= 6 ? 0xdd2200 :
-					t <= 12 ? 0xff5500 :
-					0xffee00;
-			}
 			else
 			{
 				colors[i] = el >= 0 ? 0x00ff00 :
 					0x0000ff;
+			}
+		}
+		view.generateImage(world.g, colors);
+		view.repaint();
+		}
+	}
+
+	void regenerate_Rainfall(int [] rainfall)
+	{
+		// find mean rainfall amount
+		double sum = 0.0;
+		int count = 0;
+		for (int i = 0; i < rainfall.length; i++)
+		{
+			if (world.elevation[i] >= 0)
+			{
+				sum += rainfall[i];
+				count++;
+			}
+		}
+		double meanRainfall = sum / count;
+
+		// find standard deviation rainfall amount
+		sum = 0.0;
+		for (int i = 0; i < rainfall.length; i++)
+		{
+			if (world.elevation[i] >= 0)
+				sum += Math.pow(rainfall[i] - meanRainfall, 2.0);
+		}
+		double stddevRainfall = Math.sqrt(sum / count);
+
+		int [] colors = new int[rainfall.length];
+		for (int i = 0; i < rainfall.length; i++)
+		{
+			if (world.elevation[i] >= 0)
+			{
+				int x = 11+(int)Math.round(8.0 * (rainfall[i] - meanRainfall) / stddevRainfall);
+				if (x < 0)
+					x = 0;
+				if (x >= RAINFALL_COLORS.length)
+					x = RAINFALL_COLORS.length-1;
+	
+				colors[i] = RAINFALL_COLORS[x];
+			}
+			else
+			{
+				colors[i] = 0xdddddd;
 			}
 		}
 		view.generateImage(world.g, colors);
