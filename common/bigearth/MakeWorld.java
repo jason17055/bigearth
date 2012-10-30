@@ -1,5 +1,6 @@
 package bigearth;
 
+import java.io.*;
 import java.util.*;
 import javax.vecmath.*;
 //import com.mongodb.*;
@@ -41,11 +42,67 @@ public class MakeWorld
 	int [] elevation;
 	int [] temperature; //in 10th degrees Celsius
 	int [] annualRains; //in millimeters-per-year
+	int [] drainage;
+	int [] riverVolume;
+	int [] lakeVolume;
+
+	MakeWorld()
+	{
+	}
 
 	MakeWorld(String worldName, int geometrySize)
 	{
 		this.worldName = worldName;
 		this.geometrySize = geometrySize;
+	}
+
+	public void save(File outFile)
+		throws IOException
+	{
+		PrintWriter out = new PrintWriter(
+			new OutputStreamWriter(
+				new FileOutputStream(outFile)));
+		out.println(geometrySize);
+		for (int i = 0; i < g.getCellCount(); i++)
+		{
+			out.printf("%d %d %d %d %d %d\n",
+				elevation[i],
+				temperature[i],
+				annualRains[i],
+				drainage[i],
+				riverVolume[i],
+				lakeVolume[i]);
+		}
+		out.close();
+	}
+
+	public void load(File inFile)
+		throws IOException
+	{
+		BufferedReader in = new BufferedReader(
+			new InputStreamReader(
+				new FileInputStream(inFile)));
+		this.geometrySize = Integer.parseInt(in.readLine());
+		this.g = new SphereGeometry(geometrySize);
+
+		int numCells = g.getCellCount();
+		this.elevation = new int[numCells];
+		this.temperature = new int[numCells];
+		this.annualRains = new int[numCells];
+		this.drainage = new int[numCells];
+		this.riverVolume = new int[numCells];
+		this.lakeVolume = new int[numCells];
+		for (int i = 0; i < numCells; i++)
+		{
+			String [] parts = in.readLine().split(" ");
+			elevation[i] = Integer.parseInt(parts[0]);
+			temperature[i] = Integer.parseInt(parts[1]);
+			annualRains[i] = Integer.parseInt(parts[2]);
+			drainage[i] = Integer.parseInt(parts[3]);
+			riverVolume[i] = Integer.parseInt(parts[4]);
+			lakeVolume[i] = Integer.parseInt(parts[5]);
+		}
+		in.close();
 	}
 
 	public void generate()
@@ -158,7 +215,6 @@ public class MakeWorld
 		}
 	}
 
-	int [] drainage;
 	void generateDrainage()
 	{
 		int numCells = g.getCellCount();
@@ -201,8 +257,6 @@ public class MakeWorld
 		}
 	}
 
-	int [] riverVolume;
-	int [] lakeVolume;
 	void generateRivers()
 	{
 		int numCells = g.getCellCount();

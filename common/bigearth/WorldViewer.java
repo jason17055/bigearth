@@ -1,5 +1,6 @@
 package bigearth;
 
+import java.io.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -22,7 +23,7 @@ public class WorldViewer extends JFrame
 	JToggleButton showRainfallBtn;
 	JToggleButton showRiversBtn;
 
-	WorldViewer()
+	WorldViewer() throws IOException
 	{
 		super("World Viewer");
 		view = new WorldView();
@@ -53,6 +54,13 @@ public class WorldViewer extends JFrame
 
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+		File f = new File("world.txt");
+		if (f.exists())
+		{
+			world = new MakeWorld();
+			world.load(f);
+		}
 	}
 
 	MakeWorld world;
@@ -64,6 +72,13 @@ public class WorldViewer extends JFrame
 		{
 			this.world = new MakeWorld("w1", 20);
 			world.generate();
+			try
+			{
+			world.save(new File("world.txt"));
+			} catch (IOException e)
+			{
+				System.err.println(e.getMessage());
+			}
 			regenerate();
 	
 		}
