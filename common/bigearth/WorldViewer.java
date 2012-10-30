@@ -3,6 +3,7 @@ package bigearth;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import javax.vecmath.*;
 
 public class WorldViewer extends JFrame
@@ -34,47 +35,104 @@ public class WorldViewer extends JFrame
 	//implements ActionListener
 	public void actionPerformed(ActionEvent ev)
 	{
-		view.world = new MakeWorld("w1", 20);
-		view.world.generate();
+		MakeWorld world = new MakeWorld("w1", 20);
+		world.generate();
+
+		int [] colors = new int[world.g.getCellCount()];
+		for (int i = 0; i < colors.length; i++)
+		{
+			colors[i] = world.elevation[i] >= 0 ?
+					0x00ff00 : 0x0000ff;
+		}
+		view.generateImage(world.g, colors);
 		view.repaint();
 	}
 
 	class WorldView extends JPanel
 	{
-		MakeWorld world;
+		BufferedImage image;
 
 		WorldView()
 		{
 			setPreferredSize(new Dimension(720,360));
 		}
 
-		public void paint(Graphics g)
+		boolean tryPixel(int x, int y, int c)
 		{
-			Point3d [] pts = new Point3d[world.g.getCellCount()];
+			if (x >= 0 && x < 720 && y >= 0 && y < 360)
+			{
+				if ((image.getRGB(x,y) & 0xffffff) == 0)
+				{
+					image.setRGB(x,y,c);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		void generateImage(SphereGeometry g, int [] colors)
+		{
+			Point [] pts = new Point[colors.length];
+			int [] todo = new int[colors.length];
 			for (int i = 0; i < pts.length; i++)
 			{
-				pts[i] = world.g.getCenterPoint(i+1);
+				Point3d p = g.getCenterPoint(i+1);
+				double lat = Math.asin(p.z);
+				double lgt = Math.atan2(p.y, p.x);
+				pts[i] = new Point(
+					(int)Math.round(360+lgt*720/(Math.PI*2)),
+					(int)Math.round(180-lat*360/Math.PI)
+					);
+
+				todo[i] = i;
 			}
 
-			for (int y = 0; y < 360; y += 2)
+			this.image = new BufferedImage(720,360,
+					BufferedImage.TYPE_INT_RGB);
+			int radius = 0;
+			int curCount = todo.length;
+			while (todo.length != 0 && radius<100)
 			{
-				for (int x = 0; x < 720; x += 2)
+				int [] next = new int[curCount];
+				int nextCount = 0;
+				for (int ii = 0; ii < curCount; ii++)
 				{
-					Point3d p = SphereGeometry.fromPolar(
-						x * 2*Math.PI/720,
-						(180-y) * Math.PI/360
-						);
-					int cellId = world.g.nearestTo(p);
-					if (world.elevation[cellId-1] >= 0)
+					int i = todo[ii];
+					boolean flag = false;
+					int x = pts[i].x;
+					int y = pts[i].y;
+					if (radius == 0)
 					{
-						g.setColor(Color.GREEN);
+						if (tryPixel(x, y, colors[i]))
+							flag = true;
 					}
 					else
+					for (int j = 0; j < radius; j++)
 					{
-						g.setColor(Color.BLUE);
+						if (tryPixel(x-radius+j, y-j, colors[i]))
+							flag = true;
+						if (tryPixel(x+j, y-radius+j, colors[i]))
+							flag = true;
+						if (tryPixel(x+radius-j, y+j, colors[i]))
+							flag = true;
+						if (tryPixel(x-j, y+radius-j, colors[i]))
+							flag = true;
 					}
-					g.fillRect(x,y,2,2);
+						
+					if (flag)
+						next[nextCount++] = i;
 				}
+				todo = next;
+				curCount = nextCount;
+				radius++;
+			}
+		}
+
+		public void paint(Graphics g)
+		{
+			if (image != null)
+			{
+				g.drawImage(image, 0, 0, Color.WHITE, null);
 			}
 		}
 	}
