@@ -38,8 +38,7 @@ public class MakeWorld
 	SphereGeometry g;
 	int [] elevation;
 	int [] temperature;
-	int [] summerRains;
-	int [] winterRains;
+	int [] annualRains;
 
 	MakeWorld(String worldName, int geometrySize)
 	{
@@ -92,9 +91,43 @@ public class MakeWorld
 		//
 		// determine rainfall levels and places of standing water
 		//
-		this.summerRains = new int[numCells];
-		this.winterRains = new int[numCells];
-		//generateRainfalls();
+		this.annualRains = new int[numCells];
+		for (int i = 0; i < 20; i++)
+			generateRainfalls_oneStep(annualRains);
+		normalizeRains(annualRains);
+	}
+
+	void normalizeRains(int [] rainfall)
+	{
+		// find mean rainfall amount
+		double sum = 0.0;
+		int count = 0;
+		int minRain = Integer.MAX_VALUE;
+		int maxRain = Integer.MIN_VALUE;
+		for (int i = 0; i < rainfall.length; i++)
+		{
+			if (elevation[i] >= 0)
+			{
+				sum += rainfall[i];
+				count++;
+
+				if (rainfall[i] < minRain)
+					minRain = rainfall[i];
+				if (rainfall[i] > maxRain)
+					maxRain = rainfall[i];
+			}
+		}
+		double meanRainfall = sum / count;
+
+		System.out.println("rainfall stats (before normalization):");
+		System.out.printf("  minimum rainfall :%6d\n", minRain);
+		System.out.printf("  maximum rainfall :%6d\n", maxRain);
+		System.out.printf("  average rainfall :%8.1f\n", meanRainfall);
+
+		for (int i = 0; i < rainfall.length; i++)
+		{
+			rainfall[i] = (int)Math.round(rainfall[i] * 85.0 / meanRainfall);
+		}
 	}
 
 	int [] drainage;
@@ -140,7 +173,7 @@ public class MakeWorld
 		}
 	}
 
-	void generateRainfalls()
+	void generateRainfalls_oneStep(int [] rains)
 	{
 		int numCells = g.getCellCount();
 
@@ -154,7 +187,7 @@ public class MakeWorld
 		RouletteWheel<Integer> rw = new RouletteWheel<Integer>();
 		for (int i = 0; i < numCells; i++)
 		{
-			int hasWater = elevation[i] < 0 ? 20 : summerRains[i];
+			int hasWater = elevation[i] < 0 ? 20 : rains[i];
 			rw.add(i+1, hasWater * LogisticFunction((temperature[i] + 300 - highestTemperature)/100.0));
 		}
 
@@ -197,7 +230,7 @@ public class MakeWorld
 							// are more likely to rain
 
 				if (dist >= startRaining)
-					summerRains[start-1]++;
+					rains[start-1]++;
 			}
 		}
 	}
