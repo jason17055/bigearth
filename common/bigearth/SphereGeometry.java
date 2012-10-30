@@ -411,7 +411,7 @@ public class SphereGeometry implements Geometry
 			int baseAllFaces = 13 + 30 * size;
 			int eachFaceSize = size * (size-1) / 2;
 
-			int faceId = (cellIdx - baseAllFaces) / eachFaceSize;
+			int faceId = (cellIdx - baseAllFaces) / eachFaceSize + 1;
 			int i = (cellIdx - baseAllFaces) % eachFaceSize;
 			int j = eachFaceSize - i;
 
