@@ -51,9 +51,12 @@ public class MakeWorld
 	*/
 		
 		SphereGeometry g = new SphereGeometry(geometrySize);
-		int [] elevation = new int[g.getCellCount()];
-		int [] summerRains = new int[g.getCellCount()];
-		int [] winterRains = new int[g.getCellCount()];
+		int numCells = g.getCellCount();
+
+		int [] elevation = new int[numCells];
+		int [] temperature = new int[numCells];
+		int [] summerRains = new int[numCells];
+		int [] winterRains = new int[numCells];
 
 		// generate height map for entire sphere
 		for (int i = 0; i < 100; i++)
@@ -61,12 +64,51 @@ public class MakeWorld
 			bumpMap(g, elevation, 1);
 		}
 		int seaLevel = findSeaLevel(elevation, 0.6);
-		for (int i = 0; i < elevation.length; i++)
+		for (int i = 0; i < numCells; i++)
 		{
 			elevation[i] -= seaLevel;
-System.out.printf("%6d:%6d\n", i+1, elevation[i]);
 		}
 
+		// generate temperature map
+		// - start by calculating temperature based on latitude
+		for (int i = 0; i < numCells; i++)
+		{
+			Point3d p = getCenterPoint(i+1);
+			double lat = Math.asin(p.z);
+			temperature[i] = (int)
+				Math.round(240 - 200 * Math.pow(lat,2));
+		}
+		// - then apply some random noise to those numbers
+		for (int i = 0; i < 30; i++)
+		{
+			bumpMap(g, temperature, i%2 != 0 ? 2 : -2);
+		}
+
+		//
+		// determine rainfall levels
+		//
+
+		// - assign initial moisture numbers based on ocean
+		//   and temperature
+		for (int i = 0; i < numCells; i++)
+		{
+			double lat = Math.asin(g.getCenterPoint(i+1).z);
+			int temp = temperature[i];
+
+			winterRains[i] = elevation[i] < 0 ?
+				(int)Math.round(30*Math.pow(0.5,(240-temp)/120.0)) :
+				0;
+			
+			// middle latitudes will get seasonal variation
+			// in rains
+			summerRains[i] = winterRains[i]
+				+ Math.round(6.0 * Math.sin(lat/2.0));
+		}
+		for (int i = 0; i < 50; i++)
+		{
+			//blurMoisture(summerRains);
+			//blurMoisture(winterRains);
+		}
 	}
 
 	static double getSeaCoverage(int [] elevations, int seaLevel)
