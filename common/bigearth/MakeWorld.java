@@ -238,21 +238,30 @@ public class MakeWorld
 				break;
 
 			drainage[best] = -1; //indicates that water has no place to go
-			Queue<Integer> Q = new ArrayDeque<Integer>();
-			Q.add(best+1);
+			makeRiver(best+1);
+		}
+	}
 
-			while (!Q.isEmpty())
+	void makeRiver(int cur)
+	{
+		int [] nn = g.getNeighbors(cur);
+		RouletteWheel<Integer> rw = new RouletteWheel<Integer>();
+		for (int n : nn)
+		{
+			int diffHeight = elevation[n-1] - elevation[cur-1];
+			if (drainage[n-1] == 0 && diffHeight >= 0)
 			{
-				int cur = Q.remove();
-				int [] nn = g.getNeighbors(cur);
-				for (int n : nn)
-				{
-					if (drainage[n-1] == 0)
-					{
-						drainage[n-1] = cur;
-						Q.add(n);
-					}
-				}
+				rw.add(n, 0.5 + diffHeight);
+			}
+		}
+
+		while (!rw.isEmpty())
+		{
+			int x = rw.remove();
+			if (drainage[x-1] == 0)
+			{
+				drainage[x-1] = cur;
+				makeRiver(x);
 			}
 		}
 	}

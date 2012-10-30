@@ -34,7 +34,7 @@ public class RouletteWheel<T>
 		}
 	}
 
-	public T next()
+	int pick()
 	{
 		double r = Math.random()*fitnessSum;
 		int a = 0;
@@ -48,6 +48,31 @@ public class RouletteWheel<T>
 			else
 				a = i;
 		}
-		return entries.get(a).item;
+		return a;
+	}
+
+	public T next()
+	{
+		return entries.get(pick()).item;
+	}
+
+	public boolean isEmpty()
+	{
+		return entries.isEmpty();
+	}
+
+	public T remove()
+	{
+		int i = pick();
+		Entry<T> e = entries.remove(i);
+		double eFit = (i < entries.size() ? entries.get(i).fitnessStart : fitnessSum) - e.fitnessStart;
+
+		for (int j = i; j < entries.size(); j++)
+		{
+			entries.get(i).fitnessStart -= eFit;
+		}
+		fitnessSum -= eFit;
+
+		return e.item;
 	}
 }
