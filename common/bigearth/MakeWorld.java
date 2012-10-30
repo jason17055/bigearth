@@ -1,5 +1,6 @@
 package bigearth;
 
+import java.util.*;
 import javax.vecmath.*;
 //import com.mongodb.*;
 
@@ -37,6 +38,8 @@ public class MakeWorld
 	SphereGeometry g;
 	int [] elevation;
 	int [] temperature;
+	int [] summerRains;
+	int [] winterRains;
 
 	MakeWorld(String worldName, int geometrySize)
 	{
@@ -59,8 +62,6 @@ public class MakeWorld
 
 		this.elevation = new int[numCells];
 		this.temperature = new int[numCells];
-		int [] summerRains = new int[numCells];
-		int [] winterRains = new int[numCells];
 
 		// generate height map for entire sphere
 		for (int i = 0, m = numCells/45; i <= m; i++)
@@ -89,30 +90,136 @@ public class MakeWorld
 		}
 
 		//
-		// determine rainfall levels
+		// determine rainfall levels and places of standing water
 		//
+		this.summerRains = new int[numCells];
+		this.winterRains = new int[numCells];
+		//generateRainfalls();
+	}
 
-		// - assign initial moisture numbers based on ocean
-		//   and temperature
+	int [] drainage;
+	void generateDrainage()
+	{
+		int numCells = g.getCellCount();
+		this.drainage = new int[numCells];
+
+		for (;;)
+		{
+			// find lowest point that hasn't been calculated yet
+			int best = -1;
+			int bestVal = Integer.MAX_VALUE;
+			for (int i = 0; i < numCells; i++)
+			{
+				if (drainage[i] == 0 && elevation[i] < bestVal)
+				{
+					best = i;
+					bestVal = elevation[i];
+				}
+			}
+
+			if (best == -1)
+				break;
+
+			drainage[best] = -1; //indicates that water has no place to go
+			Queue<Integer> Q = new ArrayDeque<Integer>();
+			Q.add(best+1);
+
+			while (!Q.isEmpty())
+			{
+				int cur = Q.remove();
+				int [] nn = g.getNeighbors(cur);
+				for (int n : nn)
+				{
+					if (drainage[n-1] == 0)
+					{
+						drainage[n-1] = cur;
+						Q.add(n);
+					}
+				}
+			}
+		}
+	}
+
+	void generateRainfalls()
+	{
+		int numCells = g.getCellCount();
+
+		int highestTemperature = Integer.MIN_VALUE;
 		for (int i = 0; i < numCells; i++)
 		{
-			double lat = Math.asin(g.getCenterPoint(i+1).z);
-			int temp = temperature[i];
+			if (temperature[i] > highestTemperature)
+				highestTemperature = temperature[i];
+		}
 
-			winterRains[i] = elevation[i] < 0 ?
-				(int)Math.round(30*Math.pow(0.5,(240-temp)/120.0)) :
-				0;
-			
-			// middle latitudes will get seasonal variation
-			// in rains
-			summerRains[i] = winterRains[i]
-				+ (int)Math.round(6.0 * Math.sin(lat/2.0));
-		}
-		for (int i = 0; i < 50; i++)
+		RouletteWheel<Integer> rw = new RouletteWheel<Integer>();
+		for (int i = 0; i < numCells; i++)
 		{
-			//blurMoisture(summerRains);
-			//blurMoisture(winterRains);
+			int hasWater = elevation[i] < 0 ? 20 : summerRains[i];
+			rw.add(i+1, hasWater * LogisticFunction((temperature[i] + 300 - highestTemperature)/100.0));
 		}
+
+		for (int s = 0; s < numCells; s++)
+		{
+			int start = rw.next();
+
+			int dist = (int) Math.floor(Math.random() * 30) + 3;
+			for (int i = 0; i < dist; i++)
+			{
+				Point3d c_pt = g.getCenterPoint(start);
+				double c_lat = Math.asin(c_pt.z);
+				double c_lgt = Math.atan2(c_pt.y, c_pt.x);
+				double winds = Math.cos(c_lat * 4.0);
+
+				RouletteWheel<Integer> rw2 = new RouletteWheel<Integer>();
+				int [] nn = g.getNeighbors(start);
+				for (int n : nn)
+				{
+					Point3d n_pt = g.getCenterPoint(n);
+					double n_lat = Math.asin(n_pt.z);
+					double n_lgt = Math.atan2(n_pt.y, n_pt.x);
+					double n_dir = Math.atan2(n_lat-c_lat, n_lgt-c_lgt);
+					double wind_aid = Math.cos(n_dir) * winds;
+
+					double height_diff = elevation[n-1] - elevation[start-1];
+					double xfer = LogisticFunction(height_diff/2.0 * wind_aid);
+
+					rw2.add(n, xfer);
+				}
+
+				start = rw2.next();
+			}
+
+			summerRains[start-1]++;
+		}
+	}
+
+	String getCellCoordsAsString(int cellId)
+	{
+		Point3d c_pt = g.getCenterPoint(cellId);
+		double c_lat = Math.asin(c_pt.z);
+		double c_lgt = Math.atan2(c_pt.y, c_pt.x);
+
+		return String.format("%.0f%s%s %.0f%s%s",
+			Math.abs(c_lat), "°", c_lat>0 ? "N" : c_lat<0 ? "S" : "",
+			Math.abs(c_lgt), "°", c_lgt>0 ? "E" : c_lgt<0 ? "W" : "");
+	}
+
+	static double LogisticFunction(double t)
+	{
+		return 1.0 / (1.0 + Math.exp(-t));
+	}
+
+	static String getDirectionName(double compassDir)
+	{
+		int x = (int) Math.floor((compassDir + Math.PI/8 + Math.PI*2)/(Math.PI/4)) % 8;
+		return x == 0 ? "E" :
+			x == 1 ? "NE" :
+			x == 2 ? "N" :
+			x == 3 ? "NW" :
+			x == 4 ? "W" :
+			x == 5 ? "SW" :
+			x == 6 ? "S" :
+			x == 7 ? "SE" : "<bad>";
 	}
 
 	static double getSeaCoverage(int [] elevations, int seaLevel)

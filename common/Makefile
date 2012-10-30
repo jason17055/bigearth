@@ -2,4 +2,4 @@ classpath = ../jlib/vecmath.jar
 
 all:
 	mkdir -p classes
-	javac -d classes -cp $(classpath) `find . -name '*.java'`
+	javac -d classes -cp $(classpath) -Xlint:unchecked `find . -name '*.java'`

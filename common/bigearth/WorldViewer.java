@@ -19,6 +19,7 @@ public class WorldViewer extends JFrame
 	JButton generateBtn;
 	JToggleButton showElevationBtn;
 	JToggleButton showTemperatureBtn;
+	JButton makeRainsBtn;
 
 	WorldViewer()
 	{
@@ -41,6 +42,10 @@ public class WorldViewer extends JFrame
 		showTemperatureBtn.addActionListener(this);
 		buttonsPane.add(showTemperatureBtn);
 
+		makeRainsBtn = new JButton("Make Rains");
+		makeRainsBtn.addActionListener(this);
+		buttonsPane.add(makeRainsBtn);
+
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
@@ -48,13 +53,14 @@ public class WorldViewer extends JFrame
 	MakeWorld world;
 	boolean showElevations;
 	boolean showTemperatures;
+	boolean showRainfall;
 
 	//implements ActionListener
 	public void actionPerformed(ActionEvent ev)
 	{
 		if (ev.getSource() == generateBtn)
 		{
-			this.world = new MakeWorld("w1", 30);
+			this.world = new MakeWorld("w1", 20);
 			world.generate();
 			regenerate();
 	
@@ -62,11 +68,19 @@ public class WorldViewer extends JFrame
 		else if (ev.getSource() == showElevationBtn)
 		{
 			showElevations = showElevationBtn.isSelected();
+			showRainfall = false;
 			regenerate();
 		}
 		else if (ev.getSource() == showTemperatureBtn)
 		{
 			showTemperatures = showTemperatureBtn.isSelected();
+			showRainfall = false;
+			regenerate();
+		}
+		else if (ev.getSource() == makeRainsBtn)
+		{
+			world.generateRainfalls();
+			showRainfall = true;
 			regenerate();
 		}
 	}
@@ -101,6 +115,16 @@ public class WorldViewer extends JFrame
 					el >= 0 ? 0x009900 :
 					el >= -3 ? 0x0000ff :
 					0x000088;
+			}
+			else if (showRainfall)
+			{
+				int t = world.summerRains[i];
+				colors[i] =  el < 0 ? 0x0000ff : //ocean
+					t <= 0 ? 0x00ff00 : // no rainfall
+					t <= 2 ? 0xaa0000 :
+					t <= 6 ? 0xdd2200 :
+					t <= 12 ? 0xff5500 :
+					0xffee00;
 			}
 			else
 			{
