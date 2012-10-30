@@ -18,6 +18,7 @@ public class WorldViewer extends JFrame
 	WorldView view;
 	JButton generateBtn;
 	JToggleButton showElevationBtn;
+	JToggleButton showTemperatureBtn;
 
 	WorldViewer()
 	{
@@ -36,19 +37,24 @@ public class WorldViewer extends JFrame
 		showElevationBtn.addActionListener(this);
 		buttonsPane.add(showElevationBtn);
 
+		showTemperatureBtn = new JToggleButton("Show Temperatures");
+		showTemperatureBtn.addActionListener(this);
+		buttonsPane.add(showTemperatureBtn);
+
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
 	MakeWorld world;
 	boolean showElevations;
+	boolean showTemperatures;
 
 	//implements ActionListener
 	public void actionPerformed(ActionEvent ev)
 	{
 		if (ev.getSource() == generateBtn)
 		{
-			this.world = new MakeWorld("w1", 20);
+			this.world = new MakeWorld("w1", 30);
 			world.generate();
 			regenerate();
 	
@@ -56,6 +62,11 @@ public class WorldViewer extends JFrame
 		else if (ev.getSource() == showElevationBtn)
 		{
 			showElevations = showElevationBtn.isSelected();
+			regenerate();
+		}
+		else if (ev.getSource() == showTemperatureBtn)
+		{
+			showTemperatures = showTemperatureBtn.isSelected();
 			regenerate();
 		}
 	}
@@ -70,7 +81,19 @@ public class WorldViewer extends JFrame
 		{
 			int el = world.elevation[i];
 
-			if (showElevations)
+			if (showTemperatures)
+			{
+				int t = world.temperature[i];
+				colors[i] = t >= 280 ? 0xaa0000 :
+					t >= 235 ? 0xdd2200 :
+					t >= 180 ? 0xff5500 :
+					t >= 122 ? 0xffee00 :
+					t >= 80 ? 0x44cc00 :
+					t >= 30 ? 0x00ccee :
+					t >= -20 ? 0x2233aa :
+					0xbb55cc;
+			}
+			else if (showElevations)
 			{
 				colors[i] = el >= 10 ? 0xffffff :
 					el >= 7 ? 0x885500 :
