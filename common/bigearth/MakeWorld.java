@@ -36,6 +36,7 @@ public class MakeWorld
 
 	SphereGeometry g;
 	int [] elevation;
+	int [] temperature;
 
 	MakeWorld(String worldName, int geometrySize)
 	{
@@ -57,12 +58,12 @@ public class MakeWorld
 		int numCells = g.getCellCount();
 
 		this.elevation = new int[numCells];
-		int [] temperature = new int[numCells];
+		this.temperature = new int[numCells];
 		int [] summerRains = new int[numCells];
 		int [] winterRains = new int[numCells];
 
 		// generate height map for entire sphere
-		for (int i = 0; i < 100; i++)
+		for (int i = 0, m = numCells/45; i <= m; i++)
 		{
 			bumpMap(g, elevation, 1);
 		}
@@ -82,9 +83,9 @@ public class MakeWorld
 				Math.round(240 - 200 * Math.pow(lat,2));
 		}
 		// - then apply some random noise to those numbers
-		for (int i = 0; i < 30; i++)
+		for (int i = 0, m = numCells/100; i <= m; i++)
 		{
-			bumpMap(g, temperature, i%2 != 0 ? 2 : -2);
+			bumpMap(g, temperature, i%2 != 0 ? 12 : -12);
 		}
 
 		//
