@@ -157,7 +157,6 @@ public class WorldViewer extends JFrame
 			}
 		}
 		view.generateImage(world.g, colors);
-		view.repaint();
 		}
 	}
 
@@ -182,16 +181,20 @@ public class WorldViewer extends JFrame
 			}
 		}
 		view.generateImage(world.g, colors);
-		view.repaint();
 	}
 
 	class WorldView extends JPanel
+		implements MouseListener, MouseMotionListener
 	{
+		int [] colors;
 		BufferedImage image;
+		double curLongitude;
 
 		WorldView()
 		{
 			setPreferredSize(new Dimension(720,360));
+			addMouseListener(this);
+			addMouseMotionListener(this);
 		}
 
 		boolean tryPixel(int x, int y, int c)
@@ -209,11 +212,29 @@ public class WorldViewer extends JFrame
 
 		void generateImage(SphereGeometry g, int [] colors)
 		{
+			this.colors = colors;
+			regenerate();
+		}
+
+		void regenerate()
+		{
+			if (world == null)
+				return;
+
+			SphereGeometry g = world.g;
+			Matrix3d rZ = new Matrix3d(
+				Math.cos(curLongitude), -Math.sin(curLongitude), 0,
+				Math.sin(curLongitude), Math.cos(curLongitude), 0,
+				0, 0, 1);
+
+
 			Point [] pts = new Point[colors.length];
 			int [] todo = new int[colors.length];
 			for (int i = 0; i < pts.length; i++)
 			{
 				Point3d p = g.getCenterPoint(i+1);
+				rZ.transform(p);
+
 				double lat = Math.asin(p.z);
 				double lgt = Math.atan2(p.y, p.x);
 				pts[i] = new Point(
@@ -263,6 +284,7 @@ public class WorldViewer extends JFrame
 				curCount = nextCount;
 				radius++;
 			}
+			repaint();
 		}
 
 		public void paint(Graphics g)
@@ -271,6 +293,59 @@ public class WorldViewer extends JFrame
 			{
 				g.drawImage(image, 0, 0, Color.WHITE, null);
 			}
+		}
+
+		// implements MouseListener
+		public void mouseClicked(MouseEvent ev) { }
+
+		// implements MouseListener
+		public void mouseEntered(MouseEvent ev) { }
+
+		// implements MouseListener
+		public void mouseExited(MouseEvent ev) { }
+
+		// implements MouseListener
+		public void mousePressed(MouseEvent ev)
+		{
+			if (ev.getButton() == MouseEvent.BUTTON1)
+			{
+				dragStart = ev.getPoint();
+			}
+		}
+
+		// implements MouseListener
+		public void mouseReleased(MouseEvent ev)
+		{
+			if (ev.getButton() == MouseEvent.BUTTON1 && dragStart != null)
+			{
+				onDragEnd(ev.getPoint());
+			}
+		}
+
+		// implements MouseMotionListener
+		public void mouseDragged(MouseEvent ev)
+		{
+			if (dragStart != null)
+			{
+				onDragged(ev.getPoint());
+			}
+		}
+
+		// implements MouseMotionListener
+		public void mouseMoved(MouseEvent ev) {}
+
+		private Point dragStart;
+		private void onDragEnd(Point endPoint)
+		{
+			double dist = endPoint.x - dragStart.x;
+			curLongitude += dist * Math.PI * 2 / 720.0;
+			regenerate();
+			dragStart = null;
+		}
+
+		private void onDragged(Point curPoint)
+		{
+			//System.out.println(curPoint.x - dragStart.x);
 		}
 	}
 }
