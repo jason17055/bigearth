@@ -60,6 +60,8 @@ public class WorldViewer extends JFrame
 		{
 			world = new MakeWorld();
 			world.load(f);
+			world.generateDrainage();
+			world.generateRivers();
 		}
 	}
 
@@ -86,21 +88,18 @@ public class WorldViewer extends JFrame
 		{
 			showTemperatureBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
-			showRiversBtn.setSelected(false);
 			regenerate();
 		}
 		else if (ev.getSource() == showTemperatureBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
-			showRiversBtn.setSelected(false);
 			regenerate();
 		}
 		else if (ev.getSource() == showRainfallBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showTemperatureBtn.setSelected(false);
-			showRiversBtn.setSelected(false);
 			regenerate();
 		}
 		else if (ev.getSource() == showRiversBtn)
@@ -134,6 +133,8 @@ public class WorldViewer extends JFrame
 		{
 
 		int [] colors = new int[world.g.getCellCount()];
+		view.rivers = new int[world.g.getCellCount()];
+
 		for (int i = 0; i < colors.length; i++)
 		{
 			int el = world.elevation[i];
@@ -159,16 +160,20 @@ public class WorldViewer extends JFrame
 					el >= -3 ? 0x0000ff :
 					0x000088;
 			}
-			else if (showRiversBtn.isSelected())
-			{
-				colors[i] = world.riverVolume[i] > 0 ? 0x000077 :
-					el >= 0 ? 0x00ff00 :
-					0x0000ff;
-			}
 			else
 			{
 				colors[i] = el >= 0 ? 0x00ff00 :
 					0x0000ff;
+			}
+
+			if (showRiversBtn.isSelected())
+			{
+				if (world.riverVolume[i] > 0)
+					view.rivers[i] = world.drainage[i];
+			}
+			else
+			{
+				view.rivers = null;
 			}
 		}
 		view.generateImage(world.g, colors);
@@ -202,14 +207,19 @@ public class WorldViewer extends JFrame
 		implements MouseListener, MouseMotionListener
 	{
 		int [] colors;
+		int [] rivers;
 		BufferedImage image;
 		double curLongitude;
+		double zoomFactor;
+		int yOffset;
 
 		WorldView()
 		{
 			setPreferredSize(new Dimension(720,360));
 			addMouseListener(this);
 			addMouseMotionListener(this);
+			zoomFactor = 1.0;
+			yOffset = 0;
 		}
 
 		boolean tryPixel(int x, int y, int c)
@@ -253,8 +263,8 @@ public class WorldViewer extends JFrame
 				double lat = Math.asin(p.z);
 				double lgt = Math.atan2(p.y, p.x);
 				pts[i] = new Point(
-					(int)Math.round(360+lgt*720/(Math.PI*2)),
-					(int)Math.round(180-lat*360/Math.PI)
+					(int)Math.round(360+zoomFactor*lgt*720/(Math.PI*2)),
+					(int)Math.round(180-zoomFactor*lat*360/Math.PI) + yOffset
 					);
 
 				todo[i] = i;
@@ -299,6 +309,23 @@ public class WorldViewer extends JFrame
 				curCount = nextCount;
 				radius++;
 			}
+
+			if (rivers != null)
+			{
+				Graphics2D gr = image.createGraphics();
+				gr.setColor(Color.BLACK);
+				for (int i = 0; i < rivers.length; i++)
+				{
+					int d = rivers[i];
+					if (d > 0)
+					{
+						if (Math.abs(pts[i].x - pts[d-1].x) < 500)
+							gr.drawLine(pts[i].x,pts[i].y,
+								pts[d-1].x,pts[d-1].y);
+					}
+				}
+			}
+
 			repaint();
 		}
 
@@ -331,9 +358,26 @@ public class WorldViewer extends JFrame
 		// implements MouseListener
 		public void mouseReleased(MouseEvent ev)
 		{
-			if (ev.getButton() == MouseEvent.BUTTON1 && dragStart != null)
+			if (ev.getButton() == MouseEvent.BUTTON1 && dragStart!=null)
 			{
-				onDragEnd(ev.getPoint());
+				int d = Math.abs(ev.getX()-dragStart.x)
+					+ Math.abs(ev.getY()-dragStart.y);
+				if (d>5)
+				{
+					onDragEnd(ev.getPoint());
+				}
+				else
+				{
+					zoomFactor *= 2;
+					regenerate();
+				}
+			}
+			else if (ev.getButton() == MouseEvent.BUTTON3)
+			{
+				zoomFactor/=2;
+				if (zoomFactor < 1)
+					zoomFactor = 1;
+				regenerate();
 			}
 		}
 
@@ -352,8 +396,9 @@ public class WorldViewer extends JFrame
 		private Point dragStart;
 		private void onDragEnd(Point endPoint)
 		{
-			double dist = endPoint.x - dragStart.x;
+			double dist = (endPoint.x - dragStart.x) / zoomFactor;
 			curLongitude += dist * Math.PI * 2 / 720.0;
+			yOffset += (endPoint.y - dragStart.y);
 			regenerate();
 			dragStart = null;
 		}
