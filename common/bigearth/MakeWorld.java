@@ -45,6 +45,7 @@ public class MakeWorld
 	int [] drainage;
 	int [] riverVolume;
 	int [] lakeVolume;
+	int [] floods;
 
 	MakeWorld()
 	{
@@ -160,6 +161,7 @@ public class MakeWorld
 
 		generateDrainage();
 		generateRivers();
+		generateFloods();
 	}
 
 	void status(String message)
@@ -318,6 +320,49 @@ public class MakeWorld
 				}
 			}
 			riverVolume[i] = 0;
+		}
+	}
+
+	void generateFloods()
+	{
+		this.floods = new int[g.getCellCount()];
+
+		int maxRiverVolume = 3;
+		for (int i = 0; i < riverVolume.length; i++)
+		{
+			if (riverVolume[i] > maxRiverVolume)
+				maxRiverVolume = riverVolume[i];
+		}
+
+		Queue<Integer> Q = new ArrayDeque<Integer>();
+		for (int i = 0; i < floods.length; i++)
+		{
+			if (riverVolume[i] > 0)
+			{
+				int floodLevel = 1+(int)Math.round(9.0 * Math.sqrt((double)riverVolume[i]/maxRiverVolume));
+				floods[i] = floodLevel;
+				Q.add(i+1);
+			}
+			else if (elevation[i] < 0)
+			{
+				floods[i] = 4;
+				Q.add(i+1);
+			}
+		}
+
+		while (!Q.isEmpty())
+		{
+			int cur = Q.remove();
+			for (int n : g.getNeighbors(cur))
+			{
+				int heightDiff = elevation[n-1] - elevation[cur-1];
+				int floodLevel = floods[cur-1] - (1 + heightDiff);
+				if (elevation[n-1] >= 0 && floodLevel > floods[n-1])
+				{
+					floods[n-1] = floodLevel;
+					Q.add(n);
+				}
+			}
 		}
 	}
 
