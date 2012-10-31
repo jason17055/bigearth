@@ -65,8 +65,6 @@ public class WorldViewer extends JFrame
 		{
 			world = new MakeWorld();
 			world.load(f);
-			world.generateRivers();
-			world.generateFloods();
 		}
 	}
 
@@ -184,7 +182,7 @@ public class WorldViewer extends JFrame
 			}
 			else
 			{
-				view.rivers = null;
+				view.rivers[i] = 0;
 			}
 		}
 		view.generateImage(world.g, colors);
@@ -195,6 +193,15 @@ public class WorldViewer extends JFrame
 	{
 		boolean showRains = showRainfallBtn.isSelected();
 		boolean showFloods = showFloodsBtn.isSelected();
+
+		if (showRiversBtn.isSelected())
+		{
+			view.rivers = new int[rainfall.length];
+		}
+		else
+		{
+			view.rivers = null;
+		}
 
 		int [] colors = new int[rainfall.length];
 		for (int i = 0; i < rainfall.length; i++)
@@ -217,7 +224,14 @@ public class WorldViewer extends JFrame
 			{
 				colors[i] = 0xdddddd;
 			}
+
+			if (view.rivers != null)
+			{
+				if (world.riverVolume[i] > 0)
+					view.rivers[i] = world.drainage[i];
+			}
 		}
+
 		view.generateImage(world.g, colors);
 	}
 
