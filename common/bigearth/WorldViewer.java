@@ -65,7 +65,6 @@ public class WorldViewer extends JFrame
 		{
 			world = new MakeWorld();
 			world.load(f);
-			world.generateDrainage();
 			world.generateRivers();
 			world.generateFloods();
 		}
@@ -173,8 +172,9 @@ public class WorldViewer extends JFrame
 			}
 			else
 			{
-				colors[i] = el >= 0 ? 0x00ff00 :
-					0x0000ff;
+				colors[i] = el < 0 ? 0x0000ff :
+					world.lakeLevel[i] > el ? 0x8888ff :
+					0x00ff00;
 			}
 
 			if (showRiversBtn.isSelected())
