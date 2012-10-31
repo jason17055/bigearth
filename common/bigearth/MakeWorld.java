@@ -44,7 +44,7 @@ public class MakeWorld
 	int [] annualRains; //in millimeters-per-year
 	int [] drainage;
 	int [] riverVolume;
-	int [] lakeVolume;
+	int [] lakeLevel;
 	int [] floods;
 
 	MakeWorld()
@@ -72,7 +72,7 @@ public class MakeWorld
 				annualRains[i],
 				drainage[i],
 				riverVolume[i],
-				lakeVolume[i],
+				lakeLevel[i],
 				floods[i]);
 		}
 		out.close();
@@ -93,7 +93,7 @@ public class MakeWorld
 		this.annualRains = new int[numCells];
 		this.drainage = new int[numCells];
 		this.riverVolume = new int[numCells];
-		this.lakeVolume = new int[numCells];
+		this.lakeLevel = new int[numCells];
 		this.floods = new int[numCells];
 		for (int i = 0; i < numCells; i++)
 		{
@@ -103,7 +103,7 @@ public class MakeWorld
 			annualRains[i] = Integer.parseInt(parts[2]);
 			drainage[i] = Integer.parseInt(parts[3]);
 			riverVolume[i] = Integer.parseInt(parts[4]);
-			lakeVolume[i] = Integer.parseInt(parts[5]);
+			lakeLevel[i] = Integer.parseInt(parts[5]);
 			floods[i] = Integer.parseInt(parts[6]);
 		}
 		in.close();
@@ -274,13 +274,20 @@ public class MakeWorld
 		}
 	}
 
+	static final int LAKE_VOLUME = 800;
 	void generateRivers()
 	{
 		status("Generating rivers");
 
 		int numCells = g.getCellCount();
 		this.riverVolume = new int[numCells];
-		this.lakeVolume = new int[numCells];
+		this.lakeLevel = new int[numCells];
+		for (int i = 0; i < numCells; i++)
+		{
+			lakeLevel[i] = elevation[i];
+		}
+
+		int [] lakeVolume = new int[numCells];
 
 		for (int i = 0; i < numCells; i++)
 		{
@@ -297,6 +304,14 @@ public class MakeWorld
 
 			lakeVolume[cur-1] += water;
 		}
+
+		//
+		// process river sinks that are above sea level
+		// (turn them into lakes)
+		//
+
+		processLakes(lakeVolume);
+
 
 		// normalize river volumes
 		double sum = 0.0;
@@ -326,6 +341,80 @@ public class MakeWorld
 		}
 	}
 
+	void processLakes(int [] lakeVolume)
+	{
+		for (;;)
+		{
+			// look for the highest-elevation lake
+			int best = -1;
+			int bestEl = -1;
+			for (int i = 0; i < lakeVolume.length; i++)
+			{
+				if (elevation[i] > bestEl && lakeVolume[i] > 0)
+				{
+					best = i + 1;
+					bestEl = elevation[i];
+				}
+			}
+
+			if (best == -1)
+				break; //got them all
+
+			makeLake(best, lakeVolume);
+		}
+	}
+
+	void makeLake(int cellId, int [] lakeVolume)
+	{
+		int remaining = lakeVolume[cellId-1];
+		lakeVolume[cellId-1] = 0;
+
+		// raise this lake's level by one
+		int level = lakeLevel[cellId-1] + 1;
+
+		Queue<Integer> Q = new ArrayDeque<Integer>();
+		Q.add(cellId);
+
+		while (!Q.isEmpty() && remaining > 0)
+		{
+			int cur = Q.remove();
+
+			if (lakeLevel[cur-1] < level)
+			{
+				remaining -= LAKE_VOLUME * (level - lakeLevel[cur-1]);
+				lakeLevel[cur-1] = level;
+			}
+
+			// check where this cell drains to
+			int sink = cur;
+			while (drainage[sink-1] > 0)
+				sink = drainage[sink-1];
+
+			if (lakeLevel[sink-1] < level)
+			{
+				// this tile sinks out of this lake system
+				// dump the leftover water there
+				sink = cur;
+				while (drainage[sink-1] > 0)
+				{
+					sink = drainage[sink-1];
+					riverVolume[sink-1] += remaining;
+				}
+
+				lakeVolume[sink-1] += remaining;
+				return;
+			}
+
+			for (int n : g.getNeighbors(cur))
+			{
+				if (lakeLevel[n-1] < level)
+					Q.add(n);
+			}
+		}
+
+		lakeVolume[cellId-1] = remaining > 0 ? remaining : 0;
+	}
+
 	void generateFloods()
 	{
 		this.floods = new int[g.getCellCount()];
@@ -349,6 +438,11 @@ public class MakeWorld
 			else if (elevation[i] < 0)
 			{
 				floods[i] = 4;
+				Q.add(i+1);
+			}
+			else if (lakeLevel[i] > elevation[i])
+			{
+				floods[i] = 2;
 				Q.add(i+1);
 			}
 		}
