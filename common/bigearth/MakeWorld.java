@@ -66,13 +66,14 @@ public class MakeWorld
 		out.println(geometrySize);
 		for (int i = 0; i < g.getCellCount(); i++)
 		{
-			out.printf("%d %d %d %d %d %d\n",
+			out.printf("%d %d %d %d %d %d %d\n",
 				elevation[i],
 				temperature[i],
 				annualRains[i],
 				drainage[i],
 				riverVolume[i],
-				lakeVolume[i]);
+				lakeVolume[i],
+				floods[i]);
 		}
 		out.close();
 	}
@@ -93,6 +94,7 @@ public class MakeWorld
 		this.drainage = new int[numCells];
 		this.riverVolume = new int[numCells];
 		this.lakeVolume = new int[numCells];
+		this.floods = new int[numCells];
 		for (int i = 0; i < numCells; i++)
 		{
 			String [] parts = in.readLine().split(" ");
@@ -102,6 +104,7 @@ public class MakeWorld
 			drainage[i] = Integer.parseInt(parts[3]);
 			riverVolume[i] = Integer.parseInt(parts[4]);
 			lakeVolume[i] = Integer.parseInt(parts[5]);
+			floods[i] = Integer.parseInt(parts[6]);
 		}
 		in.close();
 	}
