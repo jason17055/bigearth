@@ -21,6 +21,7 @@ public class WorldViewer extends JFrame
 	JToggleButton showElevationBtn;
 	JToggleButton showTemperatureBtn;
 	JToggleButton showRainfallBtn;
+	JToggleButton showFloodsBtn;
 	JToggleButton showRiversBtn;
 
 	WorldViewer() throws IOException
@@ -48,6 +49,10 @@ public class WorldViewer extends JFrame
 		showRainfallBtn.addActionListener(this);
 		buttonsPane.add(showRainfallBtn);
 
+		showFloodsBtn = new JToggleButton("Show Floods");
+		showFloodsBtn.addActionListener(this);
+		buttonsPane.add(showFloodsBtn);
+
 		showRiversBtn = new JToggleButton("Show Rivers");
 		showRiversBtn.addActionListener(this);
 		buttonsPane.add(showRiversBtn);
@@ -62,6 +67,7 @@ public class WorldViewer extends JFrame
 			world.load(f);
 			world.generateDrainage();
 			world.generateRivers();
+			world.generateFloods();
 		}
 	}
 
@@ -88,12 +94,14 @@ public class WorldViewer extends JFrame
 		{
 			showTemperatureBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
+			showFloodsBtn.setSelected(false);
 			regenerate();
 		}
 		else if (ev.getSource() == showTemperatureBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
+			showFloodsBtn.setSelected(false);
 			regenerate();
 		}
 		else if (ev.getSource() == showRainfallBtn)
@@ -102,11 +110,14 @@ public class WorldViewer extends JFrame
 			showTemperatureBtn.setSelected(false);
 			regenerate();
 		}
-		else if (ev.getSource() == showRiversBtn)
+		else if (ev.getSource() == showFloodsBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showTemperatureBtn.setSelected(false);
-			showRainfallBtn.setSelected(false);
+			regenerate();
+		}
+		else if (ev.getSource() == showRiversBtn)
+		{
 			regenerate();
 		}
 	}
@@ -125,7 +136,7 @@ public class WorldViewer extends JFrame
 		if (world == null)
 			return;
 
-		if (showRainfallBtn.isSelected())
+		if (showRainfallBtn.isSelected() || showFloodsBtn.isSelected())
 		{
 			regenerate_Rainfall(world.annualRains);
 		}
@@ -182,12 +193,19 @@ public class WorldViewer extends JFrame
 
 	void regenerate_Rainfall(int [] rainfall)
 	{
+		boolean showRains = showRainfallBtn.isSelected();
+		boolean showFloods = showFloodsBtn.isSelected();
+
 		int [] colors = new int[rainfall.length];
 		for (int i = 0; i < rainfall.length; i++)
 		{
 			if (world.elevation[i] >= 0)
 			{
-				int x = (int)Math.floor(Math.log((double)rainfall[i] / MakeWorld.AVERAGE_RAINFALL) * 4) + RAINFALL_COLORS.length / 2;
+				int moisture = 0
+					+ (showRains ? rainfall[i] : 0)
+					+ (showFloods ? world.floods[i] * 360 : 0)
+					;
+				int x = (int)Math.floor(Math.log((double)moisture / MakeWorld.AVERAGE_RAINFALL) * 4) + RAINFALL_COLORS.length / 2;
 				if (x < 0)
 					x = 0;
 				if (x >= RAINFALL_COLORS.length)
