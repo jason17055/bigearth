@@ -159,8 +159,6 @@ public class MakeWorld
 		normalizeRains(annualRains);
 
 		generateDrainage();
-
-		status("Generating rivers");
 		generateRivers();
 	}
 
@@ -220,54 +218,61 @@ public class MakeWorld
 		int numCells = g.getCellCount();
 		this.drainage = new int[numCells];
 
+		List<Integer> todo = new ArrayList<Integer>();
 		for (;;)
 		{
-			// find lowest point that hasn't been calculated yet
-			int best = -1;
-			int bestVal = Integer.MAX_VALUE;
-			for (int i = 0; i < numCells; i++)
+			if (todo.isEmpty())
 			{
-				if (drainage[i] == 0 && elevation[i] < bestVal)
+				// find a starting spot
+				int best = -1;
+				int bestVal = Integer.MAX_VALUE;
+				for (int i = 0; i < numCells; i++)
 				{
-					best = i;
-					bestVal = elevation[i];
+					if (drainage[i] == 0 && elevation[i] < bestVal)
+					{
+						best = i+1;
+						bestVal = elevation[i];
+					}
+				}
+				if (best == -1)
+					return;
+
+				drainage[best-1] = -1;
+				todo.add(best);
+			}
+
+			// pick a place to branch from
+			int i = (int)Math.floor(Math.random() * todo.size());
+			int cur = todo.get(i);
+			int curEl = elevation[cur-1];
+
+			// pick a direction to branch to
+			RouletteWheel<Integer> rw = new RouletteWheel<Integer>();
+			for (int n : g.getNeighbors(cur))
+			{
+				if (drainage[n-1] == 0 && elevation[n-1] >= curEl)
+				{
+					rw.add(n, 1);
 				}
 			}
 
-			if (best == -1)
-				break;
-
-			drainage[best] = -1; //indicates that water has no place to go
-			makeRiver(best+1);
-		}
-	}
-
-	void makeRiver(int cur)
-	{
-		int [] nn = g.getNeighbors(cur);
-		RouletteWheel<Integer> rw = new RouletteWheel<Integer>();
-		for (int n : nn)
-		{
-			int diffHeight = elevation[n-1] - elevation[cur-1];
-			if (drainage[n-1] == 0 && diffHeight >= 0)
+			if (!rw.isEmpty())
 			{
-				rw.add(n, 0.5 + diffHeight);
+				int n = rw.next();
+				drainage[n-1] = cur;
+				todo.add(n);
 			}
-		}
-
-		while (!rw.isEmpty())
-		{
-			int x = rw.remove();
-			if (drainage[x-1] == 0)
+			else
 			{
-				drainage[x-1] = cur;
-				makeRiver(x);
+				todo.remove(i);
 			}
 		}
 	}
 
 	void generateRivers()
 	{
+		status("Generating rivers");
+
 		int numCells = g.getCellCount();
 		this.riverVolume = new int[numCells];
 		this.lakeVolume = new int[numCells];
