@@ -128,6 +128,17 @@ public class WorldViewer extends JFrame
 		0x186388, 0x1a4780, 0x112d7a
 		};
 
+	int [] ELEVATION_COLORS = {
+		// below sea-level elevations
+		0x000044, 0x000088, 0x0000cc, 0x0000ff,
+
+		// at sea-level and above
+		0x008800, 0x00aa00, 0x00cc00, 0x00e000,
+		0x00ff00, 0x44ff00, 0x88ff00, 0xcccc00,
+		0xddaa00, 0xff9900, 0xff9944, 0xff4444,
+		0xffcccc, 0xffffff
+		};
+
 	void regenerate()
 	{
 		if (world == null)
@@ -161,12 +172,11 @@ public class WorldViewer extends JFrame
 			}
 			else if (showElevationBtn.isSelected())
 			{
-				colors[i] = el >= 10 ? 0xffffff :
-					el >= 7 ? 0x885500 :
-					el >= 3 ? 0x00ff00 :
-					el >= 0 ? 0x009900 :
-					el >= -3 ? 0x0000ff :
-					0x000088;
+				int x = el + 4;
+				x = (x >= 0 ? x : 0);
+				x = (x < ELEVATION_COLORS.length ? x :
+					ELEVATION_COLORS.length - 1);
+				colors[i] = ELEVATION_COLORS[x];
 			}
 			else
 			{
