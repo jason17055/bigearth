@@ -126,7 +126,7 @@ public class MakeWorld
 		this.temperature = new int[numCells];
 
 		// generate height map for entire sphere
-		for (int i = 0, m = numCells/45; i <= m; i++)
+		for (int i = 0, m = numCells/20; i <= m; i++)
 		{
 			bumpMap(g, elevation, 1);
 		}
@@ -478,7 +478,9 @@ public class MakeWorld
 		for (int i = 0; i < numCells; i++)
 		{
 			int hasWater = elevation[i] < 0 ? 20 : rains[i];
-			rw.add(i+1, hasWater * LogisticFunction((temperature[i] + 300 - highestTemperature)/100.0));
+			double fit = hasWater * LogisticFunction((temperature[i] + 300 - highestTemperature)/100.0);
+			if (fit > 0)
+				rw.add(i+1, fit);
 		}
 
 		for (int s = 0; s < numCells; s++)
