@@ -252,9 +252,11 @@ public class WorldViewer extends JFrame
 		int [] rivers;
 		BufferedImage image;
 		double curLongitude;
+		double curLatitude;
 		double zoomFactor;
 		int yOffset;
 		Matrix3d transformMatrix;
+		Matrix3d inverseTransformMatrix;
 
 		WorldView()
 		{
@@ -263,6 +265,10 @@ public class WorldViewer extends JFrame
 			addMouseMotionListener(this);
 			zoomFactor = 1.0;
 			yOffset = 0;
+
+			transformMatrix = new Matrix3d();
+			inverseTransformMatrix = new Matrix3d();
+			updateTransformMatrix();
 		}
 
 		boolean tryPixel(int x, int y, int c)
@@ -287,20 +293,7 @@ public class WorldViewer extends JFrame
 		boolean isVisible(int regionId)
 		{
 			SphereGeometry g = world.g;
-			Matrix3d rZ = new Matrix3d(
-				Math.cos(curLongitude), -Math.sin(curLongitude), 0,
-				Math.sin(curLongitude), Math.cos(curLongitude), 0,
-				0, 0, 1);
-
-			Point3d p = g.getCenterPoint(regionId);
-			rZ.transform(p);
-
-			double lat = Math.asin(p.z);
-			double lgt = Math.atan2(p.y, p.x);
-			Point q = new Point(
-				(int)Math.round(360+zoomFactor*lgt*720/(Math.PI*2)),
-				(int)Math.round(180-zoomFactor*lat*360/Math.PI) + yOffset
-				);
+			Point q = toScreen(g.getCenterPoint(regionId));
 			return (q.x >= 0 && q.x < 720
 				&& q.y >= 0 && q.y < 360);
 		}
@@ -310,8 +303,8 @@ public class WorldViewer extends JFrame
 			pt = new Point3d(pt);
 			transformMatrix.transform(pt);
 
-			double lat = Math.asin(pt.z);
-			double lgt = Math.atan2(pt.y, pt.x);
+			double lat = Math.asin(pt.y);
+			double lgt = Math.atan2(-pt.z, pt.x);
 			return new Point(
 				(int)Math.round(360+zoomFactor*lgt*720/(Math.PI*2)),
 				(int)Math.round(180-zoomFactor*lat*360/Math.PI) + yOffset
@@ -324,11 +317,7 @@ public class WorldViewer extends JFrame
 				return;
 
 			SphereGeometry g = world.g;
-			Matrix3d rZ = new Matrix3d(
-				Math.cos(curLongitude), -Math.sin(curLongitude), 0,
-				Math.sin(curLongitude), Math.cos(curLongitude), 0,
-				0, 0, 1);
-			transformMatrix = rZ;
+			updateTransformMatrix();
 
 			Point [] pts = new Point[colors.length];
 			int [] todo = new int[colors.length];
@@ -438,6 +427,20 @@ public class WorldViewer extends JFrame
 			{
 				g.drawImage(image, 0, 0, Color.WHITE, null);
 			}
+		}
+
+		void updateTransformMatrix()
+		{
+			// rotate around Z axis for longitude
+			Matrix3d rZ = new Matrix3d();
+			rZ.rotZ(curLongitude);
+
+			// rotate around X axis for latitude
+			Matrix3d rX = new Matrix3d();
+			rX.rotX(-(Math.PI/2 - curLatitude));
+
+			transformMatrix.mul(rX, rZ);
+			inverseTransformMatrix.invert(transformMatrix);
 		}
 
 		// implements MouseListener
