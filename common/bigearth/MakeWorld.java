@@ -46,6 +46,7 @@ public class MakeWorld
 	int [] riverVolume;
 	int [] lakeLevel;
 	int [] floods;
+	RegionDetail [] regions;
 
 	MakeWorld()
 	{
@@ -95,6 +96,7 @@ public class MakeWorld
 		this.riverVolume = new int[numCells];
 		this.lakeLevel = new int[numCells];
 		this.floods = new int[numCells];
+		this.regions = new RegionDetail[numCells];
 		for (int i = 0; i < numCells; i++)
 		{
 			String [] parts = in.readLine().split(" ");
@@ -124,6 +126,7 @@ public class MakeWorld
 
 		this.elevation = new int[numCells];
 		this.temperature = new int[numCells];
+		this.regions = new RegionDetail[numCells];
 
 		// generate height map for entire sphere
 		for (int i = 0, m = numCells/20; i <= m; i++)
@@ -165,6 +168,33 @@ public class MakeWorld
 		generateDrainage();
 		generateRivers();
 		generateFloods();
+	}
+
+	class RegionDetail
+	{
+		int numSides;
+		RegionDetail(int numSides)
+		{
+			this.numSides = numSides;
+		}
+	}
+
+	RegionDetail loadRegionDetail(int regionId)
+	{
+		return null;
+	}
+
+	void enhanceRegion(int regionId)
+	{
+		assert regionId >= 1 && regionId <= g.getCellCount();
+
+		int [] nn = g.getNeighbors(regionId);
+		RegionDetail [] neighbors = new RegionDetail[nn.length];
+		for (int i = 0; i < nn.length; i++)
+			neighbors[i] = loadRegionDetail(nn[i]);
+
+		RegionDetail detail = new RegionDetail(nn.length);
+		regions[regionId-1] = detail;
 	}
 
 	void status(String message)

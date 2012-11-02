@@ -283,6 +283,27 @@ public class WorldViewer extends JFrame
 			regenerate();
 		}
 
+		boolean isVisible(int regionId)
+		{
+			SphereGeometry g = world.g;
+			Matrix3d rZ = new Matrix3d(
+				Math.cos(curLongitude), -Math.sin(curLongitude), 0,
+				Math.sin(curLongitude), Math.cos(curLongitude), 0,
+				0, 0, 1);
+
+			Point3d p = g.getCenterPoint(regionId);
+			rZ.transform(p);
+
+			double lat = Math.asin(p.z);
+			double lgt = Math.atan2(p.y, p.x);
+			Point q = new Point(
+				(int)Math.round(360+zoomFactor*lgt*720/(Math.PI*2)),
+				(int)Math.round(180-zoomFactor*lat*360/Math.PI) + yOffset
+				);
+			return (q.x >= 0 && q.x < 720
+				&& q.y >= 0 && q.y < 360);
+		}
+
 		void regenerate()
 		{
 			if (world == null)
@@ -352,9 +373,9 @@ public class WorldViewer extends JFrame
 				radius++;
 			}
 
+			Graphics2D gr = image.createGraphics();
 			if (rivers != null)
 			{
-				Graphics2D gr = image.createGraphics();
 				gr.setColor(Color.BLACK);
 				for (int i = 0; i < rivers.length; i++)
 				{
@@ -365,6 +386,24 @@ public class WorldViewer extends JFrame
 							gr.drawLine(pts[i].x,pts[i].y,
 								pts[d-1].x,pts[d-1].y);
 					}
+				}
+			}
+
+			if (zoomFactor >= 16)
+			{
+				gr.setColor(Color.BLACK);
+				for (int i = 0; i < world.regions.length; i++)
+				{
+					if (!(pts[i].x >= 0 && pts[i].x < 720
+					&& pts[i].y >= 0 && pts[i].y < 360))
+						continue;
+
+					if (world.regions[i] == null)
+						world.enhanceRegion(i+1);
+
+					MakeWorld.RegionDetail r = world.regions[i];
+					gr.drawString(new Integer(r.numSides).toString(),
+						pts[i].x, pts[i].y);
 				}
 			}
 
