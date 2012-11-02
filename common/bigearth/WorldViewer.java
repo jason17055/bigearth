@@ -254,6 +254,7 @@ public class WorldViewer extends JFrame
 		double curLongitude;
 		double curLatitude;
 		double zoomFactor;
+		int xOffset;
 		int yOffset;
 		Matrix3d transformMatrix;
 		Matrix3d inverseTransformMatrix;
@@ -298,6 +299,26 @@ public class WorldViewer extends JFrame
 				&& q.y >= 0 && q.y < 360);
 		}
 
+		static final int WIDTH = 720;
+		static final int HEIGHT = 360;
+
+		Point3d fromScreen(Point p)
+		{
+			double lat = -(p.y - HEIGHT/2 - yOffset)
+				/ (zoomFactor * HEIGHT/Math.PI);
+			double lgt = (p.x - WIDTH/2 - xOffset)
+				/ (zoomFactor * WIDTH/(2*Math.PI));
+
+			double zz = Math.cos(lat);
+			Point3d pt = new Point3d(
+				Math.cos(lgt) * zz,
+				Math.sin(lat),
+				-Math.sin(lgt) * zz
+				);
+			inverseTransformMatrix.transform(pt);
+			return pt;
+		}
+
 		Point toScreen(Point3d pt)
 		{
 			pt = new Point3d(pt);
@@ -306,8 +327,8 @@ public class WorldViewer extends JFrame
 			double lat = Math.asin(pt.y);
 			double lgt = Math.atan2(-pt.z, pt.x);
 			return new Point(
-				(int)Math.round(360+zoomFactor*lgt*720/(Math.PI*2)),
-				(int)Math.round(180-zoomFactor*lat*360/Math.PI) + yOffset
+				(int)Math.round(WIDTH/2+zoomFactor*lgt*WIDTH/(Math.PI*2)) + xOffset,
+				(int)Math.round(HEIGHT/2-zoomFactor*lat*HEIGHT/Math.PI) + yOffset
 				);
 		}
 
@@ -458,6 +479,11 @@ public class WorldViewer extends JFrame
 			if (ev.getButton() == MouseEvent.BUTTON1)
 			{
 				dragStart = ev.getPoint();
+				Point3d pt = fromScreen(dragStart);
+
+				System.out.println("actually clicked on "+dragStart);
+				System.out.println("  which is "+pt);
+				System.out.println("  "+toScreen(pt));
 			}
 		}
 
