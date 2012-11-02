@@ -170,15 +170,6 @@ public class MakeWorld
 		generateFloods();
 	}
 
-	class RegionDetail
-	{
-		int numSides;
-		RegionDetail(int numSides)
-		{
-			this.numSides = numSides;
-		}
-	}
-
 	RegionDetail loadRegionDetail(int regionId)
 	{
 		return null;
@@ -195,6 +186,8 @@ public class MakeWorld
 
 		RegionDetail detail = new RegionDetail(nn.length);
 		regions[regionId-1] = detail;
+
+		
 	}
 
 	void status(String message)

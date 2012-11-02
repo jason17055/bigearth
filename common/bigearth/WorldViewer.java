@@ -401,7 +401,7 @@ public class WorldViewer extends JFrame
 					if (world.regions[i] == null)
 						world.enhanceRegion(i+1);
 
-					MakeWorld.RegionDetail r = world.regions[i];
+					RegionDetail r = world.regions[i];
 					gr.drawString(new Integer(r.numSides).toString(),
 						pts[i].x, pts[i].y);
 				}
