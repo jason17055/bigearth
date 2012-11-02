@@ -254,6 +254,7 @@ public class WorldViewer extends JFrame
 		double curLongitude;
 		double zoomFactor;
 		int yOffset;
+		Matrix3d transformMatrix;
 
 		WorldView()
 		{
@@ -304,6 +305,19 @@ public class WorldViewer extends JFrame
 				&& q.y >= 0 && q.y < 360);
 		}
 
+		Point toScreen(Point3d pt)
+		{
+			pt = new Point3d(pt);
+			transformMatrix.transform(pt);
+
+			double lat = Math.asin(pt.z);
+			double lgt = Math.atan2(pt.y, pt.x);
+			return new Point(
+				(int)Math.round(360+zoomFactor*lgt*720/(Math.PI*2)),
+				(int)Math.round(180-zoomFactor*lat*360/Math.PI) + yOffset
+				);
+		}
+
 		void regenerate()
 		{
 			if (world == null)
@@ -314,22 +328,13 @@ public class WorldViewer extends JFrame
 				Math.cos(curLongitude), -Math.sin(curLongitude), 0,
 				Math.sin(curLongitude), Math.cos(curLongitude), 0,
 				0, 0, 1);
-
+			transformMatrix = rZ;
 
 			Point [] pts = new Point[colors.length];
 			int [] todo = new int[colors.length];
 			for (int i = 0; i < pts.length; i++)
 			{
-				Point3d p = g.getCenterPoint(i+1);
-				rZ.transform(p);
-
-				double lat = Math.asin(p.z);
-				double lgt = Math.atan2(p.y, p.x);
-				pts[i] = new Point(
-					(int)Math.round(360+zoomFactor*lgt*720/(Math.PI*2)),
-					(int)Math.round(180-zoomFactor*lat*360/Math.PI) + yOffset
-					);
-
+				pts[i] = toScreen(g.getCenterPoint(i+1));
 				todo[i] = i;
 			}
 
@@ -402,12 +407,29 @@ public class WorldViewer extends JFrame
 						world.enhanceRegion(i+1);
 
 					RegionDetail r = world.regions[i];
-					gr.drawString(new Integer(r.numSides).toString(),
-						pts[i].x, pts[i].y);
+					drawRegionDetail(gr, r);
 				}
 			}
 
 			repaint();
+		}
+
+		void drawRegionDetail(Graphics2D gr, RegionDetail r)
+		{
+			for (int terrainId = 0; terrainId < r.numSides; terrainId++)
+			{
+				Point3d [] pp = r.getTerrainBoundary(terrainId);
+				Point [] p = new Point[pp.length];
+				for (int i = 0; i < pp.length; i++)
+				{
+					p[i] = toScreen(pp[i]);
+				}
+				for (int i = 0; i < p.length; i++)
+				{
+					Point q = p[(i+1)%p.length];
+					gr.drawLine(p[i].x, p[i].y, q.x, q.y);
+				}
+			}
 		}
 
 		public void paint(Graphics g)
