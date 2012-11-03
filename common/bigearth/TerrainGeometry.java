@@ -1,5 +1,7 @@
 package bigearth;
 
+import javax.vecmath.*;
+
 public class TerrainGeometry
 {
 	Geometry g;
@@ -9,6 +11,51 @@ public class TerrainGeometry
 	{
 		this.g = g;
 		this.depth = depth;
+	}
+
+	public int getTilesInRegion(int regionId)
+	{
+		return g.getNeighbors(regionId).length * (1 << (2*depth));
+	}
+
+	public Point3d [] getTerrainBoundary(int regionId, int tile)
+	{
+		return getTerrainBoundary(regionId, tile, depth);
+	}
+
+	Point3d [] getTerrainBoundary(int regionId, int tile, int de)
+	{
+		assert regionId >= 1;
+		assert tile >= 0;
+		assert de >= 0;
+
+		if (de <= 0)
+		{
+			Point3d c = g.getCenterPoint(regionId);
+			int [] nn = g.getNeighbors(regionId);
+			assert tile < nn.length;
+
+			Point3d d = g.getCenterPoint(nn[tile]);
+			Point3d e = g.getCenterPoint(nn[(tile+1)%nn.length]);
+			Point3d f = g.getCenterPoint(nn[(tile+nn.length-1)%nn.length]);
+
+			Vector3d aPt = new Vector3d();
+			aPt.set(c);
+			aPt.add(d);
+			aPt.add(f);
+			aPt.normalize();
+			f = new Point3d(aPt);
+
+			aPt.set(c);
+			aPt.add(d);
+			aPt.add(e);
+			aPt.normalize();
+			e = new Point3d(aPt);
+
+			return new Point3d[] { c, f, e };
+		}
+		assert false;
+		return null;
 	}
 
 	TileInfo getTileInfo(int regionId, int tile, int d)

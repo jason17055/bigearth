@@ -417,28 +417,39 @@ public class WorldViewer extends JFrame
 						world.enhanceRegion(i+1);
 
 					RegionDetail r = world.regions[i];
-					drawRegionDetail(gr, r);
+					drawRegionDetail(gr, i+1, r);
 				}
 			}
 
 			repaint();
 		}
 
-		void drawRegionDetail(Graphics2D gr, RegionDetail r)
+		void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
 		{
-			for (int terrainId = 0; terrainId < r.numSides; terrainId++)
+			TerrainGeometry tg = new TerrainGeometry(world.g, 0);
+			int sz = tg.getTilesInRegion(regionId);
+
+			for (int terrainId = 0; terrainId < sz; terrainId++)
 			{
-				Point3d [] pp = r.getTerrainBoundary(terrainId);
+				Point3d [] pp = tg.getTerrainBoundary(regionId, terrainId);
 				Point [] p = new Point[pp.length];
+				int sum_x = 0;
+				int sum_y = 0;
 				for (int i = 0; i < pp.length; i++)
 				{
 					p[i] = toScreen(pp[i]);
+					sum_x += p[i].x;
+					sum_y += p[i].y;
 				}
 				for (int i = 0; i < p.length; i++)
 				{
 					Point q = p[(i+1)%p.length];
 					gr.drawLine(p[i].x, p[i].y, q.x, q.y);
 				}
+
+				gr.drawString(new Integer(terrainId).toString(),
+					sum_x/p.length,
+					sum_y/p.length);
 			}
 		}
 

@@ -360,6 +360,7 @@ public class SphereGeometry implements Geometry
 		return rv;
 	}
 
+	//implements Geometry
 	public Point3d getCenterPoint(int cellIdx)
 	{
 		if (cellIdx <= 12)

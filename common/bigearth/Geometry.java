@@ -1,5 +1,7 @@
 package bigearth;
 
+import javax.vecmath.Point3d;
+
 public interface Geometry
 {
 	int getCellCount();
@@ -25,4 +27,6 @@ public interface Geometry
 	EdgeId getEdgeBetween(int cell1, int cell2);
 	EdgeId [] getSurroundingEdges(int cellId);
 	VertexId [] getSurroundingVertices(int cellId);
+
+	Point3d getCenterPoint(int cellId);
 }
