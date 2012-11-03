@@ -329,24 +329,18 @@ public class WorldViewer extends JFrame
 				);
 		}
 
-		void regenerate()
+		void drawMap(BufferedImage image, Point [] pts)
 		{
-			if (world == null)
-				return;
+			assert image != null;
+			assert pts != null;
+			assert pts.length == colors.length;
 
-			SphereGeometry g = world.g;
-			updateTransformMatrix();
-
-			Point [] pts = new Point[colors.length];
-			int [] todo = new int[colors.length];
+			int [] todo = new int[pts.length];
 			for (int i = 0; i < pts.length; i++)
 			{
-				pts[i] = toScreen(g.getCenterPoint(i+1));
 				todo[i] = i;
 			}
 
-			this.image = new BufferedImage(720,360,
-					BufferedImage.TYPE_INT_RGB);
 			int radius = 0;
 			int curCount = todo.length;
 			while (todo.length != 0 && radius<100)
@@ -384,6 +378,28 @@ public class WorldViewer extends JFrame
 				curCount = nextCount;
 				radius++;
 			}
+		}
+
+		void regenerate()
+		{
+			if (world == null)
+				return;
+
+			SphereGeometry g = world.g;
+			updateTransformMatrix();
+
+			Point [] pts = new Point[colors.length];
+			for (int i = 0; i < pts.length; i++)
+			{
+				pts[i] = toScreen(g.getCenterPoint(i+1));
+			}
+
+			this.image = new BufferedImage(720,360,
+					BufferedImage.TYPE_INT_RGB);
+			if (zoomFactor < 16)
+			{
+				drawMap(image, pts);
+			}
 
 			Graphics2D gr = image.createGraphics();
 			if (rivers != null)
@@ -406,8 +422,8 @@ public class WorldViewer extends JFrame
 				gr.setColor(Color.BLACK);
 				for (int i = 0; i < world.regions.length; i++)
 				{
-					if (!(pts[i].x >= 0 && pts[i].x < 720
-					&& pts[i].y >= 0 && pts[i].y < 360))
+					if (!(pts[i].x >= -50 && pts[i].x < 720+50
+					&& pts[i].y >= -50 && pts[i].y < 360+50))
 						continue;
 
 					if (world.regions[i] == null)
