@@ -187,19 +187,6 @@ public class MakeWorld
 
 		RegionDetail detail = new RegionDetail(nn.length);
 		regions[regionId-1] = detail;
-
-		detail.regionCenterPoint = g.getCenterPoint(regionId);
-		Point3d [] boundary = new Point3d[nn.length];
-		Vector3d aPt = new Vector3d();
-		for (int i = 0; i < nn.length; i++)
-		{
-			aPt.set(detail.regionCenterPoint);
-			aPt.add(g.getCenterPoint(nn[i]));
-			aPt.add(g.getCenterPoint(nn[(i+1)%nn.length]));
-			aPt.normalize();
-			boundary[i] = new Point3d(aPt);
-		}
-		detail.regionBoundary = boundary;
 	}
 
 	void status(String message)
