@@ -158,6 +158,20 @@ System.out.println("in wedge " +tile);
 		}
 	}
 
+	public void getNeighborTiles(int [] neighborRegions, int [] neighborTiles, int regionId, int tile)
+	{
+		assert neighborRegions != null && neighborRegions.length == 3;
+		assert neighborTiles != null && neighborTiles.length == 3;
+
+		TileInfo ti = getTileInfo(regionId, tile, depth);
+		neighborRegions[0] = ti.n0_region;
+		neighborRegions[1] = ti.n1_region;
+		neighborRegions[2] = ti.n2_region;
+		neighborTiles[0] = ti.n0_tile;
+		neighborTiles[1] = ti.n1_tile;
+		neighborTiles[2] = ti.n2_tile;
+	}
+
 	TileInfo getTileInfo(int regionId, int tile, int d)
 	{
 		assert regionId >= 1;

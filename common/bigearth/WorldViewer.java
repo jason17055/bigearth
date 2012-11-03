@@ -448,6 +448,11 @@ public class WorldViewer extends JFrame
 			TerrainGeometry tg = new TerrainGeometry(world.g, 2);
 			int sz = tg.getRegionTileCount(regionId);
 
+			int [] neighborRegions = new int[3];
+			int [] neighborTiles = new int[3];
+			if (selectedRegion != 0)
+			tg.getNeighborTiles(neighborRegions, neighborTiles, selectedRegion, selectedTerrain);
+
 			for (int terrainId = 0; terrainId < sz; terrainId++)
 			{
 				Point3d [] pp = tg.getTerrainBoundary(regionId, terrainId);
@@ -466,6 +471,9 @@ public class WorldViewer extends JFrame
 				gr.setColor(new Color(
 					regionId == selectedRegion &&
 					terrainId == selectedTerrain ? 0xffffff :
+					(regionId == neighborRegions[0] && terrainId == neighborTiles[0]) ||
+					(regionId == neighborRegions[1] && terrainId == neighborTiles[1]) ||
+					(regionId == neighborRegions[2] && terrainId == neighborTiles[2]) ? 0xffff00 :
 					colors[regionId-1]));
 				gr.fillPolygon(x_coords, y_coords, pp.length);
 
@@ -475,6 +483,26 @@ public class WorldViewer extends JFrame
 				gr.drawString(new Integer(terrainId).toString(),
 					sum_x/pp.length,
 					sum_y/pp.length);
+			}
+
+			if (regionId == selectedRegion)
+			{
+				Point3d [] pp = tg.getTerrainBoundary(regionId, selectedTerrain);
+System.out.println("is this clockwise or counter-clockwise?");
+System.out.println(pp[0]);
+System.out.println(pp[1]);
+System.out.println(pp[2]);
+				Point p = toScreen(pp[0]);
+				gr.setColor(Color.RED);
+				gr.fillOval(p.x-5,p.y-5,10,10);
+
+				p = toScreen(pp[1]);
+				gr.setColor(Color.GREEN);
+				gr.fillOval(p.x-5,p.y-5,10,10);
+
+				p = toScreen(pp[2]);
+				gr.setColor(Color.BLUE);
+				gr.fillOval(p.x-5,p.y-5,10,10);
 			}
 		}
 
