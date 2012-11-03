@@ -13,6 +13,61 @@ public class TerrainGeometry
 		this.depth = depth;
 	}
 
+	public int findTileInRegion(int regionId, Point3d pt)
+	{
+		Vector3d v = new Vector3d();
+		double bestD = Double.POSITIVE_INFINITY;
+		int best = 0;
+
+		int [] nn = g.getNeighbors(regionId);
+		for (int i = 0; i < nn.length; i++)
+		{
+			Point3d ptN = g.getCenterPoint(nn[i]);
+			v.sub(ptN, pt);
+			double d = v.length();
+			if (d < bestD)
+			{
+				best = i;
+				bestD = d;
+			}
+		}
+
+		int tile = best;
+System.out.println("in wedge " +tile);
+		for (int de = 0; de < depth; de++)
+		{
+			Point3d [] boundary = getTerrainBoundary(regionId, tile, de);
+			v.sub(boundary[0], pt);
+			double dS = v.length();
+
+			v.sub(boundary[1], pt);
+			double dNE = v.length();
+
+			v.sub(boundary[2], pt);
+			double dNW = v.length();
+
+			Point3d ptA = new Point3d();
+			ptA.interpolate(boundary[1], boundary[2], 0.5);
+			v.sub(ptA, pt);
+			double dN = v.length();
+
+			ptA.interpolate(boundary[0], boundary[2], 0.5);
+			v.sub(ptA, pt);
+			double dSW = v.length();
+
+			ptA.interpolate(boundary[0], boundary[1], 0.5);
+			v.sub(ptA, pt);
+			double dSE = v.length();
+
+			tile = tile * 4 + (
+				dS < dN ? 0 :
+				dNE < dSW ? 1 :
+				dNW < dSE ? 2 :
+				3);
+		}
+		return tile;
+	}
+
 	/**
 	 * Returns the number of terrain tiles in a given region.
 	 * @param regionId identifies a region
@@ -22,6 +77,10 @@ public class TerrainGeometry
 		return g.getNeighbors(regionId).length * (1 << (2*depth));
 	}
 
+	/**
+	 * Returns the three coordinates of the boundary of a particular
+	 * terrain tile.
+	 */
 	public Point3d [] getTerrainBoundary(int regionId, int tile)
 	{
 		return getTerrainBoundary(regionId, tile, depth);

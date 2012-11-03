@@ -23,6 +23,8 @@ public class WorldViewer extends JFrame
 	JToggleButton showRainfallBtn;
 	JToggleButton showFloodsBtn;
 	JToggleButton showRiversBtn;
+	JButton zoomInBtn;
+	JButton zoomOutBtn;
 
 	WorldViewer() throws IOException
 	{
@@ -57,6 +59,14 @@ public class WorldViewer extends JFrame
 		showRiversBtn.addActionListener(this);
 		buttonsPane.add(showRiversBtn);
 
+		zoomInBtn = new JButton("Zoom In");
+		zoomInBtn.addActionListener(this);
+		buttonsPane.add(zoomInBtn);
+
+		zoomOutBtn = new JButton("Zoom Out");
+		zoomOutBtn.addActionListener(this);
+		buttonsPane.add(zoomOutBtn);
+
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -65,6 +75,7 @@ public class WorldViewer extends JFrame
 		{
 			world = new MakeWorld();
 			world.load(f);
+			regenerate();
 		}
 	}
 
@@ -116,6 +127,14 @@ public class WorldViewer extends JFrame
 		else if (ev.getSource() == showRiversBtn)
 		{
 			regenerate();
+		}
+		else if (ev.getSource() == zoomInBtn)
+		{
+			view.zoomIn();
+		}
+		else if (ev.getSource() == zoomOutBtn)
+		{
+			view.zoomOut();
 		}
 	}
 
@@ -444,7 +463,10 @@ public class WorldViewer extends JFrame
 					sum_x += p.x;
 					sum_y += p.y;
 				}
-				gr.setColor(new Color(colors[regionId-1]));
+				gr.setColor(new Color(
+					regionId == selectedRegion &&
+					terrainId == selectedTerrain ? 0xffffff :
+					colors[regionId-1]));
 				gr.fillPolygon(x_coords, y_coords, pp.length);
 
 				gr.setColor(Color.BLACK);
@@ -487,18 +509,30 @@ public class WorldViewer extends JFrame
 		// implements MouseListener
 		public void mouseExited(MouseEvent ev) { }
 
+	int selectedRegion;
+	int selectedTerrain;
+
 		// implements MouseListener
 		public void mousePressed(MouseEvent ev)
 		{
 			if (ev.getButton() == MouseEvent.BUTTON1)
 			{
 				dragStart = ev.getPoint();
-				Point3d pt = fromScreen(dragStart);
-
-				System.out.println("actually clicked on "+dragStart);
-				System.out.println("  which is "+pt);
-				System.out.println("  "+toScreen(pt));
 			}
+		}
+
+		public void zoomIn()
+		{
+			zoomFactor *= 2;
+			regenerate();
+		}
+
+		public void zoomOut()
+		{
+			zoomFactor/=2;
+			if (zoomFactor < 1)
+				zoomFactor = 1;
+			regenerate();
 		}
 
 		// implements MouseListener
@@ -514,16 +548,18 @@ public class WorldViewer extends JFrame
 				}
 				else
 				{
-					zoomFactor *= 2;
+					Point3d pt = fromScreen(dragStart);
+
+					TerrainGeometry tg = new TerrainGeometry(world.g, 2);
+					selectedRegion = world.g.findCell(pt);
+					selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
 					regenerate();
+				System.out.println("  region "+selectedRegion+", terrain " + selectedTerrain);
 				}
+				dragStart = null;
 			}
 			else if (ev.getButton() == MouseEvent.BUTTON3)
-			{
-				zoomFactor/=2;
-				if (zoomFactor < 1)
-					zoomFactor = 1;
-				regenerate();
+			{ //right-click
 			}
 		}
 
