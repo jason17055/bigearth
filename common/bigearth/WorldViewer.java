@@ -292,8 +292,8 @@ public class WorldViewer extends JFrame
 		{
 			SphereGeometry g = world.g;
 			Point q = toScreen(g.getCenterPoint(regionId));
-			return (q.x >= 0 && q.x < 720
-				&& q.y >= 0 && q.y < 360);
+			return (q.x >= 0 && q.x < WIDTH
+				&& q.y >= 0 && q.y < HEIGHT);
 		}
 
 		static final int WIDTH = 720;
@@ -323,9 +323,17 @@ public class WorldViewer extends JFrame
 
 			double lat = Math.asin(pt.y);
 			double lgt = Math.atan2(-pt.z, pt.x);
+
+			double x = WIDTH/2+zoomFactor*lgt*WIDTH/(Math.PI*2);
+			double y = HEIGHT/2-zoomFactor*lat*HEIGHT/Math.PI;
+
+			// prevent overly negative or positive coordinates
+			x = Math.max(-WIDTH*9, Math.min(WIDTH*10, x));
+			y = Math.max(-HEIGHT*9, Math.min(HEIGHT*10, y));
+
 			return new Point(
-				(int)Math.round(WIDTH/2+zoomFactor*lgt*WIDTH/(Math.PI*2)) + xOffset,
-				(int)Math.round(HEIGHT/2-zoomFactor*lat*HEIGHT/Math.PI) + yOffset
+				(int)Math.round(x) + xOffset,
+				(int)Math.round(y) + yOffset
 				);
 		}
 
@@ -393,8 +401,30 @@ public class WorldViewer extends JFrame
 			{
 				pts[i] = toScreen(g.getCenterPoint(i+1));
 			}
+			Rectangle [] regionBounds = new Rectangle[colors.length];
+			for (int i = 0; i < pts.length; i++)
+			{
+				int min_x = pts[i].x;
+				int min_y = pts[i].y;
+				int max_x = pts[i].x;
+				int max_y = pts[i].y;
 
-			this.image = new BufferedImage(720,360,
+				for (int n : g.getNeighbors(i+1))
+				{
+					Point p = pts[n-1];
+					if (p.x >= -WIDTH && p.x < min_x) min_x = p.x;
+					if (p.y >= -HEIGHT && p.y < min_y) min_y = p.y;
+					if (p.x < 2*WIDTH && p.x > max_x) max_x = p.x;
+					if (p.y < 2*HEIGHT && p.y > max_y) max_y = p.y;
+				}
+				regionBounds[i] = new Rectangle(
+					min_x,
+					min_y,
+					max_x-min_x+1,
+					max_y-min_y+1);
+			}
+
+			this.image = new BufferedImage(WIDTH,HEIGHT,
 					BufferedImage.TYPE_INT_RGB);
 			if (zoomFactor < 16)
 			{
@@ -419,11 +449,11 @@ public class WorldViewer extends JFrame
 
 			if (zoomFactor >= 16)
 			{
+				Rectangle screen = new Rectangle(0,0,WIDTH,HEIGHT);
 				gr.setColor(Color.BLACK);
 				for (int i = 0; i < world.regions.length; i++)
 				{
-					if (!(pts[i].x >= -50 && pts[i].x < 720+50
-					&& pts[i].y >= -50 && pts[i].y < 360+50))
+					if (!screen.intersects(regionBounds[i]))
 						continue;
 
 					if (world.regions[i] == null)
@@ -546,12 +576,16 @@ System.out.println(pp[2]);
 		public void zoomIn()
 		{
 			zoomFactor *= 2;
+			curLongitude *= 2;
+			yOffset *= 2;
 			regenerate();
 		}
 
 		public void zoomOut()
 		{
 			zoomFactor/=2;
+			yOffset /= 2;
+			curLongitude /= 2;
 			if (zoomFactor < 1)
 				zoomFactor = 1;
 			regenerate();
@@ -601,7 +635,7 @@ System.out.println(pp[2]);
 		private void onDragEnd(Point endPoint)
 		{
 			double dist = (endPoint.x - dragStart.x) / zoomFactor;
-			curLongitude += dist * Math.PI * 2 / 720.0;
+			curLongitude += dist * Math.PI * 2 / WIDTH;
 			yOffset += (endPoint.y - dragStart.y);
 			regenerate();
 			dragStart = null;
