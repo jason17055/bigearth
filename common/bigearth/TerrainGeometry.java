@@ -33,7 +33,6 @@ public class TerrainGeometry
 		}
 
 		int tile = best;
-System.out.println("in wedge " +tile);
 		for (int de = 0; de < depth; de++)
 		{
 			Point3d [] boundary = getTerrainBoundary(regionId, tile, de);
@@ -80,13 +79,17 @@ System.out.println("in wedge " +tile);
 	/**
 	 * Returns the three coordinates of the boundary of a particular
 	 * terrain tile.
+	 * The coordinates are returned in counter-clockwise order.
 	 */
 	public Point3d [] getTerrainBoundary(int regionId, int tile)
 	{
 		return getTerrainBoundary(regionId, tile, depth);
 	}
 
-	Point3d [] getTerrainBoundary(int regionId, int tile, int de)
+	/**
+	 * Helper function for getTerrainBoundary.
+	 */
+	private Point3d [] getTerrainBoundary(int regionId, int tile, int de)
 	{
 		assert regionId >= 1;
 		assert tile >= 0;
@@ -154,10 +157,14 @@ System.out.println("in wedge " +tile);
 			p0.interpolate(basePts[1], basePts[2], 0.5);
 			p1.interpolate(basePts[0], basePts[2], 0.5);
 			p2.interpolate(basePts[0], basePts[1], 0.5);
-			return new Point3d[] { p0, p2, p1 };
+			return new Point3d[] { p0, p1, p2 };
 		}
 	}
 
+	/**
+	 * Fills in information about the three neighbors of a given terrain tile.
+	 * The neighbors are identified in counter-clockwise order.
+	 */
 	public void getNeighborTiles(int [] neighborRegions, int [] neighborTiles, int regionId, int tile)
 	{
 		assert neighborRegions != null && neighborRegions.length == 3;
@@ -172,7 +179,10 @@ System.out.println("in wedge " +tile);
 		neighborTiles[2] = ti.n2_tile;
 	}
 
-	TileInfo getTileInfo(int regionId, int tile, int d)
+	/**
+	 * Helper function.
+	 */
+	private TileInfo getTileInfo(int regionId, int tile, int d)
 	{
 		assert regionId >= 1;
 		assert tile >= 0;
@@ -269,7 +279,10 @@ System.out.println("in wedge " +tile);
 		return ti;
 	}
 
-	TileInfo getBaseTileInfo(int regionId, int tile)
+	/**
+	 * Helper function.
+	 */
+	private TileInfo getBaseTileInfo(int regionId, int tile)
 	{
 		assert regionId >= 1;
 		assert tile >= 0;
@@ -282,15 +295,19 @@ System.out.println("in wedge " +tile);
 		int [] nn = g.getNeighbors(regionId);
 		assert tile < nn.length;
 
+		// previous wedge in counter-clockwise order
 		ti.n0_region = regionId;
 		ti.n0_attitude = TileInfo.SHARED_SOUTH_VERTEX;
-		ti.n0_tile = (tile + 1) % nn.length;
+		ti.n0_tile = (tile + nn.length - 1) % nn.length;
 
+		// next wedge in counter-clockwise order
 		ti.n2_region = regionId;
 		ti.n2_attitude = TileInfo.SHARED_SOUTH_VERTEX;
-		ti.n2_tile = (tile + nn.length - 1) % nn.length;
+		ti.n2_tile = (tile + 1) % nn.length;
 
-		// figure out what region is to the "north" of this tile
+		// figure out what region is to the "north" of this tile,
+		// and which wedge of that neighboring region are we
+		// connected to...
 
 		int nid = nn[tile];
 		int [] nn2 = g.getNeighbors(nid);
