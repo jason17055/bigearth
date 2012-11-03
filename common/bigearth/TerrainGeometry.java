@@ -15,24 +15,56 @@ public class TerrainGeometry
 
 	public int findTileInRegion(int regionId, Point3d pt)
 	{
+		// predeclare some Vectors for us to use in this method
 		Vector3d v = new Vector3d();
-		double bestD = Double.POSITIVE_INFINITY;
-		int best = 0;
+		Vector3d v2 = new Vector3d();
 
-		int [] nn = g.getNeighbors(regionId);
+		// First step is to find which of the six(or five) wedges of
+		// the region the given point is within. To do this, we use
+		// a little vector math to determine whether the point is on
+		// the positive or negative side of a plane. The plane is
+		// the boundary between two wedges.
+
+		int [] nn = g.getNeighbors(regionId); //only used to determine number of neighbors
+
+		int [] pick = new int[nn.length];
 		for (int i = 0; i < nn.length; i++)
 		{
-			Point3d ptN = g.getCenterPoint(nn[i]);
-			v.sub(ptN, pt);
-			double d = v.length();
-			if (d < bestD)
+			// determine the boundary for this wedge...
+			Point3d [] boundary = getTerrainBoundary(regionId, i, 0);
+
+			// calculate the normal for the plane describing the boundary
+			// between this wedge and the next wedge in counter-clockwise order.
+
+			v.cross(new Vector3d(boundary[0]), new Vector3d(boundary[2]));
+			v.normalize();
+
+			v2.sub(pt, boundary[0]);
+			double proj = v2.dot(v);
+
+			// proj > 0 means the given point is on the positive side of the
+			// plane (i.e. the next wedge);
+			// proj < 0 means the given point is on the negative side of the plane
+
+			int j = (i+1)%nn.length;
+			pick[i] = proj < 0 ? i : j;
+		}
+
+		// now determine which wedge was determined
+		int tile = 0;
+		for (int i = 0; i + 1 < nn.length; i++)
+		{
+			if (pick[i] == pick[i+1] && pick[i] == i+1)
 			{
-				best = i;
-				bestD = d;
+				tile = i+1;
+				break;
 			}
 		}
 
-		int tile = best;
+		// now that we've got the major wedge, go iteratively deeper,
+		// each time breaking the current triangle into four smaller triangles
+		// and picking the inner triangle that contains the desired point
+
 		for (int de = 0; de < depth; de++)
 		{
 			Point3d [] boundary = getTerrainBoundary(regionId, tile, de);
