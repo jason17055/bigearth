@@ -426,30 +426,33 @@ public class WorldViewer extends JFrame
 
 		void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
 		{
-			TerrainGeometry tg = new TerrainGeometry(world.g, 1);
+			TerrainGeometry tg = new TerrainGeometry(world.g, 2);
 			int sz = tg.getRegionTileCount(regionId);
 
 			for (int terrainId = 0; terrainId < sz; terrainId++)
 			{
 				Point3d [] pp = tg.getTerrainBoundary(regionId, terrainId);
-				Point [] p = new Point[pp.length];
+				int [] x_coords = new int[pp.length];
+				int [] y_coords = new int[pp.length];
 				int sum_x = 0;
 				int sum_y = 0;
 				for (int i = 0; i < pp.length; i++)
 				{
-					p[i] = toScreen(pp[i]);
-					sum_x += p[i].x;
-					sum_y += p[i].y;
+					Point p = toScreen(pp[i]);
+					x_coords[i] = p.x;
+					y_coords[i] = p.y;
+					sum_x += p.x;
+					sum_y += p.y;
 				}
-				for (int i = 0; i < p.length; i++)
-				{
-					Point q = p[(i+1)%p.length];
-					gr.drawLine(p[i].x, p[i].y, q.x, q.y);
-				}
+				gr.setColor(new Color(colors[regionId-1]));
+				gr.fillPolygon(x_coords, y_coords, pp.length);
+
+				gr.setColor(Color.BLACK);
+				gr.drawPolygon(x_coords, y_coords, pp.length);
 
 				gr.drawString(new Integer(terrainId).toString(),
-					sum_x/p.length,
-					sum_y/p.length);
+					sum_x/pp.length,
+					sum_y/pp.length);
 			}
 		}
 
