@@ -163,47 +163,15 @@ public class WorldViewer extends JFrame
 		if (world == null)
 			return;
 
-		if (showRainfallBtn.isSelected() || showFloodsBtn.isSelected())
-		{
-			regenerate_Rainfall(world.annualRains);
-		}
-		else
-		{
-
 		int [] colors = new int[world.g.getCellCount()];
-		view.rivers = new int[world.g.getCellCount()];
-
 		for (int i = 0; i < colors.length; i++)
 		{
-			int el = world.elevation[i];
+			colors[i] = colorOfRegion(i+1);
+		}
 
-			if (showTemperatureBtn.isSelected())
-			{
-				int t = world.temperature[i];
-				colors[i] = t >= 280 ? 0xaa0000 :
-					t >= 235 ? 0xdd2200 :
-					t >= 180 ? 0xff5500 :
-					t >= 122 ? 0xffee00 :
-					t >= 80 ? 0x44cc00 :
-					t >= 30 ? 0x00ccee :
-					t >= -20 ? 0x2233aa :
-					0xbb55cc;
-			}
-			else if (showElevationBtn.isSelected())
-			{
-				int x = el + 4;
-				x = (x >= 0 ? x : 0);
-				x = (x < ELEVATION_COLORS.length ? x :
-					ELEVATION_COLORS.length - 1);
-				colors[i] = ELEVATION_COLORS[x];
-			}
-			else
-			{
-				colors[i] = el < 0 ? 0x0000ff :
-					world.lakeLevel[i] > el ? 0x8888ff :
-					0x00ff00;
-			}
-
+		view.rivers = new int[world.g.getCellCount()];
+		for (int i = 0; i < colors.length; i++)
+		{
 			if (showRiversBtn.isSelected())
 			{
 				if (world.riverVolume[i] > 0)
@@ -215,30 +183,43 @@ public class WorldViewer extends JFrame
 			}
 		}
 		view.generateImage(world.g, colors);
-		}
 	}
 
-	void regenerate_Rainfall(int [] rainfall)
+	int colorOfRegion(int regionId)
 	{
-		boolean showRains = showRainfallBtn.isSelected();
-		boolean showFloods = showFloodsBtn.isSelected();
+		int i = regionId - 1;
 
-		if (showRiversBtn.isSelected())
-		{
-			view.rivers = new int[rainfall.length];
-		}
-		else
-		{
-			view.rivers = null;
-		}
+		int el = world.elevation[i];
 
-		int [] colors = new int[rainfall.length];
-		for (int i = 0; i < rainfall.length; i++)
+		if (showTemperatureBtn.isSelected())
 		{
-			if (world.elevation[i] >= 0)
+			int t = world.temperature[i];
+			return t >= 280 ? 0xaa0000 :
+				t >= 235 ? 0xdd2200 :
+				t >= 180 ? 0xff5500 :
+				t >= 122 ? 0xffee00 :
+				t >= 80 ? 0x44cc00 :
+				t >= 30 ? 0x00ccee :
+				t >= -20 ? 0x2233aa :
+				0xbb55cc;
+		}
+		else if (showElevationBtn.isSelected())
+		{
+			int x = el + 4;
+			x = (x >= 0 ? x : 0);
+			x = (x < ELEVATION_COLORS.length ? x :
+				ELEVATION_COLORS.length - 1);
+			return ELEVATION_COLORS[x];
+		}
+		else if (showRainfallBtn.isSelected() || showFloodsBtn.isSelected())
+		{
+			boolean showRains = showRainfallBtn.isSelected();
+			boolean showFloods = showFloodsBtn.isSelected();
+
+			if (el >= 0)
 			{
 				int moisture = 0
-					+ (showRains ? rainfall[i] : 0)
+					+ (showRains ? world.annualRains[i] : 0)
 					+ (showFloods ? world.floods[i] * 360 : 0)
 					;
 				int x = (int)Math.floor(Math.log((double)moisture / MakeWorld.AVERAGE_RAINFALL) * 4) + RAINFALL_COLORS.length / 2;
@@ -247,23 +228,20 @@ public class WorldViewer extends JFrame
 				if (x >= RAINFALL_COLORS.length)
 					x = RAINFALL_COLORS.length-1;
 	
-				colors[i] = RAINFALL_COLORS[x];
+				return RAINFALL_COLORS[x];
 			}
 			else
 			{
-				colors[i] = 0xdddddd;
-			}
-
-			if (view.rivers != null)
-			{
-				if (world.riverVolume[i] > 0)
-					view.rivers[i] = world.drainage[i];
+				return 0xdddddd;
 			}
 		}
-
-		view.generateImage(world.g, colors);
+		else
+		{
+			return el < 0 ? 0x0000ff :
+				world.lakeLevel[i] > el ? 0x8888ff :
+				0x00ff00;
+		}
 	}
-
 	class WorldView extends JPanel
 		implements MouseListener, MouseMotionListener
 	{
