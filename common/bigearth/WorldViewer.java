@@ -426,8 +426,8 @@ public class WorldViewer extends JFrame
 
 		void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
 		{
-			TerrainGeometry tg = new TerrainGeometry(world.g, 0);
-			int sz = tg.getTilesInRegion(regionId);
+			TerrainGeometry tg = new TerrainGeometry(world.g, 1);
+			int sz = tg.getRegionTileCount(regionId);
 
 			for (int terrainId = 0; terrainId < sz; terrainId++)
 			{

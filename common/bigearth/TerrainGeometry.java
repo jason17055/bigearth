@@ -13,7 +13,11 @@ public class TerrainGeometry
 		this.depth = depth;
 	}
 
-	public int getTilesInRegion(int regionId)
+	/**
+	 * Returns the number of terrain tiles in a given region.
+	 * @param regionId identifies a region
+	 */
+	public int getRegionTileCount(int regionId)
 	{
 		return g.getNeighbors(regionId).length * (1 << (2*depth));
 	}
@@ -54,8 +58,45 @@ public class TerrainGeometry
 
 			return new Point3d[] { c, f, e };
 		}
-		assert false;
-		return null;
+
+		Point3d [] basePts = getTerrainBoundary(regionId, tile/4, de-1);
+		int x = tile%4;
+		if (x == 0)
+		{
+			Point3d p1 = new Point3d();
+			Point3d p2 = new Point3d();
+			p2.interpolate(basePts[0], basePts[1], 0.5);
+			p1.interpolate(basePts[0], basePts[2], 0.5);
+			return new Point3d[] { basePts[0], p2, p1 };
+		}
+		else if (x == 1)
+		{
+			Point3d p0 = new Point3d();
+			Point3d p2 = new Point3d();
+			p0.interpolate(basePts[1], basePts[2], 0.5);
+			p2.interpolate(basePts[1], basePts[0], 0.5);
+			return new Point3d[] { p0, p2, basePts[1] };
+		}
+		else if (x == 2)
+		{
+			Point3d p0 = new Point3d();
+			Point3d p1 = new Point3d();
+			p0.interpolate(basePts[2], basePts[1], 0.5);
+			p1.interpolate(basePts[2], basePts[0], 0.5);
+			return new Point3d[] { p0, basePts[2], p1 };
+		}
+		else
+		{
+			assert x == 3;
+
+			Point3d p0 = new Point3d();
+			Point3d p1 = new Point3d();
+			Point3d p2 = new Point3d();
+			p0.interpolate(basePts[1], basePts[2], 0.5);
+			p1.interpolate(basePts[0], basePts[2], 0.5);
+			p2.interpolate(basePts[0], basePts[1], 0.5);
+			return new Point3d[] { p0, p2, p1 };
+		}
 	}
 
 	TileInfo getTileInfo(int regionId, int tile, int d)
