@@ -5,6 +5,11 @@ import javax.vecmath.Point3d;
 public interface Geometry
 {
 	int getCellCount();
+
+	/**
+	 * Returns an array of cells neighboring the given cell.
+	 * The neighbors are listed in counter-clockwise order.
+	 */
 	int [] getNeighbors(int cellId);
 
 	interface EdgeId

@@ -370,11 +370,11 @@ public class SphereGeometry implements Geometry
 				return fromPolar(0, Math.PI/2);
 			else if (cellIdx <= 6)
 				return fromPolar(
-					Math.PI * 2.0/5.0 * (cellIdx-1),
+					-(Math.PI * 2.0/5.0 * (cellIdx-1)),
 					ATAN12);
 			else if (cellIdx <= 11)
 				return fromPolar(
-					Math.PI * 2.0/5.0 * (cellIdx-5.5),
+					-(Math.PI * 2.0/5.0 * (cellIdx-5.5)),
 					-ATAN12);
 			else
 				return fromPolar(0, -Math.PI/2);
