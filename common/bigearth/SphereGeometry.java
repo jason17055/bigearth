@@ -457,7 +457,8 @@ public class SphereGeometry implements Geometry
 
 	private static final double ATAN12 = Math.atan(0.5);
 
-	int nearestTo(Point3d pt)
+	//implements Geometry
+	public int findCell(Point3d pt)
 	{
 		int best = 1;
 		double bestDist = Double.POSITIVE_INFINITY;
