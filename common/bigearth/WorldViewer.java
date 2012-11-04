@@ -289,10 +289,28 @@ public class WorldViewer extends JFrame
 		else
 		{
 			return el < 0 ? 0x0000ff :
-				world.lakeLevel[i] > el ? 0x8888ff :
+				world.lakeLevel[i] > el ? 0x6666ff :
 				0x00ff00;
 		}
 	}
+
+	void onTerrainClicked(int regionId, int terrainId)
+	{
+		RegionDetail r = world.regions[regionId-1];
+		if (selectedTool.equals("grass"))
+		{
+			r.setTerrainType(terrainId, TerrainType.GRASS);
+		}
+		else if (selectedTool.equals("ocean"))
+		{
+			r.setTerrainType(terrainId, TerrainType.OCEAN);
+		}
+		else if (selectedTool.equals("lake"))
+		{
+			r.setTerrainType(terrainId, TerrainType.LAKE);
+		}
+	}
+
 	class WorldView extends JPanel
 		implements MouseListener, MouseMotionListener
 	{
@@ -578,11 +596,6 @@ public class WorldViewer extends JFrame
 			TerrainGeometry tg = new TerrainGeometry(world.g, 2);
 			int sz = tg.getRegionTileCount(regionId);
 
-			int [] neighborRegions = new int[3];
-			int [] neighborTiles = new int[3];
-			if (selectedRegion != 0)
-			tg.getNeighborTiles(neighborRegions, neighborTiles, selectedRegion, selectedTerrain);
-
 			for (int terrainId = 0; terrainId < sz; terrainId++)
 			{
 				Point3d [] pp = tg.getTerrainBoundary(regionId, terrainId);
@@ -598,25 +611,33 @@ public class WorldViewer extends JFrame
 					sum_x += p.x;
 					sum_y += p.y;
 				}
-				gr.setColor(new Color(
-					regionId == selectedRegion &&
-					terrainId == selectedTerrain ? 0xffffff :
-					(regionId == neighborRegions[0] && terrainId == neighborTiles[0]) ||
-					(regionId == neighborRegions[1] && terrainId == neighborTiles[1]) ||
-					(regionId == neighborRegions[2] && terrainId == neighborTiles[2]) ? 0xffff00 :
-					colors[regionId-1]));
+
+				if (r.terrains[terrainId] != 0)
+				{
+					gr.setColor(TerrainType.load(r.terrains[terrainId]).color);
+				}
+				else
+				{
+					gr.setColor(new Color( colors[regionId-1]) );
+				}
 				gr.fillPolygon(x_coords, y_coords, pp.length);
 
-				gr.setColor(Color.BLACK);
+				boolean isSelected = regionId == selectedRegion &&
+					terrainId == selectedTerrain;
+
+				gr.setColor(isSelected ? Color.YELLOW : Color.BLACK);
 				gr.drawPolygon(x_coords, y_coords, pp.length);
 
-			if (zoomFactor >= 32)
+				if (zoomFactor >= 64)
+				{
+				gr.setColor(Color.BLACK);
 				gr.drawString(new Integer(terrainId).toString(),
 					sum_x/pp.length,
 					sum_y/pp.length);
+				}
 			}
 
-			if (regionId == selectedRegion)
+			if (regionId == selectedRegion && false)
 			{
 				Point3d [] pp = tg.getTerrainBoundary(regionId, selectedTerrain);
 				Point p = toScreen(pp[0]);
@@ -734,6 +755,18 @@ public class WorldViewer extends JFrame
 			if (ev.getButton() == MouseEvent.BUTTON1)
 			{
 				dragStart = ev.getPoint();
+			}
+			else if (ev.getButton() == MouseEvent.BUTTON3)
+			{
+				Point3d pt = fromScreen(ev.getPoint());
+				if (zoomFactor >= 16)
+				{
+					TerrainGeometry tg = new TerrainGeometry(world.g, 2);
+					selectedRegion = world.g.findCell(pt);
+					selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
+					onTerrainClicked(selectedRegion, selectedTerrain);
+					regenerate();
+				}
 			}
 		}
 

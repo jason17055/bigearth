@@ -5,11 +5,16 @@ import javax.vecmath.*;
 class RegionDetail
 {
 	int numSides;
-	int [] terrains;
+	char [] terrains;
 
 	RegionDetail(int numSides)
 	{
 		this.numSides = numSides;
-		this.terrains = new int[numSides * 16];
+		this.terrains = new char[numSides * 16];
+	}
+
+	public void setTerrainType(int terrainId, TerrainType type)
+	{
+		terrains[terrainId] = type.id;
 	}
 }
