@@ -1,4 +1,4 @@
-classpath = ../jlib/vecmath.jar
+classpath = "../jlib/vecmath.jar;../jlib/jackson-core-2.1.0.jar"
 
 all:
 	mkdir -p classes

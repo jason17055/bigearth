@@ -96,12 +96,13 @@ public class WorldViewer extends JFrame
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-		File f = new File("world.txt");
+		File f = new File("world1");
 		if (f.exists())
 		{
 			world = new MakeWorld();
 			world.load(f);
 			regenerate();
+			world.save(f);
 		}
 	}
 

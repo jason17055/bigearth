@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 import javax.vecmath.*;
 //import com.mongodb.*;
+import com.fasterxml.jackson.core.*;
 
 public class MakeWorld
 {
@@ -58,57 +59,104 @@ public class MakeWorld
 		this.geometrySize = geometrySize;
 	}
 
-	public void save(File outFile)
+	public void save(File worldDir)
 		throws IOException
 	{
-		PrintWriter out = new PrintWriter(
-			new OutputStreamWriter(
-				new FileOutputStream(outFile)));
-		out.println(geometrySize);
-		for (int i = 0; i < g.getCellCount(); i++)
-		{
-			out.printf("%d %d %d %d %d %d %d\n",
-				elevation[i],
-				temperature[i],
-				annualRains[i],
-				drainage[i],
-				riverVolume[i],
-				lakeLevel[i],
-				floods[i]);
-		}
-		out.close();
+		File f2 = new File(worldDir, "world.txt");
+		JsonGenerator j = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
+		j.writeStartObject();
+		j.writeNumberField("size", geometrySize);
+		arrayHelper(j, "elevation", elevation);
+		arrayHelper(j, "temperature", temperature);
+		arrayHelper(j, "annualRains", annualRains);
+		arrayHelper(j, "drainage", drainage);
+		arrayHelper(j, "riverVolume", riverVolume);
+		arrayHelper(j, "lakeLevel", lakeLevel);
+		arrayHelper(j, "floods", floods);
+		j.writeEndObject();
+		j.close();
 	}
 
-	public void load(File inFile)
+	private static void arrayHelper(JsonGenerator j, String fieldName, int [] a)
 		throws IOException
 	{
-		BufferedReader in = new BufferedReader(
-			new InputStreamReader(
-				new FileInputStream(inFile)));
-		this.geometrySize = Integer.parseInt(in.readLine());
+		j.writeArrayFieldStart(fieldName);
+		for (int i = 0; i < a.length; i++)
+		{
+			j.writeNumber(a[i]);
+		}
+		j.writeEndArray();
+	}
+
+	private static int [] arrayHelper(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_ARRAY;
+
+		int [] tmp = new int[1000];
+		int count = 0;
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			if (count == tmp.length)
+			{
+				tmp = Arrays.copyOf(tmp, tmp.length*2);
+			}
+			tmp[count++] = in.getIntValue();
+		}
+
+		return Arrays.copyOf(tmp, count);
+	}
+
+	public void load(File worldDir)
+		throws IOException
+	{
+		File inFile = new File(worldDir, "world.txt");
+		JsonParser in = new JsonFactory().createJsonParser(inFile);
+
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("size"))
+				geometrySize = in.nextIntValue(0);
+			else if (s.equals("elevation"))
+				elevation = arrayHelper(in);
+			else if (s.equals("temperature"))
+				temperature = arrayHelper(in);
+			else if (s.equals("annualRains"))
+				annualRains = arrayHelper(in);
+			else if (s.equals("drainage"))
+				drainage = arrayHelper(in);
+			else if (s.equals("riverVolume"))
+				riverVolume = arrayHelper(in);
+			else if (s.equals("lakeLevel"))
+				lakeLevel = arrayHelper(in);
+			else if (s.equals("floods"))
+				floods = arrayHelper(in);
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+				System.err.println("unrecognized property: "+s);
+			}
+		}
+
+		in.close();
+
 		this.g = new SphereGeometry(geometrySize);
 
-		int numCells = g.getCellCount();
-		this.elevation = new int[numCells];
-		this.temperature = new int[numCells];
-		this.annualRains = new int[numCells];
-		this.drainage = new int[numCells];
-		this.riverVolume = new int[numCells];
-		this.lakeLevel = new int[numCells];
-		this.floods = new int[numCells];
-		this.regions = new RegionDetail[numCells];
-		for (int i = 0; i < numCells; i++)
-		{
-			String [] parts = in.readLine().split(" ");
-			elevation[i] = Integer.parseInt(parts[0]);
-			temperature[i] = Integer.parseInt(parts[1]);
-			annualRains[i] = Integer.parseInt(parts[2]);
-			drainage[i] = Integer.parseInt(parts[3]);
-			riverVolume[i] = Integer.parseInt(parts[4]);
-			lakeLevel[i] = Integer.parseInt(parts[5]);
-			floods[i] = Integer.parseInt(parts[6]);
-		}
-		in.close();
+		assert this.elevation != null;
+		assert this.temperature != null;
+		assert this.annualRains != null;
+		assert this.drainage != null;
+		assert this.riverVolume != null;
+		assert this.lakeLevel != null;
+		assert this.floods != null;
+
+		this.regions = new RegionDetail[g.getCellCount()];
 	}
 
 	public void generate()
