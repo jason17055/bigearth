@@ -332,8 +332,8 @@ System.out.println("after transform : "+pt);
 
 			// prevent extreme screen coordinates
 			// (i.e. coordinates that might overflow 32-bit int)
-			x = Math.max(-WIDTH, Math.min(WIDTH, x));
-			y = Math.max(-HEIGHT, Math.min(HEIGHT, y));
+			x = Math.max(-2*WIDTH, Math.min(2*WIDTH, x));
+			y = Math.max(-2*HEIGHT, Math.min(2*HEIGHT, y));
 
 			return new Point(
 				(int)Math.round(x) + WIDTH/2 + xOffset,
@@ -354,8 +354,8 @@ System.out.println("after transform : "+pt);
 
 			// prevent extreme screen coordinates
 			// (i.e. coordinates that might overflow 32-bit int)
-			x = Math.max(-WIDTH, Math.min(WIDTH, x));
-			y = Math.max(-HEIGHT, Math.min(HEIGHT, y));
+			x = Math.max(-2*WIDTH, Math.min(2*WIDTH, x));
+			y = Math.max(-2*HEIGHT, Math.min(2*HEIGHT, y));
 
 			return new Point(
 				(int)Math.round(x) + WIDTH/2 + xOffset,
@@ -438,8 +438,8 @@ System.out.println("after transform : "+pt);
 				for (int n : g.getNeighbors(i+1))
 				{
 					Point p = pts[n-1];
-					if (p.x >= -WIDTH && p.x < min_x) min_x = p.x;
-					if (p.y >= -HEIGHT && p.y < min_y) min_y = p.y;
+					if (p.x > -WIDTH && p.x < min_x) min_x = p.x;
+					if (p.y > -HEIGHT && p.y < min_y) min_y = p.y;
 					if (p.x < 2*WIDTH && p.x > max_x) max_x = p.x;
 					if (p.y < 2*HEIGHT && p.y > max_y) max_y = p.y;
 				}
