@@ -6,6 +6,8 @@ public interface Geometry
 {
 	int getCellCount();
 
+	int getNeighborCount(int cellId);
+
 	/**
 	 * Returns an array of cells neighboring the given cell.
 	 * The neighbors are listed in counter-clockwise order.

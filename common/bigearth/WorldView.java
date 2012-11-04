@@ -378,7 +378,7 @@ public class WorldView extends JPanel
 
 	void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
 	{
-		TerrainGeometry tg = new TerrainGeometry(world.g, r.detailLevel);
+		TerrainGeometry tg = new TerrainGeometry(world.g, world.regionDetailLevel);
 		int sz = tg.getRegionTileCount(regionId);
 
 		for (int terrainId = 0; terrainId < sz; terrainId++)

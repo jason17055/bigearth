@@ -3,7 +3,6 @@ package bigearth;
 import java.io.*;
 import java.util.*;
 import javax.vecmath.*;
-//import com.mongodb.*;
 import com.fasterxml.jackson.core.*;
 
 public class MakeWorld
@@ -234,7 +233,7 @@ public class MakeWorld
 		{
 			try
 			{
-				return RegionDetail.load(regionFile);
+				return RegionDetail.load(regionFile, this, regionId);
 			}
 			catch (IOException e)
 			{
@@ -244,8 +243,7 @@ public class MakeWorld
 		}
 		else
 		{
-			int [] nn = g.getNeighbors(regionId);
-			return new RegionDetail(nn.length, regionDetailLevel);
+			return RegionDetail.create(this, regionId);
 		}
 	}
 

@@ -152,6 +152,12 @@ public class SphereGeometry implements Geometry
 	}
 
 	//implements Geometry
+	public int getNeighborCount(int cellId)
+	{
+		return cellId <= 12 ? 5 : 6;
+	}
+
+	//implements Geometry
 	public int [] getNeighbors(int cellId)
 	{
 		if (cellId < 1)

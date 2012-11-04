@@ -6,17 +6,24 @@ import com.fasterxml.jackson.core.*;
 
 class RegionDetail
 {
-	int numSides;
-	int detailLevel;
+	MakeWorld world;
+	int regionId;
+
 	int wildlife;
-	char [] terrains;
+	int [] terrains;
 	boolean dirty;
 
-	RegionDetail(int numSides, int detailLevel)
+	RegionDetail(MakeWorld world, int regionId)
 	{
-		this.numSides = numSides;
-		this.detailLevel = detailLevel;
-		this.terrains = new char[numSides * (1 << (detailLevel*2))];
+		this.world = world;
+		this.regionId = regionId;
+	}
+
+	private void init()
+	{
+		int numSides = world.g.getNeighborCount(regionId);
+		int detailLevel = world.regionDetailLevel;
+		this.terrains = new int[numSides * (1 << (detailLevel*2))];
 	}
 
 	public void adjustWildlife(int delta)
@@ -39,8 +46,6 @@ class RegionDetail
 		JsonGenerator out = new JsonFactory().createJsonGenerator(regionFile,
 					JsonEncoding.UTF8);
 		out.writeStartObject();
-		out.writeNumberField("numSides", numSides);
-		out.writeNumberField("detailLevel", detailLevel);
 		out.writeNumberField("wildlife", wildlife);
 		out.writeArrayFieldStart("terrains");
 		for (int i = 0; i < terrains.length; i++)
@@ -52,26 +57,32 @@ class RegionDetail
 		out.close();
 	}
 
-	static RegionDetail load(File regionFile)
+	static RegionDetail create(MakeWorld world, int regionId)
+	{
+		RegionDetail m = new RegionDetail(world, regionId);
+		m.init();
+		return m;
+	}
+
+	static RegionDetail load(File regionFile, MakeWorld world, int regionId)
+		throws IOException
+	{
+		RegionDetail m = new RegionDetail(world, regionId);
+		m.load(regionFile);
+		return m;
+	}
+
+	void load(File regionFile)
 		throws IOException
 	{
 		JsonParser in = new JsonFactory().createJsonParser(regionFile);
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
-		int numSides = 6;
-		int detailLevel = 0;
-		int wildlife = 0;
-		int [] terrains = null;
-
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			if (s.equals("numSides"))
-				numSides = in.nextIntValue(numSides);
-			else if (s.equals("detailLevel"))
-				detailLevel = in.nextIntValue(detailLevel);
-			else if (s.equals("terrains"))
+			if (s.equals("terrains"))
 				terrains = MakeWorld.json_readIntArray(in);
 			else if (s.equals("wildlife"))
 				wildlife = in.nextIntValue(wildlife);
@@ -82,16 +93,5 @@ class RegionDetail
 				System.err.println("unrecognized property: "+s);
 			}
 		}
-
-		RegionDetail m = new RegionDetail(numSides, detailLevel);
-		m.wildlife = wildlife;
-		if (terrains != null)
-		{
-			for (int i = 0; i < m.terrains.length; i++)
-			{
-				m.terrains[i] = (char) terrains[i];
-			}
-		}
-		return m;
 	}
 }
