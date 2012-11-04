@@ -424,37 +424,70 @@ public class WorldViewer extends JFrame
 			{
 				pts[i] = toScreen(g.getCenterPoint(i+1));
 			}
-			Rectangle [] regionBounds = new Rectangle[colors.length];
-			for (int i = 0; i < pts.length; i++)
-			{
-				int min_x = pts[i].x;
-				int min_y = pts[i].y;
-				int max_x = pts[i].x;
-				int max_y = pts[i].y;
 
-				for (int n : g.getNeighbors(i+1))
+			Rectangle [] regionBounds;
+			if (zoomFactor >= 4)
+			{
+				regionBounds = new Rectangle[colors.length];
+				for (int i = 0; i < pts.length; i++)
 				{
-					Point p = pts[n-1];
-					if (p.x > -WIDTH && p.x < min_x) min_x = p.x;
-					if (p.y > -HEIGHT && p.y < min_y) min_y = p.y;
-					if (p.x < 2*WIDTH && p.x > max_x) max_x = p.x;
-					if (p.y < 2*HEIGHT && p.y > max_y) max_y = p.y;
+					int min_x = pts[i].x;
+					int min_y = pts[i].y;
+					int max_x = pts[i].x;
+					int max_y = pts[i].y;
+
+					for (int n : g.getNeighbors(i+1))
+					{
+						Point p = pts[n-1];
+						if (p.x > -WIDTH && p.x < min_x) min_x = p.x;
+						if (p.y > -HEIGHT && p.y < min_y) min_y = p.y;
+						if (p.x < 2*WIDTH && p.x > max_x) max_x = p.x;
+						if (p.y < 2*HEIGHT && p.y > max_y) max_y = p.y;
+					}
+					regionBounds[i] = new Rectangle(
+						min_x,
+						min_y,
+						max_x-min_x+1,
+						max_y-min_y+1);
 				}
-				regionBounds[i] = new Rectangle(
-					min_x,
-					min_y,
-					max_x-min_x+1,
-					max_y-min_y+1);
 			}
+			else
+			{
+				regionBounds = null;
+			}
+
+			Rectangle screen = new Rectangle(0,0,WIDTH,HEIGHT);
 
 			this.image = new BufferedImage(WIDTH,HEIGHT,
 					BufferedImage.TYPE_INT_RGB);
-			if (zoomFactor < 16)
+			Graphics2D gr = image.createGraphics();
+
+			if (zoomFactor < 8)
 			{
 				drawMap(image, pts);
 			}
+			else if (zoomFactor < 16)
+			{
+				for (int i = 0; i < colors.length; i++)
+				{
+					if (!screen.intersects(regionBounds[i]))
+						continue;
 
-			Graphics2D gr = image.createGraphics();
+					Point3d [] bb = world.g.getCellBoundary(i+1);
+					int [] x_coords = new int[bb.length];
+					int [] y_coords = new int[bb.length];
+					for (int j = 0; j < bb.length; j++)
+					{
+						Point p = toScreen(bb[j]);
+						x_coords[j] = p.x;
+						y_coords[j] = p.y;
+					}
+
+					gr.setColor(new Color(colors[i]));
+					gr.fillPolygon(x_coords, y_coords, bb.length);
+				}
+			}
+
 			if (rivers != null)
 			{
 				gr.setColor(Color.BLACK);
@@ -472,7 +505,6 @@ public class WorldViewer extends JFrame
 
 			if (zoomFactor >= 16)
 			{
-				Rectangle screen = new Rectangle(0,0,WIDTH,HEIGHT);
 				gr.setColor(Color.BLACK);
 				for (int i = 0; i < world.regions.length; i++)
 				{

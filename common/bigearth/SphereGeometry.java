@@ -445,6 +445,29 @@ public class SphereGeometry implements Geometry
 		}
 	}
 
+	public Point3d [] getCellBoundary(int cellId)
+	{
+		Point3d myCp = getCenterPoint(cellId);
+		int [] nn = getNeighbors(cellId);
+		Point3d [] neighborCp = new Point3d[nn.length];
+		for (int i = 0; i < nn.length; i++)
+		{
+			neighborCp[i] = getCenterPoint(nn[i]);
+		}
+
+		Point3d [] result = new Point3d[nn.length];
+		Vector3d v = new Vector3d();
+		for (int i = 0; i < nn.length; i++)
+		{
+			v.set(myCp);
+			v.add(neighborCp[i]);
+			v.add(neighborCp[(i+1)%nn.length]);
+			v.normalize();
+			result[i] = new Point3d(v);
+		}
+		return result;
+	}
+
 	private static final double ATAN12 = Math.atan(0.5);
 
 	//implements Geometry
