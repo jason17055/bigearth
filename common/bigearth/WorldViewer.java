@@ -3,6 +3,7 @@ package bigearth;
 import java.io.*;
 import java.util.*;
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -29,6 +30,14 @@ public class WorldViewer extends JFrame
 
 	JPanel toolsPane;
 	Map<String, JToggleButton> toolBtns;
+
+	JPanel regionPane;
+	JLabel biomeLbl;
+	JLabel wildlifeLbl;
+	JLabel nativesLbl;
+	JLabel elevationLbl;
+	JLabel temperatureLbl;
+	JLabel moistureLbl;
 
 	private void addToolButton(String command)
 	{
@@ -59,6 +68,11 @@ public class WorldViewer extends JFrame
 		selectedTool = "hand";
 		toolBtns.get("hand").setSelected(true);
 
+		regionPane = new JPanel();
+		regionPane.setVisible(false);
+		initRegionPane();
+		toolsPane.add(regionPane);
+
 		JPanel buttonsPane = new JPanel();
 		add(buttonsPane, BorderLayout.SOUTH);
 
@@ -88,6 +102,54 @@ public class WorldViewer extends JFrame
 		{
 			setWorld(MakeWorld.load(f));
 		}
+	}
+
+	private void initRegionPane()
+	{
+		regionPane.setLayout(new GridBagLayout());
+		GridBagConstraints c_l = new GridBagConstraints();
+		c_l.gridx = 0;
+		c_l.anchor = GridBagConstraints.FIRST_LINE_START;
+
+		GridBagConstraints c_r = new GridBagConstraints();
+		c_r.gridx = 1;
+		c_r.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		c_l.gridy = c_r.gridy = 0;
+		regionPane.add(new JLabel("Biome"), c_l);
+
+		biomeLbl = new JLabel();
+		regionPane.add(biomeLbl, c_r);
+
+		c_l.gridy = c_r.gridy = 1;
+		regionPane.add(new JLabel("Wildlife"), c_l);
+
+		wildlifeLbl = new JLabel();
+		regionPane.add(wildlifeLbl, c_r);
+
+		c_l.gridy = c_r.gridy = 2;
+		regionPane.add(new JLabel("Natives"), c_l);
+
+		nativesLbl = new JLabel();
+		regionPane.add(nativesLbl, c_r);
+
+		c_l.gridy = c_r.gridy = 3;
+		regionPane.add(new JLabel("Elevation"), c_l);
+
+		elevationLbl = new JLabel();
+		regionPane.add(elevationLbl, c_r);
+
+		c_l.gridy = c_r.gridy = 4;
+		regionPane.add(new JLabel("Temperature"), c_l);
+
+		temperatureLbl = new JLabel();
+		regionPane.add(temperatureLbl, c_r);
+
+		c_l.gridy = c_r.gridy = 5;
+		regionPane.add(new JLabel("Moisture"), c_l);
+
+		moistureLbl = new JLabel();
+		regionPane.add(moistureLbl, c_r);
 	}
 
 	void setWorld(MakeWorld newWorld)
@@ -394,8 +456,25 @@ public class WorldViewer extends JFrame
 		}
 	}
 
+	public void onRegionSelected(int regionId)
+	{
+		biomeLbl.setText("GRASS");
+		wildlifeLbl.setText("0");
+		nativesLbl.setText("0");
+		elevationLbl.setText(String.format("%d", world.elevation[regionId-1]));
+		temperatureLbl.setText(String.format("%.1f", world.temperature[regionId-1]/10.0));
+		moistureLbl.setText(String.format("%d", world.annualRains[regionId-1] + world.floods[regionId-1]));
+
+		regionPane.setBorder(
+			BorderFactory.createTitledBorder("Region "+regionId)
+			);
+		regionPane.setVisible(true);
+	}
+
 	public void onTerrainClicked(int regionId, int terrainId)
 	{
+		onRegionSelected(regionId);
+
 		RegionDetail r = world.regions[regionId-1];
 		if (selectedTool.equals("grass"))
 		{
