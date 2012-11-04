@@ -18,7 +18,7 @@ public class MakeWorld
 	int [] elevation;
 	int [] temperature; //in 10th degrees Celsius
 	int [] annualRains; //in millimeters-per-year
-	int [] drainage;
+	int [] drainage;    //pointers to neighboring regions
 	int [] riverVolume;
 	int [] lakeLevel;
 	int [] floods;

@@ -77,13 +77,28 @@ public class WorldViewer extends JFrame
 
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent ev) {
+				onWindowClosed();
+			}});
 
 		File f = new File("world1");
 		if (f.exists())
 		{
 			world = MakeWorld.load(f);
 			reloadImage();
+		}
+	}
+
+	private void onWindowClosed()
+	{
+		try
+		{
 			world.save();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
 		}
 	}
 
