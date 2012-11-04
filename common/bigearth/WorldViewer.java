@@ -1,6 +1,7 @@
 package bigearth;
 
 import java.io.*;
+import java.util.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -26,11 +27,36 @@ public class WorldViewer extends JFrame
 	JButton zoomInBtn;
 	JButton zoomOutBtn;
 
+	JPanel toolsPane;
+	Map<String, JToggleButton> toolBtns;
+
+	private void addToolButton(String command)
+	{
+		JToggleButton btn = new JToggleButton(command);
+		btn.setActionCommand(command);
+		btn.addActionListener(this);
+		toolsPane.add(btn);
+		toolBtns.put(command, btn);
+	}
+
 	WorldViewer() throws IOException
 	{
 		super("World Viewer");
 		view = new WorldView();
 		add(view, BorderLayout.CENTER);
+
+		toolsPane = new JPanel();
+		toolsPane.setLayout(new BoxLayout(toolsPane, BoxLayout.Y_AXIS));
+		add(toolsPane, BorderLayout.WEST);
+
+		toolBtns = new HashMap<String, JToggleButton>();
+		addToolButton("hand");
+		addToolButton("grass");
+		addToolButton("ocean");
+		addToolButton("lake");
+
+		selectedTool = "hand";
+		toolBtns.get("hand").setSelected(true);
 
 		JPanel buttonsPane = new JPanel();
 		add(buttonsPane, BorderLayout.SOUTH);
@@ -80,11 +106,36 @@ public class WorldViewer extends JFrame
 	}
 
 	MakeWorld world;
+	String selectedTool;
+
+	void onToolSelected(String toolName)
+	{
+		if (toolBtns.get(toolName).isSelected())
+		{
+			// unselect all other tools
+			for (String s : toolBtns.keySet())
+			{
+				if (!s.equals(toolName))
+					toolBtns.get(s).setSelected(false);
+			}
+			selectedTool = toolName;
+		}
+		else
+		{
+			// select the hand tool
+			selectedTool = "hand";
+			toolBtns.get(selectedTool).setSelected(true);
+		}
+	}
 
 	//implements ActionListener
 	public void actionPerformed(ActionEvent ev)
 	{
-		if (ev.getSource() == generateBtn)
+		if (toolBtns.containsKey(ev.getActionCommand()))
+		{
+			onToolSelected(ev.getActionCommand());
+		}
+		else if (ev.getSource() == generateBtn)
 		{
 			this.world = new MakeWorld("w1", 20);
 			world.generate();
