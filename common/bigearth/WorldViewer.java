@@ -327,7 +327,7 @@ public class WorldViewer extends JFrame
 
 		WorldView()
 		{
-			setPreferredSize(new Dimension(720,360));
+			setPreferredSize(new Dimension(WIDTH,HEIGHT));
 			addMouseListener(this);
 			addMouseMotionListener(this);
 			zoomFactor = 1.0;
@@ -340,7 +340,7 @@ public class WorldViewer extends JFrame
 
 		boolean tryPixel(int x, int y, int c)
 		{
-			if (x >= 0 && x < 720 && y >= 0 && y < 360)
+			if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
 			{
 				if ((image.getRGB(x,y) & 0xffffff) == 0)
 				{
