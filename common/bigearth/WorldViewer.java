@@ -19,11 +19,11 @@ public class WorldViewer extends JFrame
 
 	WorldView view;
 	JButton generateBtn;
-	JToggleButton showElevationBtn;
-	JToggleButton showTemperatureBtn;
-	JToggleButton showRainfallBtn;
-	JToggleButton showFloodsBtn;
-	JToggleButton showRiversBtn;
+	JCheckBoxMenuItem showElevationBtn;
+	JCheckBoxMenuItem showTemperatureBtn;
+	JCheckBoxMenuItem showRainfallBtn;
+	JCheckBoxMenuItem showFloodsBtn;
+	JCheckBoxMenuItem showRiversBtn;
 	JButton zoomInBtn;
 	JButton zoomOutBtn;
 
@@ -65,26 +65,6 @@ public class WorldViewer extends JFrame
 		generateBtn.addActionListener(this);
 		buttonsPane.add(generateBtn);
 
-		showElevationBtn = new JToggleButton("Show Elevations");
-		showElevationBtn.addActionListener(this);
-		buttonsPane.add(showElevationBtn);
-
-		showTemperatureBtn = new JToggleButton("Show Temperatures");
-		showTemperatureBtn.addActionListener(this);
-		buttonsPane.add(showTemperatureBtn);
-
-		showRainfallBtn = new JToggleButton("Show Rains");
-		showRainfallBtn.addActionListener(this);
-		buttonsPane.add(showRainfallBtn);
-
-		showFloodsBtn = new JToggleButton("Show Floods");
-		showFloodsBtn.addActionListener(this);
-		buttonsPane.add(showFloodsBtn);
-
-		showRiversBtn = new JToggleButton("Show Rivers");
-		showRiversBtn.addActionListener(this);
-		buttonsPane.add(showRiversBtn);
-
 		zoomInBtn = new JButton("Zoom In");
 		zoomInBtn.addActionListener(this);
 		buttonsPane.add(zoomInBtn);
@@ -92,6 +72,8 @@ public class WorldViewer extends JFrame
 		zoomOutBtn = new JButton("Zoom Out");
 		zoomOutBtn.addActionListener(this);
 		buttonsPane.add(zoomOutBtn);
+
+		initMenu();
 
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -103,6 +85,58 @@ public class WorldViewer extends JFrame
 			regenerate();
 			world.save();
 		}
+	}
+
+	private void onNewWorldClicked()
+	{
+	//TODO
+	}
+
+	protected void initMenu()
+	{
+		JMenuBar menuBar = new JMenuBar();
+
+		JMenu fileMenu = new JMenu("World");
+		menuBar.add(fileMenu);
+
+		JMenuItem menuItem;
+		menuItem = new JMenuItem("New World...");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onNewWorldClicked();
+			}});
+		fileMenu.add(menuItem);
+
+		JMenu viewMenu = new JMenu("View");
+		menuBar.add(viewMenu);
+
+		ActionListener al = new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onViewOptionsChanged(ev);
+			}};
+
+		showElevationBtn = new JCheckBoxMenuItem("Show Elevations");
+		showElevationBtn.addActionListener(al);
+		viewMenu.add(showElevationBtn);
+
+		showTemperatureBtn = new JCheckBoxMenuItem("Show Temperatures");
+		showTemperatureBtn.addActionListener(al);
+		viewMenu.add(showTemperatureBtn);
+
+		showRainfallBtn = new JCheckBoxMenuItem("Show Rains");
+		showRainfallBtn.addActionListener(al);
+		viewMenu.add(showRainfallBtn);
+
+		showFloodsBtn = new JCheckBoxMenuItem("Show Floods");
+		showFloodsBtn.addActionListener(al);
+		viewMenu.add(showFloodsBtn);
+
+		showRiversBtn = new JCheckBoxMenuItem("Show Rivers");
+		showRiversBtn.addActionListener(al);
+		showRiversBtn.setSelected(true);
+		viewMenu.add(showRiversBtn);
+
+		setJMenuBar(menuBar);
 	}
 
 	MakeWorld world;
@@ -128,29 +162,9 @@ public class WorldViewer extends JFrame
 		}
 	}
 
-	//implements ActionListener
-	public void actionPerformed(ActionEvent ev)
+	protected void onViewOptionsChanged(ActionEvent ev)
 	{
-		if (toolBtns.containsKey(ev.getActionCommand()))
-		{
-			onToolSelected(ev.getActionCommand());
-		}
-		else if (ev.getSource() == generateBtn)
-		{
-			this.world = new MakeWorld(new File("world1"), 20);
-			world.generate();
-			try
-			{
-				world.save();
-			}
-			catch (IOException e)
-			{
-				System.err.println(e.getMessage());
-			}
-			regenerate();
-	
-		}
-		else if (ev.getSource() == showElevationBtn)
+		if (ev.getSource() == showElevationBtn)
 		{
 			showTemperatureBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
@@ -179,6 +193,30 @@ public class WorldViewer extends JFrame
 		else if (ev.getSource() == showRiversBtn)
 		{
 			regenerate();
+		}
+	}
+
+	//implements ActionListener
+	public void actionPerformed(ActionEvent ev)
+	{
+		if (toolBtns.containsKey(ev.getActionCommand()))
+		{
+			onToolSelected(ev.getActionCommand());
+		}
+		else if (ev.getSource() == generateBtn)
+		{
+			this.world = new MakeWorld(new File("world1"), 20);
+			world.generate();
+			try
+			{
+				world.save();
+			}
+			catch (IOException e)
+			{
+				System.err.println(e.getMessage());
+			}
+			regenerate();
+	
 		}
 		else if (ev.getSource() == zoomInBtn)
 		{
