@@ -92,6 +92,7 @@ public class WorldViewer extends JFrame
 
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		setLocationRelativeTo(null);
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent ev) {
 				onWindowClosed();
