@@ -31,6 +31,7 @@ class RegionDetail
 					JsonEncoding.UTF8);
 		out.writeStartObject();
 		out.writeNumberField("numSides", numSides);
+		out.writeNumberField("detailLevel", detailLevel);
 		out.writeArrayFieldStart("terrains");
 		for (int i = 0; i < terrains.length; i++)
 		{
