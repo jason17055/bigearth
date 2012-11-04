@@ -99,10 +99,8 @@ public class WorldViewer extends JFrame
 		File f = new File("world1");
 		if (f.exists())
 		{
-			world = new MakeWorld();
-			world.load(f);
+			world = MakeWorld.load(f);
 			regenerate();
-			world.save(f);
 		}
 	}
 
@@ -138,12 +136,13 @@ public class WorldViewer extends JFrame
 		}
 		else if (ev.getSource() == generateBtn)
 		{
-			this.world = new MakeWorld("w1", 20);
+			this.world = new MakeWorld(new File("world1"), 20);
 			world.generate();
 			try
 			{
-			world.save(new File("world.txt"));
-			} catch (IOException e)
+				world.save();
+			}
+			catch (IOException e)
 			{
 				System.err.println(e.getMessage());
 			}

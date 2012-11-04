@@ -10,33 +10,7 @@ public class MakeWorld
 {
 	static final int AVERAGE_RAINFALL = 990;
 
-	public static void main(String [] args)
-		throws Exception
-	{
-		int geometrySize = 25;
-		int baseArg = 0;
-		while (baseArg < args.length && args[baseArg].startsWith("-"))
-		{
-			if (args[baseArg].equals("-size"))
-			{
-				geometrySize = Integer.parseInt(args[baseArg+1]);
-				baseArg += 2;
-			}
-			else
-			{
-				throw new Error("unrecognized argument : " + args[baseArg]);
-			}
-		}
-
-		if (args.length != baseArg + 1)
-			throw new Error("Invalid number of arguments");
-
-		String worldName = args[baseArg++];
-
-		new MakeWorld(worldName, geometrySize).generate();
-	}
-
-	String worldName;
+	File worldDir;
 	int geometrySize;
 
 	SphereGeometry g;
@@ -53,13 +27,13 @@ public class MakeWorld
 	{
 	}
 
-	MakeWorld(String worldName, int geometrySize)
+	MakeWorld(File worldDir, int geometrySize)
 	{
-		this.worldName = worldName;
+		this.worldDir = worldDir;
 		this.geometrySize = geometrySize;
 	}
 
-	public void save(File worldDir)
+	public void save()
 		throws IOException
 	{
 		File f2 = new File(worldDir, "world.txt");
@@ -108,7 +82,15 @@ public class MakeWorld
 		return Arrays.copyOf(tmp, count);
 	}
 
-	public void load(File worldDir)
+	public static MakeWorld load(File worldDir)
+		throws IOException
+	{
+		MakeWorld me = new MakeWorld(worldDir, 0);
+		me.load();
+		return me;
+	}
+
+	public void load()
 		throws IOException
 	{
 		File inFile = new File(worldDir, "world.txt");
