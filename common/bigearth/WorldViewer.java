@@ -385,6 +385,19 @@ public class WorldViewer extends JFrame
 			return pt;
 		}
 
+		void toScreen_a(Point3d [] pts, int [] x_coords, int [] y_coords)
+		{
+			assert pts.length == x_coords.length;
+			assert pts.length == y_coords.length;
+
+			for (int i = 0; i < pts.length; i++)
+			{
+				Point p = toScreen(pts[i]);
+				x_coords[i] = p.x;
+				y_coords[i] = p.y;
+			}
+		}
+
 		Point toScreen(Point3d pt)
 		{
 			pt = new Point3d(pt);
@@ -625,8 +638,11 @@ public class WorldViewer extends JFrame
 				boolean isSelected = regionId == selectedRegion &&
 					terrainId == selectedTerrain;
 
-				gr.setColor(isSelected ? Color.YELLOW : Color.BLACK);
+				if (!isSelected)
+				{
+				gr.setColor(Color.BLACK);
 				gr.drawPolygon(x_coords, y_coords, pp.length);
+				}
 
 				if (zoomFactor >= 64)
 				{
@@ -637,20 +653,15 @@ public class WorldViewer extends JFrame
 				}
 			}
 
-			if (regionId == selectedRegion && false)
+			if (regionId == selectedRegion)
 			{
 				Point3d [] pp = tg.getTerrainBoundary(regionId, selectedTerrain);
-				Point p = toScreen(pp[0]);
-				gr.setColor(Color.RED);
-				gr.fillOval(p.x-5,p.y-5,10,10);
+				int [] x_coords = new int[pp.length];
+				int [] y_coords = new int[pp.length];
+				toScreen_a(pp, x_coords, y_coords);
 
-				p = toScreen(pp[1]);
-				gr.setColor(Color.GREEN);
-				gr.fillOval(p.x-5,p.y-5,10,10);
-
-				p = toScreen(pp[2]);
-				gr.setColor(Color.BLUE);
-				gr.fillOval(p.x-5,p.y-5,10,10);
+				gr.setColor(Color.YELLOW);
+				gr.drawPolygon(x_coords, y_coords, pp.length);
 			}
 		}
 
