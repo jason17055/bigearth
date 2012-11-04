@@ -530,6 +530,7 @@ System.out.println("after transform : "+pt);
 				gr.setColor(Color.BLACK);
 				gr.drawPolygon(x_coords, y_coords, pp.length);
 
+			if (zoomFactor >= 32)
 				gr.drawString(new Integer(terrainId).toString(),
 					sum_x/pp.length,
 					sum_y/pp.length);
@@ -618,11 +619,6 @@ System.out.println("after transform : "+pt);
 
 			// draw latitude lines
 			drawCoordinateLines(g);
-
-			// draw crosshairs to help indicate the center of screen
-			g.setColor(Color.RED);
-			g.drawLine(0,0,WIDTH,HEIGHT);
-			g.drawLine(0,HEIGHT,WIDTH,0);
 		}
 
 		void updateTransformMatrix()
