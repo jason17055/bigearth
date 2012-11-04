@@ -12,6 +12,7 @@ public class MakeWorld
 
 	File worldDir;
 	int geometrySize;
+	int regionDetailLevel;
 
 	SphereGeometry g;
 	int [] elevation;
@@ -31,6 +32,7 @@ public class MakeWorld
 	{
 		this.worldDir = worldDir;
 		this.geometrySize = geometrySize;
+		this.regionDetailLevel = 2;
 	}
 
 	public void save()
@@ -40,6 +42,7 @@ public class MakeWorld
 		JsonGenerator j = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
 		j.writeStartObject();
 		j.writeNumberField("size", geometrySize);
+		j.writeNumberField("regionDetailLevel", regionDetailLevel);
 		arrayHelper(j, "elevation", elevation);
 		arrayHelper(j, "temperature", temperature);
 		arrayHelper(j, "annualRains", annualRains);
@@ -49,6 +52,12 @@ public class MakeWorld
 		arrayHelper(j, "floods", floods);
 		j.writeEndObject();
 		j.close();
+
+		for (int i = 0; i < regions.length; i++)
+		{
+			File regionFile = new File(worldDir, "region"+(i+1)+".txt");
+			regions[i].save(regionFile);
+		}
 	}
 
 	private static void arrayHelper(JsonGenerator j, String fieldName, int [] a)
@@ -62,7 +71,7 @@ public class MakeWorld
 		j.writeEndArray();
 	}
 
-	private static int [] arrayHelper(JsonParser in)
+	static int [] json_readIntArray(JsonParser in)
 		throws IOException
 	{
 		in.nextToken();
@@ -103,21 +112,23 @@ public class MakeWorld
 		{
 			String s = in.getCurrentName();
 			if (s.equals("size"))
-				geometrySize = in.nextIntValue(0);
+				geometrySize = in.nextIntValue(geometrySize);
+			else if (s.equals("regionDetailLevel"))
+				regionDetailLevel = in.nextIntValue(regionDetailLevel);
 			else if (s.equals("elevation"))
-				elevation = arrayHelper(in);
+				elevation = json_readIntArray(in);
 			else if (s.equals("temperature"))
-				temperature = arrayHelper(in);
+				temperature = json_readIntArray(in);
 			else if (s.equals("annualRains"))
-				annualRains = arrayHelper(in);
+				annualRains = json_readIntArray(in);
 			else if (s.equals("drainage"))
-				drainage = arrayHelper(in);
+				drainage = json_readIntArray(in);
 			else if (s.equals("riverVolume"))
-				riverVolume = arrayHelper(in);
+				riverVolume = json_readIntArray(in);
 			else if (s.equals("lakeLevel"))
-				lakeLevel = arrayHelper(in);
+				lakeLevel = json_readIntArray(in);
 			else if (s.equals("floods"))
-				floods = arrayHelper(in);
+				floods = json_readIntArray(in);
 			else
 			{
 				in.nextToken();
@@ -139,6 +150,10 @@ public class MakeWorld
 		assert this.floods != null;
 
 		this.regions = new RegionDetail[g.getCellCount()];
+		for (int i = 0; i < regions.length; i++)
+		{
+			this.regions[i] = loadRegionDetail(i+1);
+		}
 	}
 
 	public void generate()
@@ -200,10 +215,26 @@ public class MakeWorld
 		generateFloods();
 	}
 
-	RegionDetail loadRegionDetail(int regionId)
+	private RegionDetail loadRegionDetail(int regionId)
 	{
-		// may be null
-		return regions[regionId - 1];
+		File regionFile = new File(worldDir, "region"+regionId+".txt");
+		if (regionFile.exists())
+		{
+			try
+			{
+				return RegionDetail.load(regionFile);
+			}
+			catch (IOException e)
+			{
+				// file exists but we got an error reading it
+				throw new Error("unexpected", e);
+			}
+		}
+		else
+		{
+			int [] nn = g.getNeighbors(regionId);
+			return new RegionDetail(nn.length, regionDetailLevel);
+		}
 	}
 
 	void enhanceRegion(int regionId)
@@ -215,8 +246,7 @@ public class MakeWorld
 		for (int i = 0; i < nn.length; i++)
 			neighbors[i] = loadRegionDetail(nn[i]);
 
-		RegionDetail detail = new RegionDetail(nn.length);
-		regions[regionId-1] = detail;
+		//TODO... something...
 	}
 
 	void status(String message)

@@ -101,6 +101,7 @@ public class WorldViewer extends JFrame
 		{
 			world = MakeWorld.load(f);
 			regenerate();
+			world.save();
 		}
 	}
 
