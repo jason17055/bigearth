@@ -445,16 +445,6 @@ public class SphereGeometry implements Geometry
 		}
 	}
 
-	static Point3d fromPolar(double lgt, double lat)
-	{
-		double zz = Math.cos(lat);
-		return new Point3d(
-			Math.cos(lgt) * zz,
-			Math.sin(lgt) * zz,
-			Math.sin(lat)
-			);
-	}
-
 	private static final double ATAN12 = Math.atan(0.5);
 
 	//implements Geometry
@@ -476,5 +466,39 @@ public class SphereGeometry implements Geometry
 			}
 		}
 		return best;
+	}
+
+	public static Point3d fromPolar(double lgt, double lat)
+	{
+		double zz = Math.cos(lat);
+		return new Point3d(
+			Math.cos(lgt) * zz,
+			Math.sin(lgt) * zz,
+			Math.sin(lat)
+			);
+	}
+
+	public static double getLatitude(Point3d pt)
+	{
+		return Math.asin(pt.z);
+	}
+
+	public static double getLongitude(Point3d pt)
+	{
+		return Math.atan2(pt.y, pt.x);
+	}
+
+	public static String getGeographicCoordinateString(Point3d pt)
+	{
+		double lat = getLatitude(pt);
+		double lgt = getLongitude(pt);
+		return String.format("%.2f%s%s, %.2f%s%s",
+			Math.abs(Math.toDegrees(lat)),
+			"deg",
+			lat > 0 ? "N" : lat < 0 ? "S" : "",
+			Math.abs(Math.toDegrees(lgt)),
+			"deg",
+			lgt > 0 ? "E" : lgt < 0 ? "W" : ""
+			);
 	}
 }

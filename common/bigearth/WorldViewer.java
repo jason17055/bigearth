@@ -306,13 +306,16 @@ public class WorldViewer extends JFrame
 			double lgt = (p.x - WIDTH/2 - xOffset)
 				/ (zoomFactor * WIDTH/(2*Math.PI));
 
+System.out.println("click lgt : "+Math.toDegrees(lgt));
 			double zz = Math.cos(lat);
 			Point3d pt = new Point3d(
-				Math.cos(lgt) * zz,
+				Math.sin(lgt) * zz,
 				Math.sin(lat),
-				-Math.sin(lgt) * zz
+				Math.cos(lgt) * zz
 				);
+System.out.println("before transform : "+pt);
 			inverseTransformMatrix.transform(pt);
+System.out.println("after transform : "+pt);
 			return pt;
 		}
 
@@ -322,18 +325,41 @@ public class WorldViewer extends JFrame
 			transformMatrix.transform(pt);
 
 			double lat = Math.asin(pt.y);
-			double lgt = Math.atan2(-pt.z, pt.x);
+			double lgt = Math.atan2(pt.x, pt.z);
 
-			double x = WIDTH/2+zoomFactor*lgt*WIDTH/(Math.PI*2);
-			double y = HEIGHT/2-zoomFactor*lat*HEIGHT/Math.PI;
+			double x = zoomFactor*lgt*WIDTH/(Math.PI*2);
+			double y = zoomFactor*lat*HEIGHT/Math.PI;
 
-			// prevent overly negative or positive coordinates
-			x = Math.max(-WIDTH*9, Math.min(WIDTH*10, x));
-			y = Math.max(-HEIGHT*9, Math.min(HEIGHT*10, y));
+			// prevent extreme screen coordinates
+			// (i.e. coordinates that might overflow 32-bit int)
+			x = Math.max(-WIDTH, Math.min(WIDTH, x));
+			y = Math.max(-HEIGHT, Math.min(HEIGHT, y));
 
 			return new Point(
-				(int)Math.round(x) + xOffset,
-				(int)Math.round(y) + yOffset
+				(int)Math.round(x) + WIDTH/2 + xOffset,
+				(int)Math.round(-y) + HEIGHT/2 + yOffset
+				);
+		}
+
+		Point toScreen_x(Point3d pt)
+		{
+			pt = new Point3d(pt);
+			transformMatrix.transform(pt);
+
+			if (pt.z <= 0)
+				return new Point(-WIDTH,-HEIGHT);
+
+			double x = pt.x * zoomFactor * WIDTH/2;
+			double y = pt.y * zoomFactor * HEIGHT/2;
+
+			// prevent extreme screen coordinates
+			// (i.e. coordinates that might overflow 32-bit int)
+			x = Math.max(-WIDTH, Math.min(WIDTH, x));
+			y = Math.max(-HEIGHT, Math.min(HEIGHT, y));
+
+			return new Point(
+				(int)Math.round(x) + WIDTH/2 + xOffset,
+				(int)Math.round(-y) + HEIGHT/2 + yOffset
 				);
 		}
 
@@ -512,10 +538,6 @@ public class WorldViewer extends JFrame
 			if (regionId == selectedRegion)
 			{
 				Point3d [] pp = tg.getTerrainBoundary(regionId, selectedTerrain);
-System.out.println("is this clockwise or counter-clockwise?");
-System.out.println(pp[0]);
-System.out.println(pp[1]);
-System.out.println(pp[2]);
 				Point p = toScreen(pp[0]);
 				gr.setColor(Color.RED);
 				gr.fillOval(p.x-5,p.y-5,10,10);
@@ -530,24 +552,90 @@ System.out.println(pp[2]);
 			}
 		}
 
+		void drawGreatCircle(Graphics g, Point3d fromPt, Point3d toPt)
+		{
+			Point p1 = toScreen(fromPt);
+			Point p2 = toScreen(toPt);
+
+			if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 10)
+			{
+				Vector3d v = new Vector3d();
+				v.sub(fromPt, toPt);
+				if (v.length() < 0.0001)
+					return;
+
+				v.add(fromPt, toPt);
+				v.normalize();
+				Point3d centerPt = new Point3d(v);
+
+				drawGreatCircle(g, fromPt, centerPt);
+				drawGreatCircle(g, centerPt, toPt);
+			}
+			else if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) < 32)
+			{
+				g.drawLine(p1.x, p1.y, p2.x, p2.y);
+			}
+		}
+
+		void drawCoordinateLines(Graphics g)
+		{
+			g.setColor(new Color(0x888888));
+			for (int i = -2; i <= 2; i++)
+			{
+				double lat = i * Math.PI/6;
+				for (int j = -6; j < 6; j++)
+				{
+					double lgt_1 = j * Math.PI/6;
+					double lgt_2 = (j+1) * Math.PI/6;
+					drawGreatCircle(g,
+						SphereGeometry.fromPolar(lgt_1, lat),
+						SphereGeometry.fromPolar(lgt_2, lat)
+						);
+				}
+			}
+
+			for (int i = -5; i <= 6; i++)
+			{
+				double lgt = i * Math.PI/6;
+				for (int j = -3; j < 3; j++)
+				{
+					double lat_1 = j * Math.PI/6;
+					double lat_2 = (j+1) * Math.PI/6;
+					drawGreatCircle(g,
+						SphereGeometry.fromPolar(lgt, lat_1),
+						SphereGeometry.fromPolar(lgt, lat_2)
+						);
+				}
+			}
+		}
+
 		public void paint(Graphics g)
 		{
 			if (image != null)
 			{
 				g.drawImage(image, 0, 0, Color.WHITE, null);
 			}
+
+			// draw latitude lines
+			drawCoordinateLines(g);
+
+			// draw crosshairs to help indicate the center of screen
+			g.setColor(Color.RED);
+			g.drawLine(0,0,WIDTH,HEIGHT);
+			g.drawLine(0,HEIGHT,WIDTH,0);
 		}
 
 		void updateTransformMatrix()
 		{
 			// rotate around Z axis for longitude
 			Matrix3d rZ = new Matrix3d();
-			rZ.rotZ(curLongitude);
+			rZ.rotZ(-curLongitude - Math.PI/2);
 
 			// rotate around X axis for latitude
 			Matrix3d rX = new Matrix3d();
 			rX.rotX(-(Math.PI/2 - curLatitude));
 
+			//transformMatrix.mul(rZ, rX);
 			transformMatrix.mul(rX, rZ);
 			inverseTransformMatrix.invert(transformMatrix);
 		}
@@ -576,18 +664,17 @@ System.out.println(pp[2]);
 		public void zoomIn()
 		{
 			zoomFactor *= 2;
-			curLongitude *= 2;
-			yOffset *= 2;
 			regenerate();
 		}
 
 		public void zoomOut()
 		{
 			zoomFactor/=2;
-			yOffset /= 2;
-			curLongitude /= 2;
-			if (zoomFactor < 1)
+			if (zoomFactor <= 1)
+			{
 				zoomFactor = 1;
+				curLatitude = 0;
+			}
 			regenerate();
 		}
 
@@ -634,9 +721,37 @@ System.out.println(pp[2]);
 		private Point dragStart;
 		private void onDragEnd(Point endPoint)
 		{
-			double dist = (endPoint.x - dragStart.x) / zoomFactor;
-			curLongitude += dist * Math.PI * 2 / WIDTH;
-			yOffset += (endPoint.y - dragStart.y);
+System.out.println("drag began at "+SphereGeometry.getGeographicCoordinateString(
+					fromScreen(dragStart)));
+System.out.println("drag ended at "+SphereGeometry.getGeographicCoordinateString(
+					fromScreen(endPoint)));
+
+			int xDelta = endPoint.x - dragStart.x;
+			int yDelta = endPoint.y - dragStart.y;
+			Point3d pt = fromScreen(new Point(WIDTH/2 - xDelta, HEIGHT/2 - yDelta));
+
+System.out.println("new coordinates will be "+SphereGeometry.getGeographicCoordinateString(pt));
+			double lat = Math.asin(pt.z);
+			double lgt = Math.atan2(pt.y, pt.x);
+
+			if (zoomFactor < 2)
+			{
+				if (Math.abs(lat) > Math.PI/6)
+				{
+					lat = (lat>0 ? 1 : -1) * Math.PI/6;
+				}
+			}
+			else if (zoomFactor < 4)
+			{
+				if (Math.abs(lat) > Math.PI/3)
+				{
+					lat = (lat>0 ? 1 : -1) * Math.PI/3;
+				}
+			}
+
+			curLatitude = lat;
+			curLongitude = lgt;
+
 			regenerate();
 			dragStart = null;
 		}
