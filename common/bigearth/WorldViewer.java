@@ -82,14 +82,53 @@ public class WorldViewer extends JFrame
 		if (f.exists())
 		{
 			world = MakeWorld.load(f);
-			regenerate();
+			reloadImage();
 			world.save();
 		}
 	}
 
 	private void onNewWorldClicked()
 	{
-	//TODO
+		try
+		{
+
+		JTextField nameField = new JTextField();
+		JTextField sizeField = new JTextField();
+		final JComponent[] inputs = new JComponent[] {
+			new JLabel("Name"),
+			nameField,
+			new JLabel("Size"),
+			sizeField
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"New World",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		if (nameField.getText().length() == 0)
+			throw new Exception("You must enter a name.");
+
+		int sz = Integer.parseInt(sizeField.getText());
+
+		File worldDir = new File(nameField.getText());
+		if (!worldDir.mkdir())
+			throw new Exception("Could not create "+worldDir);
+
+		world = new MakeWorld(worldDir, sz);
+		reloadImage();
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	protected void initMenu()
@@ -169,30 +208,30 @@ public class WorldViewer extends JFrame
 			showTemperatureBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
 			showFloodsBtn.setSelected(false);
-			regenerate();
+			reloadImage();
 		}
 		else if (ev.getSource() == showTemperatureBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
 			showFloodsBtn.setSelected(false);
-			regenerate();
+			reloadImage();
 		}
 		else if (ev.getSource() == showRainfallBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showTemperatureBtn.setSelected(false);
-			regenerate();
+			reloadImage();
 		}
 		else if (ev.getSource() == showFloodsBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showTemperatureBtn.setSelected(false);
-			regenerate();
+			reloadImage();
 		}
 		else if (ev.getSource() == showRiversBtn)
 		{
-			regenerate();
+			reloadImage();
 		}
 	}
 
@@ -215,7 +254,7 @@ public class WorldViewer extends JFrame
 			{
 				System.err.println(e.getMessage());
 			}
-			regenerate();
+			reloadImage();
 	
 		}
 		else if (ev.getSource() == zoomInBtn)
@@ -248,7 +287,7 @@ public class WorldViewer extends JFrame
 		0xffcccc, 0xffffff
 		};
 
-	void regenerate()
+	void reloadImage()
 	{
 		if (world == null)
 			return;

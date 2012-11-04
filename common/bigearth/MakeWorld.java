@@ -24,15 +24,26 @@ public class MakeWorld
 	int [] floods;
 	RegionDetail [] regions;
 
-	MakeWorld()
+	protected MakeWorld()
 	{
 	}
 
-	MakeWorld(File worldDir, int geometrySize)
+	public MakeWorld(File worldDir, int geometrySize)
 	{
 		this.worldDir = worldDir;
 		this.geometrySize = geometrySize;
 		this.regionDetailLevel = 2;
+		this.g = new SphereGeometry(geometrySize);
+
+		int numCells = g.getCellCount();
+		this.elevation = new int[numCells];
+		this.temperature = new int[numCells];
+		this.annualRains = new int[numCells];
+		this.drainage = new int[numCells];
+		this.riverVolume = new int[numCells];
+		this.lakeLevel = new int[numCells];
+		this.floods = new int[numCells];
+		this.regions = new RegionDetail[numCells];
 	}
 
 	public void save()
@@ -94,7 +105,8 @@ public class MakeWorld
 	public static MakeWorld load(File worldDir)
 		throws IOException
 	{
-		MakeWorld me = new MakeWorld(worldDir, 0);
+		MakeWorld me = new MakeWorld();
+		me.worldDir = worldDir;
 		me.load();
 		return me;
 	}
