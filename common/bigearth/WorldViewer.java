@@ -306,16 +306,13 @@ public class WorldViewer extends JFrame
 			double lgt = (p.x - WIDTH/2 - xOffset)
 				/ (zoomFactor * WIDTH/(2*Math.PI));
 
-System.out.println("click lgt : "+Math.toDegrees(lgt));
 			double zz = Math.cos(lat);
 			Point3d pt = new Point3d(
 				Math.sin(lgt) * zz,
 				Math.sin(lat),
 				Math.cos(lgt) * zz
 				);
-System.out.println("before transform : "+pt);
 			inverseTransformMatrix.transform(pt);
-System.out.println("after transform : "+pt);
 			return pt;
 		}
 
@@ -693,7 +690,6 @@ System.out.println("after transform : "+pt);
 					selectedRegion = world.g.findCell(pt);
 					selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
 					regenerate();
-				System.out.println("  region "+selectedRegion+", terrain " + selectedTerrain);
 				}
 				dragStart = null;
 			}
@@ -717,16 +713,10 @@ System.out.println("after transform : "+pt);
 		private Point dragStart;
 		private void onDragEnd(Point endPoint)
 		{
-System.out.println("drag began at "+SphereGeometry.getGeographicCoordinateString(
-					fromScreen(dragStart)));
-System.out.println("drag ended at "+SphereGeometry.getGeographicCoordinateString(
-					fromScreen(endPoint)));
-
 			int xDelta = endPoint.x - dragStart.x;
 			int yDelta = endPoint.y - dragStart.y;
 			Point3d pt = fromScreen(new Point(WIDTH/2 - xDelta, HEIGHT/2 - yDelta));
 
-System.out.println("new coordinates will be "+SphereGeometry.getGeographicCoordinateString(pt));
 			double lat = Math.asin(pt.z);
 			double lgt = Math.atan2(pt.y, pt.x);
 
