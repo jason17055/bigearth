@@ -8,6 +8,7 @@ class RegionDetail
 {
 	int numSides;
 	int detailLevel;
+	int wildlife;
 	char [] terrains;
 	boolean dirty;
 
@@ -16,6 +17,14 @@ class RegionDetail
 		this.numSides = numSides;
 		this.detailLevel = detailLevel;
 		this.terrains = new char[numSides * (1 << (detailLevel*2))];
+	}
+
+	public void adjustWildlife(int delta)
+	{
+		this.wildlife += delta;
+		if (wildlife < 0)
+			wildlife = 0;
+		dirty = true;
 	}
 
 	public void setTerrainType(int terrainId, TerrainType type)
@@ -32,6 +41,7 @@ class RegionDetail
 		out.writeStartObject();
 		out.writeNumberField("numSides", numSides);
 		out.writeNumberField("detailLevel", detailLevel);
+		out.writeNumberField("wildlife", wildlife);
 		out.writeArrayFieldStart("terrains");
 		for (int i = 0; i < terrains.length; i++)
 		{
@@ -51,6 +61,7 @@ class RegionDetail
 
 		int numSides = 6;
 		int detailLevel = 0;
+		int wildlife = 0;
 		int [] terrains = null;
 
 		while (in.nextToken() == JsonToken.FIELD_NAME)
@@ -62,6 +73,8 @@ class RegionDetail
 				detailLevel = in.nextIntValue(detailLevel);
 			else if (s.equals("terrains"))
 				terrains = MakeWorld.json_readIntArray(in);
+			else if (s.equals("wildlife"))
+				wildlife = in.nextIntValue(wildlife);
 			else
 			{
 				in.nextToken();
@@ -71,6 +84,7 @@ class RegionDetail
 		}
 
 		RegionDetail m = new RegionDetail(numSides, detailLevel);
+		m.wildlife = wildlife;
 		if (terrains != null)
 		{
 			for (int i = 0; i < m.terrains.length; i++)

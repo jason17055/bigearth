@@ -260,7 +260,33 @@ public class WorldViewer extends JFrame
 		showRiversBtn.setSelected(true);
 		viewMenu.add(showRiversBtn);
 
+		JMenu regionMenu = new JMenu("Region");
+		menuBar.add(regionMenu);
+
+		menuItem = new JMenuItem("Add Wildlife");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onAdjustWildlifeClicked(+1);
+			}});
+		regionMenu.add(menuItem);
+
+		menuItem = new JMenuItem("Remove Wildlife");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onAdjustWildlifeClicked(-1);
+			}});
+		regionMenu.add(menuItem);
+
 		setJMenuBar(menuBar);
+	}
+
+	void onAdjustWildlifeClicked(int delta)
+	{
+		if (view.selectedRegion != 0)
+		{
+			RegionDetail r = world.regions[view.selectedRegion-1];
+			r.adjustWildlife(delta*100);
+		}
 	}
 
 	MakeWorld world;
@@ -460,7 +486,7 @@ public class WorldViewer extends JFrame
 	public void onRegionSelected(int regionId)
 	{
 		biomeLbl.setText("GRASS");
-		wildlifeLbl.setText("0");
+		wildlifeLbl.setText(String.format("%d", world.regions[regionId-1].wildlife));
 		nativesLbl.setText("0");
 		elevationLbl.setText(String.format("%d", world.elevation[regionId-1]));
 		temperatureLbl.setText(String.format("%.1f", world.temperature[regionId-1]/10.0));
