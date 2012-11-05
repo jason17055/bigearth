@@ -67,9 +67,13 @@ class RegionDetail
 		return v > 0 ? v : 0;
 	}
 
+	static final int WILDLIFE_PREFERRED_TEMPERATURE = 240;
+	static final int WILDLIFE_TEMPERATURE_TOLERANCE = 80;
 	void doWildlifeMaintenance_stage1()
 	{
 		final double wildlifeQuota = biome.getWildlifeQuota();
+		double biomeTolerance = 1.0 - Math.pow((WILDLIFE_PREFERRED_TEMPERATURE - world.getRegionTemperature(regionId)) / WILDLIFE_TEMPERATURE_TOLERANCE, 2.0);
+		assert biomeTolerance <= 1.0;
 
 		double quotaPortion = ((double)wildlife) / wildlifeQuota;
 		double birthRate = getBasicBirthRate(quotaPortion, 1/WILDLIFE_LIFESPAN);
@@ -77,7 +81,12 @@ class RegionDetail
 
 		assert wildlifeBirths >= 0;
 
-		int deaths = (int) Math.round(Randomizer(wildlife / WILDLIFE_LIFESPAN));
+		double deathRate = 1.0 / WILDLIFE_LIFESPAN;
+		if (biomeTolerance < 0.0)
+		{
+			deathRate *= Math.exp(-biomeTolerance);
+		}
+		int deaths = (int) Math.round(Randomizer(wildlife * deathRate));
 		wildlifeDeaths = wildlifeHunted > deaths ? 0 :
 			deaths > wildlife ? wildlife - wildlifeHunted :
 			deaths - wildlifeHunted;

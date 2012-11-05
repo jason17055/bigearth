@@ -759,4 +759,10 @@ public class MakeWorld
 	{
 		return new TerrainGeometry(g, regionDetailLevel);
 	}
+
+	public int getRegionTemperature(int regionId)
+	{
+		assert regionId >= 1 && regionId <= temperature.length;
+		return temperature[regionId-1];
+	}
 }
