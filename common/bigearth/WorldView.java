@@ -41,6 +41,8 @@ public class WorldView extends JPanel
 	public interface Listener
 	{
 		void onTerrainClicked(int regionId, int terrainId);
+		void onTerrainSelected(int regionId, int terrainId);
+		void onRegionSelected(int regionId);
 	}
 
 	public void addListener(Listener l)
@@ -314,6 +316,33 @@ public class WorldView extends JPanel
 				RegionDetail r = world.regions[i];
 				drawRegionDetail(gr, i+1, r);
 			}
+
+			if (selectedRegion != 0 && selectedTerrain >= 0)
+			{
+				TerrainGeometry tg = world.getTerrainGeometry();
+				Point3d [] pp = tg.getTerrainBoundary(selectedRegion, selectedTerrain);
+				int [] x_coords = new int[pp.length];
+				int [] y_coords = new int[pp.length];
+				toScreen_a(pp, x_coords, y_coords);
+
+				gr.setColor(Color.YELLOW);
+				gr.drawPolygon(x_coords, y_coords, pp.length);
+			}
+
+		}
+		else
+		{
+			if (selectedRegion != 0)
+			{
+				Point3d [] pp = g.getCellBoundary(selectedRegion);
+
+				int [] x_coords = new int[pp.length];
+				int [] y_coords = new int[pp.length];
+				toScreen_a(pp, x_coords, y_coords);
+
+				gr.setColor(Color.YELLOW);
+				gr.drawPolygon(x_coords, y_coords, pp.length);
+			}
 		}
 
 		repaint();
@@ -378,7 +407,7 @@ public class WorldView extends JPanel
 
 	void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
 	{
-		TerrainGeometry tg = new TerrainGeometry(world.g, world.regionDetailLevel);
+		TerrainGeometry tg = world.getTerrainGeometry();
 		int sz = tg.getRegionTileCount(regionId);
 
 		for (int terrainId = 0; terrainId < sz; terrainId++)
@@ -423,17 +452,6 @@ public class WorldView extends JPanel
 				sum_x/pp.length,
 				sum_y/pp.length);
 			}
-		}
-
-		if (regionId == selectedRegion)
-		{
-			Point3d [] pp = tg.getTerrainBoundary(regionId, selectedTerrain);
-			int [] x_coords = new int[pp.length];
-			int [] y_coords = new int[pp.length];
-			toScreen_a(pp, x_coords, y_coords);
-
-			gr.setColor(Color.YELLOW);
-			gr.drawPolygon(x_coords, y_coords, pp.length);
 		}
 	}
 
@@ -481,19 +499,49 @@ int selectedTerrain;
 		if (ev.getButton() == MouseEvent.BUTTON1)
 		{
 			dragStart = ev.getPoint();
+
+			Point3d pt = fromScreen(ev.getPoint());
+			if (zoomFactor >= 16)
+			{
+				TerrainGeometry tg = world.getTerrainGeometry();
+				selectedRegion = world.g.findCell(pt);
+				selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
+				fireTerrainSelected(selectedRegion, selectedTerrain);
+				fireTerrainClicked(selectedRegion, selectedTerrain);
+				regenerate();
+			}
+			else
+			{
+				selectedRegion = world.g.findCell(pt);
+				selectedTerrain = 0;
+				fireRegionSelected(selectedRegion);
+			}
 		}
 		else if (ev.getButton() == MouseEvent.BUTTON3)
 		{
 			Point3d pt = fromScreen(ev.getPoint());
 			if (zoomFactor >= 16)
 			{
-				TerrainGeometry tg = new TerrainGeometry(world.g, 2);
+				TerrainGeometry tg = world.getTerrainGeometry();
 				selectedRegion = world.g.findCell(pt);
 				selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
+				fireTerrainSelected(selectedRegion, selectedTerrain);
 				fireTerrainClicked(selectedRegion, selectedTerrain);
 				regenerate();
 			}
+			else
+			{
+				selectedRegion = world.g.findCell(pt);
+				selectedTerrain = 0;
+				fireRegionSelected(selectedRegion);
+			}
 		}
+	}
+
+	private void fireRegionSelected(int regionId)
+	{
+		for (Listener l : listeners)
+			l.onRegionSelected(regionId);
 	}
 
 	private void fireTerrainClicked(int regionId, int terrainId)
@@ -502,6 +550,12 @@ int selectedTerrain;
 		{
 			l.onTerrainClicked(regionId, terrainId);
 		}
+	}
+
+	private void fireTerrainSelected(int regionId, int terrainId)
+	{
+		for (Listener l : listeners)
+			l.onTerrainSelected(regionId, terrainId);
 	}
 
 	public void zoomIn()
@@ -536,7 +590,7 @@ int selectedTerrain;
 			{
 				Point3d pt = fromScreen(dragStart);
 
-				TerrainGeometry tg = new TerrainGeometry(world.g, 2);
+				TerrainGeometry tg = world.getTerrainGeometry();
 				selectedRegion = world.g.findCell(pt);
 				selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
 				regenerate();

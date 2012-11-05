@@ -540,6 +540,7 @@ assert(x >= 1);
 		moistureLbl.setText(String.format("%d", world.annualRains[regionId-1] + world.floods[regionId-1]));
 	}
 
+	//implements WorldView.Listener
 	public void onRegionSelected(int regionId)
 	{
 		assert regionId == view.selectedRegion;
@@ -551,10 +552,15 @@ assert(x >= 1);
 		regionPane.setVisible(true);
 	}
 
-	public void onTerrainClicked(int regionId, int terrainId)
+	//implements WorldView.Listener
+	public void onTerrainSelected(int regionId, int terrainId)
 	{
 		onRegionSelected(regionId);
+	}
 
+	//implements WorldView.Listener
+	public void onTerrainClicked(int regionId, int terrainId)
+	{
 		RegionDetail r = world.regions[regionId-1];
 		if (selectedTool.equals("grass"))
 		{

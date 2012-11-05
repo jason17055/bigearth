@@ -754,4 +754,9 @@ public class MakeWorld
 		assert regionId >= 1 && regionId <= regions.length;
 		return regions[regionId-1];
 	}
+
+	public TerrainGeometry getTerrainGeometry()
+	{
+		return new TerrainGeometry(g, regionDetailLevel);
+	}
 }
