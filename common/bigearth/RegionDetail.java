@@ -52,10 +52,28 @@ class RegionDetail
 		return x * MyRandomVariateGenerator.next();
 	}
 
+	/**
+	 * @param p is the proportion of the max-population-density
+	 *   that the population is currently experiencing.
+	 * @return birth rate, expressed as the portion of the current
+	 *   population that will spawn new life
+	 */
+	static double getBasicBirthRate(double p, double r)
+	{
+// cubic function that intersects (0,0), (0.1,0), and (1.0,0)
+// y=(x-0)(x-0.1)(x-1)
+
+		double v = r - (p-0)*(p-0.1)*(p-1);  //magic
+		return v > 0 ? v : 0;
+	}
+
 	void doWildlifeMaintenance_stage1()
 	{
 		final double wildlifeQuota = biome.getWildlifeQuota();
-		wildlifeBirths = (int) Math.round(Randomizer((wildlifeQuota/WILDLIFE_LIFESPAN) * Math.pow(0.5 - 0.5 * Math.cos(Math.PI * Math.sqrt(wildlife / wildlifeQuota)), 2.0)));
+
+		double quotaPortion = ((double)wildlife) / wildlifeQuota;
+		double birthRate = getBasicBirthRate(quotaPortion, 1/WILDLIFE_LIFESPAN);
+		wildlifeBirths = (int) Math.round(Randomizer(wildlife * birthRate));
 
 		assert wildlifeBirths >= 0;
 
@@ -67,7 +85,7 @@ class RegionDetail
 		int adjustedCount = wildlife - (wildlifeHunted + wildlifeDeaths);
 		adjustedCount = Math.max(0, adjustedCount);
 
-		double quotaPortion = ((double)adjustedCount) / wildlifeQuota;
+		quotaPortion = ((double)adjustedCount) / wildlifeQuota;
 		double emigrantPortion = WILDLIFE_EMIGRATION_RATE
 			* (0.5 - Math.cos(quotaPortion * Math.PI)/2);
 		double eligibleEmigrants = emigrantPortion * adjustedCount;
@@ -91,7 +109,7 @@ class RegionDetail
 
 	void doWildlifeMaintenance_cleanup()
 	{
-if (wildlife > 100)
+if (false)
 {
 	System.out.println("Region "+regionId);
 	System.out.printf("beginning balance :%8d\n", wildlife);
