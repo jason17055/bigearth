@@ -23,6 +23,8 @@ public class MakeWorld
 	int [] floods;
 	RegionDetail [] regions;
 
+	int year;
+
 	protected MakeWorld()
 	{
 	}
@@ -53,6 +55,7 @@ public class MakeWorld
 		j.writeStartObject();
 		j.writeNumberField("size", geometrySize);
 		j.writeNumberField("regionDetailLevel", regionDetailLevel);
+		j.writeNumberField("year", year);
 		arrayHelper(j, "elevation", elevation);
 		arrayHelper(j, "temperature", temperature);
 		arrayHelper(j, "annualRains", annualRains);
@@ -126,6 +129,8 @@ public class MakeWorld
 				geometrySize = in.nextIntValue(geometrySize);
 			else if (s.equals("regionDetailLevel"))
 				regionDetailLevel = in.nextIntValue(regionDetailLevel);
+			else if (s.equals("year"))
+				year = in.nextIntValue(year);
 			else if (s.equals("elevation"))
 				elevation = json_readIntArray(in);
 			else if (s.equals("temperature"))
@@ -164,6 +169,9 @@ public class MakeWorld
 		for (int i = 0; i < regions.length; i++)
 		{
 			this.regions[i] = loadRegionDetail(i+1);
+			this.regions[i].biome = (
+				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
+				BiomeType.OCEAN);
 		}
 	}
 
@@ -224,6 +232,19 @@ public class MakeWorld
 		generateDrainage();
 		generateRivers();
 		generateFloods();
+	}
+
+	void doOneStep()
+	{
+		year++;
+		for (RegionDetail r : regions)
+		{
+			r.endOfYear_stage1();
+		}
+		for (RegionDetail r : regions)
+		{
+			r.endOfYear_cleanup();
+		}
 	}
 
 	private RegionDetail loadRegionDetail(int regionId)
@@ -714,5 +735,11 @@ public class MakeWorld
 				values[i] += delta;
 			}
 		}
+	}
+
+	ShadowRegion getShadowRegion(int regionId)
+	{
+		assert regionId >= 1 && regionId <= regions.length;
+		return regions[regionId-1];
 	}
 }

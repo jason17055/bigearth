@@ -20,6 +20,7 @@ public class WorldViewer extends JFrame
 
 	WorldView view;
 	JButton generateBtn;
+	JButton stepBtn;
 	JCheckBoxMenuItem showElevationBtn;
 	JCheckBoxMenuItem showTemperatureBtn;
 	JCheckBoxMenuItem showRainfallBtn;
@@ -79,6 +80,10 @@ public class WorldViewer extends JFrame
 		generateBtn = new JButton("Generate");
 		generateBtn.addActionListener(this);
 		buttonsPane.add(generateBtn);
+
+		stepBtn = new JButton("Step");
+		stepBtn.addActionListener(this);
+		buttonsPane.add(stepBtn);
 
 		zoomInBtn = new JButton("Zoom In");
 		zoomInBtn.addActionListener(this);
@@ -368,6 +373,10 @@ public class WorldViewer extends JFrame
 			reloadImage();
 	
 		}
+		else if (ev.getSource() == stepBtn)
+		{
+			world.doOneStep();
+		}
 		else if (ev.getSource() == zoomInBtn)
 		{
 			view.zoomIn();
@@ -485,7 +494,7 @@ public class WorldViewer extends JFrame
 
 	public void onRegionSelected(int regionId)
 	{
-		biomeLbl.setText("GRASS");
+		biomeLbl.setText(world.regions[regionId-1].getBiome().name());
 		wildlifeLbl.setText(String.format("%d", world.regions[regionId-1].wildlife));
 		nativesLbl.setText("0");
 		elevationLbl.setText(String.format("%d", world.elevation[regionId-1]));
