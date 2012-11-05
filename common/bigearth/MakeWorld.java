@@ -169,9 +169,12 @@ public class MakeWorld
 		for (int i = 0; i < regions.length; i++)
 		{
 			this.regions[i] = loadRegionDetail(i+1);
+			if (this.regions[i].biome == null)
+			{
 			this.regions[i].biome = (
 				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
 				BiomeType.OCEAN);
+			}
 		}
 	}
 
@@ -232,6 +235,15 @@ public class MakeWorld
 		generateDrainage();
 		generateRivers();
 		generateFloods();
+
+		this.regions = new RegionDetail[g.getCellCount()];
+		for (int i = 0; i < regions.length; i++)
+		{
+			this.regions[i] = loadRegionDetail(i+1);
+			this.regions[i].biome = (
+				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
+				BiomeType.OCEAN);
+		}
 	}
 
 	void doOneStep()
