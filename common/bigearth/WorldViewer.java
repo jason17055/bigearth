@@ -26,6 +26,7 @@ public class WorldViewer extends JFrame
 	JCheckBoxMenuItem showRainfallBtn;
 	JCheckBoxMenuItem showFloodsBtn;
 	JCheckBoxMenuItem showRiversBtn;
+	JCheckBoxMenuItem showWildlifeBtn;
 	JButton zoomInBtn;
 	JButton zoomOutBtn;
 
@@ -265,6 +266,11 @@ public class WorldViewer extends JFrame
 		showRiversBtn.setSelected(true);
 		viewMenu.add(showRiversBtn);
 
+		showWildlifeBtn = new JCheckBoxMenuItem("Show Wildlife");
+		showWildlifeBtn.addActionListener(al);
+		showWildlifeBtn.setSelected(true);
+		viewMenu.add(showWildlifeBtn);
+
 		JMenu regionMenu = new JMenu("Region");
 		menuBar.add(regionMenu);
 
@@ -376,6 +382,8 @@ public class WorldViewer extends JFrame
 		else if (ev.getSource() == stepBtn)
 		{
 			world.doOneStep();
+			reloadImage();
+			reloadRegionStats();
 		}
 		else if (ev.getSource() == zoomInBtn)
 		{
@@ -405,6 +413,15 @@ public class WorldViewer extends JFrame
 		0x00ff00, 0x44ff00, 0x88ff00, 0xcccc00,
 		0xddaa00, 0xff9900, 0xff9944, 0xff4444,
 		0xffcccc, 0xffffff
+		};
+
+	int [] WILDLIFE_COLORS = {
+		0, //no wildlife
+		0x880000, 0x990000, 0xaa0000, 0xbb0000,
+		0xcc0000, 0xdd0000, 0xee0000, 0xff0000,
+		0xff1111, 0xff2222, 0xff3333, 0xff4444,
+		0xff5555, 0xff6666, 0xff7777, 0xff8888,
+		0xff9999, 0xffaaaa, 0xffbbbb, 0xffcccc
 		};
 
 	void reloadImage()
@@ -484,6 +501,23 @@ public class WorldViewer extends JFrame
 				return 0xdddddd;
 			}
 		}
+		else if (showWildlifeBtn.isSelected())
+		{
+			int wildlife = world.regions[i].wildlife;
+			if (wildlife <= 0)
+			{
+				return el < 0 ? 0x0000ff :
+					world.lakeLevel[i] > el ? 0x6666ff :
+					0x00ff00;
+			}
+
+			int x = wildlife < 10 ? 1 :
+				(1 + (int)Math.floor(Math.log(wildlife/10)/Math.log(2)));
+assert(x >= 1);
+			if (x >= WILDLIFE_COLORS.length)
+				x = WILDLIFE_COLORS.length-1;
+			return WILDLIFE_COLORS[x];
+		}
 		else
 		{
 			return el < 0 ? 0x0000ff :
@@ -492,14 +526,24 @@ public class WorldViewer extends JFrame
 		}
 	}
 
-	public void onRegionSelected(int regionId)
+	void reloadRegionStats()
 	{
+		int regionId = view.selectedRegion;
+		if (regionId == 0)
+			return;
+
 		biomeLbl.setText(world.regions[regionId-1].getBiome().name());
 		wildlifeLbl.setText(String.format("%d", world.regions[regionId-1].wildlife));
 		nativesLbl.setText("0");
 		elevationLbl.setText(String.format("%d", world.elevation[regionId-1]));
 		temperatureLbl.setText(String.format("%.1f", world.temperature[regionId-1]/10.0));
 		moistureLbl.setText(String.format("%d", world.annualRains[regionId-1] + world.floods[regionId-1]));
+	}
+
+	public void onRegionSelected(int regionId)
+	{
+		assert regionId == view.selectedRegion;
+		reloadRegionStats();
 
 		regionPane.setBorder(
 			BorderFactory.createTitledBorder("Region "+regionId)

@@ -13,4 +13,9 @@ public enum BiomeType
 	MOUNTAIN,
 	HILLS,
 	PLAINS;
+
+	public double getWildlifeQuota()
+	{
+		return 1000.0;
+	}
 }

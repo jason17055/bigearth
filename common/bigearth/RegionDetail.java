@@ -49,14 +49,12 @@ class RegionDetail
 
 	static double Randomizer(double x)
 	{
-		double t = Math.random();
-		if (t == 0) return 0;
-		return x * Math.exp( -Math.log((1.0/t) - 1.0) / 15.0 );
+		return x * MyRandomVariateGenerator.next();
 	}
 
 	void doWildlifeMaintenance_stage1()
 	{
-		final double wildlifeQuota = 500.0;
+		final double wildlifeQuota = biome.getWildlifeQuota();
 		wildlifeBirths = (int) Math.round(Randomizer((wildlifeQuota/WILDLIFE_LIFESPAN) * Math.pow(0.5 - 0.5 * Math.cos(Math.PI * Math.sqrt(wildlife / wildlifeQuota)), 2.0)));
 
 		assert wildlifeBirths >= 0;
@@ -69,7 +67,10 @@ class RegionDetail
 		int adjustedCount = wildlife - (wildlifeHunted + wildlifeDeaths);
 		adjustedCount = Math.max(0, adjustedCount);
 
-		double emigrantsBase = WILDLIFE_EMIGRATION_RATE * adjustedCount * ((double)adjustedCount / wildlifeQuota);
+		double quotaPortion = ((double)adjustedCount) / wildlifeQuota;
+		double emigrantPortion = WILDLIFE_EMIGRATION_RATE
+			* (0.5 - Math.cos(quotaPortion * Math.PI)/2);
+		double eligibleEmigrants = emigrantPortion * adjustedCount;
 		wildlifeEmigrants = 0;
 
 		int [] nn = world.g.getNeighbors(regionId);
@@ -78,7 +79,7 @@ class RegionDetail
 			ShadowRegion neighborRegion = world.getShadowRegion(n);
 			BiomeType neighborBiome = neighborRegion.getBiome();
 
-			double emigrants = emigrantsBase / nn.length;
+			double emigrants = eligibleEmigrants / nn.length;
 			if (neighborBiome == BiomeType.OCEAN)
 				emigrants = 0;
 
@@ -90,6 +91,17 @@ class RegionDetail
 
 	void doWildlifeMaintenance_cleanup()
 	{
+if (wildlife > 100)
+{
+	System.out.println("Region "+regionId);
+	System.out.printf("beginning balance :%8d\n", wildlife);
+	System.out.printf("           births :%8d\n", wildlifeBirths);
+	System.out.printf("           deaths :%8d\n", wildlifeDeaths);
+	System.out.printf("           hunted :%8d\n", wildlifeHunted);
+	System.out.printf("       immigrants :%8d\n", wildlifeImmigrants);
+	System.out.printf("        emigrants :%8d\n", wildlifeEmigrants);
+	System.out.println();
+}
 		wildlife += wildlifeBirths - wildlifeDeaths - wildlifeHunted
 			+ wildlifeImmigrants - wildlifeEmigrants;
 		wildlifeImmigrants = 0;
