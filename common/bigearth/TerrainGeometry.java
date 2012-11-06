@@ -211,6 +211,64 @@ public class TerrainGeometry
 		neighborTiles[2] = ti.n2_tile;
 	}
 
+	public TerrainId [] getNeighborTiles(TerrainId tile)
+	{
+		int [] rr = new int[3];
+		int [] tt = new int[3];
+		getNeighborTiles(rr, tt, tile.regionId, tile.tile);
+
+		TerrainId [] rv = new TerrainId[] {
+			new TerrainId(rr[0], tt[0]),
+			new TerrainId(rr[1], tt[1]),
+			new TerrainId(rr[2], tt[2])
+			};
+		return rv;
+	}
+
+	int RIGHT = 1;
+	int LEFT = 2;
+	public TerrainId getRelativeTile(TerrainId foreTile, TerrainId aftTile, int dir)
+	{
+		int [] rr = new int[3];
+		int [] tt = new int[3];
+		getNeighborTiles(rr, tt, foreTile.regionId, foreTile.tile);
+
+		if (rr[0] == aftTile.regionId && tt[0] == aftTile.tile)
+		{
+			return new TerrainId(rr[dir], tt[dir]);
+		}
+		else if (rr[1] == aftTile.regionId && tt[1] == aftTile.tile)
+		{
+			return new TerrainId(rr[(1+dir)%3], tt[(1+dir)%3]);
+		}
+		else
+		{
+			return new TerrainId(rr[(2+dir)%3], tt[(2+dir)%3]);
+		}
+	}
+
+	public TerrainId car(TerrainId foreTile, TerrainId aftTile)
+	{
+		return getRelativeTile(foreTile, aftTile, LEFT);
+	}
+
+	public TerrainId caar(TerrainId foreTile, TerrainId aftTile)
+	{
+		TerrainId t = car(foreTile, aftTile);
+		return car(t, foreTile);
+	}
+
+	public TerrainId cdr(TerrainId foreTile, TerrainId aftTile)
+	{
+		return getRelativeTile(foreTile, aftTile, RIGHT);
+	}
+
+	public TerrainId cddr(TerrainId foreTile, TerrainId aftTile)
+	{
+		TerrainId t = cdr(foreTile, aftTile);
+		return cdr(t, foreTile);
+	}
+
 	/**
 	 * Helper function.
 	 */
