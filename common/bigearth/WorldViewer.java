@@ -268,7 +268,6 @@ public class WorldViewer extends JFrame
 
 		showWildlifeBtn = new JCheckBoxMenuItem("Show Wildlife");
 		showWildlifeBtn.addActionListener(al);
-		showWildlifeBtn.setSelected(true);
 		viewMenu.add(showWildlifeBtn);
 
 		JMenu regionMenu = new JMenu("Region");
@@ -330,6 +329,7 @@ public class WorldViewer extends JFrame
 			showTemperatureBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
 			showFloodsBtn.setSelected(false);
+			showWildlifeBtn.setSelected(false);
 			reloadImage();
 		}
 		else if (ev.getSource() == showTemperatureBtn)
@@ -337,18 +337,29 @@ public class WorldViewer extends JFrame
 			showElevationBtn.setSelected(false);
 			showRainfallBtn.setSelected(false);
 			showFloodsBtn.setSelected(false);
+			showWildlifeBtn.setSelected(false);
 			reloadImage();
 		}
 		else if (ev.getSource() == showRainfallBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showTemperatureBtn.setSelected(false);
+			showWildlifeBtn.setSelected(false);
 			reloadImage();
 		}
 		else if (ev.getSource() == showFloodsBtn)
 		{
 			showElevationBtn.setSelected(false);
 			showTemperatureBtn.setSelected(false);
+			showWildlifeBtn.setSelected(false);
+			reloadImage();
+		}
+		else if (ev.getSource() == showWildlifeBtn)
+		{
+			showElevationBtn.setSelected(false);
+			showTemperatureBtn.setSelected(false);
+			showRainfallBtn.setSelected(false);
+			showFloodsBtn.setSelected(false);
 			reloadImage();
 		}
 		else if (ev.getSource() == showRiversBtn)
