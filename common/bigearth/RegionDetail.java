@@ -60,7 +60,49 @@ class RegionDetail
 		}
 		dirty = true;
 
-		new MakeRivers(world).makeRivers(new TerrainId(regionId, 0));
+		int [] drainage = new int[terrains.length];
+		drainage[8] = -1;
+		ArrayList<Integer> todo = new ArrayList<Integer>();
+		todo.add(8);
+
+		int [] nrr = new int[3];
+		int [] ntt = new int[3];
+		while (!todo.isEmpty())
+		{
+			int i = (int) Math.floor(Math.random() * todo.size());
+			int tile = todo.get(i);
+
+			tg.getNeighborTiles(nrr, ntt, regionId, tile);
+			ArrayList<Integer> candidates = new ArrayList<Integer>();
+			for (int j = 0; j < nrr.length; j++)
+			{
+				if (nrr[j] != regionId)
+					continue;
+				if (drainage[ntt[j]] == 0)
+				{
+					candidates.add(ntt[j]);
+				}
+			}
+
+			if (candidates.size() == 0)
+			{
+				todo.remove(i);
+				continue;
+			}
+
+			int j = (int) Math.floor(Math.random() * candidates.size());
+			int tile1 = candidates.get(j);
+
+			drainage[tile1] = tile+1;
+			todo.add(tile1);
+		}
+
+		int t = 70;
+		while (t >= 0)
+		{
+			setTerrainType(t, TerrainType.STREAM);
+			t = drainage[t] - 1;
+		}
 	}
 
 	static double Randomizer(double x)
