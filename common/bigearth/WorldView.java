@@ -439,10 +439,10 @@ public class WorldView extends JPanel
 			boolean isSelected = regionId == selectedRegion &&
 				terrainId == selectedTerrain;
 
-			if (!isSelected)
+			if (!isSelected && zoomFactor >= 32.0)
 			{
-			gr.setColor(Color.BLACK);
-			gr.drawPolygon(x_coords, y_coords, pp.length);
+				gr.setColor(Color.BLACK);
+				gr.drawPolygon(x_coords, y_coords, pp.length);
 			}
 
 			if (zoomFactor >= 64)
