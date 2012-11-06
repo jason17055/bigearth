@@ -23,6 +23,8 @@ class RegionDetail
 	int [] terrains;
 	boolean dirty;
 
+	Map<Integer,TerrainId> riverPorts;
+
 	static final double WILDLIFE_LIFESPAN = 5.0;
 	static final double WILDLIFE_EMIGRATION_RATE = 0.25;
 
@@ -31,6 +33,7 @@ class RegionDetail
 		this.world = world;
 		this.regionId = regionId;
 		this.biome = BiomeType.GRASSLAND;
+		this.riverPorts = new HashMap<Integer,TerrainId>();
 	}
 
 	private void init()
@@ -48,12 +51,44 @@ class RegionDetail
 		dirty = true;
 	}
 
-	/**
-	 * Picks a random terrain tile that borders the specified neighboring
-	 * region.
-	 */
-	TerrainId pickBorderTile(TerrainGeometry tg, int borderRegionId)
+	public TerrainId getRiverPort(int neighborRegionId)
 	{
+		return riverPorts.get(neighborRegionId);
+	}
+
+	/**
+	 * Picks a terrain tile that borders the specified neighboring region
+	 * for a river.
+	 * If the neighboring region has a river already generated, pick the
+	 * tile in our region opposite its tile.
+	 * Otherwise, pick a random terrain tile on that border.
+	 */
+	TerrainId pickBorderTile(int borderRegionId)
+	{
+		// if we already determined the port...
+		if (riverPorts.containsKey(borderRegionId))
+		{
+			return riverPorts.get(borderRegionId);
+		}
+
+		TerrainGeometry tg = world.getTerrainGeometry();
+
+		// if the neighboring region has already determined the
+		// port...
+		ShadowRegion neighbor = world.getShadowRegion(borderRegionId);
+		TerrainId port = neighbor.getRiverPort(regionId);
+		if (port != null)
+		{
+			TerrainId [] portN = tg.getNeighborTiles(port);
+			port = (portN[0].regionId == regionId ? portN[0] :
+				portN[1].regionId == regionId ? portN[1] :
+				portN[2]);
+			riverPorts.put(borderRegionId, port);
+			return port;
+		}
+
+		// otherwise, pick randomly
+
 		int [] nrr = new int[3];
 		int [] ntt = new int[3];
 
@@ -73,7 +108,9 @@ class RegionDetail
 
 		assert candidates.size() > 0;
 		int i = (int) Math.floor(Math.random() * candidates.size());
-		return new TerrainId(regionId, candidates.get(i));
+		port = new TerrainId(regionId, candidates.get(i));
+		riverPorts.put(borderRegionId, port);
+		return port;
 	}
 
 	public void makeRivers()
@@ -94,7 +131,7 @@ class RegionDetail
 			return;
 
 		ShadowRegion sinkNeighbor = world.getShadowRegion(sinkRegion);
-		int sinkTile = pickBorderTile(tg, sinkRegion).tile;
+		int sinkTile = pickBorderTile(sinkRegion).tile;
 
 		int [] drainage = new int[terrains.length];
 		drainage[sinkTile] = -1;
@@ -137,7 +174,7 @@ class RegionDetail
 		{
 			if (world.drainage[n-1] == regionId)
 			{
-				makeRiverFrom(pickBorderTile(tg, n), drainage);
+				makeRiverFrom(pickBorderTile(n), drainage);
 			}
 		}
 	}

@@ -8,4 +8,6 @@ interface ShadowRegion
 {
 	BiomeType getBiome();
 	void importWildlife(int newWildlife);
+
+	TerrainId getRiverPort(int neighborRegionId);
 }
