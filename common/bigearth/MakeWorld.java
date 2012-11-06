@@ -444,26 +444,29 @@ public class MakeWorld
 		for (int i = 0; i < numCells; i++)
 		{
 			if (elevation[i] < 0)
+			{
+				riverVolume[i] = 0;
 				continue;
+			}
 
 			sum += riverVolume[i];
 			count++;
 		}
-		double meanRiverVolume = sum / count;
-
-		int threshold = (int) Math.ceil(meanRiverVolume*2);
-		for (int i = 0; i < numCells; i++)
-		{
-			if (elevation[i] >= 0)
-			{
-				if (riverVolume[i] > threshold)
-				{
-					riverVolume[i] -= threshold;
-					continue;
-				}
-			}
-			riverVolume[i] = 0;
-		}
+//		double meanRiverVolume = sum / count;
+//
+//		int threshold = (int) Math.ceil(meanRiverVolume*2);
+//		for (int i = 0; i < numCells; i++)
+//		{
+//			if (elevation[i] >= 0)
+//			{
+//				if (riverVolume[i] > threshold)
+//				{
+//					riverVolume[i] -= threshold;
+//					continue;
+//				}
+//			}
+//			riverVolume[i] = 0;
+//		}
 	}
 
 	void processLakes(int [] lakeVolume)

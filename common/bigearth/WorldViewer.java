@@ -40,6 +40,7 @@ public class WorldViewer extends JFrame
 	JLabel elevationLbl;
 	JLabel temperatureLbl;
 	JLabel moistureLbl;
+	JLabel riversLbl;
 
 	private void addToolButton(String command)
 	{
@@ -157,6 +158,12 @@ public class WorldViewer extends JFrame
 
 		moistureLbl = new JLabel();
 		regionPane.add(moistureLbl, c_r);
+
+		c_l.gridy = c_r.gridy = 6;
+		regionPane.add(new JLabel("Rivers"), c_l);
+
+		riversLbl = new JLabel();
+		regionPane.add(riversLbl, c_r);
 	}
 
 	void setWorld(MakeWorld newWorld)
@@ -237,6 +244,13 @@ public class WorldViewer extends JFrame
 			}});
 		fileMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Generate Rivers");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onGenerateRiversClicked();
+			}});
+		fileMenu.add(menuItem);
+
 		JMenu viewMenu = new JMenu("View");
 		menuBar.add(viewMenu);
 
@@ -304,6 +318,12 @@ public class WorldViewer extends JFrame
 			RegionDetail r = world.regions[view.selectedRegion-1];
 			r.adjustWildlife(delta*100);
 		}
+	}
+
+	void onGenerateRiversClicked()
+	{
+		world.generateRivers();
+		world.generateFloods();
 	}
 
 	void onMakeRiversClicked()
@@ -566,6 +586,7 @@ assert(x >= 1);
 		elevationLbl.setText(String.format("%d", world.elevation[regionId-1]));
 		temperatureLbl.setText(String.format("%.1f", world.temperature[regionId-1]/10.0));
 		moistureLbl.setText(String.format("%d", world.annualRains[regionId-1] + world.floods[regionId-1]));
+		riversLbl.setText(String.format("%d", world.riverVolume[regionId-1]));
 	}
 
 	//implements WorldView.Listener
