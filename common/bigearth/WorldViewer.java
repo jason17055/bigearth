@@ -287,6 +287,13 @@ public class WorldViewer extends JFrame
 			}});
 		regionMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Make Rivers");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onMakeRiversClicked();
+			}});
+		regionMenu.add(menuItem);
+
 		setJMenuBar(menuBar);
 	}
 
@@ -296,6 +303,16 @@ public class WorldViewer extends JFrame
 		{
 			RegionDetail r = world.regions[view.selectedRegion-1];
 			r.adjustWildlife(delta*100);
+		}
+	}
+
+	void onMakeRiversClicked()
+	{
+		if (view.selectedRegion != 0)
+		{
+			RegionDetail r = world.regions[view.selectedRegion-1];
+			r.makeRivers();
+			reloadImage();
 		}
 	}
 

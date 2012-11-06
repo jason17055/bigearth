@@ -1,6 +1,7 @@
 package bigearth;
 
 import java.io.*;
+import java.util.*;
 import javax.vecmath.*;
 import com.fasterxml.jackson.core.*;
 
@@ -44,6 +45,55 @@ class RegionDetail
 		this.wildlife += delta;
 		if (wildlife < 0)
 			wildlife = 0;
+		dirty = true;
+	}
+
+	public void makeRivers()
+	{
+		final int GRASS = TerrainType.GRASS.id;
+		final int RIVER = TerrainType.LAKE.id;
+
+		TerrainGeometry tg = world.getTerrainGeometry();
+		for (int i = 0; i < terrains.length; i++)
+		{
+			terrains[i] = GRASS;
+		}
+
+		terrains[0] = RIVER;
+		ArrayList<Integer> q = new ArrayList<Integer>();
+		q.add(0);
+
+		int[] neighborRegions = new int[3];
+		int[] neighborTiles = new int[3];
+
+		while (!q.isEmpty())
+		{
+			int i = (int)Math.floor(Math.random() * q.size());
+			int tile = q.get(i);
+
+			tg.getNeighborTiles(neighborRegions, neighborTiles, regionId, tile);
+			ArrayList<Integer> candidates = new ArrayList<Integer>();
+			for (int j = 0; j < 3; j++)
+			{
+				if (neighborRegions[j] != regionId)
+					continue;
+				if (terrains[neighborTiles[j]] != GRASS)
+					continue;
+				candidates.add(neighborTiles[j]);
+			}
+
+			if (candidates.size() >= 2)
+			{
+				int j = (int)Math.floor(Math.random() * candidates.size());
+				int tileJ = candidates.get(j);
+				terrains[tileJ] = RIVER;
+				q.add(tileJ);
+			}
+			else
+			{
+				q.remove(i);
+			}
+		}
 		dirty = true;
 	}
 
