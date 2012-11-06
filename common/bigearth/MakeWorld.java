@@ -17,7 +17,11 @@ public class MakeWorld
 	int [] elevation;
 	int [] temperature; //in 10th degrees Celsius
 	int [] annualRains; //in millimeters-per-year
-	int [] drainage;    //pointers to neighboring regions
+
+	/** Each element is -1 if there is no drainage destination,
+	 * or a region id. */
+	int [] drainage;
+
 	int [] riverVolume;
 	int [] lakeLevel;
 	int [] floods;
@@ -232,10 +236,6 @@ public class MakeWorld
 		}
 		normalizeRains(annualRains);
 
-		generateDrainage();
-		generateRivers();
-		generateFloods();
-
 		this.regions = new RegionDetail[g.getCellCount()];
 		for (int i = 0; i < regions.length; i++)
 		{
@@ -244,6 +244,10 @@ public class MakeWorld
 				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
 				BiomeType.OCEAN);
 		}
+
+		generateDrainage();
+		generateRivers();
+		generateFloods();
 	}
 
 	void doOneStep()
@@ -467,6 +471,11 @@ public class MakeWorld
 //			}
 //			riverVolume[i] = 0;
 //		}
+
+		for (int i = 0; i < numCells; i++)
+		{
+			regions[i].makeRivers();
+		}
 	}
 
 	void processLakes(int [] lakeVolume)
