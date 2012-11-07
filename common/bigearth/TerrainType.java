@@ -9,7 +9,7 @@ public enum TerrainType
 	LAKE          ( 3, 0x6666ff),
 	DEEP_SEA      ( 4, 0x0000cc),
 	STREAM        ( 5, 0x6666ff),
-	ROCKY_SHORE   ( 6, 0),
+	ROCKY_SHORE   ( 6, 0xcccccc),
 	GRAVEL_BEACH  ( 7, 0),
 	SANDY_BEACH   ( 8, 0),
 	FLAT_SAND     ( 9, 0),
@@ -50,6 +50,7 @@ public enum TerrainType
 		case 3: return LAKE;
 		case 4: return DEEP_SEA;
 		case 5: return STREAM;
+		case 6: return ROCKY_SHORE;
 		default:
 			assert false;
 			return null;

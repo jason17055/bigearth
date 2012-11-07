@@ -56,6 +56,30 @@ class RegionDetail
 		return riverPorts.get(neighborRegionId);
 	}
 
+	TerrainId [] getBorderTiles(int borderRegionId)
+	{
+		TerrainGeometry tg = world.getTerrainGeometry();
+
+		int [] nrr = new int[3];
+		int [] ntt = new int[3];
+
+		ArrayList<TerrainId> candidates = new ArrayList<TerrainId>();
+		for (int tile = 0; tile < terrains.length; tile++)
+		{
+			tg.getNeighborTiles(nrr, ntt, regionId, tile);
+			for (int j = 0; j < nrr.length; j++)
+			{
+				if (nrr[j] == borderRegionId)
+				{
+					candidates.add(new TerrainId(regionId, tile));
+					break;
+				}
+			}
+		}
+
+		return candidates.toArray(new TerrainId[0]);
+	}
+
 	/**
 	 * Picks a terrain tile that borders the specified neighboring region
 	 * for a river.
@@ -89,49 +113,86 @@ class RegionDetail
 
 		// otherwise, pick randomly
 
-		int [] nrr = new int[3];
-		int [] ntt = new int[3];
-
-		ArrayList<Integer> candidates = new ArrayList<Integer>();
-		for (int tile = 0; tile < terrains.length; tile++)
-		{
-			tg.getNeighborTiles(nrr, ntt, regionId, tile);
-			for (int j = 0; j < nrr.length; j++)
-			{
-				if (nrr[j] == borderRegionId)
-				{
-					candidates.add(tile);
-					break;
-				}
-			}
-		}
-
-		assert candidates.size() > 0;
-		int i = (int) Math.floor(Math.random() * candidates.size());
-		port = new TerrainId(regionId, candidates.get(i));
+		TerrainId [] candidates = getBorderTiles(borderRegionId);
+		int i = (int) Math.floor(Math.random() * candidates.length);
+		port = candidates[i];
 		riverPorts.put(borderRegionId, port);
 		return port;
 	}
 
-	public void makeRivers()
+	public void makeOcean()
 	{
-		final int GRASS = TerrainType.GRASS.id;
-		final int RIVER = TerrainType.LAKE.id;
+		TerrainGeometry tg = world.getTerrainGeometry();
 
+		for (int i = 0; i < terrains.length; i++)
+		{
+			terrains[i] = TerrainType.DEEP_SEA.id;
+		}
+
+		for (int n : world.g.getNeighbors(regionId))
+		{
+			ShadowRegion neighbor = world.getShadowRegion(n);
+			if (neighbor.getBiome() != BiomeType.OCEAN)
+			{
+				TerrainId [] tiles = getBorderTiles(n);
+				for (TerrainId t : tiles)
+				{
+					terrains[t.tile] = TerrainType.ROCKY_SHORE.id;
+					for (TerrainId tt : tg.getNeighborTiles(t))
+					{
+						if (tt.regionId == regionId)
+							terrains[tt.tile] = TerrainType.ROCKY_SHORE.id;
+					}
+				}
+			}
+		}
+
+		dirty = true;
+	}
+
+	void makeLand()
+	{
 		TerrainGeometry tg = world.getTerrainGeometry();
 		for (int i = 0; i < terrains.length; i++)
 		{
-			terrains[i] = GRASS;
+			terrains[i] = TerrainType.GRASS.id;
 		}
+
 		dirty = true;
+	}
+
+	public void makeRivers()
+	{
+		final int RIVER = TerrainType.LAKE.id;
+
+		if (world.elevation[regionId-1] < 0)
+		{
+			makeOcean();
+		}
+		else
+		{
+			makeLand();
+		}
+
+		TerrainGeometry tg = world.getTerrainGeometry();
+			//
+			// make land
+			//
+
 
 		// find the drainage sink
+		int sinkTile;
+		{
 		int sinkRegion = world.drainage[regionId-1];
-		if (sinkRegion <= 0)
-			return;
-
-		ShadowRegion sinkNeighbor = world.getShadowRegion(sinkRegion);
-		int sinkTile = pickBorderTile(sinkRegion).tile;
+		if (sinkRegion > 0)
+		{
+			sinkTile = pickBorderTile(sinkRegion).tile;
+		}
+		else
+		{
+			sinkTile = 0;
+		}
+		}
 
 		int [] drainage = new int[terrains.length];
 		drainage[sinkTile] = -1;
@@ -182,9 +243,15 @@ class RegionDetail
 	private void makeRiverFrom(TerrainId tid, int [] drainage)
 	{
 		int t = tid.tile;
+		int count = 0;
 		while (t >= 0)
 		{
 			setTerrainType(t, TerrainType.STREAM);
+			count++;
+
+			if (count == 2 && world.elevation[regionId-1] < 0)
+				break;
+
 			t = drainage[t] - 1;
 		}
 	}
