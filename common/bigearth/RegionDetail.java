@@ -161,13 +161,28 @@ class RegionDetail
 		dirty = true;
 	}
 
+	void makeFreshwaterLake()
+	{
+		TerrainGeometry tg = world.getTerrainGeometry();
+		for (int i = 0; i < terrains.length; i++)
+		{
+			terrains[i] = TerrainType.LAKE.id;
+		}
+
+		dirty = true;
+	}
+
 	public void makeRivers()
 	{
-		final int RIVER = TerrainType.LAKE.id;
+		final int RIVER = TerrainType.STREAM.id;
 
 		if (world.elevation[regionId-1] < 0)
 		{
 			makeOcean();
+		}
+		else if (world.lakeLevel[regionId-1] > world.elevation[regionId-1])
+		{
+			makeFreshwaterLake();
 		}
 		else
 		{

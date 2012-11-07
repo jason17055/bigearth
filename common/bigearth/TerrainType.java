@@ -8,7 +8,7 @@ public enum TerrainType
 	OCEAN         ( 2, 0x0000ff),
 	LAKE          ( 3, 0x6666ff),
 	DEEP_SEA      ( 4, 0x0000cc),
-	STREAM        ( 5, 0x6666ff),
+	STREAM        ( 5, 0x4444ff),
 	ROCKY_SHORE   ( 6, 0xcccccc),
 	GRAVEL_BEACH  ( 7, 0),
 	SANDY_BEACH   ( 8, 0),
