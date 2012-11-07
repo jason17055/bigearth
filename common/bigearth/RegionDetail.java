@@ -80,6 +80,31 @@ class RegionDetail
 		return candidates.toArray(new TerrainId[0]);
 	}
 
+	private TerrainId pickRandomInnerTile()
+	{
+		TerrainGeometry tg = world.getTerrainGeometry();
+
+		int [] nrr = new int[3];
+		int [] ntt = new int[3];
+
+		ArrayList<TerrainId> candidates = new ArrayList<TerrainId>();
+		for (int tile = 0; tile < terrains.length; tile++)
+		{
+			tg.getNeighborTiles(nrr, ntt, regionId, tile);
+			boolean flag = false;
+			for (int j = 0; j < nrr.length; j++)
+			{
+				if (nrr[j] != regionId)
+					flag = true;
+			}
+			if (!flag)
+				candidates.add(new TerrainId(regionId, tile));
+		}
+
+		int i = (int) Math.floor(Math.random() * candidates.size());
+		return candidates.get(i);
+	}
+
 	/**
 	 * Picks a terrain tile that borders the specified neighboring region
 	 * for a river.
@@ -190,14 +215,9 @@ class RegionDetail
 		}
 
 		TerrainGeometry tg = world.getTerrainGeometry();
-			//
-			// make land
-			//
-
 
 		// find the drainage sink
 		int sinkTile;
-		{
 		int sinkRegion = world.drainage[regionId-1];
 		if (sinkRegion > 0)
 		{
@@ -206,7 +226,6 @@ class RegionDetail
 		else
 		{
 			sinkTile = 0;
-		}
 		}
 
 		int [] drainage = new int[terrains.length];
@@ -246,12 +265,21 @@ class RegionDetail
 			todo.add(tile1);
 		}
 
+		int countSources = 0;
 		for (int n : world.g.getNeighbors(regionId))
 		{
-			if (world.drainage[n-1] == regionId)
+			if (world.drainage[n-1] == regionId && world.elevation[n-1] >= 0)
 			{
 				makeRiverFrom(pickBorderTile(n), drainage);
+				countSources++;
 			}
+		}
+
+		if (countSources == 0 && world.elevation[regionId-1] >= 0 && sinkRegion > 0)
+		{
+			makeRiverFrom(
+				pickRandomInnerTile(),
+				drainage);
 		}
 	}
 
