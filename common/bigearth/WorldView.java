@@ -8,7 +8,7 @@ import javax.swing.*;
 import javax.vecmath.*;
 
 public class WorldView extends JPanel
-	implements MouseListener, MouseMotionListener
+	implements MouseListener, MouseMotionListener, MouseWheelListener
 {
 	MakeWorld world;
 	int [] colors;
@@ -30,6 +30,7 @@ public class WorldView extends JPanel
 		setPreferredSize(new Dimension(WIDTH,HEIGHT));
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		addMouseWheelListener(this);
 		zoomFactor = 1.0;
 		yOffset = 0;
 
@@ -479,6 +480,15 @@ public class WorldView extends JPanel
 		//transformMatrix.mul(rZ, rX);
 		transformMatrix.mul(rX, rZ);
 		inverseTransformMatrix.invert(transformMatrix);
+	}
+
+	// implements MouseWheelListener
+	public void mouseWheelMoved(MouseWheelEvent ev)
+	{
+		if (ev.getWheelRotation() > 0)
+			zoomOut();
+		else
+			zoomIn();
 	}
 
 	// implements MouseListener
