@@ -174,6 +174,76 @@ public class MakeRivers
 		}
 
 		//
+		// process the lakes
+		//
+
+		for (Geometry.VertexId lakeVertex : lakes.keySet())
+		{
+			// see if we can carve a path to a neighboring separate river system
+			Geometry.VertexId [] candidates = world.g.getNearbyVertices(lakeVertex);
+			Geometry.VertexId best = null;
+			double bestV = Double.POSITIVE_INFINITY;
+
+			double lakeHeight = getVertexHeight(lakeVertex);
+			int water = lakes.get(lakeVertex);
+
+			for (Geometry.VertexId neighborVertex : candidates)
+			{
+				Geometry.VertexId termVtx = neighborVertex;
+				while (drainage.containsKey(termVtx))
+				{
+					termVtx = drainage.get(termVtx);
+				}
+
+				// the neighboring river we pick must terminate at some
+				// vertex other than our own
+				if (termVtx == lakeVertex) 
+					continue;
+
+				// the neighboring river we pick must terminate at a
+				// lower-elevation vertex
+				if (getVertexHeight(termVtx) >= lakeHeight)
+					continue;
+
+				// assuming the above criteria are met, pick the
+				// neighboring vertex which is lowest in elevation
+
+				double h = getVertexHeight(neighborVertex);
+				if (h < bestV)
+				{
+					bestV = h;
+					best = neighborVertex;
+				}
+			}
+
+			if (best != null)
+			{
+	System.out.println("for lake at "+lakeVertex+", adding river to "+best);
+				RiverInfo ri = new RiverInfo();
+				ri.volume = water;
+				rivers.put(world.g.getEdgeByEndpoints(lakeVertex, best), ri);
+				drainage.put(lakeVertex, best);
+
+				// add this lake's volume to the downstream river
+				Geometry.VertexId v = best;
+				while (drainage.containsKey(v))
+				{
+					Geometry.VertexId nextVtx = drainage.get(v);
+					Geometry.EdgeId eId = world.g.getEdgeByEndpoints(v, nextVtx);
+					RiverInfo r = rivers.get(eId);
+					assert r != null;
+
+					r.volume += water;
+					v = nextVtx;
+				}
+			}
+			else
+			{
+	System.out.println("nowhere to take lake at "+lakeVertex);
+			}
+		}
+
+		//
 		// place rivers
 		//
 
