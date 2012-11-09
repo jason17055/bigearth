@@ -35,6 +35,7 @@ class RegionDetail
 		this.regionId = regionId;
 		this.biome = BiomeType.GRASSLAND;
 		this.riverPorts = new HashMap<Integer,TerrainId>();
+		this.rivers = new int[6];
 	}
 
 	private void init()
@@ -406,6 +407,18 @@ if (false)
 	{
 		assert newWildlife >= 0;
 		this.wildlifeImmigrants += newWildlife;
+	}
+
+	void setRiver(int neighborId, int value)
+	{
+		int [] nn = world.g.getNeighbors(regionId);
+		for (int i = 0; i < nn.length; i++)
+		{
+			if (nn[i] == neighborId)
+			{
+				rivers[i] = value;
+			}
+		}
 	}
 
 	public void setTerrainType(int terrainId, TerrainType type)

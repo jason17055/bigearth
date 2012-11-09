@@ -285,6 +285,9 @@ public class WorldView extends JPanel
 
 				gr.setColor(new Color(colors[i]));
 				gr.fillPolygon(x_coords, y_coords, bb.length);
+
+				RegionDetail r = world.regions[i];
+				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
 			}
 		}
 
@@ -402,6 +405,22 @@ public class WorldView extends JPanel
 					SphereGeometry.fromPolar(lgt, lat_1),
 					SphereGeometry.fromPolar(lgt, lat_2)
 					);
+			}
+		}
+	}
+
+	void drawRegionBorder(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)
+	{
+		int n = x_coords.length;
+
+		gr.setColor(Color.BLACK);
+		for (int i = 0; i < n; i++)
+		{
+			if (r.rivers[i] > 0)
+			{
+				gr.drawLine(x_coords[i], y_coords[i],
+					x_coords[(i+n-1)%n],
+					y_coords[(i+n-1)%n]);
 			}
 		}
 	}

@@ -180,7 +180,16 @@ public class MakeRivers
 		for (Geometry.EdgeId eId : rivers.keySet())
 		{
 			RiverInfo r = rivers.get(eId);
-			System.out.println("River at "+eId+" : "+ r.volume);
+			int [] cc = eId.getAdjacentCells();
+
+			RegionDetail r0 = world.regions[cc[0]-1];
+			RegionDetail r1 = world.regions[cc[1]-1];
+
+			assert r0 != null;
+			assert r1 != null;
+
+			r0.setRiver(cc[1], r.volume);
+			r1.setRiver(cc[0], r.volume);
 		}
 	}
 
