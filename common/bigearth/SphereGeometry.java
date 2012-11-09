@@ -276,6 +276,25 @@ public class SphereGeometry implements Geometry
 		{
 			return new int[] { cell1, cell2, cell3 };
 		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj instanceof MyVertexId)
+			{
+				MyVertexId rhs = (MyVertexId) obj;
+				return this.cell1 == rhs.cell1 &&
+					this.cell2 == rhs.cell2 &&
+					this.cell3 == rhs.cell3;
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return cell1 + 33 * (cell2 + 33 * (cell3));
+		}
 	}
 
 	private class MyEdgeId implements EdgeId
