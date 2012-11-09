@@ -257,7 +257,7 @@ public class SphereGeometry implements Geometry
 		}
 	}
 
-	private class MyVertexId implements VertexId
+	private static class MyVertexId implements VertexId
 	{
 		int cell1;
 		int cell2;
@@ -300,6 +300,32 @@ public class SphereGeometry implements Geometry
 		public VertexId [] getEndpoints()
 		{
 			return getEdgeEndpoints(this);
+		}
+	}
+
+	//implements Geometry
+	public EdgeId getEdgeByEndpoints(VertexId fromVertex, VertexId toVertex)
+	{
+		int [] cc = fromVertex.getAdjacentCells();
+		int [] dd = toVertex.getAdjacentCells();
+
+		// assumption- two of the cell ids in cc[] match two of
+		// the cell ids in dd[]. We will look for the cell id in
+		// cc[] that does not match any in dd[], and conclude
+		// that the other two ids in cc[] are the matching ones.
+
+		if (cc[0] != dd[0] && cc[0] != dd[1] && cc[0] != dd[2])
+		{
+			return getEdgeBetween(cc[1], cc[2]);
+		}
+		else if (cc[1] != dd[0] && cc[1] != dd[1] && cc[1] != dd[2])
+		{
+			return getEdgeBetween(cc[0], cc[2]);
+		}
+		else
+		{
+			assert(cc[2] != dd[0] && cc[2] != dd[1] && cc[2] != dd[2]);
+			return getEdgeBetween(cc[0], cc[1]);
 		}
 	}
 
@@ -364,6 +390,28 @@ public class SphereGeometry implements Geometry
 			rv[i] = getEdgeBetween(cellId, nn[i]);
 		}
 		return rv;
+	}
+
+	//implements Geometry
+	public VertexId [] getNearbyVertices(VertexId vertex)
+	{
+		int [] cc = vertex.getAdjacentCells();
+		VertexId [] result = new VertexId[cc.length];
+		for (int i = 0; i < cc.length; i++)
+		{
+			int x = cc[(i+1)%cc.length];
+			int [] nn = getNeighbors(cc[i]);
+			for (int j = 0; j < nn.length; j++)
+			{
+				if (nn[(j+1)%nn.length] == x)
+				{
+					result[i] = getVertexBetween(cc[i], nn[j], x);
+				}
+			}
+			assert result[i] != null;
+		}
+
+		return result;
 	}
 
 	//implements Geometry

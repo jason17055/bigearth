@@ -32,8 +32,11 @@ public interface Geometry
 	};
 
 	EdgeId getEdgeBetween(int cell1, int cell2);
+	EdgeId getEdgeByEndpoints(VertexId fromVertex, VertexId toVertex);
+
 	EdgeId [] getSurroundingEdges(int cellId);
 	VertexId [] getSurroundingVertices(int cellId);
+	VertexId [] getNearbyVertices(VertexId vertex);
 
 	Point3d getCenterPoint(int cellId);
 	int findCell(Point3d pt);

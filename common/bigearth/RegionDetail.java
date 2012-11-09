@@ -12,6 +12,7 @@ class RegionDetail
 	int regionId;
 
 	BiomeType biome;
+	int [] rivers;
 
 	int wildlife;
 	int wildlifeHunted;
