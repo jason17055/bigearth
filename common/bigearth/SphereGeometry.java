@@ -320,6 +320,24 @@ public class SphereGeometry implements Geometry
 		{
 			return getEdgeEndpoints(this);
 		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj instanceof MyEdgeId)
+			{
+				MyEdgeId rhs = (MyEdgeId) obj;
+				return this.cell1 == rhs.cell1 &&
+					this.cell2 == rhs.cell2;
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return cell1 + 33 * cell2;
+		}
 	}
 
 	//implements Geometry
