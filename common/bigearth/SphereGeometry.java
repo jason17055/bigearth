@@ -293,7 +293,13 @@ public class SphereGeometry implements Geometry
 		@Override
 		public int hashCode()
 		{
-			return cell1 + 33 * (cell2 + 33 * (cell3));
+			return cell1 + 257 * (cell2 + 257 * (cell3));
+		}
+
+		@Override
+		public String toString()
+		{
+			return String.format("V<%d,%d,%d>", cell1, cell2, cell3);
 		}
 	}
 
@@ -336,7 +342,13 @@ public class SphereGeometry implements Geometry
 		@Override
 		public int hashCode()
 		{
-			return cell1 + 33 * cell2;
+			return cell1 + 257 * cell2;
+		}
+
+		@Override
+		public String toString()
+		{
+			return String.format("E<%d,%d>", cell1, cell2);
 		}
 	}
 
