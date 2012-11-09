@@ -5,8 +5,8 @@ import java.util.*;
 public class MakeRivers
 {
 	MakeWorld world;
-	ArrayList<Geometry.VertexId> todo;
-	HashSet<Geometry.VertexId> remaining;
+	List<Geometry.VertexId> todo;
+	Set<Geometry.VertexId> remaining;
 	Map<Geometry.VertexId, Geometry.VertexId> drainage;
 	Map<Geometry.EdgeId, RiverInfo> rivers;
 
@@ -16,6 +16,7 @@ public class MakeRivers
 		this.todo = new ArrayList<Geometry.VertexId>();
 		this.remaining = new HashSet<Geometry.VertexId>();
 		this.drainage = new HashMap<Geometry.VertexId, Geometry.VertexId>();
+		this.rivers = new HashMap<Geometry.EdgeId, RiverInfo>();
 	}
 
 	void initialize()
@@ -23,6 +24,7 @@ public class MakeRivers
 		todo.clear();
 		remaining.clear();
 		drainage.clear();
+		rivers.clear();
 
 		int numCells = world.g.getCellCount();
 		for (int i = 1; i <= numCells; i++)
@@ -82,7 +84,7 @@ public class MakeRivers
 	/**
 	 * @return true if a river was added, false if no more rivers to add
 	 */
-	private boolean step()
+	private boolean drainageStep()
 	{
 		for (;;)
 		{
@@ -129,10 +131,61 @@ public class MakeRivers
 	public void generateRivers()
 	{
 		initialize();
-		while (step());
+		while (drainageStep());
+
+		//
+		// determine volume of rivers
+		//
+
+		Map<Geometry.VertexId, Integer> lakes = new HashMap<Geometry.VertexId,Integer>();
+		for (Geometry.VertexId vtx : drainage.keySet())
+		{
+			int [] cells = vtx.getAdjacentCells();
+			int water = 0;
+
+			for (int cellId : cells)
+			{
+				water += world.annualRains[cellId-1];
+			}
+			water = (water - 100) / 30;
+			if (water <= 0)
+				continue;
+
+			Geometry.VertexId v = vtx;
+			while (drainage.containsKey(v))
+			{
+				Geometry.VertexId nextVtx = drainage.get(v);
+				Geometry.EdgeId eId = world.g.getEdgeByEndpoints(v, nextVtx);
+				RiverInfo r = rivers.get(eId);
+				assert r != null;
+
+				r.volume += water;
+				v = nextVtx;
+			}
+
+			if (!lakes.containsKey(v))
+			{
+				lakes.put(v, water);
+			}
+			else
+			{
+				lakes.put(v, lakes.get(v) + water);
+			}
+		}
+
+		//
+		// place rivers
+		//
+
+		for (Geometry.EdgeId eId : rivers.keySet())
+		{
+			RiverInfo r = rivers.get(eId);
+			System.out.println("River at "+eId+" : "+ r.volume);
+		}
 	}
 
 	static class RiverInfo
 	{
+		int volume;
 	}
 }

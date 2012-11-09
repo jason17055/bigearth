@@ -322,8 +322,11 @@ public class WorldViewer extends JFrame
 
 	void onGenerateRiversClicked()
 	{
-		world.generateRivers();
-		world.generateFloods();
+		MakeRivers mr = new MakeRivers(world);
+		mr.generateRivers();
+
+//		world.generateRivers();
+//		world.generateFloods();
 	}
 
 	void onMakeRiversClicked()
