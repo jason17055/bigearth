@@ -218,7 +218,7 @@ public class MakeRivers
 
 			if (best != null)
 			{
-	System.out.println("for lake at "+lakeVertex+", adding river to "+best);
+				lakes.get(lakeVertex).type = LakeType.NONTERMINAL;
 
 				RiverInfo ri = new RiverInfo();
 				ri.upstreamVertex = lakeVertex;
@@ -284,8 +284,17 @@ public class MakeRivers
 		Geometry.VertexId upstreamVertex;
 	}
 
+	static enum LakeType
+	{
+		TERMINAL,
+		NONTERMINAL;
+	}
+
 	static class LakeInfo
 	{
 		int volume;
+		LakeType type;
+
+		LakeInfo() { type = LakeType.TERMINAL; }
 	}
 }

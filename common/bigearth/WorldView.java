@@ -11,6 +11,7 @@ public class WorldView extends JPanel
 	implements MouseListener, MouseMotionListener, MouseWheelListener
 {
 	MakeWorld world;
+	MakeRivers mrivers;
 	int [] colors;
 	int [] rivers;
 	BufferedImage image;
@@ -276,18 +277,44 @@ public class WorldView extends JPanel
 				Point3d [] bb = world.g.getCellBoundary(i+1);
 				int [] x_coords = new int[bb.length];
 				int [] y_coords = new int[bb.length];
-				for (int j = 0; j < bb.length; j++)
-				{
-					Point p = toScreen(bb[j]);
-					x_coords[j] = p.x;
-					y_coords[j] = p.y;
-				}
+				toScreen_a(bb, x_coords, y_coords);
 
 				gr.setColor(new Color(colors[i]));
 				gr.fillPolygon(x_coords, y_coords, bb.length);
+			}
+
+			for (int i = 0; i < colors.length; i++)
+			{
+				if (!screen.intersects(regionBounds[i]))
+					continue;
+
+				Point3d [] bb = world.g.getCellBoundary(i+1);
+				int [] x_coords = new int[bb.length];
+				int [] y_coords = new int[bb.length];
+				toScreen_a(bb, x_coords, y_coords);
 
 				RegionDetail r = world.regions[i];
 				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
+			}
+		}
+
+		if (mrivers != null)
+		{
+			gr.setColor(Color.CYAN);
+			for (Geometry.VertexId lakeVtx : mrivers.lakes.keySet())
+			{
+				int x = 0;
+				int y = 0;
+				for (int cellId : lakeVtx.getAdjacentCells())
+				{
+					x += pts[cellId-1].x;
+					y += pts[cellId-1].y;
+				}
+				x /= 3;
+				y /= 3;
+
+				int radius = mrivers.lakes.get(lakeVtx).type == MakeRivers.LakeType.NONTERMINAL ? 5 : 10;
+				gr.fillOval(x-radius,y-radius,2*radius,2*radius);
 			}
 		}
 
@@ -409,6 +436,19 @@ public class WorldView extends JPanel
 		}
 	}
 
+	private static void drawArrow(Graphics gr, int x0, int y0, int x1, int y1)
+	{
+		// draw shaft of arrow
+		gr.drawLine(x0, y0, x1, y1);
+
+		// draw head
+		int dx = (x1 - x0) / 5;
+		int dy = (y1 - y0) / 5;
+
+		gr.drawLine(x1, y1, x1-dx-dy, y1-dy+dx);
+		gr.drawLine(x1, y1, x1-dx+dy, y1-dy-dx);
+	}
+
 	void drawRegionBorder(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)
 	{
 		int n = x_coords.length;
@@ -418,9 +458,12 @@ public class WorldView extends JPanel
 		{
 			if (r.rivers[i] > 0)
 			{
-				gr.drawLine(x_coords[i], y_coords[i],
+				drawArrow(gr,
 					x_coords[(i+n-1)%n],
-					y_coords[(i+n-1)%n]);
+					y_coords[(i+n-1)%n],
+					x_coords[i],
+					y_coords[i]
+					);
 			}
 		}
 	}
