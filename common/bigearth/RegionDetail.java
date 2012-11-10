@@ -468,6 +468,23 @@ if (false)
 			out.writeNumber(terrains[i]);
 		}
 		out.writeEndArray();
+
+		for (int i = 0; i < sides.length; i++)
+		{
+			if (sides[i] != null)
+			{
+				out.writeFieldName("side"+i);
+				sides[i].write(out);
+			}
+		}
+		for (int i = 0; i < corners.length; i++)
+		{
+			if (corners[i] != null)
+			{
+				out.writeFieldName("corner"+i);
+				corners[i].write(out);
+			}
+		}
 		out.writeEndObject();
 		out.close();
 	}
@@ -503,6 +520,30 @@ if (false)
 				wildlife = in.nextIntValue(wildlife);
 			else if (s.equals("biome"))
 				biome = BiomeType.valueOf(in.nextTextValue());
+			else if (s.equals("side0"))
+				sides[0] = RegionSideDetail.parse(in);
+			else if (s.equals("side1"))
+				sides[1] = RegionSideDetail.parse(in);
+			else if (s.equals("side2"))
+				sides[2] = RegionSideDetail.parse(in);
+			else if (s.equals("side3"))
+				sides[3] = RegionSideDetail.parse(in);
+			else if (s.equals("side4"))
+				sides[4] = RegionSideDetail.parse(in);
+			else if (s.equals("side5"))
+				sides[5] = RegionSideDetail.parse(in);
+			else if (s.equals("corner0"))
+				corners[0] = RegionCornerDetail.parse(in);
+			else if (s.equals("corner1"))
+				corners[1] = RegionCornerDetail.parse(in);
+			else if (s.equals("corner2"))
+				corners[2] = RegionCornerDetail.parse(in);
+			else if (s.equals("corner3"))
+				corners[3] = RegionCornerDetail.parse(in);
+			else if (s.equals("corner4"))
+				corners[4] = RegionCornerDetail.parse(in);
+			else if (s.equals("corner5"))
+				corners[5] = RegionCornerDetail.parse(in);
 			else
 			{
 				in.nextToken();
