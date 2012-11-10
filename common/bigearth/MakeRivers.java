@@ -279,6 +279,23 @@ public class MakeRivers
 				r.volume > 100 ? RegionSideDetail.SideFeature.CREEK :
 				RegionSideDetail.SideFeature.BROOK);
 		}
+
+		//
+		// place lakes
+		//
+
+		for (Geometry.VertexId vId : lakes.keySet())
+		{
+			LakeInfo lake = lakes.get(vId);
+			int [] cc = vId.getAdjacentCells();
+
+			int aRegion = cc[0];
+			RegionDetail region = world.regions[aRegion-1];
+			region.setLake(vId,
+				lake.type == LakeType.TERMINAL ? RegionCornerDetail.PointFeature.LAKE :
+				RegionCornerDetail.PointFeature.POND
+				);
+		}
 	}
 
 	static class RiverInfo

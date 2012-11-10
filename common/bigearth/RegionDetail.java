@@ -400,6 +400,23 @@ if (false)
 		doWildlifeMaintenance_cleanup();
 	}
 
+	int findNeighbor(Geometry.VertexId cornerVtx)
+	{
+		int [] cc = cornerVtx.getAdjacentCells();
+		if (cc[0] == regionId)
+		{
+			return findNeighbor(cc[1]);
+		}
+		else
+		{
+			throw new Error("not implemented");
+		}
+	}
+
+	/**
+	 * Finds the index number of the specified region in this region's
+	 * neighbor list.
+	 */
 	int findNeighbor(int neighborId)
 	{
 		int [] nn = world.g.getNeighbors(regionId);
@@ -435,6 +452,17 @@ if (false)
 	{
 		assert newWildlife >= 0;
 		this.wildlifeImmigrants += newWildlife;
+	}
+
+	void setLake(Geometry.VertexId cornerVtx, RegionCornerDetail.PointFeature lakeType)
+	{
+		int i = findNeighbor(cornerVtx);
+		if (corners[i] == null)
+		{
+			corners[i] = new RegionCornerDetail();
+		}
+		corners[i].feature = lakeType;
+		dirty = true;
 	}
 
 	void setRiver(int neighborId, RegionSideDetail.SideFeature riverLevel)

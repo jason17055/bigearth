@@ -11,7 +11,6 @@ public class WorldView extends JPanel
 	implements MouseListener, MouseMotionListener, MouseWheelListener
 {
 	MakeWorld world;
-	MakeRivers mrivers;
 	int [] colors;
 	int [] rivers;
 	BufferedImage image;
@@ -269,7 +268,10 @@ public class WorldView extends JPanel
 		}
 		else if (zoomFactor < 16)
 		{
-			for (int i = 0; i < colors.length; i++)
+			//
+			// fill region areas
+			//
+			for (int i = 0; i < regionBounds.length; i++)
 			{
 				if (!screen.intersects(regionBounds[i]))
 					continue;
@@ -283,7 +285,10 @@ public class WorldView extends JPanel
 				gr.fillPolygon(x_coords, y_coords, bb.length);
 			}
 
-			for (int i = 0; i < colors.length; i++)
+			//
+			// draw region sides
+			//
+			for (int i = 0; i < regionBounds.length; i++)
 			{
 				if (!screen.intersects(regionBounds[i]))
 					continue;
@@ -296,26 +301,24 @@ public class WorldView extends JPanel
 				RegionDetail r = world.regions[i];
 				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
 			}
-		}
 
-		if (mrivers != null)
-		{
-			gr.setColor(Color.CYAN);
-			for (Geometry.VertexId lakeVtx : mrivers.lakes.keySet())
+			//
+			// draw region corners
+			//
+			for (int i = 0; i < regionBounds.length; i++)
 			{
-				int x = 0;
-				int y = 0;
-				for (int cellId : lakeVtx.getAdjacentCells())
-				{
-					x += pts[cellId-1].x;
-					y += pts[cellId-1].y;
-				}
-				x /= 3;
-				y /= 3;
+				if (!screen.intersects(regionBounds[i]))
+					continue;
 
-				int radius = mrivers.lakes.get(lakeVtx).type == MakeRivers.LakeType.NONTERMINAL ? 5 : 10;
-				gr.fillOval(x-radius,y-radius,2*radius,2*radius);
+				Point3d [] bb = world.g.getCellBoundary(i+1);
+				int [] x_coords = new int[bb.length];
+				int [] y_coords = new int[bb.length];
+				toScreen_a(bb, x_coords, y_coords);
+
+				RegionDetail r = world.regions[i];
+				drawRegionCorners(gr, i+1, r, x_coords, y_coords);
 			}
+				
 		}
 
 		if (rivers != null)
@@ -466,6 +469,27 @@ public class WorldView extends JPanel
 					);
 			}
 		}
+	}
+
+	void drawRegionCorners(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)
+	{
+		int n = x_coords.length;
+		for (int i = 0; i < n; i++)
+		{
+			if (r.corners[i] != null)
+			{
+				drawRegionCorner(gr, regionId, r, i, x_coords[i], y_coords[i]);
+			}
+		}
+	}
+
+	void drawRegionCorner(Graphics gr, int regionId, RegionDetail r, int cornerIdx, int x, int y)
+	{
+		gr.setColor(Color.CYAN);
+
+		RegionCornerDetail.PointFeature type = r.corners[cornerIdx].feature;
+		int radius = type == RegionCornerDetail.PointFeature.LAKE ? 10 : 5;
+		gr.fillOval(x-radius,y-radius,2*radius,2*radius);
 	}
 
 	void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
