@@ -12,7 +12,8 @@ class RegionDetail
 	int regionId;
 
 	BiomeType biome;
-	int [] rivers;
+	RegionSideDetail [] sides;
+	RegionCornerDetail [] corners;
 
 	int wildlife;
 	int wildlifeHunted;
@@ -35,7 +36,8 @@ class RegionDetail
 		this.regionId = regionId;
 		this.biome = BiomeType.GRASSLAND;
 		this.riverPorts = new HashMap<Integer,TerrainId>();
-		this.rivers = new int[6];
+		this.sides = new RegionSideDetail[6];
+		this.corners = new RegionCornerDetail[6];
 	}
 
 	private void init()
@@ -398,9 +400,35 @@ if (false)
 		doWildlifeMaintenance_cleanup();
 	}
 
+	int findNeighbor(int neighborId)
+	{
+		int [] nn = world.g.getNeighbors(regionId);
+		for (int i = 0; i < nn.length; i++)
+		{
+			if (nn[i] == neighborId)
+			{
+				return i;
+			}
+		}
+
+		throw new Error("Unexpected: region "+neighborId+" is not a neighbor");
+	}
+
 	public BiomeType getBiome()
 	{
 		return biome;
+	}
+
+	public RegionSideDetail.SideFeature getSideFeature(int sideIndex)
+	{
+		if (sides[sideIndex] != null)
+		{
+			return sides[sideIndex].feature;
+		}
+		else
+		{
+			return RegionSideDetail.SideFeature.NONE;
+		}
 	}
 
 	public void importWildlife(int newWildlife)
@@ -409,16 +437,15 @@ if (false)
 		this.wildlifeImmigrants += newWildlife;
 	}
 
-	void setRiver(int neighborId, int value)
+	void setRiver(int neighborId, RegionSideDetail.SideFeature riverLevel)
 	{
-		int [] nn = world.g.getNeighbors(regionId);
-		for (int i = 0; i < nn.length; i++)
+		int i = findNeighbor(neighborId);
+		if (sides[i] == null)
 		{
-			if (nn[i] == neighborId)
-			{
-				rivers[i] = value;
-			}
+			sides[i] = new RegionSideDetail();
 		}
+		sides[i].feature = riverLevel;
+		dirty = true;
 	}
 
 	public void setTerrainType(int terrainId, TerrainType type)

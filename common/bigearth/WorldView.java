@@ -456,7 +456,7 @@ public class WorldView extends JPanel
 		gr.setColor(Color.BLACK);
 		for (int i = 0; i < n; i++)
 		{
-			if (r.rivers[i] > 0)
+			if (r.getSideFeature(i).isRiver())
 			{
 				drawArrow(gr,
 					x_coords[(i+n-1)%n],

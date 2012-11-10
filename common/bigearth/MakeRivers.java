@@ -274,7 +274,10 @@ public class MakeRivers
 			}
 
 			RegionDetail region = world.regions[bRegion-1];
-			region.setRiver(aRegion, r.volume);
+			region.setRiver(aRegion,
+				r.volume > 500 ? RegionSideDetail.SideFeature.RIVER :
+				r.volume > 100 ? RegionSideDetail.SideFeature.CREEK :
+				RegionSideDetail.SideFeature.BROOK);
 		}
 	}
 
