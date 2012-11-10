@@ -9,6 +9,7 @@ public class MakeRivers
 	Set<Geometry.VertexId> remaining;
 	Map<Geometry.VertexId, Geometry.VertexId> drainage;
 	Map<Geometry.EdgeId, RiverInfo> rivers;
+	Map<Geometry.VertexId, LakeInfo> lakes;
 
 	public MakeRivers(MakeWorld world)
 	{
@@ -75,8 +76,10 @@ public class MakeRivers
 		remaining.remove(toVertex);
 		todo.add(toVertex);
 
-		rivers.put(world.g.getEdgeByEndpoints(fromVertex, toVertex), new RiverInfo());
-		drainage.put(fromVertex, toVertex);
+		RiverInfo ri = new RiverInfo();
+		ri.upstreamVertex = toVertex;
+		rivers.put(world.g.getEdgeByEndpoints(fromVertex, toVertex), ri);
+		drainage.put(toVertex, fromVertex);
 
 		return true;
 	}
@@ -137,7 +140,7 @@ public class MakeRivers
 		// determine volume of rivers
 		//
 
-		Map<Geometry.VertexId, Integer> lakes = new HashMap<Geometry.VertexId,Integer>();
+		lakes = new HashMap<Geometry.VertexId,LakeInfo>();
 		for (Geometry.VertexId vtx : drainage.keySet())
 		{
 			int [] cells = vtx.getAdjacentCells();
@@ -165,12 +168,9 @@ public class MakeRivers
 
 			if (!lakes.containsKey(v))
 			{
-				lakes.put(v, water);
+				lakes.put(v, new LakeInfo());
 			}
-			else
-			{
-				lakes.put(v, lakes.get(v) + water);
-			}
+			lakes.get(v).volume += water;
 		}
 
 		//
@@ -185,7 +185,7 @@ public class MakeRivers
 			double bestV = Double.POSITIVE_INFINITY;
 
 			double lakeHeight = getVertexHeight(lakeVertex);
-			int water = lakes.get(lakeVertex);
+			int water = lakes.get(lakeVertex).volume;
 
 			for (Geometry.VertexId neighborVertex : candidates)
 			{
@@ -219,7 +219,9 @@ public class MakeRivers
 			if (best != null)
 			{
 	System.out.println("for lake at "+lakeVertex+", adding river to "+best);
+
 				RiverInfo ri = new RiverInfo();
+				ri.upstreamVertex = lakeVertex;
 				ri.volume = water;
 				rivers.put(world.g.getEdgeByEndpoints(lakeVertex, best), ri);
 				drainage.put(lakeVertex, best);
@@ -250,20 +252,39 @@ public class MakeRivers
 		for (Geometry.EdgeId eId : rivers.keySet())
 		{
 			RiverInfo r = rivers.get(eId);
-			int [] cc = eId.getAdjacentCells();
+			int [] cc = r.upstreamVertex.getAdjacentCells();
+			int [] dd = eId.getAdjacentCells();
 
-			RegionDetail r0 = world.regions[cc[0]-1];
-			RegionDetail r1 = world.regions[cc[1]-1];
+			int aRegion;
+			int bRegion;
+			if (cc[0] != dd[0] && cc[0] != dd[1])
+			{
+				aRegion = cc[1];
+				bRegion = cc[2];
+			}
+			else if (cc[1] != dd[0] && cc[1] != dd[1])
+			{
+				aRegion = cc[2];
+				bRegion = cc[0];
+			}
+			else
+			{
+				aRegion = cc[0];
+				bRegion = cc[1];
+			}
 
-			assert r0 != null;
-			assert r1 != null;
-
-			r0.setRiver(cc[1], r.volume);
-			r1.setRiver(cc[0], r.volume);
+			RegionDetail region = world.regions[bRegion-1];
+			region.setRiver(aRegion, r.volume);
 		}
 	}
 
 	static class RiverInfo
+	{
+		int volume;
+		Geometry.VertexId upstreamVertex;
+	}
+
+	static class LakeInfo
 	{
 		int volume;
 	}
