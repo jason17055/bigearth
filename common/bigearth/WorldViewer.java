@@ -402,6 +402,7 @@ public class WorldViewer extends JFrame
 		}
 		else if (ev.getSource() == showRiversBtn)
 		{
+			view.showRivers = showRiversBtn.isSelected();
 			reloadImage();
 		}
 	}
@@ -484,19 +485,6 @@ public class WorldViewer extends JFrame
 			colors[i] = colorOfRegion(i+1);
 		}
 
-		view.rivers = new int[world.g.getCellCount()];
-		for (int i = 0; i < colors.length; i++)
-		{
-			if (showRiversBtn.isSelected())
-			{
-				if (world.riverVolume[i] > 0)
-					view.rivers[i] = world.drainage[i];
-			}
-			else
-			{
-				view.rivers[i] = 0;
-			}
-		}
 		view.generateImage(world.g, colors);
 	}
 

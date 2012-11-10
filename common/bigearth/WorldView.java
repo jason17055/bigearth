@@ -12,7 +12,6 @@ public class WorldView extends JPanel
 {
 	MakeWorld world;
 	int [] colors;
-	int [] rivers;
 	BufferedImage image;
 	double curLongitude;
 	double curLatitude;
@@ -22,6 +21,7 @@ public class WorldView extends JPanel
 	Matrix3d transformMatrix;
 	Matrix3d inverseTransformMatrix;
 	ArrayList<Listener> listeners;
+	boolean showRivers;
 
 	public WorldView()
 	{
@@ -33,6 +33,7 @@ public class WorldView extends JPanel
 		addMouseWheelListener(this);
 		zoomFactor = 1.0;
 		yOffset = 0;
+		showRivers = true;
 
 		transformMatrix = new Matrix3d();
 		inverseTransformMatrix = new Matrix3d();
@@ -285,6 +286,8 @@ public class WorldView extends JPanel
 				gr.fillPolygon(x_coords, y_coords, bb.length);
 			}
 
+		if (showRivers)
+		{
 			//
 			// draw region sides
 			//
@@ -318,23 +321,9 @@ public class WorldView extends JPanel
 				RegionDetail r = world.regions[i];
 				drawRegionCorners(gr, i+1, r, x_coords, y_coords);
 			}
+		}
 				
-		}
-
-		if (rivers != null)
-		{
-			gr.setColor(Color.BLACK);
-			for (int i = 0; i < rivers.length; i++)
-			{
-				int d = rivers[i];
-				if (d > 0)
-				{
-					if (Math.abs(pts[i].x - pts[d-1].x) < 500)
-						gr.drawLine(pts[i].x,pts[i].y,
-							pts[d-1].x,pts[d-1].y);
-				}
-			}
-		}
+		} //end if zoom factor in [8,16}
 
 		if (zoomFactor >= 16)
 		{
