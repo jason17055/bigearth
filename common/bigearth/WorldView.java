@@ -448,14 +448,41 @@ public class WorldView extends JPanel
 		gr.setColor(Color.BLACK);
 		for (int i = 0; i < n; i++)
 		{
-			if (r.getSideFeature(i).isRiver())
+			RegionSideDetail.SideFeature sf = r.getSideFeature(i);
+			if (sf.isRiver())
 			{
+				Graphics2D gr2 = (Graphics2D) gr;
+
+				Stroke oldStroke = gr2.getStroke();
+				if (sf != RegionSideDetail.SideFeature.BROOK)
+				{
+
+				gr2.setStroke(new BasicStroke(
+					sf == RegionSideDetail.SideFeature.RIVER ? 8.0f : 5.0f
+					));
+				gr2.setColor(new Color(170,149,53));
+
 				drawArrow(gr,
 					x_coords[(i+n-1)%n],
 					y_coords[(i+n-1)%n],
 					x_coords[i],
 					y_coords[i]
 					);
+				}
+
+				gr2.setStroke(new BasicStroke(
+					sf == RegionSideDetail.SideFeature.RIVER ? 3.0f :
+					sf == RegionSideDetail.SideFeature.CREEK ? 2.0f : 1.0f));
+				gr2.setColor(Color.BLUE);
+
+				drawArrow(gr,
+					x_coords[(i+n-1)%n],
+					y_coords[(i+n-1)%n],
+					x_coords[i],
+					y_coords[i]
+					);
+
+				gr2.setStroke(oldStroke);
 			}
 		}
 	}

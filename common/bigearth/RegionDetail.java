@@ -465,6 +465,18 @@ if (false)
 		dirty = true;
 	}
 
+	void clearSides()
+	{
+		for (int i = 0; i < sides.length; i++)
+		{
+			sides[i] = null;
+		}
+		for (int i = 0; i < corners.length; i++)
+		{
+			corners[i] = null;
+		}
+	}
+
 	void setRiver(int neighborId, RegionSideDetail.SideFeature riverLevel)
 	{
 		int i = findNeighbor(neighborId);

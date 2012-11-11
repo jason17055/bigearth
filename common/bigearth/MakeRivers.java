@@ -249,6 +249,11 @@ public class MakeRivers
 		// place rivers
 		//
 
+		for (RegionDetail r : world.regions)
+		{
+			r.clearSides();
+		}
+
 		for (Geometry.EdgeId eId : rivers.keySet())
 		{
 			RiverInfo r = rivers.get(eId);
@@ -275,8 +280,8 @@ public class MakeRivers
 
 			RegionDetail region = world.regions[bRegion-1];
 			region.setRiver(aRegion,
-				r.volume > 500 ? RegionSideDetail.SideFeature.RIVER :
-				r.volume > 100 ? RegionSideDetail.SideFeature.CREEK :
+				r.volume > 2000 ? RegionSideDetail.SideFeature.RIVER :
+				r.volume > 200 ? RegionSideDetail.SideFeature.CREEK :
 				RegionSideDetail.SideFeature.BROOK);
 		}
 
