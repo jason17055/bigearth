@@ -14,6 +14,7 @@ class RegionDetail
 	BiomeType biome;
 	RegionSideDetail [] sides;
 	RegionCornerDetail [] corners;
+	int waterLevel;
 
 	int wildlife;
 	int wildlifeHunted;
@@ -38,6 +39,7 @@ class RegionDetail
 		this.riverPorts = new HashMap<Integer,TerrainId>();
 		this.sides = new RegionSideDetail[6];
 		this.corners = new RegionCornerDetail[6];
+		this.waterLevel = Integer.MIN_VALUE;
 	}
 
 	private void init()
@@ -502,6 +504,7 @@ if (false)
 		out.writeStartObject();
 		out.writeStringField("biome", biome.name());
 		out.writeNumberField("wildlife", wildlife);
+		out.writeNumberField("waterLevel", waterLevel);
 		out.writeArrayFieldStart("terrains");
 		for (int i = 0; i < terrains.length; i++)
 		{
@@ -558,6 +561,8 @@ if (false)
 				terrains = MakeWorld.json_readIntArray(in);
 			else if (s.equals("wildlife"))
 				wildlife = in.nextIntValue(wildlife);
+			else if (s.equals("waterLevel"))
+				waterLevel = in.nextIntValue(waterLevel);
 			else if (s.equals("biome"))
 				biome = BiomeType.valueOf(in.nextTextValue());
 			else if (s.equals("side0"))
