@@ -131,8 +131,120 @@ public class MakeRivers
 		}
 	}
 
+	void addWaterToRiver(Geometry.VertexId startVtx, int water)
+	{
+		Geometry.VertexId v = startVtx;
+		while (drainage.containsKey(v))
+		{
+			Geometry.VertexId nextVtx = drainage.get(v);
+			Geometry.EdgeId eId = world.g.getEdgeByEndpoints(v, nextVtx);
+			RiverInfo r = rivers.get(eId);
+			assert r != null;
+
+			r.volume += water;
+			v = nextVtx;
+		}
+
+		if (!lakes.containsKey(v))
+		{
+			lakes.put(v, new LakeInfo());
+		}
+		lakes.get(v).volume += water;
+	}
+
+	private void processSingleHexLake(int regionId, LakeInfo lake)
+	{
+		System.out.println("region "+regionId+" is now a lake");
+		System.out.println("remaining volume "+lake.volume);
+	}
+
+	private void processSinglePointLake(Geometry.VertexId lakeVertex)
+	{
+		// see if we can carve a path to a neighboring separate river system
+		Geometry.VertexId [] candidates = world.g.getNearbyVertices(lakeVertex);
+		Geometry.VertexId best = null;
+		double bestV = Double.POSITIVE_INFINITY;
+
+		double lakeHeight = getVertexHeight(lakeVertex);
+		int water = lakes.get(lakeVertex).volume;
+
+		for (Geometry.VertexId neighborVertex : candidates)
+		{
+			Geometry.VertexId termVtx = neighborVertex;
+			while (drainage.containsKey(termVtx))
+			{
+				termVtx = drainage.get(termVtx);
+			}
+
+			// the neighboring river we pick must terminate at some
+			// vertex other than our own
+			if (termVtx == lakeVertex) 
+				continue;
+
+			// the neighboring river we pick must terminate at a
+			// lower-elevation vertex
+			if (getVertexHeight(termVtx) >= lakeHeight)
+				continue;
+
+			// assuming the above criteria are met, pick the
+			// neighboring vertex which is lowest in elevation
+
+			double h = getVertexHeight(neighborVertex);
+			if (h < bestV)
+			{
+				bestV = h;
+				best = neighborVertex;
+			}
+		}
+
+		LakeInfo lake = lakes.get(lakeVertex);
+		if (best != null)
+		{
+			lake.type = LakeType.NONTERMINAL;
+
+			RiverInfo ri = new RiverInfo();
+			ri.upstreamVertex = lakeVertex;
+			ri.volume = water;
+			rivers.put(world.g.getEdgeByEndpoints(lakeVertex, best), ri);
+			drainage.put(lakeVertex, best);
+
+			// add this lake's volume to the downstream river
+			addWaterToRiver(best, water);
+		}
+		else
+		{
+			int [] cc = lakeVertex.getAdjacentCells();
+			int lowest = 0;
+			for (int i = 1; i < cc.length; i++)
+			{
+				if (world.elevation[cc[i]-1] < world.elevation[cc[lowest]-1])
+				{
+					lowest = i;
+				}
+			}
+
+			// expand lake
+			int regionId = cc[lowest];
+			world.regions[regionId-1].biome = BiomeType.LAKE;
+			world.regions[regionId-1].waterLevel = world.elevation[regionId-1]+1;
+			lake.volume = Math.max(0, lake.volume - 1000);
+			lakes.remove(lakeVertex);
+
+			if (lake.volume > 0)
+			{
+				processSingleHexLake(regionId, lake);
+			}
+		}
+	}
+
 	public void generateRivers()
 	{
+		for (RegionDetail r : world.regions)
+		{
+			r.biome = BiomeType.GRASSLAND;
+			r.clearSides();
+		}
+
 		initialize();
 		while (drainageStep());
 
@@ -154,111 +266,45 @@ public class MakeRivers
 			if (water <= 0)
 				continue;
 
-			Geometry.VertexId v = vtx;
-			while (drainage.containsKey(v))
-			{
-				Geometry.VertexId nextVtx = drainage.get(v);
-				Geometry.EdgeId eId = world.g.getEdgeByEndpoints(v, nextVtx);
-				RiverInfo r = rivers.get(eId);
-				assert r != null;
-
-				r.volume += water;
-				v = nextVtx;
-			}
-
-			if (!lakes.containsKey(v))
-			{
-				lakes.put(v, new LakeInfo());
-			}
-			lakes.get(v).volume += water;
+			addWaterToRiver(vtx, water);
 		}
 
 		//
 		// process the lakes
 		//
 
-		for (Geometry.VertexId lakeVertex : lakes.keySet())
+		Geometry.VertexId [] lakeVertices = lakes.keySet().toArray(new Geometry.VertexId[0]);
+		Arrays.sort(lakeVertices,
+			new Comparator<Geometry.VertexId>() {
+				public int compare(Geometry.VertexId a, Geometry.VertexId b)
+				{
+					double a_el = getVertexHeight(a);
+					double b_el = getVertexHeight(b);
+					return -(a_el > b_el ? 1 :
+						a_el < b_el ? -1 : 0);
+				}
+			});
+
+		// this goes through the lakes from highest-elevation to lowest-elevation
+		for (Geometry.VertexId lakeVertex : lakeVertices)
 		{
-			// see if we can carve a path to a neighboring separate river system
-			Geometry.VertexId [] candidates = world.g.getNearbyVertices(lakeVertex);
-			Geometry.VertexId best = null;
-			double bestV = Double.POSITIVE_INFINITY;
-
-			double lakeHeight = getVertexHeight(lakeVertex);
-			int water = lakes.get(lakeVertex).volume;
-
-			for (Geometry.VertexId neighborVertex : candidates)
-			{
-				Geometry.VertexId termVtx = neighborVertex;
-				while (drainage.containsKey(termVtx))
-				{
-					termVtx = drainage.get(termVtx);
-				}
-
-				// the neighboring river we pick must terminate at some
-				// vertex other than our own
-				if (termVtx == lakeVertex) 
-					continue;
-
-				// the neighboring river we pick must terminate at a
-				// lower-elevation vertex
-				if (getVertexHeight(termVtx) >= lakeHeight)
-					continue;
-
-				// assuming the above criteria are met, pick the
-				// neighboring vertex which is lowest in elevation
-
-				double h = getVertexHeight(neighborVertex);
-				if (h < bestV)
-				{
-					bestV = h;
-					best = neighborVertex;
-				}
-			}
-
-			if (best != null)
-			{
-				lakes.get(lakeVertex).type = LakeType.NONTERMINAL;
-
-				RiverInfo ri = new RiverInfo();
-				ri.upstreamVertex = lakeVertex;
-				ri.volume = water;
-				rivers.put(world.g.getEdgeByEndpoints(lakeVertex, best), ri);
-				drainage.put(lakeVertex, best);
-
-				// add this lake's volume to the downstream river
-				Geometry.VertexId v = best;
-				while (drainage.containsKey(v))
-				{
-					Geometry.VertexId nextVtx = drainage.get(v);
-					Geometry.EdgeId eId = world.g.getEdgeByEndpoints(v, nextVtx);
-					RiverInfo r = rivers.get(eId);
-					assert r != null;
-
-					r.volume += water;
-					v = nextVtx;
-				}
-			}
-			else
-			{
-	System.out.println("nowhere to take lake at "+lakeVertex);
-			}
+			processSinglePointLake(lakeVertex);
 		}
 
 		//
 		// place rivers
 		//
 
-		for (RegionDetail r : world.regions)
-		{
-			r.clearSides();
-		}
-
 		for (Geometry.EdgeId eId : rivers.keySet())
 		{
 			RiverInfo r = rivers.get(eId);
 			int [] cc = r.upstreamVertex.getAdjacentCells();
 			int [] dd = eId.getAdjacentCells();
+
+			if (world.regions[dd[0]-1].biome.isWater())
+				continue;
+			if (world.regions[dd[1]-1].biome.isWater())
+				continue;
 
 			int aRegion;
 			int bRegion;

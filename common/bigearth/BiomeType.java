@@ -2,8 +2,9 @@ package bigearth;
 
 public enum BiomeType
 {
-	OCEAN,
 	GRASSLAND,
+	OCEAN,
+	LAKE,
 	FOREST,
 	SWAMP,
 	JUNGLE,
@@ -17,5 +18,11 @@ public enum BiomeType
 	public double getWildlifeQuota()
 	{
 		return 1000.0;
+	}
+
+	public boolean isWater()
+	{
+		return this.ordinal() == OCEAN.ordinal()
+		|| this.ordinal() == LAKE.ordinal();
 	}
 }

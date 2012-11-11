@@ -557,9 +557,13 @@ assert(x >= 1);
 		}
 		else
 		{
-			return el < 0 ? 0x0000ff :
-				world.lakeLevel[i] > el ? 0x6666ff :
-				0x00ff00;
+			RegionDetail r = world.regions[i];
+			if (r.biome == BiomeType.LAKE)
+				return 0x6666ff;
+			else if (r.biome.isWater())
+				return 0x0000ff;
+			else
+				return 0x00ff00;
 		}
 	}
 
