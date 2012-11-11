@@ -10,8 +10,10 @@ public class MakeRivers
 	Map<Geometry.VertexId, Geometry.VertexId> drainage;
 	Map<Geometry.EdgeId, RiverInfo> rivers;
 	Map<Geometry.VertexId, LakeInfo> lakes;
+	Map<Integer, LakeInfo> lakesByRegion;
 
-	static final int LAKE_UNIT_VOLUME = 2000;
+	static final int LAKE_UNIT_VOLUME = 1500;
+	static final int OCEAN_SIZE_THRESHOLD = 12;
 
 	public MakeRivers(MakeWorld world)
 	{
@@ -20,6 +22,7 @@ public class MakeRivers
 		this.remaining = new HashSet<Geometry.VertexId>();
 		this.drainage = new HashMap<Geometry.VertexId, Geometry.VertexId>();
 		this.rivers = new HashMap<Geometry.EdgeId, RiverInfo>();
+		this.lakesByRegion = new HashMap<Integer, LakeInfo>();
 	}
 
 	void initialize()
@@ -28,6 +31,7 @@ public class MakeRivers
 		remaining.clear();
 		drainage.clear();
 		rivers.clear();
+		lakesByRegion.clear();
 
 		int numCells = world.g.getCellCount();
 		for (int i = 1; i <= numCells; i++)
@@ -82,6 +86,7 @@ public class MakeRivers
 		ri.upstreamVertex = toVertex;
 		rivers.put(world.g.getEdgeByEndpoints(fromVertex, toVertex), ri);
 		drainage.put(toVertex, fromVertex);
+		assert checkDrainageCycle(toVertex);
 
 		return true;
 	}
@@ -136,7 +141,8 @@ public class MakeRivers
 	void addWaterToRiver(Geometry.VertexId startVtx, int water)
 	{
 		Geometry.VertexId v = startVtx;
-		while (drainage.containsKey(v))
+		LakeInfo lake = null;
+		while (lake == null && drainage.containsKey(v))
 		{
 			Geometry.VertexId nextVtx = drainage.get(v);
 			Geometry.EdgeId eId = world.g.getEdgeByEndpoints(v, nextVtx);
@@ -145,18 +151,46 @@ public class MakeRivers
 
 			r.volume += water;
 			v = nextVtx;
+			lake = getLakeAt(v);
 		}
 
-		if (!lakes.containsKey(v))
+		if (lake == null)
 		{
-			lakes.put(v, new LakeInfo());
+			if (!lakes.containsKey(v))
+			{
+				lakes.put(v, new LakeInfo(v));
+			}
+			lake = lakes.get(v);
 		}
-		lakes.get(v).volume += water;
+
+		lake.volume += water;
+		lake.remaining += water;
+	}
+
+	private LakeInfo getLakeAt(Geometry.VertexId lakeVertex)
+	{
+		for (int regionId : lakeVertex.getAdjacentCells())
+		{
+			if (lakesByRegion.containsKey(regionId))
+			{
+				return lakesByRegion.get(regionId);
+			}
+		}
+
+		LakeInfo lake = lakes.get(lakeVertex);
+		if (lake != null)
+		{
+			while (lake.subsumedBy != null)
+				lake = lake.subsumedBy;
+		}
+		return lake;
 	}
 
 	private void processMultiHexLake(LakeInfo lake)
 	{
 		assert lake.remaining > 0;
+
+System.out.println("in processMultiHexLake");
 
 		// a list of adjacent regions that this lake can expand to
 		Set<Integer> adjacentRegions = new HashSet<Integer>();
@@ -196,8 +230,8 @@ public class MakeRivers
 			}
 		}
 
-		// check if any of the bording vertices drain out of this lake
-		if (!drains.isEmpty())
+		// check if any of the bordering vertices drain out of this lake
+		if (!lake.isOcean && !drains.isEmpty())
 		{
 			int num = drains.size();
 			for (Geometry.VertexId drainVtx : drains)
@@ -222,10 +256,10 @@ System.out.println("found outlet for lake");
 			int i = (int) Math.floor(Math.random() * a.length);
 			int expandTo = a[i];
 
-			lake.regions.add(expandTo);
-			lake.remaining -= LAKE_UNIT_VOLUME * (lake.waterLevel - world.elevation[expandTo-1]);
+System.out.println("expanding lake to region "+expandTo);
+assert !lake.regions.contains(expandTo);
 
-System.out.println("lake area is now " + lake.regions.size()+"; ("+lake.remaining+ " remaining)");
+			addRegionToLake(lake, expandTo);
 			return;
 		}
 
@@ -236,43 +270,189 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 		return;
 	}
 
-	private void processSingleHexLake(int regionId, LakeInfo lake)
+	private void reduceLakeDepth(LakeInfo lake1, int newWaterLevel)
 	{
-		System.out.println("region "+regionId+" is now a lake");
-		System.out.println("remaining volume "+lake.volume);
+		if (newWaterLevel < lake1.waterLevel)
+		{
+			int delta = lake1.waterLevel - newWaterLevel;
+			lake1.remaining += (LAKE_UNIT_VOLUME * delta * lake1.regions.size());
+			lake1.waterLevel = newWaterLevel;
 
+		// The following code removes regions from the lake that
+		// are now above the new water level. This creates problems
+		// when invoked indirectly from addRegionToLake(), because
+		// the newly added region may no longer be part of the lake
+		//...
+		// actually, what I am probably missing is an appropriate
+		// call to lakesByRegion.remove()...
+		//
+		//	Integer [] a = lake1.regions.toArray(new Integer[0]);
+		//	for (int r1 : a)
+		//	{
+		//		if (world.elevation[r1-1] >= lake1.waterLevel)
+		//		{
+		//			lake1.remaining -= LAKE_UNIT_VOLUME * (world.elevation[r1-1] - lake1.waterLevel);
+		//			lake1.regions.remove(r1);
+		//		}
+		//	}
+		}
+	}
+
+	private void mergeLakes(LakeInfo lake1, LakeInfo lake2)
+	{
+		int newWaterLevel = Math.min(lake1.waterLevel, lake2.waterLevel);
+		reduceLakeDepth(lake1, newWaterLevel);
+		reduceLakeDepth(lake2, newWaterLevel);
+
+		for (int r2 : lake2.regions)
+		{
+			lake1.regions.add(r2);
+			lakesByRegion.put(r2, lake1);
+		}
+		lake2.regions.clear();
+		lake2.subsumedBy = lake1;
+
+		lake1.remaining += lake2.remaining;
+		lake1.volume += lake2.volume;
+
+		lake2.remaining = 0;
+		lake2.volume = 0;
+	}
+
+	private void addRegionToLake(LakeInfo lake, int regionId)
+	{
+		if (lakesByRegion.containsKey(regionId))
+		{
+			LakeInfo otherLake = lakesByRegion.get(regionId);
+			mergeLakes(lake, otherLake);
+			return;
+		}
+
+		for (LakeInfo lake1 : lakes.values())
+		{
+			if (lake == lake1)
+				continue;
+			if (lake1.subsumedBy != null)
+				continue;
+			if (!lake1.regions.isEmpty())
+				continue;
+
+			boolean found = false;
+			for (int r1 : lake1.origin.getAdjacentCells())
+			{
+				if (r1 == regionId)
+					found = true;
+			}
+
+			if (found)
+			{
+				lake.remaining += lake1.remaining;
+				lake.volume += lake1.volume;
+				lake1.remaining = 0;
+				lake1.volume = 0;
+				lake1.subsumedBy = lake;
+			}
+		}
+
+		lake.regions.add(regionId);
+		lakesByRegion.put(regionId, lake);
+		lake.remaining -= LAKE_UNIT_VOLUME * (lake.waterLevel - world.elevation[regionId-1]);
+	}
+
+	private void processLakeExcess(Geometry.VertexId lakeVertex, LakeInfo lake)
+	{
+		assert lake.subsumedBy == null;
+		if (lake.isOcean)
+		{
+			processOcean(lake);
+		}
+		else if (lake.regions.isEmpty())
+		{
+			processSinglePointLake(lakeVertex);
+		}
+		else
+		{
+			processSingleHexLake(lake);
+		}
+	}
+
+	private void processSingleHexLake(LakeInfo lake)
+	{
 		while (lake.remaining > 0)
 		{
 			processMultiHexLake(lake);
 		}
+
+		if (lake.regions.size() >= OCEAN_SIZE_THRESHOLD &&
+			lake.waterLevel < 0)
+		{
+			processOcean(lake);
+		}
+	}
+
+	private void processOcean(LakeInfo lake)
+	{
+		// make this an ocean
+		lake.isOcean = true;
+		while (lake.waterLevel < 0)
+		{
+			lake.remaining = 1;
+System.out.println("OCEAN size "+lake.regions.size() + " depth "+lake.waterLevel);
+			processMultiHexLake(lake);
+		}
+		lake.remaining = 0;
 	}
 
 	private void processSinglePointLake(Geometry.VertexId lakeVertex)
 	{
+System.out.println("in processSinglePointLake");
+		LakeInfo lake = lakes.get(lakeVertex);
+		assert lake.subsumedBy == null;
+		assert lake.remaining > 0;
+
+		// make sure this lake isn't already contained by an
+		// already-processed lake
+		for (int cellid : lakeVertex.getAdjacentCells())
+		{
+			if (lakesByRegion.containsKey(cellid))
+			{
+				throw new Error("unexpected: this should've been prevented by addRegionToLake()");
+			}
+		}
+
 		// see if we can carve a path to a neighboring separate river system
 		Geometry.VertexId [] candidates = world.g.getNearbyVertices(lakeVertex);
 		Geometry.VertexId best = null;
 		double bestV = Double.POSITIVE_INFINITY;
 
 		double lakeHeight = getVertexHeight(lakeVertex);
-		int water = lakes.get(lakeVertex).volume;
+		int water = lake.volume;
 
 		for (Geometry.VertexId neighborVertex : candidates)
 		{
 			Geometry.VertexId termVtx = neighborVertex;
-			while (drainage.containsKey(termVtx))
+			LakeInfo termLake = null;
+			while (termLake == null && drainage.containsKey(termVtx))
 			{
 				termVtx = drainage.get(termVtx);
+				termLake = getLakeAt(termVtx);
 			}
 
 			// the neighboring river we pick must terminate at some
-			// vertex other than our own
-			if (termVtx == lakeVertex) 
+			// lake... make sure that lake is not our own
+
+			assert termLake != null;
+			assert termLake.subsumedBy == null;
+
+			if (termLake == lake)
 				continue;
 
 			// the neighboring river we pick must terminate at a
 			// lower-elevation vertex
 			if (getVertexHeight(termVtx) >= lakeHeight)
+				continue;
+
+			if (termLake.waterLevel >= lakeHeight)
 				continue;
 
 			// assuming the above criteria are met, pick the
@@ -286,7 +466,6 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 			}
 		}
 
-		LakeInfo lake = lakes.get(lakeVertex);
 		if (best != null)
 		{
 			lake.type = LakeType.NONTERMINAL;
@@ -296,6 +475,7 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 			ri.volume = water;
 			rivers.put(world.g.getEdgeByEndpoints(lakeVertex, best), ri);
 			drainage.put(lakeVertex, best);
+			assert checkDrainageCycle(lakeVertex);
 
 			// add this lake's volume to the downstream river
 			addWaterToRiver(best, water);
@@ -312,18 +492,29 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 				}
 			}
 
-			// expand lake
+			// expand lake from single point to a full region
 			int regionId = cc[lowest];
 			lake.remaining = lake.volume;
-			lake.remaining -= LAKE_UNIT_VOLUME;
-			lake.waterLevel = world.elevation[regionId-1]+1;
-			lake.regions.add(regionId);
+			lake.waterLevel = world.elevation[regionId-1] + 1;
+			addRegionToLake(lake, regionId);
 
 			if (lake.remaining > 0)
 			{
-				processSingleHexLake(regionId, lake);
+				processSingleHexLake(lake);
 			}
 		}
+	}
+
+	boolean checkDrainageCycle(Geometry.VertexId startVtx)
+	{
+		Geometry.VertexId v = startVtx;
+		while (drainage.containsKey(v))
+		{
+			v = drainage.get(v);
+			if (v.equals(startVtx))
+				return false;
+		}
+		return true;
 	}
 
 	public void generateRivers()
@@ -362,22 +553,20 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 		// process the lakes
 		//
 
-		Geometry.VertexId [] lakeVertices = lakes.keySet().toArray(new Geometry.VertexId[0]);
-		Arrays.sort(lakeVertices,
-			new Comparator<Geometry.VertexId>() {
-				public int compare(Geometry.VertexId a, Geometry.VertexId b)
-				{
-					double a_el = getVertexHeight(a);
-					double b_el = getVertexHeight(b);
-					return -(a_el > b_el ? 1 :
-						a_el < b_el ? -1 : 0);
-				}
-			});
-
-		// this goes through the lakes from highest-elevation to lowest-elevation
-		for (Geometry.VertexId lakeVertex : lakeVertices)
+		boolean anyFound = true;
+		while (anyFound)
 		{
-			processSinglePointLake(lakeVertex);
+System.out.println("processing pending lakes...");
+			anyFound = false;
+			for (Geometry.VertexId lakeVertex : lakes.keySet())
+			{
+				LakeInfo lake = lakes.get(lakeVertex);
+				if (lake.remaining > 0 && lake.subsumedBy == null)
+				{
+					anyFound = true;
+					processLakeExcess(lakeVertex, lake);
+				}
+			}
 		}
 
 		//
@@ -400,11 +589,11 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 			}
 			else
 			{
-System.out.println("lake at "+vId+" covers "+lake.regions.size() + " regions");
 				for (Integer rId : lake.regions)
 				{
 					int regionId = rId;
-					world.regions[regionId-1].biome = BiomeType.LAKE;
+					world.regions[regionId-1].biome =
+						lake.isOcean ? BiomeType.OCEAN : BiomeType.LAKE;
 					world.regions[regionId-1].waterLevel = lake.waterLevel;
 				}
 			}
@@ -465,14 +654,26 @@ System.out.println("lake at "+vId+" covers "+lake.regions.size() + " regions");
 
 	static class LakeInfo
 	{
-		int volume;
 		LakeType type;
+
+		Geometry.VertexId origin;
 		Set<Integer> regions;
 		int waterLevel;
+
+		/// This is the lake's inflow, units water per units time.
+		int volume;
+
+		/// This is how much volume of water still needs dealt with.
+		/// Dealing with this will make the lake grow in depth
+		/// and surface area until a drainage point is found.
 		int remaining;
 
-		LakeInfo()
+		boolean isOcean;
+		LakeInfo subsumedBy;
+
+		LakeInfo(Geometry.VertexId origin)
 		{
+			this.origin = origin;
 			this.volume = 0;
 			this.remaining = 0;
 			this.type = LakeType.TERMINAL;
