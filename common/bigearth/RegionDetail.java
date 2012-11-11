@@ -438,6 +438,12 @@ if (false)
 		return biome;
 	}
 
+	public int getDepth()
+	{
+		int dep = this.waterLevel - world.elevation[regionId-1];
+		return dep > 0 ? dep : 0;
+	}
+
 	public RegionSideDetail.SideFeature getSideFeature(int sideIndex)
 	{
 		if (sides[sideIndex] != null)

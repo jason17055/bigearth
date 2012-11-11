@@ -40,7 +40,7 @@ public class WorldViewer extends JFrame
 	JLabel elevationLbl;
 	JLabel temperatureLbl;
 	JLabel moistureLbl;
-	JLabel riversLbl;
+	JLabel depthLbl;
 
 	private void addToolButton(String command)
 	{
@@ -160,10 +160,10 @@ public class WorldViewer extends JFrame
 		regionPane.add(moistureLbl, c_r);
 
 		c_l.gridy = c_r.gridy = 6;
-		regionPane.add(new JLabel("Rivers"), c_l);
+		regionPane.add(new JLabel("Water Depth"), c_l);
 
-		riversLbl = new JLabel();
-		regionPane.add(riversLbl, c_r);
+		depthLbl = new JLabel();
+		regionPane.add(depthLbl, c_r);
 	}
 
 	void setWorld(MakeWorld newWorld)
@@ -579,7 +579,7 @@ assert(x >= 1);
 		elevationLbl.setText(String.format("%d", world.elevation[regionId-1]));
 		temperatureLbl.setText(String.format("%.1f", world.temperature[regionId-1]/10.0));
 		moistureLbl.setText(String.format("%d", world.annualRains[regionId-1] + world.floods[regionId-1]));
-		riversLbl.setText(String.format("%d", world.riverVolume[regionId-1]));
+		depthLbl.setText(String.format("%d", world.regions[regionId-1].getDepth()));
 	}
 
 	//implements WorldView.Listener
