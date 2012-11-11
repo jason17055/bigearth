@@ -11,6 +11,8 @@ public class MakeRivers
 	Map<Geometry.EdgeId, RiverInfo> rivers;
 	Map<Geometry.VertexId, LakeInfo> lakes;
 
+	static final int LAKE_UNIT_VOLUME = 2000;
+
 	public MakeRivers(MakeWorld world)
 	{
 		this.world = world;
@@ -152,10 +154,97 @@ public class MakeRivers
 		lakes.get(v).volume += water;
 	}
 
+	private void processMultiHexLake(LakeInfo lake)
+	{
+		assert lake.remaining > 0;
+
+		// a list of adjacent regions that this lake can expand to
+		Set<Integer> adjacentRegions = new HashSet<Integer>();
+
+		// a list of bording vertices that drain away from this lake
+		Set<Geometry.VertexId> drains = new HashSet<Geometry.VertexId>();
+
+		for (int aRegion : lake.regions)
+		{
+			for (int nid : world.g.getNeighbors(aRegion))
+			{
+				if (!lake.regions.contains(nid))
+				{
+					if (world.elevation[nid-1] < lake.waterLevel)
+						adjacentRegions.add(nid);
+				}
+			}
+
+			for (Geometry.VertexId vId : world.g.getSurroundingVertices(aRegion))
+			{
+				if (lake.isOnBorder(vId))
+				{
+					Geometry.VertexId sink = vId;
+					while (drainage.containsKey(sink))
+					{
+						sink = drainage.get(sink);
+						if (lake.contains(sink))
+							break;
+					}
+
+					if (!lake.contains(sink))
+					{
+		System.out.println("lake outlet "+vId+" drains to "+sink);
+						drains.add(vId);
+					}
+				}
+			}
+		}
+
+		// check if any of the bording vertices drain out of this lake
+		if (!drains.isEmpty())
+		{
+			int num = drains.size();
+			for (Geometry.VertexId drainVtx : drains)
+			{
+				int water = lake.remaining / num;
+				addWaterToRiver(drainVtx, water);
+				lake.remaining -= water;
+				num--;
+			}
+
+			assert num == 0;
+			assert lake.remaining == 0;
+
+System.out.println("found outlet for lake");
+			return;
+		}
+
+		// check if there are any adjacent vertices we can expand to
+		if (!adjacentRegions.isEmpty())
+		{
+			Integer [] a = adjacentRegions.toArray(new Integer[0]);
+			int i = (int) Math.floor(Math.random() * a.length);
+			int expandTo = a[i];
+
+			lake.regions.add(expandTo);
+			lake.remaining -= LAKE_UNIT_VOLUME * (lake.waterLevel - world.elevation[expandTo-1]);
+
+System.out.println("lake area is now " + lake.regions.size()+"; ("+lake.remaining+ " remaining)");
+			return;
+		}
+
+		// increase height of this lake
+		lake.waterLevel++;
+		lake.remaining -= LAKE_UNIT_VOLUME * lake.regions.size();
+System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaining + " remaining)");
+		return;
+	}
+
 	private void processSingleHexLake(int regionId, LakeInfo lake)
 	{
 		System.out.println("region "+regionId+" is now a lake");
 		System.out.println("remaining volume "+lake.volume);
+
+		while (lake.remaining > 0)
+		{
+			processMultiHexLake(lake);
+		}
 	}
 
 	private void processSinglePointLake(Geometry.VertexId lakeVertex)
@@ -225,12 +314,12 @@ public class MakeRivers
 
 			// expand lake
 			int regionId = cc[lowest];
-			world.regions[regionId-1].biome = BiomeType.LAKE;
-			world.regions[regionId-1].waterLevel = world.elevation[regionId-1]+1;
-			lake.volume = Math.max(0, lake.volume - 1000);
-			lakes.remove(lakeVertex);
+			lake.remaining = lake.volume;
+			lake.remaining -= LAKE_UNIT_VOLUME;
+			lake.waterLevel = world.elevation[regionId-1]+1;
+			lake.regions.add(regionId);
 
-			if (lake.volume > 0)
+			if (lake.remaining > 0)
 			{
 				processSingleHexLake(regionId, lake);
 			}
@@ -292,6 +381,36 @@ public class MakeRivers
 		}
 
 		//
+		// place lakes
+		//
+
+		for (Geometry.VertexId vId : lakes.keySet())
+		{
+			LakeInfo lake = lakes.get(vId);
+			if (lake.regions.isEmpty())
+			{
+				int [] cc = vId.getAdjacentCells();
+
+				int aRegion = cc[0];
+				RegionDetail region = world.regions[aRegion-1];
+				region.setLake(vId,
+					lake.type == LakeType.TERMINAL ? RegionCornerDetail.PointFeature.LAKE :
+					RegionCornerDetail.PointFeature.POND
+					);
+			}
+			else
+			{
+System.out.println("lake at "+vId+" covers "+lake.regions.size() + " regions");
+				for (Integer rId : lake.regions)
+				{
+					int regionId = rId;
+					world.regions[regionId-1].biome = BiomeType.LAKE;
+					world.regions[regionId-1].waterLevel = lake.waterLevel;
+				}
+			}
+		}
+
+		//
 		// place rivers
 		//
 
@@ -330,23 +449,6 @@ public class MakeRivers
 				r.volume > 200 ? RegionSideDetail.SideFeature.CREEK :
 				RegionSideDetail.SideFeature.BROOK);
 		}
-
-		//
-		// place lakes
-		//
-
-		for (Geometry.VertexId vId : lakes.keySet())
-		{
-			LakeInfo lake = lakes.get(vId);
-			int [] cc = vId.getAdjacentCells();
-
-			int aRegion = cc[0];
-			RegionDetail region = world.regions[aRegion-1];
-			region.setLake(vId,
-				lake.type == LakeType.TERMINAL ? RegionCornerDetail.PointFeature.LAKE :
-				RegionCornerDetail.PointFeature.POND
-				);
-		}
 	}
 
 	static class RiverInfo
@@ -365,7 +467,45 @@ public class MakeRivers
 	{
 		int volume;
 		LakeType type;
+		Set<Integer> regions;
+		int waterLevel;
+		int remaining;
 
-		LakeInfo() { type = LakeType.TERMINAL; }
+		LakeInfo()
+		{
+			this.volume = 0;
+			this.remaining = 0;
+			this.type = LakeType.TERMINAL;
+			this.regions = new HashSet<Integer>();
+			this.waterLevel = Integer.MIN_VALUE;
+		}
+
+		/**
+		 * True iff the vertex is on an outer corner of this lake.
+		 * I.e. the vertex touches exactly one region of the lake.
+		 */
+		boolean isOnBorder(Geometry.VertexId vtx)
+		{
+			int count = 0;
+			for (int adjCell : vtx.getAdjacentCells())
+			{
+				if (this.regions.contains(adjCell))
+					count++;
+			}
+
+			return (count == 1);
+		}
+
+		boolean contains(Geometry.VertexId vtx)
+		{
+			int count = 0;
+			for (int adjCell : vtx.getAdjacentCells())
+			{
+				if (this.regions.contains(adjCell))
+					count++;
+			}
+
+			return (count != 0);
+		}
 	}
 }
