@@ -327,6 +327,42 @@ public class WorldViewer extends JFrame
 		}
 	}
 
+	void onExpandLakeClicked()
+	{
+	try {
+		if (mrivers == null)
+			throw new Exception("Must generate rivers first");
+
+		MakeRivers.LakeInfo lake = null;
+		if (view.selectedVertex != null)
+		{
+			lake = mrivers.getLakeAt(view.selectedVertex);
+		}
+		else if (view.selectedRegion != 0)
+		{
+			lake = mrivers.lakesByRegion.get(view.selectedRegion);
+		}
+		
+		if (lake == null)
+			throw new Exception("No lake at selected location");
+
+		if (lake.remaining <= 0)
+			lake.remaining = 1;
+
+		mrivers.processLakeExcess(lake);
+		mrivers.placeLakes();
+		mrivers.placeRivers();
+		reloadImage();
+
+	}
+	catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(this, e.getMessage(),
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
 	void onGenerateRiversClicked()
 	{
 		mrivers = new MakeRivers(world);
@@ -438,10 +474,7 @@ public class WorldViewer extends JFrame
 		}
 		else if (ev.getSource() == expandLakeBtn)
 		{
-			if (mrivers != null)
-			{
-				
-			}
+			onExpandLakeClicked();
 		}
 		else if (ev.getSource() == stepBtn)
 		{

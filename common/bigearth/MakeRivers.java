@@ -222,6 +222,7 @@ public class MakeRivers
 			assert r != null;
 
 			r.volume += water;
+System.out.println("  added "+water+" ("+r.volume+") water to river");
 			v = nextVtx;
 			lake = getLakeAt(v);
 		}
@@ -234,7 +235,7 @@ public class MakeRivers
 System.out.println("  added "+water+" water to "+lake.toString());
 	}
 
-	private LakeInfo getLakeAt(Geometry.VertexId lakeVertex)
+	LakeInfo getLakeAt(Geometry.VertexId lakeVertex)
 	{
 		for (int regionId : lakeVertex.getAdjacentCells())
 		{
@@ -253,6 +254,42 @@ System.out.println("  added "+water+" water to "+lake.toString());
 		return lake;
 	}
 
+	/**
+	 * Enumerate the vertices on the border of this lake that drain
+	 * out of the lake.
+	 */
+	private Geometry.VertexId [] getLakeDrains(LakeInfo lake)
+	{
+		if (lake.isSinglePointLake())
+		{
+			if (drainage.containsKey(lake.origin))
+			{
+				return new Geometry.VertexId[] { drainage.get(lake.origin) };
+			}
+			else
+			{
+				return new Geometry.VertexId[0];
+			}
+		}
+
+		Set<Geometry.VertexId> drains = new HashSet<Geometry.VertexId>();
+		for (int regionid : lake.regions)
+		{
+			for (Geometry.VertexId vtx : world.g.getSurroundingVertices(regionid))
+			{
+				if (drainage.containsKey(vtx))
+				{
+					drains.add(vtx);
+				}
+			}
+		}
+
+		return drains.toArray(new Geometry.VertexId[0]);
+	}
+
+	/**
+	 * Get all vertices that drain into a specified lake.
+	 */
 	private Geometry.VertexId [] getLakeSources(LakeInfo lake)
 	{
 		Set<Geometry.VertexId> result = new HashSet<Geometry.VertexId>();
@@ -285,41 +322,13 @@ System.out.println("  added "+water+" water to "+lake.toString());
 				}
 			}
 		}
-		return v2;
-	}
-
-	private Geometry.VertexId [] getLakeDrains(LakeInfo lake)
-	{
-		if (lake.isSinglePointLake())
-		{
-			if (drainage.containsKey(lake.origin))
-			{
-				return new Geometry.VertexId[] { drainage.get(lake.origin) };
-			}
-			else
-			{
-				return new Geometry.VertexId[0];
-			}
-		}
-
-		Set<Geometry.VertexId> drains = new HashSet<Geometry.VertexId>();
-		for (int regionid : lake.regions)
-		{
-			for (Geometry.VertexId vtx : world.g.getSurroundingVertices(regionid))
-			{
-				if (drainage.containsKey(vtx))
-				{
-					drains.add(vtx);
-				}
-			}
-		}
-
-		return drains.toArray(new Geometry.VertexId[0]);
+		return result.toArray(new Geometry.VertexId[0]);
 	}
 
 	private void processMultiHexLake(LakeInfo lake)
 	{
 		assert lake.remaining > 0;
+		assert !lake.regions.isEmpty();
 
 System.out.println(lake.toString() + " : processMultiHexLake");
 
@@ -362,6 +371,17 @@ System.out.println("  lake has " + num + " outlets");
 			}
 		}
 
+		// check if there are adjacent regions that are lower in elevation
+		if (!adjacentLowerRegions.isEmpty())
+		{
+			Integer [] regionsList = adjacentLowerRegions.toArray(new Integer[0]);
+			int i = (int) Math.floor(Math.random() * regionsList.length);
+			int nid = regionsList[i];
+
+			addRegionToLake(lake, nid);
+			return;		
+		}
+
 		// check if there are any adjacent vertices we can expand to
 		if (!adjacentRegions.isEmpty())
 		{
@@ -377,7 +397,8 @@ assert !lake.regions.contains(expandTo);
 		}
 
 		// increase height of this lake
-		if (adjacentLowerRegions.isEmpty())
+		assert adjacentLowerRegions.isEmpty();
+
 		{
 			lake.waterLevel++;
 			lake.remaining -= LAKE_UNIT_VOLUME * lake.regions.size();
@@ -385,10 +406,6 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 			return;
 		}
 
-		// nothing else to do
-		System.out.println("nothing else to do");
-		lake.remaining = 0;
-		return;
 	}
 
 	private void reduceLakeDepth(LakeInfo lake1, int newWaterLevel)
@@ -524,21 +541,31 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		}
 	}
 
-	private void processLakeExcess(Geometry.VertexId lakeVertex, LakeInfo lake)
+	void processLakeExcess(LakeInfo lake)
 	{
 		assert lake.subsumedBy == null;
-		if (lake.isOcean)
-		{
-			processOcean(lake);
-		}
-		else if (lake.regions.isEmpty())
+		assert lake.remaining > 0;
+
+		if (lake.isSinglePointLake())
 		{
 			processSinglePointLake(lake);
 		}
 		else
 		{
-			processSingleHexLake(lake);
+			processMultiHexLake(lake);
 		}
+	//	if (lake.isOcean)
+	//	{
+	//		processOcean(lake);
+	//	}
+	//	else if (lake.regions.isEmpty())
+	//	{
+	//		processSinglePointLake(lake);
+	//	}
+	//	else
+	//	{
+	//		processSingleHexLake(lake);
+	//	}
 	}
 
 	private void processSingleHexLake(LakeInfo lake)
@@ -574,6 +601,17 @@ System.out.println(lake.toString() + " : processSinglePointLake");
 		Geometry.VertexId lakeVertex = lake.origin;
 		assert lake.subsumedBy == null;
 		assert lake.remaining > 0;
+
+		if (drainage.containsKey(lake.origin))
+		{
+			int water = lake.remaining;
+			lake.remaining = 0;
+			addWaterToRiver(lake.origin, water);
+
+			assert lake.remaining == 0;
+			return;
+		}
+
 		assert getLakeDrains(lake).length == 0;
 
 		// make sure this lake isn't already contained by an
@@ -621,7 +659,6 @@ System.out.println(lake.toString() + " : processSinglePointLake");
 			}
 		}
 
-		int water = lake.volume;
 		if (best != null)
 		{
 			lake.type = LakeType.NONTERMINAL;
@@ -629,7 +666,11 @@ System.out.println(lake.toString() + " : processSinglePointLake");
 			addRiverSegment(lakeVertex, best);
 
 			// add this lake's volume to the downstream river
-			addWaterToRiver(best, water);
+			int water = lake.remaining;
+			lake.remaining = 0;
+			addWaterToRiver(lakeVertex, water);
+
+			assert lake.remaining == 0;
 		}
 		else
 		{
@@ -645,14 +686,14 @@ System.out.println(lake.toString() + " : processSinglePointLake");
 
 			// expand lake from single point to a full region
 			int regionId = cc[lowest];
-			lake.remaining = lake.volume;
+			//lake.remaining = lake.volume;
 			lake.waterLevel = world.elevation[regionId-1] + 1;
 			addRegionToLake(lake, regionId);
 
-			if (lake.remaining > 0)
-			{
-				processSingleHexLake(lake);
-			}
+			//if (lake.remaining > 0)
+			//{
+			//	processSingleHexLake(lake);
+			//}
 		}
 	}
 
@@ -670,12 +711,6 @@ System.out.println(lake.toString() + " : processSinglePointLake");
 
 	public void generateRivers()
 	{
-		for (RegionDetail r : world.regions)
-		{
-			r.biome = BiomeType.GRASSLAND;
-			r.clearSides();
-		}
-
 		initialize();
 		while (drainageStep());
 
@@ -714,24 +749,38 @@ System.out.println(lake.toString() + " : processSinglePointLake");
 					a_el < b_el ? -1 : 0);
 			}});
 
-System.out.println("processing pending lakes...");
-		for (Geometry.VertexId lakeVertex : lakeVertices)
-		{
-			LakeInfo lake = lakes.get(lakeVertex);
-			if (lake.remaining > 0 && lake.subsumedBy == null)
-			{
-				processLakeExcess(lakeVertex, lake);
-			}
-		}
+//System.out.println("processing pending lakes...");
+//		for (Geometry.VertexId lakeVertex : lakeVertices)
+//		{
+//			LakeInfo lake = lakes.get(lakeVertex);
+//			if (lake.remaining > 0 && lake.subsumedBy == null)
+//			{
+//				processLakeExcess(lake);
+//			}
+//		}
+
+		placeLakes();
+		placeRivers();
+	}
 
 		//
 		// place lakes
 		//
+	void placeLakes()
+	{
+		for (RegionDetail r : world.regions)
+		{
+			r.biome = BiomeType.GRASSLAND;
+			r.clearSides();
+		}
 
 		for (Geometry.VertexId vId : lakes.keySet())
 		{
 			LakeInfo lake = lakes.get(vId);
-			if (lake.regions.isEmpty())
+			if (lake.subsumedBy != null)
+				continue;
+
+			if (lake.isSinglePointLake())
 			{
 				int [] cc = vId.getAdjacentCells();
 
@@ -744,20 +793,21 @@ System.out.println("processing pending lakes...");
 			}
 			else
 			{
-				for (Integer rId : lake.regions)
+				for (int regionId : lake.regions)
 				{
-					int regionId = rId;
 					world.regions[regionId-1].biome =
 						lake.isOcean ? BiomeType.OCEAN : BiomeType.LAKE;
 					world.regions[regionId-1].waterLevel = lake.waterLevel;
 				}
 			}
 		}
+	}
 
 		//
 		// place rivers
 		//
-
+	void placeRivers()
+	{
 		for (Geometry.EdgeId eId : rivers.keySet())
 		{
 			RiverInfo r = rivers.get(eId);
