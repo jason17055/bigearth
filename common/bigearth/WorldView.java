@@ -22,6 +22,11 @@ public class WorldView extends JPanel
 	Matrix3d inverseTransformMatrix;
 	ArrayList<Listener> listeners;
 	boolean showRivers;
+	boolean allowVertexSelection;
+
+	int selectedRegion;
+	int selectedTerrain;
+	Geometry.VertexId selectedVertex;
 
 	public WorldView()
 	{
@@ -45,6 +50,7 @@ public class WorldView extends JPanel
 		void onTerrainClicked(int regionId, int terrainId);
 		void onTerrainSelected(int regionId, int terrainId);
 		void onRegionSelected(int regionId);
+		void onVertexSelected(Geometry.VertexId vertex);
 	}
 
 	public void addListener(Listener l)
@@ -602,9 +608,6 @@ public class WorldView extends JPanel
 	// implements MouseListener
 	public void mouseExited(MouseEvent ev) { }
 
-int selectedRegion;
-int selectedTerrain;
-
 	// implements MouseListener
 	public void mousePressed(MouseEvent ev)
 	{
@@ -624,36 +627,76 @@ int selectedTerrain;
 			}
 			else
 			{
-				selectedRegion = world.g.findCell(pt);
-				selectedTerrain = 0;
-				fireRegionSelected(selectedRegion);
+				selectNearestTo(pt);
 			}
 		}
 		else if (ev.getButton() == MouseEvent.BUTTON3)
 		{
-			Point3d pt = fromScreen(ev.getPoint());
-			if (zoomFactor >= 16)
+		}
+	}
+
+	private void selectNearestTo(Point3d pt)
+	{
+		int regionId = world.g.findCell(pt);
+		if (!allowVertexSelection)
+		{
+			selectRegion(regionId);
+			return;
+		}
+
+		Point3d regionCenterPoint = world.g.getCenterPoint(regionId);
+		Vector3d v = new Vector3d();
+		v.sub(pt, regionCenterPoint);
+		double r_dist = v.length();
+
+		Point3d [] borderPoints = world.g.getCellBoundary(regionId);
+		int best = -1;
+		for (int i = 0; i < borderPoints.length; i++)
+		{
+			v.sub(pt, borderPoints[i]);
+			double n_dist = v.length();
+			if (n_dist < r_dist)
 			{
-				TerrainGeometry tg = world.getTerrainGeometry();
-				selectedRegion = world.g.findCell(pt);
-				selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
-				fireTerrainSelected(selectedRegion, selectedTerrain);
-				fireTerrainClicked(selectedRegion, selectedTerrain);
-				regenerate();
-			}
-			else
-			{
-				selectedRegion = world.g.findCell(pt);
-				selectedTerrain = 0;
-				fireRegionSelected(selectedRegion);
+				best = i;
+				r_dist = n_dist;
 			}
 		}
+
+		if (best == -1)
+		{
+			selectRegion(regionId);
+			return;
+		}
+
+		Geometry.VertexId [] vtxs = world.g.getSurroundingVertices(regionId);
+		selectVertex(vtxs[best]);
+	}
+
+	private void selectRegion(int regionId)
+	{
+		selectedRegion = regionId;
+		selectedTerrain = 0;
+		selectedVertex = null;
+		fireRegionSelected(selectedRegion);
+	}
+
+	private void selectVertex(Geometry.VertexId vtx)
+	{
+		selectedRegion = 0;
+		selectedVertex = vtx;
+		fireVertexSelected(selectedVertex);
 	}
 
 	private void fireRegionSelected(int regionId)
 	{
 		for (Listener l : listeners)
 			l.onRegionSelected(regionId);
+	}
+
+	private void fireVertexSelected(Geometry.VertexId vertex)
+	{
+		for (Listener l : listeners)
+			l.onVertexSelected(vertex);
 	}
 
 	private void fireTerrainClicked(int regionId, int terrainId)
@@ -697,15 +740,6 @@ int selectedTerrain;
 			if (d>5)
 			{
 				onDragEnd(ev.getPoint());
-			}
-			else
-			{
-				Point3d pt = fromScreen(dragStart);
-
-				TerrainGeometry tg = world.getTerrainGeometry();
-				selectedRegion = world.g.findCell(pt);
-				selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
-				regenerate();
 			}
 			dragStart = null;
 		}

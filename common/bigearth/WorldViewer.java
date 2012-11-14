@@ -19,7 +19,9 @@ public class WorldViewer extends JFrame
 	}
 
 	WorldView view;
+	MakeRivers mrivers;
 	JButton generateBtn;
+	JButton expandLakeBtn;
 	JButton stepBtn;
 	JCheckBoxMenuItem showElevationBtn;
 	JCheckBoxMenuItem showTemperatureBtn;
@@ -56,6 +58,7 @@ public class WorldViewer extends JFrame
 		super("World Viewer");
 		view = new WorldView();
 		view.addListener(this);
+		view.allowVertexSelection = true;
 		add(view, BorderLayout.CENTER);
 
 		toolsPane = new JPanel();
@@ -82,6 +85,10 @@ public class WorldViewer extends JFrame
 		generateBtn = new JButton("Generate");
 		generateBtn.addActionListener(this);
 		buttonsPane.add(generateBtn);
+
+		expandLakeBtn = new JButton("Expand Lake");
+		expandLakeBtn.addActionListener(this);
+		buttonsPane.add(expandLakeBtn);
 
 		stepBtn = new JButton("Step");
 		stepBtn.addActionListener(this);
@@ -322,8 +329,8 @@ public class WorldViewer extends JFrame
 
 	void onGenerateRiversClicked()
 	{
-		MakeRivers mr = new MakeRivers(world);
-		mr.generateRivers();
+		mrivers = new MakeRivers(world);
+		mrivers.generateRivers();
 		reloadImage();
 	}
 
@@ -428,6 +435,13 @@ public class WorldViewer extends JFrame
 			}
 			reloadImage();
 	
+		}
+		else if (ev.getSource() == expandLakeBtn)
+		{
+			if (mrivers != null)
+			{
+				
+			}
 		}
 		else if (ev.getSource() == stepBtn)
 		{
@@ -616,5 +630,11 @@ assert(x >= 1);
 		{
 			r.setTerrainType(terrainId, TerrainType.LAKE);
 		}
+	}
+
+	//implements WorldView.Listener
+	public void onVertexSelected(Geometry.VertexId vertex)
+	{
+		System.out.println("selected "+vertex);
 	}
 }
