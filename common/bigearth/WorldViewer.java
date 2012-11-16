@@ -258,6 +258,13 @@ public class WorldViewer extends JFrame
 			}});
 		fileMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Generate Floods");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onGenerateFloodsClicked();
+			}});
+		fileMenu.add(menuItem);
+
 		JMenu viewMenu = new JMenu("View");
 		menuBar.add(viewMenu);
 
@@ -368,6 +375,15 @@ public class WorldViewer extends JFrame
 		mrivers = new MakeRivers(world);
 		mrivers.generateRivers();
 		reloadImage();
+	}
+
+	void onGenerateFloodsClicked()
+	{
+		if (mrivers != null)
+		{
+			mrivers.generateFloods();
+			reloadImage();
+		}
 	}
 
 	void onMakeRiversClicked()
