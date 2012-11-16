@@ -1006,14 +1006,15 @@ System.out.println("in generateFloods");
 			RiverInfo riv = rivers.get(eId);
 			int [] dd = eId.getAdjacentCells();
 
-			int water = riv.volume > 2000 ? 3 :
-				riv.volume > 200 ? 2 : 1;
+			int water = riv.volume >= 5000 ? 3 :
+				riv.volume >= 3500 ? 2 :
+				riv.volume >= 2000 ? 1 : 0;
 			riverVolume[dd[0]-1] += water;
 			riverVolume[dd[1]-1] += water;
 		}
 
-final int OCEAN_FLOOD = 4;
-final int LAKE_FLOOD = 7;
+final int OCEAN_FLOOD = 5;
+final int LAKE_FLOOD = 10;
 
 		Queue<Integer> Q = new ArrayDeque<Integer>();
 		for (int i = 0; i < floods.length; i++)
@@ -1031,7 +1032,7 @@ final int LAKE_FLOOD = 7;
 			}
 			else if (riverVolume[i] > 0)
 			{
-				int floodLevel = 1+(int)Math.round(9.0 * Math.sqrt((double)riverVolume[i]/maxRiverVolume));
+				int floodLevel = 1+(int)Math.round(8.0 * Math.sqrt((double)riverVolume[i]/maxRiverVolume));
 				floods[i] = floodLevel;
 				Q.add(i+1);
 			}
