@@ -8,4 +8,4 @@ classpath=$(
 	done; }
 	)
 
-java -cp "$classpath" -enableassertions bigearth.WorldViewer "$@"
+java -cp "$classpath" -enableassertions -Xshare:off bigearth.WorldViewer "$@"

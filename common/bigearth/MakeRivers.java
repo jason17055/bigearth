@@ -129,27 +129,21 @@ public class MakeRivers
 			if (h1 <= h)
 			{
 				h = h1;
+				return; // no change needed, stop here
 			}
 			else
 			{
+				// make a change to river elevation
 				riverElevation.put(vtx, h);
 			}
 		}
 
 		LakeInfo lake = getLakeAt(vtx);
-		if (lake != null)
-		{
-			double h1 = lake.lakeElevation;
-			if (h1 <= h)
-			{
-				h = h1;
-			}
-			else
-			{
-				lake.lakeElevation = h;
-			}
+		assert lake != null;
 
-			enforceRiverSlope(lake);
+		if (lake.lakeElevation > h)
+		{
+			checkLakeElevation(lake);
 		}
 	}
 
@@ -422,6 +416,8 @@ public class MakeRivers
 
 	private void checkLakeElevation(LakeInfo lake)
 	{
+System.out.println(lake.toString() + " : checkLakeElevation");
+
 		double newEl = Double.POSITIVE_INFINITY;
 		for (Geometry.VertexId sourceVtx : getLakeSources(lake))
 		{
@@ -571,6 +567,7 @@ System.out.println(lake.toString() + " : addRegionToLake");
 				if (drainsTo.lakeElevation >= lake.lakeElevation)
 				{
 					// can't have this; remove that drainage rule
+System.out.println("  removed drain cycle at "+v);
 					clearRiver(v);
 				}
 			}
@@ -989,6 +986,70 @@ System.out.println(lake);
 				origin.toString(),
 				lakeElevation,
 				remaining);
+		}
+	}
+
+	void generateFloods()
+	{
+System.out.println("in generateFloods");
+
+		int [] floods = world.floods;
+		for (int i = 0; i < floods.length; i++)
+		{
+			floods[i] = 0;
+		}
+
+		int [] riverVolume = new int[floods.length];
+		final int maxRiverVolume = 3;
+		for (Geometry.EdgeId eId : rivers.keySet())
+		{
+			RiverInfo riv = rivers.get(eId);
+			int [] dd = eId.getAdjacentCells();
+
+			int water = riv.volume > 2000 ? 3 :
+				riv.volume > 200 ? 2 : 1;
+			riverVolume[dd[0]-1] += water;
+			riverVolume[dd[1]-1] += water;
+		}
+
+final int OCEAN_FLOOD = 4;
+final int LAKE_FLOOD = 7;
+
+		Queue<Integer> Q = new ArrayDeque<Integer>();
+		for (int i = 0; i < floods.length; i++)
+		{
+			LakeInfo lake = lakesByRegion.get(i+1);
+			if (lake != null && lake.isOcean)
+			{
+				floods[i] = OCEAN_FLOOD;
+				Q.add(i+1);
+			}
+			else if (lake != null)
+			{
+				floods[i] = LAKE_FLOOD;
+				Q.add(i+1);
+			}
+			else if (riverVolume[i] > 0)
+			{
+				int floodLevel = 1+(int)Math.round(9.0 * Math.sqrt((double)riverVolume[i]/maxRiverVolume));
+				floods[i] = floodLevel;
+				Q.add(i+1);
+			}
+		}
+
+		while (!Q.isEmpty())
+		{
+			int cur = Q.remove();
+			for (int n : world.g.getNeighbors(cur))
+			{
+				int heightDiff = world.elevation[n-1] - world.elevation[cur-1];
+				int floodLevel = floods[cur-1] - Math.max(1, 1 + heightDiff);
+				if (floodLevel > floods[n-1])
+				{
+					floods[n-1] = floodLevel;
+					Q.add(n);
+				}
+			}
 		}
 	}
 }
