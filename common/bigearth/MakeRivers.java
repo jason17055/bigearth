@@ -555,6 +555,9 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		lake.regions.add(regionId);
 		lakesByRegion.put(regionId, lake);
 
+		if (lake.floorElevation < world.elevation[regionId-1])
+			lake.floorElevation = world.elevation[regionId-1];
+
 		double deltaVolume = LAKE_UNIT_VOLUME * (lake.lakeElevation - (world.elevation[regionId-1] - 0.5));
 		//lake.remaining -= Math.floor(deltaVolume);
 		lake.remaining -= LAKE_UNIT_VOLUME;
@@ -634,25 +637,17 @@ System.out.println(lake.toString() + " : addRegionToLake");
 			}
 		}
 
-	//	if (lake.isOcean)
-	//	{
-	//		processOcean(lake);
-	//	}
-	//	else if (lake.regions.isEmpty())
-	//	{
-	//		processSinglePointLake(lake);
-	//	}
-	//	else
-	//	{
-	//		processSingleHexLake(lake);
-	//	}
+		if (lake.regions.size() >= OCEAN_SIZE_THRESHOLD)
+		{
+			processOcean(lake);
+		}
 	}
 
 	private void processOcean(LakeInfo lake)
 	{
 		// make this an ocean
 		lake.isOcean = true;
-		while (lake.lakeElevation < 0.5)
+		while (lake.floorElevation < 0)
 		{
 			lake.remaining = 1;
 System.out.println("OCEAN size "+lake.regions.size() + " depth "+lake.lakeElevation);
@@ -858,8 +853,7 @@ System.out.println(lake);
 			}
 			else
 			{
-				boolean isOcean = lake.regions.size() >= OCEAN_SIZE_THRESHOLD &&
-						lake.lakeElevation <= 0;
+				boolean isOcean = lake.isOcean;
 				for (int regionId : lake.regions)
 				{
 					world.regions[regionId-1].biome =
@@ -943,6 +937,8 @@ System.out.println(lake);
 		boolean isOcean;
 		LakeInfo subsumedBy;
 
+		int floorElevation;
+
 		LakeInfo(Geometry.VertexId origin)
 		{
 			this.origin = origin;
@@ -950,6 +946,7 @@ System.out.println(lake);
 			this.remaining = 0;
 			this.type = LakeType.TERMINAL;
 			this.regions = new HashSet<Integer>();
+			this.floorElevation = Integer.MIN_VALUE;
 		}
 
 		/**
