@@ -14,7 +14,7 @@ public class MakeRivers
 	Map<Integer, LakeInfo> lakesByRegion;
 
 	static final int LAKE_UNIT_VOLUME = 1500;
-	static final int OCEAN_SIZE_THRESHOLD = 12;
+	static final int OCEAN_SIZE_THRESHOLD = 30;
 	static final double MIN_RIVER_SLOPE = 0.1;
 
 	public MakeRivers(MakeWorld world)
@@ -120,16 +120,19 @@ public class MakeRivers
 		double h = getVertexHeight(vtx);
 		while (drainage.containsKey(vtx))
 		{
-			vtx = drainage.get(vtx);
+			Geometry.VertexId nextVtx = drainage.get(vtx);
+
+			h -= MIN_RIVER_SLOPE;
+
+			vtx = nextVtx;
 			double h1 = getVertexHeight(vtx);
-			if (h1 <= h - MIN_RIVER_SLOPE)
+			if (h1 <= h)
 			{
 				h = h1;
 			}
 			else
 			{
-				riverElevation.put(vtx, h - MIN_RIVER_SLOPE);
-				h = h - MIN_RIVER_SLOPE;
+				riverElevation.put(vtx, h);
 			}
 		}
 
@@ -146,16 +149,26 @@ public class MakeRivers
 				lake.lakeElevation = h;
 			}
 
-			// check all outputs for this river
-			for (Geometry.VertexId drainVtx : getLakeDrains(lake))
+			enforceRiverSlope(lake);
+		}
+	}
+
+	/**
+	 * Updates river elevation downstream of a given lake,
+	 * ensuring that the river slopes down in elevation
+	 * by at least a certain rate.
+	 */
+	void enforceRiverSlope(LakeInfo lake)
+	{
+		// check all outputs for this river
+		for (Geometry.VertexId drainVtx : getLakeDrains(lake))
+		{
+			double h1 = getVertexHeight(drainVtx);
+			if (h1 > lake.lakeElevation)
 			{
-				h1 = getVertexHeight(drainVtx);
-				if (h1 > h)
-				{
-					riverElevation.put(drainVtx, h);
-				}
-				enforceRiverSlope(drainVtx);
+				riverElevation.put(drainVtx, lake.lakeElevation);
 			}
+			enforceRiverSlope(drainVtx);
 		}
 	}
 
@@ -222,7 +235,6 @@ public class MakeRivers
 			assert r != null;
 
 			r.volume += water;
-System.out.println("  added "+water+" ("+r.volume+") water to river");
 			v = nextVtx;
 			lake = getLakeAt(v);
 		}
@@ -231,8 +243,6 @@ System.out.println("  added "+water+" ("+r.volume+") water to river");
 
 		lake.volume += water;
 		lake.remaining += water;
-
-System.out.println("  added "+water+" water to "+lake.toString());
 	}
 
 	LakeInfo getLakeAt(Geometry.VertexId lakeVertex)
@@ -285,6 +295,24 @@ System.out.println("  added "+water+" water to "+lake.toString());
 		}
 
 		return drains.toArray(new Geometry.VertexId[0]);
+	}
+
+	private Geometry.VertexId [] getLakeVertices(LakeInfo lake)
+	{
+		if (lake.isSinglePointLake())
+		{
+			return new Geometry.VertexId[] { lake.origin };
+		}
+
+		Set<Geometry.VertexId> result = new HashSet<Geometry.VertexId>();
+		for (int regionId : lake.regions)
+		{
+			for (Geometry.VertexId v : world.g.getSurroundingVertices(regionId))
+			{
+				result.add(v);
+			}
+		}
+		return result.toArray(new Geometry.VertexId[0]);
 	}
 
 	/**
@@ -353,9 +381,9 @@ System.out.println("  lake has " + num + " outlets");
 			return;
 		}
 
-		// a list of adjacent regions that this lake can expand to
-		Set<Integer> adjacentRegions = new HashSet<Integer>();
-		Set<Integer> adjacentLowerRegions = new HashSet<Integer>();
+		// find the lowest adjacent region that this lake can expand to
+		Set<Integer> candidates = new HashSet<Integer>();
+		int bestEl = Integer.MAX_VALUE;
 
 		for (int aRegion : lake.regions)
 		{
@@ -363,49 +391,123 @@ System.out.println("  lake has " + num + " outlets");
 			{
 				if (!lake.regions.contains(nid))
 				{
-					if (world.elevation[nid-1] == lake.waterLevel-1)
-						adjacentRegions.add(nid);
-					else if (world.elevation[nid-1] < lake.waterLevel-1)
-						adjacentLowerRegions.add(nid);
+					if (world.elevation[nid-1] < bestEl)
+					{
+						bestEl = world.elevation[nid-1];
+						candidates.clear();
+						candidates.add(nid);
+					}
+					else if (world.elevation[nid-1] == bestEl)
+					{
+						candidates.add(nid);
+					}
 				}
 			}
 		}
 
-		// check if there are adjacent regions that are lower in elevation
-		if (!adjacentLowerRegions.isEmpty())
+		if (candidates.isEmpty())
 		{
-			Integer [] regionsList = adjacentLowerRegions.toArray(new Integer[0]);
+			// this presumably means the entire world is covered in ocean
+			throw new Error("not implemented");
+		}
+		else
+		{
+			Integer [] regionsList = candidates.toArray(new Integer[0]);
 			int i = (int) Math.floor(Math.random() * regionsList.length);
 			int nid = regionsList[i];
 
 			addRegionToLake(lake, nid);
-			return;		
-		}
-
-		// check if there are any adjacent vertices we can expand to
-		if (!adjacentRegions.isEmpty())
-		{
-			Integer [] a = adjacentRegions.toArray(new Integer[0]);
-			int i = (int) Math.floor(Math.random() * a.length);
-			int expandTo = a[i];
-
-System.out.println("expanding lake to region "+expandTo);
-assert !lake.regions.contains(expandTo);
-
-			addRegionToLake(lake, expandTo);
 			return;
 		}
 
-		// increase height of this lake
-		assert adjacentLowerRegions.isEmpty();
+//		// a list of adjacent regions that this lake can expand to
+//		Set<Integer> adjacentRegions = new HashSet<Integer>();
+//		Set<Integer> adjacentLowerRegions = new HashSet<Integer>();
+//
+//		for (int aRegion : lake.regions)
+//		{
+//			for (int nid : world.g.getNeighbors(aRegion))
+//			{
+//				if (!lake.regions.contains(nid))
+//				{
+//					if (world.elevation[nid-1] == lake.waterLevel-1)
+//						adjacentRegions.add(nid);
+//					else if (world.elevation[nid-1] < lake.waterLevel-1)
+//						adjacentLowerRegions.add(nid);
+//				}
+//			}
+//		}
+//
+//		// check if there are adjacent regions that are lower in elevation
+//		if (!adjacentLowerRegions.isEmpty())
+//		{
+//			Integer [] regionsList = adjacentLowerRegions.toArray(new Integer[0]);
+//			int i = (int) Math.floor(Math.random() * regionsList.length);
+//			int nid = regionsList[i];
+//
+//			addRegionToLake(lake, nid);
+//			return;		
+//		}
+//
+//		// check if there are any adjacent vertices we can expand to
+//		if (!adjacentRegions.isEmpty())
+//		{
+//			Integer [] a = adjacentRegions.toArray(new Integer[0]);
+//			int i = (int) Math.floor(Math.random() * a.length);
+//			int expandTo = a[i];
+//
+//System.out.println("expanding lake to region "+expandTo);
+//assert !lake.regions.contains(expandTo);
+//
+//			addRegionToLake(lake, expandTo);
+//			return;
+//		}
+//
+//		// increase height of this lake
+//		assert adjacentLowerRegions.isEmpty();
+//
+//		{
+//			lake.waterLevel++;
+//			lake.remaining -= LAKE_UNIT_VOLUME * lake.regions.size();
+//
+//			checkLakeElevation(lake);
+//
+//System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaining + " remaining)");
+//			return;
+//		}
 
+	}
+
+	private void checkLakeElevation(LakeInfo lake)
+	{
+		double newEl = Double.POSITIVE_INFINITY;
+		for (Geometry.VertexId sourceVtx : getLakeSources(lake))
 		{
-			lake.waterLevel++;
-			lake.remaining -= LAKE_UNIT_VOLUME * lake.regions.size();
-System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaining + " remaining)");
-			return;
+			double h = getVertexHeight(sourceVtx) - MIN_RIVER_SLOPE;
+			if (newEl > h)
+				newEl = h;
 		}
 
+		for (int regionId : lake.regions)
+		{
+			double h = world.elevation[regionId-1];
+			if (newEl > h)
+				newEl = h;
+		}
+
+		if (lake.lakeElevation != newEl)
+		{
+	System.out.println("changing water level; was "+lake.lakeElevation+", is now " + newEl);
+
+			lake.lakeElevation = newEl;
+
+			for (Geometry.VertexId vtx : getLakeVertices(lake))
+			{
+				riverElevation.put(vtx, lake.lakeElevation);
+			}
+
+			enforceRiverSlope(lake);
+		}
 	}
 
 	private void reduceLakeDepth(LakeInfo lake1, int newWaterLevel)
@@ -455,11 +557,17 @@ System.out.println("lake water level is now "+lake.waterLevel+"; ("+lake.remaini
 		lake1.remaining += lake2.remaining;
 		lake1.volume += lake2.volume;
 		lake1.originHeight = Math.min(lake1.originHeight, lake2.originHeight);
+		lake1.lakeElevation = Math.min(lake1.lakeElevation, lake2.lakeElevation);
 
 		lake2.remaining = 0;
 		lake2.volume = 0;
 	}
 
+	/**
+	 * Adds a region to the specified lake, merging adjacent lakes automatically
+	 * as needed. Also, the lake's elevation is raised to the max possible given
+	 * the lake's sources.
+	 */
 	private void addRegionToLake(LakeInfo lake, int regionId)
 	{
 System.out.println(lake.toString() + " : addRegionToLake");
@@ -514,11 +622,33 @@ System.out.println(lake.toString() + " : addRegionToLake");
 				if (drainsTo.lakeElevation >= lake.lakeElevation)
 				{
 					// can't have this; remove that drainage rule
-					System.out.println("  removing drainage "+v);
-					drainage.remove(v);
+					clearRiver(v);
 				}
 			}
 		}
+
+		// check if this region touches any other lakes
+		for (int nid : world.g.getNeighbors(regionId))
+		{
+			LakeInfo otherLake = lakesByRegion.get(nid);
+			if (otherLake != null && otherLake != lake)
+			{
+				mergeLakes(lake, otherLake);
+			}
+		}
+
+		checkLakeElevation(lake);
+	}
+
+	private void clearRiver(Geometry.VertexId upstreamVtx)
+	{
+		assert drainage.containsKey(upstreamVtx);
+
+		Geometry.VertexId downstreamVtx = drainage.get(upstreamVtx);
+		Geometry.EdgeId eId = world.g.getEdgeByEndpoints(downstreamVtx, upstreamVtx);
+
+		drainage.remove(upstreamVtx);
+		rivers.remove(eId);
 	}
 
 	/**
@@ -793,10 +923,12 @@ System.out.println(lake.toString() + " : processSinglePointLake");
 			}
 			else
 			{
+				boolean isOcean = lake.regions.size() >= OCEAN_SIZE_THRESHOLD &&
+						lake.lakeElevation <= 0;
 				for (int regionId : lake.regions)
 				{
 					world.regions[regionId-1].biome =
-						lake.isOcean ? BiomeType.OCEAN : BiomeType.LAKE;
+						isOcean ? BiomeType.OCEAN : BiomeType.LAKE;
 					world.regions[regionId-1].waterLevel = lake.waterLevel;
 				}
 			}
