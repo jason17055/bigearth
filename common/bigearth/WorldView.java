@@ -3,6 +3,9 @@ package bigearth;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.*;
 import java.util.*;
 import javax.swing.*;
 import javax.vecmath.*;
@@ -27,6 +30,8 @@ public class WorldView extends JPanel
 	int selectedRegion;
 	int selectedTerrain;
 	Geometry.VertexId selectedVertex;
+
+	static final int UNKNOWN_BIOME_COLOR = 0x888888;
 
 	public WorldView()
 	{
@@ -191,21 +196,30 @@ public class WorldView extends JPanel
 				boolean flag = false;
 				int x = pts[i].x;
 				int y = pts[i].y;
+				int col = colors[i];
+				if (col == 0)
+				{
+					if (biomeColors.containsKey(world.regions[i].biome))
+						col = biomeColors.get(world.regions[i].biome);
+					else
+						col = UNKNOWN_BIOME_COLOR;
+				}
+
 				if (radius == 0)
 				{
-					if (tryPixel(x, y, colors[i]))
+					if (tryPixel(x, y, col))
 						flag = true;
 				}
 				else
 				for (int j = 0; j < radius; j++)
 				{
-					if (tryPixel(x-radius+j, y-j, colors[i]))
+					if (tryPixel(x-radius+j, y-j, col))
 						flag = true;
-					if (tryPixel(x+j, y-radius+j, colors[i]))
+					if (tryPixel(x+j, y-radius+j, col))
 						flag = true;
-					if (tryPixel(x+radius-j, y+j, colors[i]))
+					if (tryPixel(x+radius-j, y+j, col))
 						flag = true;
-					if (tryPixel(x-j, y+radius-j, colors[i]))
+					if (tryPixel(x-j, y+radius-j, col))
 						flag = true;
 				}
 					
@@ -288,8 +302,16 @@ public class WorldView extends JPanel
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
 
-				gr.setColor(new Color(colors[i]));
-				gr.fillPolygon(x_coords, y_coords, bb.length);
+				if (colors[i] != 0)
+				{
+					gr.setColor(new Color(colors[i]));
+					gr.fillPolygon(x_coords, y_coords, bb.length);
+				}
+				else
+				{
+					RegionDetail r = world.regions[i];
+					drawRegionArea(gr, i+1, r, x_coords, y_coords);
+				}
 			}
 
 		if (showRivers)
@@ -445,6 +467,86 @@ public class WorldView extends JPanel
 
 		gr.drawLine(x1, y1, x1-dx-dy, y1-dy+dx);
 		gr.drawLine(x1, y1, x1-dx+dy, y1-dy-dx);
+	}
+
+	static Map<BiomeType, BufferedImage> biomeTextures;
+	static Map<BiomeType, Rectangle> biomeMappingRect;
+	static Map<BiomeType, Integer> biomeColors;
+	static
+	{
+		biomeTextures = new EnumMap<BiomeType, BufferedImage>(BiomeType.class);
+		loadTexture(BiomeType.OCEAN, "ocean");
+		loadTexture(BiomeType.DESERT, "desert");
+		loadTexture(BiomeType.FOREST, "forest");
+		loadTexture(BiomeType.GLACIER, "glacier");
+		loadTexture(BiomeType.GRASSLAND, "grassland");
+		loadTexture(BiomeType.HILLS, "hills");
+		loadTexture(BiomeType.JUNGLE, "jungle");
+		loadTexture(BiomeType.MOUNTAIN, "mountains");
+		loadTexture(BiomeType.PLAINS, "plains");
+		loadTexture(BiomeType.SWAMP, "swamp");
+		loadTexture(BiomeType.TUNDRA, "tundra");
+		loadTexture(BiomeType.LAKE, "ocean");
+
+		biomeMappingRect = new EnumMap<BiomeType, Rectangle>(BiomeType.class);
+		for (BiomeType b : biomeTextures.keySet())
+		{
+			BufferedImage img = biomeTextures.get(b);
+			Rectangle r = new Rectangle(0, 0,
+				img.getWidth(),
+				img.getHeight()
+				);
+			biomeMappingRect.put(b, r);
+		}
+
+		biomeColors = new EnumMap<BiomeType, Integer>(BiomeType.class);
+		biomeColors.put(BiomeType.OCEAN, 0x1e41a4);
+		biomeColors.put(BiomeType.LAKE, 0x1e41a4);
+		biomeColors.put(BiomeType.DESERT, 0xddbb70);
+		biomeColors.put(BiomeType.FOREST, 0x337118);
+		biomeColors.put(BiomeType.GLACIER, 0xf6f6f6);
+		biomeColors.put(BiomeType.GRASSLAND, 0x0a8403);
+		biomeColors.put(BiomeType.HILLS, 0x3f8020);
+		biomeColors.put(BiomeType.JUNGLE, 0x367f26);
+		biomeColors.put(BiomeType.MOUNTAIN, 0x858767);
+		biomeColors.put(BiomeType.PLAINS, 0x7e9e32);
+		biomeColors.put(BiomeType.SWAMP, 0x365436);
+		biomeColors.put(BiomeType.TUNDRA, 778362);
+	}
+
+	static void loadTexture(BiomeType biome, String textureName)
+	{
+		try
+		{
+System.err.println("trying to load "+textureName+" texture");
+		biomeTextures.put(biome, ImageIO.read(new File("../html/terrain_textures/"+textureName+".png")));
+		}
+		catch (IOException e)
+		{
+			//FIXME- do something?
+System.err.println(e);
+		}
+	}
+
+	void drawRegionArea(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)
+	{
+		Graphics2D gr2 = (Graphics2D) gr;
+		Paint oldPaint = gr2.getPaint();
+
+		BiomeType biome = r.getBiome();
+		if (biomeTextures.containsKey(biome))
+		{
+			Rectangle rect = biomeMappingRect.get(biome);
+			TexturePaint p = new TexturePaint(biomeTextures.get(biome), rect);
+			gr2.setPaint(p);
+		}
+		else
+		{
+			gr2.setColor(new Color(UNKNOWN_BIOME_COLOR));
+		}
+
+		gr2.fillPolygon(x_coords, y_coords, x_coords.length);
+		gr2.setPaint(oldPaint);
 	}
 
 	void drawRegionBorder(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)

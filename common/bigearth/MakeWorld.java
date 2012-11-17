@@ -578,4 +578,67 @@ public class MakeWorld
 		assert regionId >= 1 && regionId <= temperature.length;
 		return temperature[regionId-1];
 	}
+
+	public void generateBiomes()
+	{
+		for (int i = 0; i < regions.length; i++)
+		{
+			RegionDetail region = regions[i];
+			if (region.getBiome().isWater())
+				continue;
+
+			int temp = getRegionTemperature(i+1);
+			int moisture = annualRains[i] + floods[i];
+
+			double heightVariation = 0.0;
+			int [] nn = g.getNeighbors(i+1);
+			for (int nid : nn)
+			{
+				int hdiff = elevation[nid-1] - elevation[i];
+				heightVariation += Math.pow(hdiff, 2.0);
+			}
+			heightVariation /= nn.length;
+
+			if (temp < -20)
+			{
+				regions[i].biome = BiomeType.GLACIER;
+			}
+			else if (elevation[i] >= 3 && heightVariation >= 4.0)
+			{
+				regions[i].biome = BiomeType.MOUNTAIN;
+			}
+			else if (heightVariation >= 1.8)
+			{
+				regions[i].biome = BiomeType.HILLS;
+			}
+			else if (moisture < 200 && temp >= 130)
+			{
+				regions[i].biome = BiomeType.DESERT;
+			}
+			else if (moisture < 300 && temp < 100)
+			{
+				regions[i].biome = BiomeType.TUNDRA;
+			}
+			else if (moisture >= 1500 && temp >= 210)
+			{
+				regions[i].biome = BiomeType.JUNGLE;
+			}
+			else if (moisture >= 1800)
+			{
+				regions[i].biome = BiomeType.SWAMP;
+			}
+			else if (moisture >= 1200)
+			{
+				regions[i].biome = BiomeType.FOREST;
+			}
+			else if (moisture >= 600)
+			{
+				regions[i].biome = BiomeType.GRASSLAND;
+			}
+			else
+			{
+				regions[i].biome = BiomeType.PLAINS;
+			}
+		}
+	}
 }

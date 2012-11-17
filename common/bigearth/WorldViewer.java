@@ -265,6 +265,13 @@ public class WorldViewer extends JFrame
 			}});
 		fileMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Generate Biomes");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onGenerateBiomesClicked();
+			}});
+		fileMenu.add(menuItem);
+
 		JMenu viewMenu = new JMenu("View");
 		menuBar.add(viewMenu);
 
@@ -368,6 +375,12 @@ public class WorldViewer extends JFrame
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	void onGenerateBiomesClicked()
+	{
+		world.generateBiomes();
+		reloadImage();
 	}
 
 	void onGenerateRiversClicked()
@@ -620,13 +633,15 @@ assert(x >= 1);
 		}
 		else
 		{
-			RegionDetail r = world.regions[i];
-			if (r.biome == BiomeType.LAKE)
-				return 0x6666ff;
-			else if (r.biome.isWater())
-				return 0x0000ff;
-			else
-				return 0x00ff00;
+		return 0;
+
+//			RegionDetail r = world.regions[i];
+//			if (r.biome == BiomeType.LAKE)
+//				return 0x6666ff;
+//			else if (r.biome.isWater())
+//				return 0x0000ff;
+//			else
+//				return 0x00ff00;
 		}
 	}
 
