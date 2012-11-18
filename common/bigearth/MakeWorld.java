@@ -18,10 +18,6 @@ public class MakeWorld
 	int [] temperature; //in 10th degrees Celsius
 	int [] annualRains; //in millimeters-per-year
 
-	/** Each element is -1 if there is no drainage destination,
-	 * or a region id. */
-	int [] drainage;
-
 	int [] riverVolume;
 	int [] lakeLevel;
 	int [] floods;
@@ -44,7 +40,6 @@ public class MakeWorld
 		this.elevation = new int[numCells];
 		this.temperature = new int[numCells];
 		this.annualRains = new int[numCells];
-		this.drainage = new int[numCells];
 		this.riverVolume = new int[numCells];
 		this.lakeLevel = new int[numCells];
 		this.floods = new int[numCells];
@@ -63,7 +58,6 @@ public class MakeWorld
 		arrayHelper(j, "elevation", elevation);
 		arrayHelper(j, "temperature", temperature);
 		arrayHelper(j, "annualRains", annualRains);
-		arrayHelper(j, "drainage", drainage);
 		arrayHelper(j, "riverVolume", riverVolume);
 		arrayHelper(j, "lakeLevel", lakeLevel);
 		arrayHelper(j, "floods", floods);
@@ -141,8 +135,6 @@ public class MakeWorld
 				temperature = json_readIntArray(in);
 			else if (s.equals("annualRains"))
 				annualRains = json_readIntArray(in);
-			else if (s.equals("drainage"))
-				drainage = json_readIntArray(in);
 			else if (s.equals("riverVolume"))
 				riverVolume = json_readIntArray(in);
 			else if (s.equals("lakeLevel"))
@@ -164,7 +156,6 @@ public class MakeWorld
 		assert this.elevation != null;
 		assert this.temperature != null;
 		assert this.annualRains != null;
-		assert this.drainage != null;
 		assert this.riverVolume != null;
 		assert this.lakeLevel != null;
 		assert this.floods != null;
@@ -244,8 +235,6 @@ public class MakeWorld
 				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
 				BiomeType.OCEAN);
 		}
-
-		generateDrainage();
 	}
 
 	void doOneStep()
@@ -342,62 +331,6 @@ public class MakeWorld
 		{
 			double x = (rainfall[i] - meanRainfall) / stddevRain;
 			rainfall[i] = (int)Math.round(AVERAGE_RAINFALL * Math.exp(x));
-		}
-	}
-
-	void generateDrainage()
-	{
-		int numCells = g.getCellCount();
-		this.drainage = new int[numCells];
-
-		List<Integer> todo = new ArrayList<Integer>();
-		for (;;)
-		{
-			if (todo.isEmpty())
-			{
-				// find a starting spot
-				int best = -1;
-				int bestVal = Integer.MAX_VALUE;
-				for (int i = 0; i < numCells; i++)
-				{
-					if (drainage[i] == 0 && elevation[i] < bestVal)
-					{
-						best = i+1;
-						bestVal = elevation[i];
-					}
-				}
-				if (best == -1)
-					return;
-
-				drainage[best-1] = -1;
-				todo.add(best);
-			}
-
-			// pick a place to branch from
-			int i = (int)Math.floor(Math.random() * todo.size());
-			int cur = todo.get(i);
-			int curEl = elevation[cur-1];
-
-			// pick a direction to branch to
-			RouletteWheel<Integer> rw = new RouletteWheel<Integer>();
-			for (int n : g.getNeighbors(cur))
-			{
-				if (drainage[n-1] == 0 && elevation[n-1] >= curEl)
-				{
-					rw.add(n, 1);
-				}
-			}
-
-			if (!rw.isEmpty())
-			{
-				int n = rw.next();
-				drainage[n-1] = cur;
-				todo.add(n);
-			}
-			else
-			{
-				todo.remove(i);
-			}
 		}
 	}
 

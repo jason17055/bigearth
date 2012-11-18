@@ -401,12 +401,7 @@ public class WorldViewer extends JFrame
 
 	void onMakeRiversClicked()
 	{
-		if (view.selectedRegion != 0)
-		{
-			RegionDetail r = world.regions[view.selectedRegion-1];
-			r.makeRivers();
-			reloadImage();
-		}
+		throw new Error("not implemented");
 	}
 
 	MakeWorld world;
