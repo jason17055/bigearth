@@ -60,6 +60,13 @@ public class BigEarthServer
 	void loadNodeConfiguration()
 		throws IOException
 	{
+		if (nodeName == null)
+		{
+			// determine a default node name
+			java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+			nodeName = localMachine.getHostName();
+		}
+
 		String effNodeName = nodeName.toLowerCase().replace('.', '_');
 		if (!effNodeName.matches("[a-z0-9_-]+"))
 		{
