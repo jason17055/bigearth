@@ -116,6 +116,12 @@ public class MakeWorld
 		me.floods = new int[numCells];
 		me.regions = new RegionDetail[numCells];
 
+		for (int i = 0; i < numCells; i++)
+		{
+			int regionId = i+1;
+			me.regions[i] = RegionDetail.create(me, regionId);
+		}
+
 		return me;
 	}
 
