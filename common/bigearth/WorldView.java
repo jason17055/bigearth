@@ -28,7 +28,6 @@ public class WorldView extends JPanel
 	boolean allowVertexSelection;
 
 	int selectedRegion;
-	int selectedTerrain;
 	Geometry.VertexId selectedVertex;
 
 	static final int UNKNOWN_BIOME_COLOR = 0x888888;
@@ -718,7 +717,6 @@ System.err.println(e);
 	private void selectRegion(int regionId)
 	{
 		selectedRegion = regionId;
-		selectedTerrain = 0;
 		selectedVertex = null;
 		fireRegionSelected(selectedRegion);
 	}
