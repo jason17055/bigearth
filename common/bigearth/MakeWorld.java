@@ -10,7 +10,6 @@ public class MakeWorld
 	static final int AVERAGE_RAINFALL = 990;
 
 	File worldDir;
-	int regionDetailLevel;
 
 	SphereGeometry g;
 	int [] elevation;
@@ -41,7 +40,6 @@ public class MakeWorld
 		File f2 = new File(worldDir, "world.txt");
 		JsonGenerator j = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
 		j.writeStartObject();
-		j.writeNumberField("regionDetailLevel", regionDetailLevel);
 		j.writeNumberField("year", year);
 		j.writeNumberField("lastMobId", lastMobId);
 		arrayHelper(j, "elevation", elevation);
@@ -107,7 +105,6 @@ public class MakeWorld
 		me.worldConfig = WorldConfig.load(worldDir);
 
 		me.worldDir = worldDir;
-		me.regionDetailLevel = 2;
 		me.g = (SphereGeometry) me.worldConfig.getGeometry();
 
 		int numCells = me.g.getCellCount();
@@ -145,9 +142,7 @@ public class MakeWorld
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			if (s.equals("regionDetailLevel"))
-				regionDetailLevel = in.nextIntValue(regionDetailLevel);
-			else if (s.equals("year"))
+			if (s.equals("year"))
 				year = in.nextIntValue(year);
 			else if (s.equals("lastMobId"))
 				lastMobId = in.nextIntValue(0);
@@ -544,11 +539,6 @@ public class MakeWorld
 	{
 		assert regionId >= 1 && regionId <= regions.length;
 		return regions[regionId-1];
-	}
-
-	public TerrainGeometry getTerrainGeometry()
-	{
-		return new TerrainGeometry(g, regionDetailLevel);
 	}
 
 	public int getRegionTemperature(int regionId)

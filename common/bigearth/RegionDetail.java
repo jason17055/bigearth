@@ -43,7 +43,6 @@ class RegionDetail
 	private void init()
 	{
 		int numSides = world.g.getNeighborCount(regionId);
-		int detailLevel = world.regionDetailLevel;
 	}
 
 	public void adjustWildlife(int delta)
