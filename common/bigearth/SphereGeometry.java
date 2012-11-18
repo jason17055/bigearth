@@ -387,7 +387,8 @@ public class SphereGeometry implements Geometry
 			return new MyEdgeId(cell2, cell1);
 	}
 
-	VertexId getVertexBetween(int cell1, int cell2, int cell3)
+	//implements Geometry
+	public VertexId getVertex(int cell1, int cell2, int cell3)
 	{
 		if (cell1 < cell2 && cell1 < cell3)
 			return new MyVertexId(cell1, cell2, cell3);
@@ -405,8 +406,8 @@ public class SphereGeometry implements Geometry
 			if (adj[i] == edgeId.cell2)
 			{
 				return new VertexId[] {
-					getVertexBetween(edgeId.cell1, edgeId.cell2, adj[(i+1)%len]),
-					getVertexBetween(edgeId.cell2, edgeId.cell1, adj[(i+len-1)%len])
+					getVertex(edgeId.cell1, edgeId.cell2, adj[(i+1)%len]),
+					getVertex(edgeId.cell2, edgeId.cell1, adj[(i+len-1)%len])
 					};
 			}
 		}
@@ -422,7 +423,7 @@ public class SphereGeometry implements Geometry
 		VertexId [] rv = new VertexId[len];
 		for (int i = 0; i < len; i++)
 		{
-			rv[i] = getVertexBetween(cellId, nn[i], nn[(i+1)%len]);
+			rv[i] = getVertex(cellId, nn[i], nn[(i+1)%len]);
 		}
 		return rv;
 	}
@@ -454,7 +455,7 @@ public class SphereGeometry implements Geometry
 			{
 				if (nn[(j+1)%nn.length] == x)
 				{
-					result[i] = getVertexBetween(cc[i], nn[j], x);
+					result[i] = getVertex(cc[i], nn[j], x);
 				}
 			}
 			assert result[i] != null;

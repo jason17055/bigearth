@@ -35,6 +35,8 @@ public interface Geometry
 	EdgeId getEdgeByEndpoints(VertexId fromVertex, VertexId toVertex);
 
 	EdgeId [] getSurroundingEdges(int cellId);
+
+	VertexId getVertex(int cell1, int cell2, int cell3);
 	VertexId [] getSurroundingVertices(int cellId);
 	VertexId [] getNearbyVertices(VertexId vertex);
 
