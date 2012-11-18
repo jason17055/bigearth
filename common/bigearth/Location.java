@@ -12,4 +12,9 @@ class SimpleLocation implements Location
 	{
 		this.regionId = regionId;
 	}
+
+	public String toString()
+	{
+		return new Integer(regionId).toString();
+	}
 }

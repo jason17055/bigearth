@@ -360,11 +360,14 @@ if (false)
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
+		WorldConfig worldCfg = new WorldConfig();
+		worldCfg.geometry = world.g;
+
 		presentMobs.clear();
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String mobName = in.getCurrentName();
-			presentMobs.put(mobName, MobInfo.parse(in, mobName));
+			presentMobs.put(mobName, MobInfo.parse(in, mobName, worldCfg));
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;

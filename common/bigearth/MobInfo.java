@@ -8,6 +8,7 @@ public class MobInfo
 	String name;
 	String displayName;
 	String avatarName;
+	Location location;
 
 	MobInfo(String name)
 	{
@@ -15,7 +16,7 @@ public class MobInfo
 		this.displayName = name;
 	}
 
-	public static MobInfo parse(JsonParser in, String mobName)
+	public static MobInfo parse(JsonParser in, String mobName, WorldConfig world)
 		throws IOException
 	{
 		MobInfo m = new MobInfo(mobName);
@@ -30,6 +31,8 @@ public class MobInfo
 				m.displayName = in.nextTextValue();
 			else if (s.equals("avatarName"))
 				m.avatarName = in.nextTextValue();
+			else if (s.equals("location"))
+				m.location = LocationHelper.parse(in.nextTextValue(), world);
 			else
 			{
 				in.nextToken();
@@ -48,6 +51,8 @@ public class MobInfo
 		out.writeStringField("displayName", displayName);
 		if (avatarName != null)
 			out.writeStringField("avatarName", avatarName);
+		if (location != null)
+			out.writeStringField("location", location.toString());
 		out.writeEndObject();
 	}
 }
