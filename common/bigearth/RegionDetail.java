@@ -271,6 +271,19 @@ if (false)
 				corners[i].write(out);
 			}
 		}
+
+		if (!presentMobs.isEmpty())
+		{
+			out.writeFieldName("mobs");
+			out.writeStartObject();
+			for (String mobName : presentMobs.keySet())
+			{
+				out.writeFieldName(mobName);
+				presentMobs.get(mobName).write(out);
+			}
+			out.writeEndObject();
+		}
+
 		out.writeEndObject();
 		out.close();
 	}
@@ -330,6 +343,8 @@ if (false)
 				corners[4] = RegionCornerDetail.parse(in);
 			else if (s.equals("corner5"))
 				corners[5] = RegionCornerDetail.parse(in);
+			else if (s.equals("mobs"))
+				loadMobs(in);
 			else
 			{
 				in.nextToken();
@@ -339,12 +354,29 @@ if (false)
 		}
 	}
 
-	void spawnCharacter(Location loc, String characterName)
+	private void loadMobs(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+		presentMobs.clear();
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String mobName = in.getCurrentName();
+			presentMobs.put(mobName, MobInfo.parse(in, mobName));
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+
+	void spawnCharacter(Location loc, String characterName, String avatarName)
 	{
 		assert world.getRegionIdForLocation(loc) == this.regionId;
 
 		MobInfo mob = world.newMob();
 		mob.displayName = characterName;
+		mob.avatarName = avatarName;
 		presentMobs.put(mob.name, mob);
 	}
 }

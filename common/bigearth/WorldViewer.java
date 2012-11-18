@@ -410,10 +410,23 @@ public class WorldViewer extends JFrame
 			throw new Exception("Please select a location first.");
 		}
 
+		final String [] avatarList = new String[] {
+			"explorer",
+			"settler",
+			"lion",
+			"trieme",
+			"warrior"
+			};
+
 		JTextField nameField = new JTextField();
+		JComboBox avatarSelect = new JComboBox(avatarList);
+		avatarSelect.setSelectedIndex(0);
+
 		final JComponent[] inputs = new JComponent[] {
 			new JLabel("Name"),
-			nameField
+			nameField,
+			new JLabel("Avatar"),
+			avatarSelect
 			};
 
 		int rv = JOptionPane.showOptionDialog(this, inputs,
@@ -427,7 +440,10 @@ public class WorldViewer extends JFrame
 			throw new Exception("You must enter a name.");
 
 		RegionDetail region = world.getRegionForLocation(loc);
-		region.spawnCharacter(loc, nameField.getText());
+		region.spawnCharacter(loc,
+			nameField.getText(),
+			avatarList[avatarSelect.getSelectedIndex()]
+			);
 
 		}
 		catch (Exception e)
