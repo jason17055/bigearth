@@ -60,10 +60,17 @@ public class BigEarthServer
 	void loadNodeConfiguration()
 		throws IOException
 	{
-		File filename = new File(worldPath, "node_"+nodeName+".config");
+		String effNodeName = nodeName.toLowerCase().replace('.', '_');
+		if (!effNodeName.matches("[a-z0-9_-]+"))
+		{
+			System.err.println("Invalid node name");
+			System.exit(1);
+		}
+
+		File filename = new File(worldPath, "node_"+effNodeName+".config");
 		if (!filename.exists())
 		{
-			System.err.println("No configuration found for node "+nodeName);
+			System.err.println(filename + ": not found");
 			System.exit(1);
 		}
 
