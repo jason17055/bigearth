@@ -15,6 +15,7 @@ class RegionDetail
 	RegionSideDetail [] sides;
 	RegionCornerDetail [] corners;
 	int waterLevel;
+	Map<String, MobInfo> presentMobs;
 
 	int wildlife;
 	int wildlifeHunted;
@@ -36,6 +37,7 @@ class RegionDetail
 		this.sides = new RegionSideDetail[6];
 		this.corners = new RegionCornerDetail[6];
 		this.waterLevel = Integer.MIN_VALUE;
+		this.presentMobs = new HashMap<String, MobInfo>();
 	}
 
 	private void init()
@@ -335,5 +337,14 @@ if (false)
 				System.err.println("unrecognized property: "+s);
 			}
 		}
+	}
+
+	void spawnCharacter(Location loc, String characterName)
+	{
+		assert world.getRegionIdForLocation(loc) == this.regionId;
+
+		MobInfo mob = world.newMob();
+		mob.displayName = characterName;
+		presentMobs.put(mob.name, mob);
 	}
 }

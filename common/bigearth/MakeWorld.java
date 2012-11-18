@@ -22,6 +22,7 @@ public class MakeWorld
 	int [] lakeLevel;
 	int [] floods;
 	RegionDetail [] regions;
+	int lastMobId;
 
 	int year;
 
@@ -55,6 +56,7 @@ public class MakeWorld
 		j.writeNumberField("size", geometrySize);
 		j.writeNumberField("regionDetailLevel", regionDetailLevel);
 		j.writeNumberField("year", year);
+		j.writeNumberField("lastMobId", lastMobId);
 		arrayHelper(j, "elevation", elevation);
 		arrayHelper(j, "temperature", temperature);
 		arrayHelper(j, "annualRains", annualRains);
@@ -129,6 +131,8 @@ public class MakeWorld
 				regionDetailLevel = in.nextIntValue(regionDetailLevel);
 			else if (s.equals("year"))
 				year = in.nextIntValue(year);
+			else if (s.equals("lastMobId"))
+				lastMobId = in.nextIntValue(0);
 			else if (s.equals("elevation"))
 				elevation = json_readIntArray(in);
 			else if (s.equals("temperature"))
@@ -427,6 +431,30 @@ public class MakeWorld
 			x == 7 ? "SE" : "<bad>";
 	}
 
+	int getRegionIdForLocation(Location loc)
+	{
+		if (loc instanceof SimpleLocation)
+			return ((SimpleLocation) loc).regionId;
+		else if (loc instanceof Geometry.EdgeId)
+		{
+			return ((Geometry.EdgeId) loc).getAdjacentCells()[0];
+		}
+		else if (loc instanceof Geometry.VertexId)
+		{
+			return ((Geometry.VertexId) loc).getAdjacentCells()[0];
+		}
+		else
+		{
+			throw new IllegalArgumentException("not a recognized loc");
+		}
+	}
+
+	public RegionDetail getRegionForLocation(Location loc)
+	{
+		int regionId = getRegionIdForLocation(loc);
+		return regions[regionId-1];
+	}
+
 	static double getSeaCoverage(int [] elevations, int seaLevel)
 	{
 		int countAbove = 0;
@@ -573,5 +601,12 @@ public class MakeWorld
 				regions[i].biome = BiomeType.PLAINS;
 			}
 		}
+	}
+
+	MobInfo newMob()
+	{
+		String name = "mob"+(++lastMobId);
+		MobInfo mob = new MobInfo(name);
+		return mob;
 	}
 }

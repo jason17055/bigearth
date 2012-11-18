@@ -322,10 +322,10 @@ public class WorldViewer extends JFrame
 			}});
 		regionMenu.add(menuItem);
 
-		menuItem = new JMenuItem("Make Rivers");
+		menuItem = new JMenuItem("Spawn Character...");
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
-				onMakeRiversClicked();
+				onSpawnCharacterClicked();
 			}});
 		regionMenu.add(menuItem);
 
@@ -399,9 +399,44 @@ public class WorldViewer extends JFrame
 		}
 	}
 
-	void onMakeRiversClicked()
+	void onSpawnCharacterClicked()
 	{
-		throw new Error("not implemented");
+		try
+		{
+
+		Location loc = view.getSelectedLocation();
+		if (loc == null)
+		{
+			throw new Exception("Please select a location first.");
+		}
+
+		JTextField nameField = new JTextField();
+		final JComponent[] inputs = new JComponent[] {
+			new JLabel("Name"),
+			nameField
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"New Character",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		if (nameField.getText().length() == 0)
+			throw new Exception("You must enter a name.");
+
+		RegionDetail region = world.getRegionForLocation(loc);
+		region.spawnCharacter(loc, nameField.getText());
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	MakeWorld world;

@@ -65,6 +65,22 @@ public class WorldView extends JPanel
 		listeners.remove(l);
 	}
 
+	public Location getSelectedLocation()
+	{
+		if (selectedVertex != null)
+		{
+			return selectedVertex;
+		}
+		else if (selectedRegion != 0)
+		{
+			return new SimpleLocation(selectedRegion);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
 	boolean tryPixel(int x, int y, int c)
 	{
 		if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)

@@ -14,13 +14,13 @@ public interface Geometry
 	 */
 	int [] getNeighbors(int cellId);
 
-	interface EdgeId
+	interface EdgeId extends Location
 	{
 		int [] getAdjacentCells();
 		VertexId [] getEndpoints();
 	};
 
-	interface VertexId
+	interface VertexId extends Location
 	{
 		int [] getAdjacentCells();
 
