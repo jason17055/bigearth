@@ -25,9 +25,15 @@ public class MakeWorld
 	int lastMobId;
 
 	int year;
+	WorldConfig worldConfig;
 
 	protected MakeWorld()
 	{
+	}
+
+	public WorldConfig getConfig()
+	{
+		return worldConfig;
 	}
 
 	public MakeWorld(File worldDir, int geometrySize)
@@ -116,6 +122,8 @@ public class MakeWorld
 	public void load()
 		throws IOException
 	{
+		worldConfig = WorldConfig.load(worldDir);
+
 		File inFile = new File(worldDir, "world.txt");
 		JsonParser in = new JsonFactory().createJsonParser(inFile);
 
