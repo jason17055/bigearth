@@ -15,7 +15,20 @@ public class WorldViewer extends JFrame
 	public static void main(String [] args)
 		throws Exception
 	{
-		new WorldViewer().setVisible(true);
+		WorldViewer wv = new WorldViewer();
+
+		File f = new File("world1");
+		if (args.length >= 1)
+		{
+			f = new File(args[0]);
+		}
+
+		if (f.exists())
+		{
+			wv.setWorld(MakeWorld.load(f));
+		}
+
+		wv.setVisible(true);
 	}
 
 	WorldView view;
@@ -111,12 +124,6 @@ public class WorldViewer extends JFrame
 			public void windowClosed(WindowEvent ev) {
 				onWindowClosed();
 			}});
-
-		File f = new File("world1");
-		if (f.exists())
-		{
-			setWorld(MakeWorld.load(f));
-		}
 	}
 
 	private void initRegionPane()
