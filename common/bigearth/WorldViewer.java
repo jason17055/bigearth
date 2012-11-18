@@ -219,10 +219,8 @@ public class WorldViewer extends JFrame
 		int sz = Integer.parseInt(sizeField.getText());
 
 		File worldDir = new File(nameField.getText());
-		if (!worldDir.mkdir())
-			throw new Exception("Could not create "+worldDir);
 
-		world = new MakeWorld(worldDir, sz);
+		world = MakeWorld.create(worldDir, sz);
 		reloadImage();
 
 		}
@@ -534,7 +532,6 @@ public class WorldViewer extends JFrame
 		}
 		else if (ev.getSource() == generateBtn)
 		{
-			this.world = new MakeWorld(new File("world1"), 20);
 			world.generate();
 			try
 			{

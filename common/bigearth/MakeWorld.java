@@ -10,7 +10,6 @@ public class MakeWorld
 	static final int AVERAGE_RAINFALL = 990;
 
 	File worldDir;
-	int geometrySize;
 	int regionDetailLevel;
 
 	SphereGeometry g;
@@ -36,30 +35,12 @@ public class MakeWorld
 		return worldConfig;
 	}
 
-	public MakeWorld(File worldDir, int geometrySize)
-	{
-		this.worldDir = worldDir;
-		this.geometrySize = geometrySize;
-		this.regionDetailLevel = 2;
-		this.g = new SphereGeometry(geometrySize);
-
-		int numCells = g.getCellCount();
-		this.elevation = new int[numCells];
-		this.temperature = new int[numCells];
-		this.annualRains = new int[numCells];
-		this.riverVolume = new int[numCells];
-		this.lakeLevel = new int[numCells];
-		this.floods = new int[numCells];
-		this.regions = new RegionDetail[numCells];
-	}
-
 	public void save()
 		throws IOException
 	{
 		File f2 = new File(worldDir, "world.txt");
 		JsonGenerator j = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
 		j.writeStartObject();
-		j.writeNumberField("size", geometrySize);
 		j.writeNumberField("regionDetailLevel", regionDetailLevel);
 		j.writeNumberField("year", year);
 		j.writeNumberField("lastMobId", lastMobId);
@@ -110,6 +91,37 @@ public class MakeWorld
 		return Arrays.copyOf(tmp, count);
 	}
 
+	public static MakeWorld create(File worldDir, int geometrySize)
+		throws IOException
+	{
+		if (!worldDir.mkdir())
+			throw new IOException("Could not create directory: "+worldDir);
+
+		Properties props = new Properties();
+		props.setProperty("geometry", "sphere:"+geometrySize);
+		FileOutputStream propsOut = new FileOutputStream(new File(worldDir, "world.config"));
+		props.store(propsOut, "where does this go");
+		propsOut.close();
+
+		MakeWorld me = new MakeWorld();
+		me.worldConfig = WorldConfig.load(worldDir);
+
+		me.worldDir = worldDir;
+		me.regionDetailLevel = 2;
+		me.g = (SphereGeometry) me.worldConfig.getGeometry();
+
+		int numCells = me.g.getCellCount();
+		me.elevation = new int[numCells];
+		me.temperature = new int[numCells];
+		me.annualRains = new int[numCells];
+		me.riverVolume = new int[numCells];
+		me.lakeLevel = new int[numCells];
+		me.floods = new int[numCells];
+		me.regions = new RegionDetail[numCells];
+
+		return me;
+	}
+
 	public static MakeWorld load(File worldDir)
 		throws IOException
 	{
@@ -133,9 +145,7 @@ public class MakeWorld
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			if (s.equals("size"))
-				geometrySize = in.nextIntValue(geometrySize);
-			else if (s.equals("regionDetailLevel"))
+			if (s.equals("regionDetailLevel"))
 				regionDetailLevel = in.nextIntValue(regionDetailLevel);
 			else if (s.equals("year"))
 				year = in.nextIntValue(year);
@@ -163,7 +173,7 @@ public class MakeWorld
 
 		in.close();
 
-		this.g = new SphereGeometry(geometrySize);
+		this.g = (SphereGeometry) worldConfig.getGeometry();
 
 		assert this.elevation != null;
 		assert this.temperature != null;
@@ -195,7 +205,6 @@ public class MakeWorld
 		DBCollection regions = db.getCollection("regions");
 	*/
 		
-		this.g = new SphereGeometry(geometrySize);
 		int numCells = g.getCellCount();
 
 		this.elevation = new int[numCells];
