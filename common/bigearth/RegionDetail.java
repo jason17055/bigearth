@@ -23,10 +23,7 @@ class RegionDetail
 	int wildlifeEmigrants;
 	int wildlifeImmigrants;
 
-	int [] terrains;
 	boolean dirty;
-
-	Map<Integer,TerrainId> riverPorts;
 
 	static final double WILDLIFE_LIFESPAN = 5.0;
 	static final double WILDLIFE_EMIGRATION_RATE = 0.25;
@@ -36,7 +33,6 @@ class RegionDetail
 		this.world = world;
 		this.regionId = regionId;
 		this.biome = BiomeType.GRASSLAND;
-		this.riverPorts = new HashMap<Integer,TerrainId>();
 		this.sides = new RegionSideDetail[6];
 		this.corners = new RegionCornerDetail[6];
 		this.waterLevel = Integer.MIN_VALUE;
@@ -46,7 +42,6 @@ class RegionDetail
 	{
 		int numSides = world.g.getNeighborCount(regionId);
 		int detailLevel = world.regionDetailLevel;
-		this.terrains = new int[numSides * (1 << (detailLevel*2))];
 	}
 
 	public void adjustWildlife(int delta)
@@ -55,168 +50,6 @@ class RegionDetail
 		if (wildlife < 0)
 			wildlife = 0;
 		dirty = true;
-	}
-
-	public TerrainId getRiverPort(int neighborRegionId)
-	{
-		return riverPorts.get(neighborRegionId);
-	}
-
-	TerrainId [] getBorderTiles(int borderRegionId)
-	{
-		TerrainGeometry tg = world.getTerrainGeometry();
-
-		int [] nrr = new int[3];
-		int [] ntt = new int[3];
-
-		ArrayList<TerrainId> candidates = new ArrayList<TerrainId>();
-		for (int tile = 0; tile < terrains.length; tile++)
-		{
-			tg.getNeighborTiles(nrr, ntt, regionId, tile);
-			for (int j = 0; j < nrr.length; j++)
-			{
-				if (nrr[j] == borderRegionId)
-				{
-					candidates.add(new TerrainId(regionId, tile));
-					break;
-				}
-			}
-		}
-
-		return candidates.toArray(new TerrainId[0]);
-	}
-
-	private TerrainId pickRandomInnerTile()
-	{
-		TerrainGeometry tg = world.getTerrainGeometry();
-
-		int [] nrr = new int[3];
-		int [] ntt = new int[3];
-
-		ArrayList<TerrainId> candidates = new ArrayList<TerrainId>();
-		for (int tile = 0; tile < terrains.length; tile++)
-		{
-			tg.getNeighborTiles(nrr, ntt, regionId, tile);
-			boolean flag = false;
-			for (int j = 0; j < nrr.length; j++)
-			{
-				if (nrr[j] != regionId)
-					flag = true;
-			}
-			if (!flag)
-				candidates.add(new TerrainId(regionId, tile));
-		}
-
-		int i = (int) Math.floor(Math.random() * candidates.size());
-		return candidates.get(i);
-	}
-
-	/**
-	 * Picks a terrain tile that borders the specified neighboring region
-	 * for a river.
-	 * If the neighboring region has a river already generated, pick the
-	 * tile in our region opposite its tile.
-	 * Otherwise, pick a random terrain tile on that border.
-	 */
-	TerrainId pickBorderTile(int borderRegionId)
-	{
-		// if we already determined the port...
-		if (riverPorts.containsKey(borderRegionId))
-		{
-			return riverPorts.get(borderRegionId);
-		}
-
-		TerrainGeometry tg = world.getTerrainGeometry();
-
-		// if the neighboring region has already determined the
-		// port...
-		ShadowRegion neighbor = world.getShadowRegion(borderRegionId);
-		TerrainId port = neighbor.getRiverPort(regionId);
-		if (port != null)
-		{
-			TerrainId [] portN = tg.getNeighborTiles(port);
-			port = (portN[0].regionId == regionId ? portN[0] :
-				portN[1].regionId == regionId ? portN[1] :
-				portN[2]);
-			riverPorts.put(borderRegionId, port);
-			return port;
-		}
-
-		// otherwise, pick randomly
-
-		TerrainId [] candidates = getBorderTiles(borderRegionId);
-		int i = (int) Math.floor(Math.random() * candidates.length);
-		port = candidates[i];
-		riverPorts.put(borderRegionId, port);
-		return port;
-	}
-
-	public void makeOcean()
-	{
-		TerrainGeometry tg = world.getTerrainGeometry();
-
-		for (int i = 0; i < terrains.length; i++)
-		{
-			terrains[i] = TerrainType.DEEP_SEA.id;
-		}
-
-		for (int n : world.g.getNeighbors(regionId))
-		{
-			ShadowRegion neighbor = world.getShadowRegion(n);
-			if (neighbor.getBiome() != BiomeType.OCEAN)
-			{
-				TerrainId [] tiles = getBorderTiles(n);
-				for (TerrainId t : tiles)
-				{
-					terrains[t.tile] = TerrainType.ROCKY_SHORE.id;
-					for (TerrainId tt : tg.getNeighborTiles(t))
-					{
-						if (tt.regionId == regionId)
-							terrains[tt.tile] = TerrainType.ROCKY_SHORE.id;
-					}
-				}
-			}
-		}
-
-		dirty = true;
-	}
-
-	void makeLand()
-	{
-		TerrainGeometry tg = world.getTerrainGeometry();
-		for (int i = 0; i < terrains.length; i++)
-		{
-			terrains[i] = TerrainType.GRASS.id;
-		}
-
-		dirty = true;
-	}
-
-	void makeFreshwaterLake()
-	{
-		TerrainGeometry tg = world.getTerrainGeometry();
-		for (int i = 0; i < terrains.length; i++)
-		{
-			terrains[i] = TerrainType.LAKE.id;
-		}
-
-		dirty = true;
-	}
-
-	private void makeRiverFrom(TerrainId tid, int [] drainage)
-	{
-		int t = tid.tile;
-		int count = 0;
-		while (t >= 0)
-		{
-			setTerrainType(t, TerrainType.STREAM);
-			count++;
-
-			if (count == 2 && world.elevation[regionId-1] < 0)
-				break;
-
-			t = drainage[t] - 1;
-		}
 	}
 
 	static double Randomizer(double x)
@@ -410,12 +243,6 @@ if (false)
 		dirty = true;
 	}
 
-	public void setTerrainType(int terrainId, TerrainType type)
-	{
-		terrains[terrainId] = type.id;
-		dirty = true;
-	}
-
 	void save(File regionFile)
 		throws IOException
 	{
@@ -425,12 +252,6 @@ if (false)
 		out.writeStringField("biome", biome.name());
 		out.writeNumberField("wildlife", wildlife);
 		out.writeNumberField("waterLevel", waterLevel);
-		out.writeArrayFieldStart("terrains");
-		for (int i = 0; i < terrains.length; i++)
-		{
-			out.writeNumber(terrains[i]);
-		}
-		out.writeEndArray();
 
 		for (int i = 0; i < sides.length; i++)
 		{
@@ -477,9 +298,7 @@ if (false)
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			if (s.equals("terrains"))
-				terrains = MakeWorld.json_readIntArray(in);
-			else if (s.equals("wildlife"))
+			if (s.equals("wildlife"))
 				wildlife = in.nextIntValue(wildlife);
 			else if (s.equals("waterLevel"))
 				waterLevel = in.nextIntValue(waterLevel);

@@ -674,24 +674,6 @@ assert(x >= 1);
 	}
 
 	//implements WorldView.Listener
-	public void onTerrainClicked(int regionId, int terrainId)
-	{
-		RegionDetail r = world.regions[regionId-1];
-		if (selectedTool.equals("grass"))
-		{
-			r.setTerrainType(terrainId, TerrainType.GRASS);
-		}
-		else if (selectedTool.equals("ocean"))
-		{
-			r.setTerrainType(terrainId, TerrainType.OCEAN);
-		}
-		else if (selectedTool.equals("lake"))
-		{
-			r.setTerrainType(terrainId, TerrainType.LAKE);
-		}
-	}
-
-	//implements WorldView.Listener
 	public void onVertexSelected(Geometry.VertexId vertex)
 	{
 		System.out.println("selected "+vertex);

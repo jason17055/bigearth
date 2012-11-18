@@ -52,8 +52,6 @@ public class WorldView extends JPanel
 
 	public interface Listener
 	{
-		void onTerrainClicked(int regionId, int terrainId);
-		void onTerrainSelected(int regionId, int terrainId);
 		void onRegionSelected(int regionId);
 		void onVertexSelected(Geometry.VertexId vertex);
 	}
@@ -287,7 +285,7 @@ public class WorldView extends JPanel
 		{
 			drawMap(image, pts);
 		}
-		else if (zoomFactor < 16)
+		else
 		{
 			//
 			// fill region areas
@@ -351,49 +349,18 @@ public class WorldView extends JPanel
 			}
 		}
 				
-		} //end if zoom factor in [8,16}
+		} //end if zoom factor >= 8
 
-		if (zoomFactor >= 16)
+		if (selectedRegion != 0)
 		{
-			gr.setColor(Color.BLACK);
-			for (int i = 0; i < world.regions.length; i++)
-			{
-				if (!screen.intersects(regionBounds[i]))
-					continue;
+			Point3d [] pp = g.getCellBoundary(selectedRegion);
 
-				if (world.regions[i] == null)
-					world.enhanceRegion(i+1);
+			int [] x_coords = new int[pp.length];
+			int [] y_coords = new int[pp.length];
+			toScreen_a(pp, x_coords, y_coords);
 
-				RegionDetail r = world.regions[i];
-				drawRegionDetail(gr, i+1, r);
-			}
-
-			if (selectedRegion != 0 && selectedTerrain >= 0)
-			{
-				TerrainGeometry tg = world.getTerrainGeometry();
-				Point3d [] pp = tg.getTerrainBoundary(selectedRegion, selectedTerrain);
-				int [] x_coords = new int[pp.length];
-				int [] y_coords = new int[pp.length];
-				toScreen_a(pp, x_coords, y_coords);
-
-				gr.setColor(Color.YELLOW);
-				gr.drawPolygon(x_coords, y_coords, pp.length);
-			}
-
-		}
-		else
-		{
-			if (selectedRegion != 0)
-			{
-				Point3d [] pp = g.getCellBoundary(selectedRegion);
-
-				int [] x_coords = new int[pp.length];
-				int [] y_coords = new int[pp.length];
-				toScreen_a(pp, x_coords, y_coords);
-
-				gr.setColor(Color.YELLOW);
-				gr.drawPolygon(x_coords, y_coords, pp.length);
-			}
+			gr.setColor(Color.YELLOW);
+			gr.drawPolygon(x_coords, y_coords, pp.length);
 		}
 
 		repaint();
@@ -652,56 +619,6 @@ System.err.println(e);
 		gr2.setPaint(oldPaint);
 	}
 
-	void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
-	{
-		TerrainGeometry tg = world.getTerrainGeometry();
-		int sz = tg.getRegionTileCount(regionId);
-
-		for (int terrainId = 0; terrainId < sz; terrainId++)
-		{
-			Point3d [] pp = tg.getTerrainBoundary(regionId, terrainId);
-			int [] x_coords = new int[pp.length];
-			int [] y_coords = new int[pp.length];
-			int sum_x = 0;
-			int sum_y = 0;
-			for (int i = 0; i < pp.length; i++)
-			{
-				Point p = toScreen(pp[i]);
-				x_coords[i] = p.x;
-				y_coords[i] = p.y;
-				sum_x += p.x;
-				sum_y += p.y;
-			}
-
-			if (r.terrains[terrainId] != 0)
-			{
-				gr.setColor(TerrainType.load(r.terrains[terrainId]).color);
-			}
-			else
-			{
-				gr.setColor(new Color( colors[regionId-1]) );
-			}
-			gr.fillPolygon(x_coords, y_coords, pp.length);
-
-			boolean isSelected = regionId == selectedRegion &&
-				terrainId == selectedTerrain;
-
-			if (!isSelected && zoomFactor >= 32.0)
-			{
-				gr.setColor(Color.BLACK);
-				gr.drawPolygon(x_coords, y_coords, pp.length);
-			}
-
-			if (zoomFactor >= 64)
-			{
-			gr.setColor(Color.BLACK);
-			gr.drawString(new Integer(terrainId).toString(),
-				sum_x/pp.length,
-				sum_y/pp.length);
-			}
-		}
-	}
-
 	public void paint(Graphics g)
 	{
 		if (image != null)
@@ -754,19 +671,7 @@ System.err.println(e);
 			dragStart = ev.getPoint();
 
 			Point3d pt = fromScreen(ev.getPoint());
-			if (zoomFactor >= 16)
-			{
-				TerrainGeometry tg = world.getTerrainGeometry();
-				selectedRegion = world.g.findCell(pt);
-				selectedTerrain = tg.findTileInRegion(selectedRegion, pt);
-				fireTerrainSelected(selectedRegion, selectedTerrain);
-				fireTerrainClicked(selectedRegion, selectedTerrain);
-				regenerate();
-			}
-			else
-			{
-				selectNearestTo(pt);
-			}
+			selectNearestTo(pt);
 		}
 		else if (ev.getButton() == MouseEvent.BUTTON3)
 		{
@@ -835,20 +740,6 @@ System.err.println(e);
 	{
 		for (Listener l : listeners)
 			l.onVertexSelected(vertex);
-	}
-
-	private void fireTerrainClicked(int regionId, int terrainId)
-	{
-		for (Listener l : listeners)
-		{
-			l.onTerrainClicked(regionId, terrainId);
-		}
-	}
-
-	private void fireTerrainSelected(int regionId, int terrainId)
-	{
-		for (Listener l : listeners)
-			l.onTerrainSelected(regionId, terrainId);
 	}
 
 	public void zoomIn()
