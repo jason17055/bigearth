@@ -456,6 +456,12 @@ public class WorldView extends JPanel
 		}
 	}
 
+	private static void drawRiver(Graphics gr, int x0, int y0, int x1, int y1)
+	{
+		// draw shaft of arrow
+		gr.drawLine(x0, y0, x1, y1);
+	}
+
 	private static void drawArrow(Graphics gr, int x0, int y0, int x1, int y1)
 	{
 		// draw shaft of arrow
@@ -570,7 +576,7 @@ System.err.println(e);
 					));
 				gr2.setColor(new Color(170,149,53));
 
-				drawArrow(gr,
+				drawRiver(gr,
 					x_coords[(i+n-1)%n],
 					y_coords[(i+n-1)%n],
 					x_coords[i],
@@ -578,17 +584,23 @@ System.err.println(e);
 					);
 				}
 
+				if (sf != RegionSideDetail.SideFeature.BROOK
+					|| zoomFactor > 16)
+				{
+
 				gr2.setStroke(new BasicStroke(
 					sf == RegionSideDetail.SideFeature.RIVER ? 3.0f :
 					sf == RegionSideDetail.SideFeature.CREEK ? 2.0f : 1.0f));
 				gr2.setColor(Color.BLUE);
 
-				drawArrow(gr,
+				drawRiver(gr,
 					x_coords[(i+n-1)%n],
 					y_coords[(i+n-1)%n],
 					x_coords[i],
 					y_coords[i]
 					);
+
+				}
 
 				gr2.setStroke(oldStroke);
 			}
@@ -609,11 +621,35 @@ System.err.println(e);
 
 	void drawRegionCorner(Graphics gr, int regionId, RegionDetail r, int cornerIdx, int x, int y)
 	{
-		gr.setColor(Color.CYAN);
+		Graphics2D gr2 = (Graphics2D) gr;
 
 		RegionCornerDetail.PointFeature type = r.corners[cornerIdx].feature;
 		int radius = type == RegionCornerDetail.PointFeature.LAKE ? 10 : 5;
+
+		Paint oldPaint = gr2.getPaint();
+		Stroke oldStroke = gr2.getStroke();
+
+		gr2.setStroke(new BasicStroke(5.0f));
+		final Color RIVER_BANK_COLOR = new Color(170,149,53);
+		gr2.setColor(RIVER_BANK_COLOR);
+		gr.drawOval(x-radius,y-radius,2*radius, 2*radius);
+		gr2.setStroke(oldStroke);
+
+		if (biomeTextures.containsKey(BiomeType.LAKE))
+		{
+			gr2.setPaint(new TexturePaint(
+				biomeTextures.get(BiomeType.LAKE),
+				biomeMappingRect.get(BiomeType.LAKE)
+				));
+		}
+		else
+		{
+			gr.setColor(new Color(biomeColors.get(BiomeType.LAKE)));
+		}
+
 		gr.fillOval(x-radius,y-radius,2*radius,2*radius);
+
+		gr2.setPaint(oldPaint);
 	}
 
 	void drawRegionDetail(Graphics2D gr, int regionId, RegionDetail r)
