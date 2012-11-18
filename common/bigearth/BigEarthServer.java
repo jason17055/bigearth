@@ -8,7 +8,80 @@ import org.mortbay.jetty.servlet.*;
 
 public class BigEarthServer
 {
+	File worldPath;
+	String nodeName;
+	RandomAccessFile nodeConfigurationFile;
+
+	BigEarthServer()
+	{
+	}
+
 	public static void main(String [] args)
+		throws Exception
+	{
+		BigEarthServer be = new BigEarthServer();
+
+		for (int i = 0; i < args.length; i++)
+		{
+			String [] parts = args[i].split("=", 2);
+			if (parts[0].equals("world"))
+			{
+				be.worldPath = new File(parts[1]);
+			}
+			else if (parts[0].equals("node"))
+			{
+				be.nodeName = parts[1];
+			}
+			else
+			{
+				System.err.println("Invalid argument: "+parts[0]);
+				System.err.println("Usage: $0 world=blah node=foo");
+				System.exit(1);
+			}
+		}
+
+		be.load();
+		be.start();
+	}
+
+	void load()
+		throws IOException
+	{
+		if (worldPath == null)
+		{
+			System.err.println("World not specified");
+			System.exit(1);
+		}
+
+		loadNodeConfiguration();
+		loadWorld();
+	}
+
+	void loadNodeConfiguration()
+		throws IOException
+	{
+		File filename = new File(worldPath, "node_"+nodeName+".config");
+		if (!filename.exists())
+		{
+			System.err.println("No configuration found for node "+nodeName);
+			System.exit(1);
+		}
+
+		nodeConfigurationFile = new RandomAccessFile(filename, "rw");
+		if (nodeConfigurationFile.getChannel().tryLock() == null)
+		{
+			System.err.println("File locked! Another process is already running with this node name");
+			System.exit(1);
+		}
+	}
+
+	void loadWorld()
+		throws IOException
+	{
+		//TODO
+	}
+
+	void start()
 		throws Exception
 	{
 		Server server = new Server(2626);
