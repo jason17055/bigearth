@@ -252,10 +252,15 @@ public class MakeWorld
 		this.regions = new RegionDetail[g.getCellCount()];
 		for (int i = 0; i < regions.length; i++)
 		{
-			this.regions[i] = loadRegionDetail(i+1);
-			this.regions[i].biome = (
+			RegionDetail region = loadRegionDetail(i+1);
+			region.elevation = this.elevation[i];
+			region.temperature = this.temperature[i];
+			region.annualRains = this.annualRains[i];
+			region.floods = this.floods[i];
+			region.biome = (
 				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
 				BiomeType.OCEAN);
+			this.regions[i] = region;
 		}
 	}
 

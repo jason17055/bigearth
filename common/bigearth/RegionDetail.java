@@ -17,6 +17,15 @@ class RegionDetail
 	int waterLevel;
 	Map<String, MobInfo> presentMobs;
 
+	/// Elevation as generated randomly by MakeWorld.
+	int elevation;
+	/// Average temperature, in tenths of degrees Celsius.
+	int temperature;
+	/// Average annual rainfall, in millimeters.
+	int annualRains;
+	/// Average additional moisture from flooding of flood plains.
+	int floods;
+
 	int wildlife;
 	int wildlifeHunted;
 	int wildlifeBirths;
@@ -253,6 +262,10 @@ if (false)
 		out.writeStringField("biome", biome.name());
 		out.writeNumberField("wildlife", wildlife);
 		out.writeNumberField("waterLevel", waterLevel);
+		out.writeNumberField("elevation", elevation);
+		out.writeNumberField("temperature", temperature);
+		out.writeNumberField("annualRains", annualRains);
+		out.writeNumberField("floods", floods);
 
 		for (int i = 0; i < sides.length; i++)
 		{
@@ -298,6 +311,10 @@ if (false)
 		throws IOException
 	{
 		RegionDetail m = new RegionDetail(world, regionId);
+		m.temperature = world.temperature[regionId-1];
+		m.annualRains = world.annualRains[regionId-1];
+		m.elevation = world.elevation[regionId-1];
+		m.floods = world.floods[regionId-1];
 		m.load(regionFile);
 		return m;
 	}
@@ -316,6 +333,14 @@ if (false)
 				wildlife = in.nextIntValue(wildlife);
 			else if (s.equals("waterLevel"))
 				waterLevel = in.nextIntValue(waterLevel);
+			else if (s.equals("elevation"))
+				elevation = in.nextIntValue(elevation);
+			else if (s.equals("temperature"))
+				temperature = in.nextIntValue(temperature);
+			else if (s.equals("annualRains"))
+				annualRains = in.nextIntValue(annualRains);
+			else if (s.equals("floods"))
+				floods = in.nextIntValue(floods);
 			else if (s.equals("biome"))
 				biome = BiomeType.valueOf(in.nextTextValue());
 			else if (s.equals("side0"))
