@@ -13,12 +13,13 @@ public class BigEarthServer
 	String nodeName;
 
 	WorldConfig worldConfig;
+	Properties hostConfig;
 
 	/**
 	 * Keep a reference to the node lock file so that the GC won't
 	 * discard it, causing it to be unlocked.
 	 */
-	RandomAccessFile nodeLockFile;
+	RandomAccessFile hostLockFile;
 
 	BigEarthServer()
 	{
@@ -84,7 +85,7 @@ public class BigEarthServer
 			nodeName = localMachine.getHostName();
 		}
 
-		// require the node name to be listed in the world propertes file
+		// require the node name to be listed in the world properties file
 		if (!worldConfig.isValidHost(nodeName))
 		{
 			System.err.println("Not a valid host for this world");
@@ -98,15 +99,19 @@ public class BigEarthServer
 			System.exit(1);
 		}
 
-		File filename = new File(worldPath, "node_"+effNodeName+".lockfile");
-	//	if (!filename.exists())
-	//	{
-	//		System.err.println(filename + ": not found");
-	//		System.exit(1);
-	//	}
+		hostConfig = new Properties(worldConfig.properties);
 
-		nodeLockFile = new RandomAccessFile(filename, "rw");
-		if (nodeLockFile.getChannel().tryLock() == null)
+		File cfgFilename = new File(worldPath, "node_"+effNodeName+".config");
+		if (cfgFilename.exists())
+		{
+			FileInputStream in = new FileInputStream(cfgFilename);
+			hostConfig.load(in);
+			in.close();
+		}
+
+		File lockFilename = new File(worldPath, "node_"+effNodeName+".lockfile");
+		hostLockFile = new RandomAccessFile(lockFilename, "rw");
+		if (hostLockFile.getChannel().tryLock() == null)
 		{
 			System.err.println("File locked! Another process is already running with this node name");
 			System.exit(1);
@@ -122,7 +127,8 @@ public class BigEarthServer
 	void start()
 		throws Exception
 	{
-		Server server = new Server(2626);
+		int portNumber = Integer.parseInt(hostConfig.getProperty("http.port", "2626"));
+		Server server = new Server(portNumber);
 
 		Context context = new Context(server, "/", Context.SESSIONS);
 		context.addServlet(new ServletHolder(new TestServlet()), "/hello");
