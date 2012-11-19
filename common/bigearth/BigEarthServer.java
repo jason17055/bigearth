@@ -10,9 +10,10 @@ import org.mortbay.jetty.servlet.*;
 public class BigEarthServer
 {
 	File worldPath;
-	String nodeName;
+	String hostName;
 
 	WorldConfig worldConfig;
+	WorldMaster world;
 	Properties hostConfig;
 
 	/**
@@ -37,14 +38,14 @@ public class BigEarthServer
 			{
 				be.worldPath = new File(parts[1]);
 			}
-			else if (parts[0].equals("node"))
+			else if (parts[0].equals("hostname"))
 			{
-				be.nodeName = parts[1];
+				be.hostName = parts[1];
 			}
 			else
 			{
 				System.err.println("Invalid argument: "+parts[0]);
-				System.err.println("Usage: $0 world=blah node=foo");
+				System.err.println("Usage: $0 world=blah hostname=foo");
 				System.exit(1);
 			}
 		}
@@ -78,21 +79,21 @@ public class BigEarthServer
 	void loadNodeConfiguration()
 		throws IOException
 	{
-		if (nodeName == null)
+		if (hostName == null)
 		{
 			// determine a default node name
 			java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-			nodeName = localMachine.getHostName();
+			hostName = localMachine.getHostName();
 		}
 
 		// require the node name to be listed in the world properties file
-		if (!worldConfig.isValidHost(nodeName))
+		if (!worldConfig.isValidHost(hostName))
 		{
 			System.err.println("Not a valid host for this world");
 			System.exit(1);
 		}
 
-		String effNodeName = nodeName.toLowerCase().replace('.', '_');
+		String effNodeName = hostName.toLowerCase().replace('.', '_');
 		if (!effNodeName.matches("[a-z0-9_-]+"))
 		{
 			System.err.println("Invalid node name");
@@ -121,7 +122,8 @@ public class BigEarthServer
 	void loadWorld()
 		throws IOException
 	{
-		//TODO
+		world = new WorldMaster(worldConfig);
+		world.load();
 	}
 
 	void start()

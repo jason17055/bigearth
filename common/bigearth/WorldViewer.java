@@ -341,7 +341,7 @@ public class WorldViewer extends JFrame
 	{
 		if (view.selectedRegion != 0)
 		{
-			RegionDetail r = world.regions[view.selectedRegion-1];
+			RegionDetail r = world.world.regions[view.selectedRegion-1];
 			r.adjustWildlife(delta*100);
 		}
 	}
@@ -444,7 +444,7 @@ public class WorldViewer extends JFrame
 		if (nameField.getText().length() == 0)
 			throw new Exception("You must enter a name.");
 
-		RegionDetail region = world.getRegionForLocation(loc);
+		RegionDetail region = world.world.getRegionForLocation(loc);
 		region.spawnCharacter(loc,
 			nameField.getText(),
 			avatarList[avatarSelect.getSelectedIndex()]
@@ -542,7 +542,7 @@ public class WorldViewer extends JFrame
 			world.generate();
 			try
 			{
-				world.save();
+				world.world.save();
 			}
 			catch (IOException e)
 			{
@@ -666,12 +666,10 @@ public class WorldViewer extends JFrame
 		}
 		else if (showWildlifeBtn.isSelected())
 		{
-			int wildlife = world.regions[i].wildlife;
+			int wildlife = world.world.regions[i].wildlife;
 			if (wildlife <= 0)
 			{
-				return el < 0 ? 0x0000ff :
-					world.lakeLevel[i] > el ? 0x6666ff :
-					0x00ff00;
+				return 0; //no wildlife
 			}
 
 			int x = wildlife < 10 ? 1 :
@@ -701,13 +699,14 @@ assert(x >= 1);
 		if (regionId == 0)
 			return;
 
-		biomeLbl.setText(world.regions[regionId-1].getBiome().name());
-		wildlifeLbl.setText(String.format("%d", world.regions[regionId-1].wildlife));
+		RegionDetail region = world.world.regions[regionId-1];
+		biomeLbl.setText(region.getBiome().name());
+		wildlifeLbl.setText(String.format("%d", region.wildlife));
 		nativesLbl.setText("0");
-		elevationLbl.setText(String.format("%d", world.elevation[regionId-1]));
-		temperatureLbl.setText(String.format("%.1f", world.temperature[regionId-1]/10.0));
-		moistureLbl.setText(String.format("%d", world.annualRains[regionId-1] + world.floods[regionId-1]));
-		depthLbl.setText(String.format("%d", world.regions[regionId-1].getDepth()));
+		elevationLbl.setText(String.format("%d", region.elevation));
+		temperatureLbl.setText(String.format("%.1f", region.temperature/10.0));
+		moistureLbl.setText(String.format("%d", region.annualRains + region.floods));
+		depthLbl.setText(String.format("%d", region.getDepth()));
 	}
 
 	//implements WorldView.Listener

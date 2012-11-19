@@ -825,7 +825,7 @@ System.out.println(lake);
 		//
 	void placeLakes()
 	{
-		for (RegionDetail r : world.regions)
+		for (RegionDetail r : world.world.regions)
 		{
 			r.biome = BiomeType.GRASSLAND;
 			r.clearSides();
@@ -842,7 +842,7 @@ System.out.println(lake);
 				int [] cc = vId.getAdjacentCells();
 
 				int aRegion = cc[0];
-				RegionDetail region = world.regions[aRegion-1];
+				RegionDetail region = world.world.regions[aRegion-1];
 				region.setLake(vId,
 					lake.type == LakeType.TERMINAL ? RegionCornerDetail.PointFeature.LAKE :
 					RegionCornerDetail.PointFeature.POND
@@ -853,9 +853,9 @@ System.out.println(lake);
 				boolean isOcean = lake.isOcean;
 				for (int regionId : lake.regions)
 				{
-					world.regions[regionId-1].biome =
+					world.world.regions[regionId-1].biome =
 						isOcean ? BiomeType.OCEAN : BiomeType.LAKE;
-					world.regions[regionId-1].waterLevel = (int) Math.ceil(lake.lakeElevation);
+					world.world.regions[regionId-1].waterLevel = (int) Math.ceil(lake.lakeElevation);
 				}
 			}
 		}
@@ -872,9 +872,9 @@ System.out.println(lake);
 			int [] cc = r.upstreamVertex.getAdjacentCells();
 			int [] dd = eId.getAdjacentCells();
 
-			if (world.regions[dd[0]-1].biome.isWater())
+			if (world.getRegionBiome(dd[0]).isWater())
 				continue;
-			if (world.regions[dd[1]-1].biome.isWater())
+			if (world.getRegionBiome(dd[1]).isWater())
 				continue;
 
 			int aRegion;
@@ -895,7 +895,7 @@ System.out.println(lake);
 				bRegion = cc[1];
 			}
 
-			RegionDetail region = world.regions[bRegion-1];
+			RegionDetail region = world.world.regions[bRegion-1];
 			region.setRiver(aRegion,
 				r.volume > 2000 ? RegionSideDetail.SideFeature.RIVER :
 				r.volume > 200 ? RegionSideDetail.SideFeature.CREEK :

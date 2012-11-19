@@ -212,8 +212,8 @@ public class WorldView extends JPanel
 				int col = colors[i];
 				if (col == 0)
 				{
-					if (biomeColors.containsKey(world.regions[i].biome))
-						col = biomeColors.get(world.regions[i].biome);
+					if (biomeColors.containsKey(world.world.regions[i].biome))
+						col = biomeColors.get(world.world.regions[i].biome);
 					else
 						col = UNKNOWN_BIOME_COLOR;
 				}
@@ -322,7 +322,7 @@ public class WorldView extends JPanel
 				}
 				else
 				{
-					RegionDetail r = world.regions[i];
+					RegionDetail r = world.world.regions[i];
 					drawRegionArea(gr, i+1, r, x_coords, y_coords);
 				}
 			}
@@ -342,7 +342,7 @@ public class WorldView extends JPanel
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
 
-				RegionDetail r = world.regions[i];
+				RegionDetail r = world.world.regions[i];
 				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
 			}
 
@@ -359,7 +359,7 @@ public class WorldView extends JPanel
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
 
-				RegionDetail r = world.regions[i];
+				RegionDetail r = world.world.regions[i];
 				drawRegionCorners(gr, i+1, r, x_coords, y_coords);
 			}
 		}

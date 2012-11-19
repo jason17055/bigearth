@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.*;
 class RegionDetail
 	implements ShadowRegion
 {
-	MakeWorld world;
+	WorldMaster world;
 	int regionId;
 
 	BiomeType biome;
@@ -38,7 +38,7 @@ class RegionDetail
 	static final double WILDLIFE_LIFESPAN = 5.0;
 	static final double WILDLIFE_EMIGRATION_RATE = 0.25;
 
-	RegionDetail(MakeWorld world, int regionId)
+	RegionDetail(WorldMaster world, int regionId)
 	{
 		this.world = world;
 		this.regionId = regionId;
@@ -51,7 +51,7 @@ class RegionDetail
 
 	private void init()
 	{
-		int numSides = world.g.getNeighborCount(regionId);
+		int numSides = world.getGeometry().getNeighborCount(regionId);
 	}
 
 	public void adjustWildlife(int delta)
@@ -87,7 +87,7 @@ class RegionDetail
 	void doWildlifeMaintenance_stage1()
 	{
 		final double wildlifeQuota = biome.getWildlifeQuota();
-		double biomeTolerance = 1.0 - Math.pow((WILDLIFE_PREFERRED_TEMPERATURE - world.getRegionTemperature(regionId)) / WILDLIFE_TEMPERATURE_TOLERANCE, 2.0);
+		double biomeTolerance = 1.0 - Math.pow((WILDLIFE_PREFERRED_TEMPERATURE - this.temperature) / WILDLIFE_TEMPERATURE_TOLERANCE, 2.0);
 		assert biomeTolerance <= 1.0;
 
 		double quotaPortion = ((double)wildlife) / wildlifeQuota;
@@ -115,7 +115,7 @@ class RegionDetail
 		double eligibleEmigrants = emigrantPortion * adjustedCount;
 		wildlifeEmigrants = 0;
 
-		int [] nn = world.g.getNeighbors(regionId);
+		int [] nn = world.getRegionNeighbors(regionId);
 		for (int n : nn)
 		{
 			ShadowRegion neighborRegion = world.getShadowRegion(n);
@@ -178,7 +178,7 @@ if (false)
 	 */
 	int findNeighbor(int neighborId)
 	{
-		int [] nn = world.g.getNeighbors(regionId);
+		int [] nn = world.getRegionNeighbors(regionId);
 		for (int i = 0; i < nn.length; i++)
 		{
 			if (nn[i] == neighborId)
@@ -197,7 +197,7 @@ if (false)
 
 	public int getDepth()
 	{
-		int dep = this.waterLevel - world.elevation[regionId-1];
+		int dep = this.waterLevel - this.elevation;
 		return dep > 0 ? dep : 0;
 	}
 
@@ -300,21 +300,17 @@ if (false)
 		out.close();
 	}
 
-	static RegionDetail create(MakeWorld world, int regionId)
+	static RegionDetail create(WorldMaster world, int regionId)
 	{
 		RegionDetail m = new RegionDetail(world, regionId);
 		m.init();
 		return m;
 	}
 
-	static RegionDetail load(File regionFile, MakeWorld world, int regionId)
+	static RegionDetail load(File regionFile, WorldMaster world, int regionId)
 		throws IOException
 	{
 		RegionDetail m = new RegionDetail(world, regionId);
-		m.temperature = world.temperature[regionId-1];
-		m.annualRains = world.annualRains[regionId-1];
-		m.elevation = world.elevation[regionId-1];
-		m.floods = world.floods[regionId-1];
 		m.load(regionFile);
 		return m;
 	}
@@ -384,14 +380,11 @@ if (false)
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
-		WorldConfig worldCfg = world.getConfig();
-		worldCfg.geometry = world.g;
-
 		presentMobs.clear();
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String mobName = in.getCurrentName();
-			MobInfo mob = MobInfo.parse(in, mobName, worldCfg);
+			MobInfo mob = MobInfo.parse(in, mobName, world.config);
 			if (mob.location == null)
 			{
 				mob.location = new SimpleLocation(regionId);

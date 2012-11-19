@@ -15,15 +15,10 @@ public class MakeWorld
 	int [] elevation;
 	int [] temperature; //in 10th degrees Celsius
 	int [] annualRains; //in millimeters-per-year
-
-	int [] riverVolume;
-	int [] lakeLevel;
 	int [] floods;
-	RegionDetail [] regions;
-	int lastMobId;
 
-	int year;
 	WorldConfig worldConfig;
+	WorldMaster world;
 
 	protected MakeWorld()
 	{
@@ -32,30 +27,6 @@ public class MakeWorld
 	public WorldConfig getConfig()
 	{
 		return worldConfig;
-	}
-
-	public void save()
-		throws IOException
-	{
-		File f2 = new File(worldDir, "world.txt");
-		JsonGenerator j = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
-		j.writeStartObject();
-		j.writeNumberField("year", year);
-		j.writeNumberField("lastMobId", lastMobId);
-		arrayHelper(j, "elevation", elevation);
-		arrayHelper(j, "temperature", temperature);
-		arrayHelper(j, "annualRains", annualRains);
-		arrayHelper(j, "riverVolume", riverVolume);
-		arrayHelper(j, "lakeLevel", lakeLevel);
-		arrayHelper(j, "floods", floods);
-		j.writeEndObject();
-		j.close();
-
-		for (int i = 0; i < regions.length; i++)
-		{
-			File regionFile = new File(worldDir, "region"+(i+1)+".txt");
-			regions[i].save(regionFile);
-		}
 	}
 
 	private static void arrayHelper(JsonGenerator j, String fieldName, int [] a)
@@ -69,6 +40,7 @@ public class MakeWorld
 		j.writeEndArray();
 	}
 
+	//not being used any more?
 	static int [] json_readIntArray(JsonParser in)
 		throws IOException
 	{
@@ -98,7 +70,7 @@ public class MakeWorld
 		Properties props = new Properties();
 		props.setProperty("geometry", "sphere:"+geometrySize);
 		FileOutputStream propsOut = new FileOutputStream(new File(worldDir, "world.config"));
-		props.store(propsOut, "where does this go");
+		props.store(propsOut, "MakeWorld");
 		propsOut.close();
 
 		MakeWorld me = new MakeWorld();
@@ -111,17 +83,18 @@ public class MakeWorld
 		me.elevation = new int[numCells];
 		me.temperature = new int[numCells];
 		me.annualRains = new int[numCells];
-		me.riverVolume = new int[numCells];
-		me.lakeLevel = new int[numCells];
 		me.floods = new int[numCells];
-		me.regions = new RegionDetail[numCells];
+
+		WorldMaster world = new WorldMaster(me.worldConfig);
 
 		for (int i = 0; i < numCells; i++)
 		{
 			int regionId = i+1;
-			me.regions[i] = RegionDetail.create(me, regionId);
+			world.regions[i] = RegionDetail.create(world, regionId);
 		}
+		world.load();
 
+		me.world = world;
 		return me;
 	}
 
@@ -129,88 +102,39 @@ public class MakeWorld
 		throws IOException
 	{
 		MakeWorld me = new MakeWorld();
-		me.worldDir = worldDir;
+		me.world = new WorldMaster(WorldConfig.load(worldDir));
 		me.load();
 		return me;
 	}
 
-	public void load()
+	private void load()
 		throws IOException
 	{
-		worldConfig = WorldConfig.load(worldDir);
-
-		File inFile = new File(worldDir, "world.txt");
-		JsonParser in = new JsonFactory().createJsonParser(inFile);
-
-		in.nextToken();
-		assert in.getCurrentToken() == JsonToken.START_OBJECT;
-
-		while (in.nextToken() == JsonToken.FIELD_NAME)
-		{
-			String s = in.getCurrentName();
-			if (s.equals("year"))
-				year = in.nextIntValue(year);
-			else if (s.equals("lastMobId"))
-				lastMobId = in.nextIntValue(0);
-			else if (s.equals("elevation"))
-				elevation = json_readIntArray(in);
-			else if (s.equals("temperature"))
-				temperature = json_readIntArray(in);
-			else if (s.equals("annualRains"))
-				annualRains = json_readIntArray(in);
-			else if (s.equals("riverVolume"))
-				riverVolume = json_readIntArray(in);
-			else if (s.equals("lakeLevel"))
-				lakeLevel = json_readIntArray(in);
-			else if (s.equals("floods"))
-				floods = json_readIntArray(in);
-			else
-			{
-				in.nextToken();
-				in.skipChildren();
-				System.err.println("unrecognized property: "+s);
-			}
-		}
-
-		in.close();
-
 		this.g = (SphereGeometry) worldConfig.getGeometry();
 
-		assert this.elevation != null;
-		assert this.temperature != null;
-		assert this.annualRains != null;
-		assert this.riverVolume != null;
-		assert this.lakeLevel != null;
-		assert this.floods != null;
+		int numCells = g.getCellCount();
+		this.elevation = new int[numCells];
+		this.temperature = new int[numCells];
+		this.annualRains = new int[numCells];
+		this.floods = new int[numCells];
 
-		this.regions = new RegionDetail[g.getCellCount()];
-		for (int i = 0; i < regions.length; i++)
+		assert world.regions != null;
+
+		for (int i = 0; i < world.regions.length; i++)
 		{
-			this.regions[i] = loadRegionDetail(i+1);
-			if (this.regions[i].biome == null)
-			{
-			this.regions[i].biome = (
-				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
-				BiomeType.OCEAN);
-			}
+			elevation[i] = world.regions[i].elevation;
+			temperature[i] = world.regions[i].temperature;
+			annualRains[i] = world.regions[i].annualRains;
+			floods[i] = world.regions[i].floods;
 		}
 	}
 
 	public void generate()
 	{
-	/*	Mongo m;
-		DB db;
-		m = new Mongo();
-		db = m.getDB("world1");
-
-		DBCollection regions = db.getCollection("regions");
-	*/
-		
 		int numCells = g.getCellCount();
 
 		this.elevation = new int[numCells];
 		this.temperature = new int[numCells];
-		this.regions = new RegionDetail[numCells];
 
 		// generate height map for entire sphere
 		for (int i = 0, m = numCells/20; i <= m; i++)
@@ -249,10 +173,10 @@ public class MakeWorld
 		}
 		normalizeRains(annualRains);
 
-		this.regions = new RegionDetail[g.getCellCount()];
-		for (int i = 0; i < regions.length; i++)
+		// modify all regions according to the numbers we generated...
+		for (int i = 0; i < numCells; i++)
 		{
-			RegionDetail region = loadRegionDetail(i+1);
+			RegionDetail region = world.regions[i];
 			region.elevation = this.elevation[i];
 			region.temperature = this.temperature[i];
 			region.annualRains = this.annualRains[i];
@@ -260,31 +184,22 @@ public class MakeWorld
 			region.biome = (
 				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
 				BiomeType.OCEAN);
-			this.regions[i] = region;
 		}
 	}
 
 	void doOneStep()
 	{
-		year++;
-		for (RegionDetail r : regions)
-		{
-			r.endOfYear_stage1();
-		}
-		for (RegionDetail r : regions)
-		{
-			r.endOfYear_cleanup();
-		}
+		world.doOneStep();
 	}
 
-	private RegionDetail loadRegionDetail(int regionId)
+	private RegionDetail loadRegionDetail_DEPRECATE(int regionId)
 	{
 		File regionFile = new File(worldDir, "region"+regionId+".txt");
 		if (regionFile.exists())
 		{
 			try
 			{
-				return RegionDetail.load(regionFile, this, regionId);
+				return RegionDetail.load(regionFile, world, regionId);
 			}
 			catch (IOException e)
 			{
@@ -294,20 +209,8 @@ public class MakeWorld
 		}
 		else
 		{
-			return RegionDetail.create(this, regionId);
+			return RegionDetail.create(world, regionId);
 		}
-	}
-
-	void enhanceRegion(int regionId)
-	{
-		assert regionId >= 1 && regionId <= g.getCellCount();
-
-		int [] nn = g.getNeighbors(regionId);
-		RegionDetail [] neighbors = new RegionDetail[nn.length];
-		for (int i = 0; i < nn.length; i++)
-			neighbors[i] = loadRegionDetail(nn[i]);
-
-		//TODO... something...
 	}
 
 	void status(String message)
@@ -454,30 +357,6 @@ public class MakeWorld
 			x == 7 ? "SE" : "<bad>";
 	}
 
-	int getRegionIdForLocation(Location loc)
-	{
-		if (loc instanceof SimpleLocation)
-			return ((SimpleLocation) loc).regionId;
-		else if (loc instanceof Geometry.EdgeId)
-		{
-			return ((Geometry.EdgeId) loc).getAdjacentCells()[0];
-		}
-		else if (loc instanceof Geometry.VertexId)
-		{
-			return ((Geometry.VertexId) loc).getAdjacentCells()[0];
-		}
-		else
-		{
-			throw new IllegalArgumentException("not a recognized loc");
-		}
-	}
-
-	public RegionDetail getRegionForLocation(Location loc)
-	{
-		int regionId = getRegionIdForLocation(loc);
-		return regions[regionId-1];
-	}
-
 	static double getSeaCoverage(int [] elevations, int seaLevel)
 	{
 		int countAbove = 0;
@@ -546,12 +425,6 @@ public class MakeWorld
 		}
 	}
 
-	ShadowRegion getShadowRegion(int regionId)
-	{
-		assert regionId >= 1 && regionId <= regions.length;
-		return regions[regionId-1];
-	}
-
 	public int getRegionTemperature(int regionId)
 	{
 		assert regionId >= 1 && regionId <= temperature.length;
@@ -560,9 +433,10 @@ public class MakeWorld
 
 	public void generateBiomes()
 	{
-		for (int i = 0; i < regions.length; i++)
+		int numCells = g.getCellCount();
+		for (int i = 0; i < numCells; i++)
 		{
-			RegionDetail region = regions[i];
+			RegionDetail region = world.regions[i];
 			if (region.getBiome().isWater())
 				continue;
 
@@ -580,51 +454,55 @@ public class MakeWorld
 
 			if (temp < -20)
 			{
-				regions[i].biome = BiomeType.GLACIER;
+				region.biome = BiomeType.GLACIER;
 			}
 			else if (elevation[i] >= 3 && heightVariation >= 4.0)
 			{
-				regions[i].biome = BiomeType.MOUNTAIN;
+				region.biome = BiomeType.MOUNTAIN;
 			}
 			else if (heightVariation >= 1.8)
 			{
-				regions[i].biome = BiomeType.HILLS;
+				region.biome = BiomeType.HILLS;
 			}
 			else if (moisture < 200 && temp >= 130)
 			{
-				regions[i].biome = BiomeType.DESERT;
+				region.biome = BiomeType.DESERT;
 			}
 			else if (moisture < 300 && temp < 100)
 			{
-				regions[i].biome = BiomeType.TUNDRA;
+				region.biome = BiomeType.TUNDRA;
 			}
 			else if (moisture >= 1500 && temp >= 210)
 			{
-				regions[i].biome = BiomeType.JUNGLE;
+				region.biome = BiomeType.JUNGLE;
 			}
 			else if (moisture >= 1800)
 			{
-				regions[i].biome = BiomeType.SWAMP;
+				region.biome = BiomeType.SWAMP;
 			}
 			else if (moisture >= 1200)
 			{
-				regions[i].biome = BiomeType.FOREST;
+				region.biome = BiomeType.FOREST;
 			}
 			else if (moisture >= 600)
 			{
-				regions[i].biome = BiomeType.GRASSLAND;
+				region.biome = BiomeType.GRASSLAND;
 			}
 			else
 			{
-				regions[i].biome = BiomeType.PLAINS;
+				region.biome = BiomeType.PLAINS;
 			}
 		}
 	}
 
-	MobInfo newMob()
+	BiomeType getRegionBiome(int regionId)
 	{
-		String name = "mob"+(++lastMobId);
-		MobInfo mob = new MobInfo(name);
-		return mob;
+		return world.regions[regionId-1].biome;
+	}
+
+	void save()
+		throws IOException
+	{
+		world.save();
 	}
 }
