@@ -102,7 +102,8 @@ public class MakeWorld
 		throws IOException
 	{
 		MakeWorld me = new MakeWorld();
-		me.world = new WorldMaster(WorldConfig.load(worldDir));
+		me.worldConfig = WorldConfig.load(worldDir);
+		me.world = new WorldMaster(me.worldConfig);
 		me.load();
 		return me;
 	}
