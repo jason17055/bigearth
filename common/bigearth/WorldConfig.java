@@ -5,6 +5,9 @@ import java.util.*;
 
 /**
  * Public information about a world. Immutable.
+ * All hosts in the cluster read this file at startup.
+ * If the world configuration changes, all hosts in the cluster
+ * need to be restarted.
  */
 public class WorldConfig
 {
@@ -47,9 +50,9 @@ public class WorldConfig
 		return this.geometry;
 	}
 
-	public boolean isValidNode(String nodeName)
+	public boolean isValidHost(String hostName)
 	{
-		String [] nodes = properties.getProperty("cluster.nodes", "localhost").split("\\s*,\\s*");
-		return Arrays.asList(nodes).contains(nodeName);
+		String [] hosts = properties.getProperty("cluster.hosts", "localhost").split("\\s*,\\s*");
+		return Arrays.asList(hosts).contains(hostName);
 	}
 }

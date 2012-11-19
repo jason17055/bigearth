@@ -85,9 +85,9 @@ public class BigEarthServer
 		}
 
 		// require the node name to be listed in the world propertes file
-		if (!worldConfig.isValidNode(nodeName))
+		if (!worldConfig.isValidHost(nodeName))
 		{
-			System.err.println("Not a valid node for this world");
+			System.err.println("Not a valid host for this world");
 			System.exit(1);
 		}
 
