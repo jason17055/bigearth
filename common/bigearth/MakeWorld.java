@@ -104,6 +104,7 @@ public class MakeWorld
 		MakeWorld me = new MakeWorld();
 		me.worldConfig = WorldConfig.load(worldDir);
 		me.world = new WorldMaster(me.worldConfig);
+		me.world.load();
 		me.load();
 		return me;
 	}
