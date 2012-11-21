@@ -373,10 +373,12 @@ public class WorldView extends JPanel
 				continue;
 
 			int regionId = i+1;
+			Point p = toScreen(world.g.getCenterPoint(regionId));
+
 			if (zoomFactor <= 2)
-				drawMob(gr, regionId);
+				drawMobDot(gr, p, regionId);
 			else
-				drawMobAlt(gr, regionId);
+				drawMobPin(gr, p, regionId);
 		}
 
 		if (selectedRegion != 0)
@@ -400,13 +402,7 @@ public class WorldView extends JPanel
 	static final int MOB_TACK_LG_DIAMETER = 20;
 	static final int MOB_TACK_LG_HEIGHT = 32;
 
-	void drawMob(Graphics gr, int regionId)
-	{
-		Point p = toScreen(world.g.getCenterPoint(regionId));
-		drawMobDot(gr, p);
-	}
-
-	void drawMobDot(Graphics gr, Point p)
+	void drawMobDot(Graphics gr, Point p, int regionId)
 	{
 		final int d = MOB_TACK_SM_DIAMETER;
 
@@ -416,13 +412,7 @@ public class WorldView extends JPanel
 		gr.drawOval(p.x-d/2,p.y-d/2,d, d);
 	}
 
-	void drawMobAlt(Graphics gr, int regionId)
-	{
-		Point p = toScreen(world.g.getCenterPoint(regionId));
-		drawMobAlt(gr, p);
-	}
-
-	void drawMobAlt(Graphics gr, Point p)
+	void drawMobPin(Graphics gr, Point p, int regionId)
 	{
 		Graphics2D gr2 = (Graphics2D) gr;
 
@@ -447,7 +437,7 @@ public class WorldView extends JPanel
 
 		Shape s = new Polygon(x_coords, y_coords, x_coords.length);
 
-		drawMobDot(gr, p);
+		drawMobDot(gr, p, regionId);
 
 		gr2.setColor(MOB_TACK_FILL_COLOR);
 		gr2.fill(s);
