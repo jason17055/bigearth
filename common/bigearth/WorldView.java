@@ -260,7 +260,7 @@ public class WorldView extends JPanel
 		}
 
 		Rectangle [] regionBounds;
-		if (zoomFactor >= 4)
+		int numRegions = colors.length;
 		{
 			regionBounds = new Rectangle[colors.length];
 			for (int i = 0; i < pts.length; i++)
@@ -284,10 +284,6 @@ public class WorldView extends JPanel
 					max_x-min_x+1,
 					max_y-min_y+1);
 			}
-		}
-		else
-		{
-			regionBounds = null;
 		}
 
 		Rectangle screen = new Rectangle(0,0,WIDTH,HEIGHT);
@@ -366,6 +362,23 @@ public class WorldView extends JPanel
 				
 		} //end if zoom factor >= 8
 
+		// draw mobs
+		for (int i = 0; i < numRegions; i++)
+		{
+			RegionDetail region = world.world.regions[i];
+			if (region.presentMobs.isEmpty())
+				continue;
+
+			if (!screen.intersects(regionBounds[i]))
+				continue;
+
+			int regionId = i+1;
+			if (zoomFactor <= 2)
+				drawMob(gr, regionId);
+			else
+				drawMobAlt(gr, regionId);
+		}
+
 		if (selectedRegion != 0)
 		{
 			Point3d [] pp = g.getCellBoundary(selectedRegion);
@@ -379,6 +392,67 @@ public class WorldView extends JPanel
 		}
 
 		repaint();
+	}
+
+	static final Color MOB_TACK_FILL_COLOR = new Color(0xff8778);
+	static final Color MOB_TACK_STROKE_COLOR = new Color(0xa9463f);
+	static final int MOB_TACK_SM_DIAMETER = 8;
+	static final int MOB_TACK_LG_DIAMETER = 20;
+	static final int MOB_TACK_LG_HEIGHT = 32;
+
+	void drawMob(Graphics gr, int regionId)
+	{
+		Point p = toScreen(world.g.getCenterPoint(regionId));
+		drawMobDot(gr, p);
+	}
+
+	void drawMobDot(Graphics gr, Point p)
+	{
+		final int d = MOB_TACK_SM_DIAMETER;
+
+		gr.setColor(MOB_TACK_FILL_COLOR);
+		gr.fillOval(p.x-d/2,p.y-d/2,d, d);
+		gr.setColor(MOB_TACK_STROKE_COLOR);
+		gr.drawOval(p.x-d/2,p.y-d/2,d, d);
+	}
+
+	void drawMobAlt(Graphics gr, int regionId)
+	{
+		Point p = toScreen(world.g.getCenterPoint(regionId));
+		drawMobAlt(gr, p);
+	}
+
+	void drawMobAlt(Graphics gr, Point p)
+	{
+		Graphics2D gr2 = (Graphics2D) gr;
+
+		int z = (int) Math.floor(MOB_TACK_LG_DIAMETER/2.0 / Math.sqrt(2));
+
+		int x0 = p.x;
+		int x1 = x0 - MOB_TACK_LG_DIAMETER / 2;
+		int x2 = x1 + MOB_TACK_LG_DIAMETER;
+		int x3 = p.x - z;
+		int x4 = p.x + z;
+
+		int y0 = p.y - MOB_TACK_LG_HEIGHT;
+		int y1 = y0 + MOB_TACK_LG_DIAMETER / 2 - z;
+		int y2 = y0 + MOB_TACK_LG_DIAMETER / 2;
+		int y3 = y2 + z;
+		int y4 = p.y;
+
+		int [] x_coords = new int[]
+		{ x0, x4, x2, x4, x0, x3, x1, x3 };
+		int [] y_coords = new int[]
+		{ y4, y3, y2, y1, y0, y1, y2, y3 };
+
+		Shape s = new Polygon(x_coords, y_coords, x_coords.length);
+
+		drawMobDot(gr, p);
+
+		gr2.setColor(MOB_TACK_FILL_COLOR);
+		gr2.fill(s);
+		gr2.setColor(MOB_TACK_STROKE_COLOR);
+		gr2.draw(s);
 	}
 
 	void drawGreatCircle(Graphics g, Point3d fromPt, Point3d toPt)
