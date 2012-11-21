@@ -57,6 +57,8 @@ public class WorldViewer extends JFrame
 	JLabel moistureLbl;
 	JLabel depthLbl;
 
+	JPanel mobPane;
+
 	private void addToolButton(String command)
 	{
 		JToggleButton btn = new JToggleButton(command);
@@ -92,6 +94,11 @@ public class WorldViewer extends JFrame
 		initRegionPane();
 		toolsPane.add(regionPane);
 
+		mobPane = new JPanel();
+		mobPane.setVisible(false);
+		initMobPane();
+		toolsPane.add(mobPane);
+
 		JPanel buttonsPane = new JPanel();
 		add(buttonsPane, BorderLayout.SOUTH);
 
@@ -124,6 +131,10 @@ public class WorldViewer extends JFrame
 			public void windowClosed(WindowEvent ev) {
 				onWindowClosed();
 			}});
+	}
+
+	private void initMobPane()
+	{
 	}
 
 	private void initRegionPane()
@@ -333,6 +344,12 @@ public class WorldViewer extends JFrame
 				onSpawnCharacterClicked();
 			}});
 		regionMenu.add(menuItem);
+
+		JMenu mobMenu = new JMenu("Mob");
+		menuBar.add(mobMenu);
+
+		menuItem = new JMenuItem("Foo");
+		mobMenu.add(menuItem);
 
 		setJMenuBar(menuBar);
 	}
@@ -719,6 +736,22 @@ assert(x >= 1);
 			BorderFactory.createTitledBorder("Region "+regionId)
 			);
 		regionPane.setVisible(true);
+
+		RegionDetail region = world.world.regions[regionId-1];
+		if (!region.presentMobs.isEmpty())
+		{
+			Set<String> mobNames = region.presentMobs.keySet();
+			String [] mobNamesA = mobNames.toArray(new String[0]);
+
+			mobPane.setBorder(
+				BorderFactory.createTitledBorder("Mob "+mobNamesA[0])
+				);
+			mobPane.setVisible(true);
+		}
+		else
+		{
+			mobPane.setVisible(false);
+		}
 	}
 
 	//implements WorldView.Listener
