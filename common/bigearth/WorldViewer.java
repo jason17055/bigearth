@@ -288,6 +288,13 @@ public class WorldViewer extends JFrame
 			}});
 		fileMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Leaders...");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onLeadersClicked();
+			}});
+		fileMenu.add(menuItem);
+
 		JMenu viewMenu = new JMenu("View");
 		menuBar.add(viewMenu);
 
@@ -361,6 +368,11 @@ public class WorldViewer extends JFrame
 			RegionDetail r = world.world.regions[view.selectedRegion-1];
 			r.adjustWildlife(delta*100);
 		}
+	}
+
+	void onLeadersClicked()
+	{
+		new LeadersFrame(world.world, this).setVisible(true);
 	}
 
 	void onExpandLakeClicked()

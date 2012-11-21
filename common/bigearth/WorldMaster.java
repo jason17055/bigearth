@@ -8,14 +8,16 @@ public class WorldMaster
 {
 	WorldConfig config;
 	RegionDetail [] regions;
+	Map<String, LeaderInfo> leaders;
 
 	int year;
-	int lastMobId;
+	int lastSeqId;
 
 	public WorldMaster(WorldConfig config)
 	{
 		this.config = config;
 		this.regions = new RegionDetail[config.getGeometry().getCellCount()];
+		this.leaders = new HashMap<String, LeaderInfo>();
 	}
 
 	public void load()
@@ -32,8 +34,8 @@ public class WorldMaster
 			String s = in.getCurrentName();
 			if (s.equals("year"))
 				year = in.nextIntValue(year);
-			else if (s.equals("lastMobId"))
-				lastMobId = in.nextIntValue(0);
+			else if (s.equals("lastMobId") || s.equals("lastSeqId"))
+				lastSeqId = in.nextIntValue(0);
 			else
 			{
 				in.nextToken();
@@ -59,9 +61,16 @@ public class WorldMaster
 
 	MobInfo newMob()
 	{
-		String name = "mob"+(++lastMobId);
+		String name = "mob"+(++lastSeqId);
 		MobInfo mob = new MobInfo(name);
 		return mob;
+	}
+
+	void newLeader(String leaderDisplayName)
+	{
+		String name = "leader"+(++lastSeqId);
+		LeaderInfo leader = new LeaderInfo(name);
+		leader.displayName = leaderDisplayName;
 	}
 
 	public final int [] getRegionNeighbors(int regionId)
@@ -105,7 +114,7 @@ public class WorldMaster
 		JsonGenerator j = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
 		j.writeStartObject();
 		j.writeNumberField("year", year);
-		j.writeNumberField("lastMobId", lastMobId);
+		j.writeNumberField("lastSeqId", lastSeqId);
 		j.writeEndObject();
 		j.close();
 
@@ -113,6 +122,13 @@ public class WorldMaster
 		{
 			File regionFile = new File(config.path, "region"+(i+1)+".txt");
 			regions[i].save(regionFile);
+		}
+
+		File leadersDir = config.path;
+		for (String name : leaders.keySet())
+		{
+			File leaderFile = new File(leadersDir, name+".txt");
+			leaders.get(name).save(leaderFile);
 		}
 	}
 
