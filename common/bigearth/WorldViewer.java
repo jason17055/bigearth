@@ -58,6 +58,7 @@ public class WorldViewer extends JFrame
 	JLabel depthLbl;
 
 	JPanel mobPane;
+	String selectedMob;
 
 	private void addToolButton(String command)
 	{
@@ -355,7 +356,11 @@ public class WorldViewer extends JFrame
 		JMenu mobMenu = new JMenu("Mob");
 		menuBar.add(mobMenu);
 
-		menuItem = new JMenuItem("Foo");
+		menuItem = new JMenuItem("Set Owner...");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onSetOwnerClicked();
+			}});
 		mobMenu.add(menuItem);
 
 		setJMenuBar(menuBar);
@@ -478,6 +483,71 @@ public class WorldViewer extends JFrame
 			nameField.getText(),
 			avatarList[avatarSelect.getSelectedIndex()]
 			);
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	MobInfo getSelectedMob()
+	{
+		if (selectedMob == null)
+			return null;
+
+		int regionId = view.selectedRegion;
+		RegionDetail region = world.world.regions[regionId-1];
+
+		return region.presentMobs.get(selectedMob);
+	}
+
+	void onSetOwnerClicked()
+	{
+		try {
+
+		MobInfo mob = getSelectedMob();
+		if (mob == null)
+			throw new Exception("Please select a mob first.");
+
+		String [] leaderNames = world.world.leaders.keySet().toArray(new String[0]);
+		String [] leaderDisplayNames = new String[leaderNames.length+1];
+		leaderDisplayNames[0] = "--None--";
+		int toSelect = 0;
+		for (int i = 0; i < leaderNames.length; i++)
+		{
+			leaderDisplayNames[i+1] = world.world.leaders.get(leaderNames[i]).displayName;
+			if (leaderNames[i].equals(mob.owner))
+				toSelect = i+1;
+		}
+
+		JComboBox ownerSelect = new JComboBox(leaderDisplayNames);
+		ownerSelect.setSelectedIndex(toSelect);
+		
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Owner"),
+			ownerSelect
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Set Owner",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		int sel = ownerSelect.getSelectedIndex();
+		if (sel == 0)
+		{
+			mob.owner = null;
+		}
+		else
+		{
+			mob.owner = leaderNames[sel-1];
+		}
 
 		}
 		catch (Exception e)
@@ -754,6 +824,7 @@ assert(x >= 1);
 		{
 			Set<String> mobNames = region.presentMobs.keySet();
 			String [] mobNamesA = mobNames.toArray(new String[0]);
+			selectedMob = mobNamesA[0];
 
 			mobPane.setBorder(
 				BorderFactory.createTitledBorder("Mob "+mobNamesA[0])
@@ -762,6 +833,7 @@ assert(x >= 1);
 		}
 		else
 		{
+			selectedMob = null;
 			mobPane.setVisible(false);
 		}
 	}

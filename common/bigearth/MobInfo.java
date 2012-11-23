@@ -8,6 +8,7 @@ public class MobInfo
 	String name;
 	String displayName;
 	String avatarName;
+	String owner;
 	Location location;
 
 	MobInfo(String name)
@@ -33,6 +34,8 @@ public class MobInfo
 				m.avatarName = in.nextTextValue();
 			else if (s.equals("location"))
 				m.location = LocationHelper.parse(in.nextTextValue(), world);
+			else if (s.equals("owner"))
+				m.owner = in.nextTextValue();
 			else
 			{
 				in.nextToken();
@@ -53,6 +56,8 @@ public class MobInfo
 			out.writeStringField("avatarName", avatarName);
 		if (location != null)
 			out.writeStringField("location", location.toString());
+		if (owner != null)
+			out.writeStringField("owner", owner);
 		out.writeEndObject();
 	}
 }
