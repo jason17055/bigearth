@@ -14,15 +14,36 @@ public class LeaderInfo
 		this.displayName = name;
 	}
 
-	void save(File filename)
+	void parse(JsonParser in)
 		throws IOException
 	{
-		JsonGenerator out = new JsonFactory().createJsonGenerator(filename,
-					JsonEncoding.UTF8);
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("displayName"))
+			{
+				displayName = in.nextTextValue();
+			}
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+				System.err.println("unrecognized leader property: " + s);
+			}
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+
+	void write(JsonGenerator out)
+		throws IOException
+	{
 		out.writeStartObject();
 		out.writeStringField("displayName", displayName);
 
 		out.writeEndObject();
-		out.close();
 	}
 }

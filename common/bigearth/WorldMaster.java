@@ -36,6 +36,10 @@ public class WorldMaster
 				year = in.nextIntValue(year);
 			else if (s.equals("lastMobId") || s.equals("lastSeqId"))
 				lastSeqId = in.nextIntValue(0);
+			else if (s.equals("leaders"))
+			{
+				parseLeaders(in);
+			}
 			else
 			{
 				in.nextToken();
@@ -51,6 +55,25 @@ public class WorldMaster
 			File regionFilename = new File(config.path, "region"+regionId+".txt");
 			regions[i] = RegionDetail.load(regionFilename, this, regionId);
 		}
+	}
+
+	void parseLeaders(JsonParser in)
+		throws IOException
+	{
+		leaders.clear();
+
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String leaderName = in.getCurrentName();
+			LeaderInfo leader = new LeaderInfo(leaderName);
+			leader.parse(in);
+			leaders.put(leaderName, leader);
+		}
+		
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
 	ShadowRegion getShadowRegion(int regionId)
@@ -71,6 +94,7 @@ public class WorldMaster
 		String name = "leader"+(++lastSeqId);
 		LeaderInfo leader = new LeaderInfo(name);
 		leader.displayName = leaderDisplayName;
+		leaders.put(name, leader);
 	}
 
 	public final int [] getRegionNeighbors(int regionId)
@@ -115,6 +139,15 @@ public class WorldMaster
 		j.writeStartObject();
 		j.writeNumberField("year", year);
 		j.writeNumberField("lastSeqId", lastSeqId);
+		j.writeFieldName("leaders");
+		j.writeStartObject();
+		for (String name : leaders.keySet())
+		{
+			j.writeFieldName(name);
+			leaders.get(name).write(j);
+		}
+		j.writeEndObject(); //end "leaders" property
+
 		j.writeEndObject();
 		j.close();
 
@@ -122,13 +155,6 @@ public class WorldMaster
 		{
 			File regionFile = new File(config.path, "region"+(i+1)+".txt");
 			regions[i].save(regionFile);
-		}
-
-		File leadersDir = config.path;
-		for (String name : leaders.keySet())
-		{
-			File leaderFile = new File(leadersDir, name+".txt");
-			leaders.get(name).save(leaderFile);
 		}
 	}
 
