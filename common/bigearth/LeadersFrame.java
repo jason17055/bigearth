@@ -20,8 +20,10 @@ public class LeadersFrame extends JFrame
 			{ "Foo" },
 			{ "Bar" }};
 		JTable table = new JTable(data, columnNames);
+		JScrollPane scrollPane = new JScrollPane(table);
+		table.setFillsViewportHeight(true);
 
-		getContentPane().add(table);
+		getContentPane().add(scrollPane);
 
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
