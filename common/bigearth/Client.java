@@ -39,16 +39,25 @@ public class Client
 		this(host, user, new String(pass));
 	}
 
+	HttpURLConnection makeRequest(String method, String path)
+		throws IOException
+	{
+		assert path.startsWith("/");
+
+		URL url = new URL("http", host, port, path);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod(method);
+
+		return conn;
+	}
+
 	void login()
 		throws IOException, LoginFailedException
 	{
-		URL url = new URL("http", host, port, "/login");
-
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
+		HttpURLConnection conn = makeRequest("POST", "/login");
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
-		conn.setRequestMethod("POST");
+
 		String x = "user=" + URLEncoder.encode(user, "UTF-8")
 			+ "&password=" + URLEncoder.encode(pass, "UTF-8");
 		byte [] xx = x.getBytes("UTF-8");
