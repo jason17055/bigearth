@@ -10,6 +10,7 @@ public class Client
 	String host;
 	String user;
 	String pass;
+	Map<String, String> cookies = new HashMap<String,String>();
 
 	static final int DEFAULT_PORT = 2626;
 
@@ -26,7 +27,7 @@ public class Client
 	}
 
 	void login()
-		throws IOException
+		throws IOException, LoginFailedException
 	{
 		String myHost;
 		int port;
@@ -52,7 +53,7 @@ public class Client
 		conn.setDoInput(true);
 		conn.setRequestMethod("POST");
 		String x = "user=" + URLEncoder.encode(user, "UTF-8")
-			+ "&pass=" + URLEncoder.encode(pass, "UTF-8");
+			+ "&password=" + URLEncoder.encode(pass, "UTF-8");
 		byte [] xx = x.getBytes("UTF-8");
 
 		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -62,7 +63,6 @@ public class Client
 		out.close();
 
 		// read cookie from response
-		Map<String,String> cookies = new HashMap<String,String>();
 		String headerName = null;
 		for (int i = 1; (headerName = conn.getHeaderFieldKey(i)) != null; i++)
 		{
@@ -73,6 +73,12 @@ public class Client
 				String [] parts2 = parts[0].split("=");
 				cookies.put(parts2[0], parts2[1]);
 			}
+		}
+
+		int status = conn.getResponseCode();
+		if (status == 401)
+		{
+			throw new LoginFailedException();
 		}
 
 		InputStream in  = conn.getInputStream();
@@ -109,9 +115,22 @@ public class Client
 		if (rv != JOptionPane.OK_OPTION)
 			return;
 
+		try
+		{
 		Client me = new Client(hostField.getText(),
 				userField.getText(),
 				passField.getPassword());
 		me.login();
+
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(null, e,
+				"Error", JOptionPane.ERROR_MESSAGE);
+		}
 	}
+}
+
+class LoginFailedException extends Exception
+{
 }

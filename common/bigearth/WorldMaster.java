@@ -72,7 +72,7 @@ public class WorldMaster
 			leader.parse(in);
 			leaders.put(leaderName, leader);
 		}
-		
+
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
@@ -169,5 +169,10 @@ public class WorldMaster
 		{
 			r.endOfYear_cleanup();
 		}
+	}
+
+	LeaderInfo getLeaderByUsername(String user)
+	{
+		return leaders.get(user);
 	}
 }

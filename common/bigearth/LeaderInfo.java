@@ -7,11 +7,19 @@ public class LeaderInfo
 {
 	String name;
 	String displayName;
+	String password;
 
 	LeaderInfo(String name)
 	{
 		this.name = name;
 		this.displayName = name;
+	}
+
+	boolean checkPassword(String inPassword)
+	{
+		return (
+			password != null && password.equals(inPassword)
+			);
 	}
 
 	void parse(JsonParser in)
@@ -26,6 +34,10 @@ public class LeaderInfo
 			if (s.equals("displayName"))
 			{
 				displayName = in.nextTextValue();
+			}
+			else if (s.equals("password"))
+			{
+				password = in.nextTextValue();
 			}
 			else
 			{
@@ -43,6 +55,10 @@ public class LeaderInfo
 	{
 		out.writeStartObject();
 		out.writeStringField("displayName", displayName);
+		if (password != null)
+		{
+			out.writeStringField("password", password);
+		}
 
 		out.writeEndObject();
 	}

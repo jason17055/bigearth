@@ -8,6 +8,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import org.mortbay.jetty.*;
 import org.mortbay.jetty.servlet.*;
+import com.fasterxml.jackson.core.*;
 
 public class BigEarthServer
 {
@@ -181,16 +182,52 @@ class LoginServlet extends HttpServlet
 		String user = request.getParameter("user");
 		//TODO - check that the user account is valid
 
+		LeaderInfo leader = server.world.getLeaderByUsername(user);
+		if (leader != null)
+		{
+			if (leader.checkPassword(request.getParameter("password")))
+			{
+				doLoginSuccess(response, user);
+				return;
+			}
+		}
+
+		doLoginFailure(response, "Invalid username or password.");
+	}
+
+	private void doLoginFailure(HttpServletResponse response, String errorMessage)
+		throws IOException
+	{
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeStringField("error", errorMessage);
+		out.writeEndObject();
+		out.close();
+	}
+
+	private void doLoginSuccess(HttpServletResponse response, String user)
+		throws IOException, ServletException
+	{
 		String sid = server.newSession(user);
 		Cookie sessionCookie = new Cookie(BigEarthServer.COOKIE_NAME, sid);
 		response.addCookie(sessionCookie);
 
 		response.setStatus(HttpServletResponse.SC_OK);
-		PrintWriter w = response.getWriter();
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
 
-		w.println("<h1>Hello</h1>");
-		w.println("You are <b>"+user+"</b>");
-		w.println("Your session id is <b>"+sid+"</b>");
-		w.close();
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeNumberField("year", server.world.year);
+		out.writeEndObject();
+		out.close();
 	}
 }

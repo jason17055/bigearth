@@ -11,15 +11,16 @@ public class LeadersFrame extends JFrame
 	WorldMaster world;
 	JTable leadersTable;
 
-	static final String [] COLUMN_NAMES = { "Name" };
+	static final String [] COLUMN_NAMES = { "Username", "Display Name" };
 
 	private void reloadTable()
 	{
 		String [] leaderNames = world.leaders.keySet().toArray(new String[0]);
-		Object [][] data = new Object[leaderNames.length][1];
+		Object [][] data = new Object[leaderNames.length][2];
 		for (int i = 0; i < leaderNames.length; i++)
 		{
-			data[i][0] = world.leaders.get(leaderNames[i]).displayName;
+			data[i][0] = leaderNames[i];
+			data[i][1] = world.leaders.get(leaderNames[i]).displayName;
 		}
 		DefaultTableModel model = new DefaultTableModel(data, COLUMN_NAMES);
 		leadersTable.setModel(model);
@@ -30,8 +31,7 @@ public class LeadersFrame extends JFrame
 		super("Leaders");
 		this.world = world;
 
-		Object [][] data = {};
-		leadersTable = new JTable(data, COLUMN_NAMES);
+		leadersTable = new JTable();
 		JScrollPane scrollPane = new JScrollPane(leadersTable);
 		leadersTable.setFillsViewportHeight(true);
 		reloadTable();
@@ -46,6 +46,14 @@ public class LeadersFrame extends JFrame
 			public void actionPerformed(ActionEvent ev)
 			{
 				onNewClicked();
+			}});
+		buttonPane.add(btn);
+
+		btn = new JButton("Change Password...");
+		btn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onChangePasswordClicked();
 			}});
 		buttonPane.add(btn);
 
@@ -101,6 +109,31 @@ public class LeadersFrame extends JFrame
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	void onChangePasswordClicked()
+	{
+		int row = leadersTable.getSelectedRow();
+		if (row == -1)
+			return;
+
+		String username = (String) leadersTable.getValueAt(row, 0);
+		LeaderInfo leader = world.leaders.get(username);
+
+		JTextField passField = new JTextField();
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Enter password for "+username),
+			passField
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Change Password",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		leader.password = passField.getText();
 	}
 
 	void onDeleteClicked()
