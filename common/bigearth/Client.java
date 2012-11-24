@@ -39,6 +39,28 @@ public class Client
 		this(host, user, new String(pass));
 	}
 
+	private void addCookiesToRequest(HttpURLConnection conn)
+	{
+		//
+		// make Cookie header
+		//
+		StringBuilder sb = new StringBuilder();
+		for (String cookieName : cookies.keySet())
+		{
+			if (sb.length() != 0)
+			{
+				sb.append("; ");
+			}
+			sb.append(cookieName);
+			sb.append("=");
+			sb.append(cookies.get(cookieName));
+		}
+		if (sb.length() != 0)
+		{
+			conn.setRequestProperty("Cookie", sb.toString());
+		}
+	}
+
 	HttpURLConnection makeRequest(String method, String path)
 		throws IOException
 	{
@@ -48,7 +70,31 @@ public class Client
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod(method);
 
+		addCookiesToRequest(conn);
+
 		return conn;
+	}
+
+	void getMap()
+		throws IOException
+	{
+		HttpURLConnection conn = makeRequest("GET", "/my/map");
+		conn.setDoOutput(false);
+		conn.setDoInput(true);
+		conn.connect();
+
+		JsonParser in = new JsonFactory().createJsonParser(
+					conn.getInputStream()
+				);
+		in.nextToken();
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			System.out.println(s);
+			in.nextToken();
+			in.skipChildren();
+		}
+		in.close();
 	}
 
 	void login()
@@ -133,6 +179,7 @@ public class Client
 				userField.getText(),
 				passField.getPassword());
 		me.login();
+		me.getMap();
 
 		}
 		catch (Exception e)

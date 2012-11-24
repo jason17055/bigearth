@@ -142,6 +142,7 @@ public class BigEarthServer
 
 		Context context = new Context(server, "/", Context.SESSIONS);
 		context.addServlet(new ServletHolder(new LoginServlet(this)), "/login");
+		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
 
 		server.start();
 		server.join();
@@ -155,6 +156,19 @@ public class BigEarthServer
 		sessions.put(sid, sess);
 		return sid;
 	}
+
+	Session getSessionFromRequest(HttpServletRequest request)
+	{
+		for (Cookie c : request.getCookies())
+		{
+			if (c.getName().equals(COOKIE_NAME))
+			{
+				String sid = c.getValue();
+				return sessions.get(sid);
+			}
+		}
+		return null;
+	}
 }
 
 class Session
@@ -164,6 +178,50 @@ class Session
 	public Session(String user)
 	{
 		this.user = user;
+	}
+}
+
+class GetMapServlet extends HttpServlet
+{
+	BigEarthServer server;
+	GetMapServlet(BigEarthServer server)
+	{
+		this.server = server;
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response)
+		throws IOException, ServletException
+	{
+		Session s = server.getSessionFromRequest(request);
+		if (s == null)
+		{
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+
+			JsonGenerator out = new JsonFactory().createJsonGenerator(
+					response.getOutputStream(),
+					JsonEncoding.UTF8);
+			out.writeStartObject();
+			out.writeStringField("error", "not a valid session");
+			out.writeEndObject();
+			out.close();
+			return;
+		}
+
+		
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeStringField("status", "success");
+		out.writeEndObject();
+		out.close();
 	}
 }
 
@@ -180,7 +238,8 @@ class LoginServlet extends HttpServlet
 		throws IOException, ServletException
 	{
 		String user = request.getParameter("user");
-		//TODO - check that the user account is valid
+
+		// check that the user account is valid
 
 		LeaderInfo leader = server.world.getLeaderByUsername(user);
 		if (leader != null)
