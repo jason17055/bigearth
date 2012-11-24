@@ -207,7 +207,3 @@ class WorldStub
 	int year;
 	Geometry geometry;
 }
-
-class MapModel extends HashMap<Location, RegionProfile>
-{
-}

@@ -17,4 +17,18 @@ class SimpleLocation implements Location
 	{
 		return new Integer(regionId).toString();
 	}
+
+	public boolean equals(Object obj)
+	{
+		if (obj instanceof SimpleLocation)
+		{
+			return this.regionId == ((SimpleLocation) obj).regionId;
+		}
+		return false;
+	}
+
+	public int hashCode()
+	{
+		return regionId;
+	}
 }
