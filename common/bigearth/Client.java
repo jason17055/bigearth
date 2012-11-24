@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.*;
 public class Client
 {
 	String host;
+	int port;
 	String user;
 	String pass;
 	Map<String, String> cookies = new HashMap<String,String>();
@@ -18,7 +19,17 @@ public class Client
 
 	public Client(String host, String user, String pass)
 	{
-		this.host = host;
+		int colon = host.lastIndexOf(':');
+		if (colon == -1)
+		{
+			this.host = host;
+			this.port = DEFAULT_PORT;
+		}
+		else
+		{
+			this.host = host.substring(0, colon);
+			this.port = Integer.parseInt(host.substring(colon+1));
+		}
 		this.user = user;
 		this.pass = pass;
 	}
@@ -31,23 +42,7 @@ public class Client
 	void login()
 		throws IOException, LoginFailedException
 	{
-		String myHost;
-		int port;
-
-		int colonIdx = host.indexOf(':');
-		if (colonIdx == -1)
-		{
-			myHost = host;
-			port = DEFAULT_PORT;
-		}
-		else
-		{
-			myHost = host.substring(0, colonIdx);
-			port = Integer.parseInt(host.substring(colonIdx+1));
-		}
-
-		URL url = new URL("http", myHost, port, "/login");
-		System.out.println(url);
+		URL url = new URL("http", host, port, "/login");
 
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
