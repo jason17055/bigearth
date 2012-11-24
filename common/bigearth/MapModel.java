@@ -18,6 +18,12 @@ public class MapModel
 		return geometry;
 	}
 
+	public RegionProfile getRegion(int regionId)
+	{
+		Location loc = new SimpleLocation(regionId);
+		return regions.get(loc);
+	}
+
 	public void put(Location loc, RegionProfile p)
 	{
 		regions.put(loc, p);

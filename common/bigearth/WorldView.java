@@ -13,7 +13,7 @@ import javax.vecmath.*;
 public class WorldView extends JPanel
 	implements MouseListener, MouseMotionListener, MouseWheelListener
 {
-	MapAdapter map;
+	MapModel map;
 	int [] colors; //overlay colors
 	BufferedImage image;
 	double curLongitude;
@@ -49,7 +49,7 @@ public class WorldView extends JPanel
 		updateTransformMatrix();
 	}
 
-	public void setMap(MapAdapter map)
+	public void setMap(MapModel map)
 	{
 		this.map = map;
 	}

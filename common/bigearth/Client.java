@@ -81,7 +81,7 @@ public class Client
 		return world.geometry;
 	}
 
-	void getMap()
+	MapModel getMap()
 		throws IOException
 	{
 		HttpURLConnection conn = makeRequest("GET", "/my/map");
@@ -103,6 +103,8 @@ public class Client
 			map.put(loc, p);
 		}
 		in.close();
+
+		return map;
 	}
 
 	void login()
@@ -187,7 +189,12 @@ public class Client
 				userField.getText(),
 				passField.getPassword());
 		me.login();
-		me.getMap();
+		MapModel map = me.getMap();
+
+		MainWindow w = new MainWindow();
+		w.setMap(map);
+
+		w.setVisible(true);
 
 		}
 		catch (Exception e)
