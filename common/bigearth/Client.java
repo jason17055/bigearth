@@ -14,6 +14,7 @@ public class Client
 	String pass;
 	Map<String, String> cookies = new HashMap<String,String>();
 	WorldStub world;
+	MapModel map;
 
 	static final int DEFAULT_PORT = 2626;
 
@@ -75,6 +76,11 @@ public class Client
 		return conn;
 	}
 
+	Geometry getGeometry()
+	{
+		return world.geometry;
+	}
+
 	void getMap()
 		throws IOException
 	{
@@ -83,6 +89,8 @@ public class Client
 		conn.setDoInput(true);
 		conn.connect();
 
+		map = new MapModel();
+
 		JsonParser in = new JsonFactory().createJsonParser(
 					conn.getInputStream()
 				);
@@ -90,9 +98,9 @@ public class Client
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			System.out.println(s);
-			in.nextToken();
-			in.skipChildren();
+			Location loc = LocationHelper.parse(s, getGeometry());
+			RegionProfile p = RegionProfile.parse(loc, in);
+			map.put(loc, p);
 		}
 		in.close();
 	}
@@ -198,4 +206,8 @@ class WorldStub
 {
 	int year;
 	Geometry geometry;
+}
+
+class MapModel extends HashMap<Location, RegionProfile>
+{
 }

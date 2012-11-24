@@ -218,15 +218,17 @@ class GetMapServlet extends HttpServlet
 				response.getOutputStream(),
 				JsonEncoding.UTF8);
 		out.writeStartObject();
-		out.writeStringField("status", "success");
 
-		for (String mobName : server.world.mobs.keySet())
+		for (int i = 0; i < server.world.regions.length; i++)
 		{
-			MobInfo mob = server.world.mobs.get(mobName);
-			if (!mob.owner.equals(s.user))
-				continue;
-
-			out.writeStringField(mobName, "foo");
+			int regionId = i + 1;
+			if (server.world.leaderCanSeeRegion(s.user, regionId))
+			{
+				Location loc = new SimpleLocation(regionId);
+				out.writeFieldName(loc.toString());
+				RegionProfile p = server.world.makeRegionProfileFor(s.user, regionId);
+				p.write(out);
+			}
 		}
 
 		out.writeEndObject();

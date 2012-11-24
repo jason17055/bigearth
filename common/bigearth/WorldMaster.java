@@ -180,4 +180,81 @@ public class WorldMaster
 	{
 		return leaders.get(user);
 	}
+
+	boolean regionHasMobOwnedBy(int regionId, String user)
+	{
+		RegionDetail region = regions[regionId-1];
+		for (MobInfo mob : region.presentMobs.values())
+		{
+			if (mob.owner != null && mob.owner.equals(user))
+				return true;
+		}
+		return false;
+	}
+
+	boolean leaderCanSeeRegion(String user, int regionId)
+	{
+		// check whether the designated region has a mob owned by this
+		// player
+
+		if (regionHasMobOwnedBy(regionId, user))
+			return true;
+
+		// check the same thing for any of the region's neighbors
+
+		for (int nid : getRegionNeighbors(regionId))
+		{
+			if (regionHasMobOwnedBy(nid, user))
+				return true;
+		}
+
+		return false;
+	}
+
+	RegionProfile makeRegionProfileFor(String user, int regionId)
+	{
+		assert leaderCanSeeRegion(user, regionId);
+
+		RegionDetail region = regions[regionId-1];
+
+		RegionProfile p = new RegionProfile();
+		p.biome = region.biome;
+
+		return p;
+	}
+}
+
+class RegionProfile
+{
+	BiomeType biome;
+
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		if (biome != null)
+			out.writeStringField("biome", biome.name());
+		out.writeEndObject();
+	}
+
+	static RegionProfile parse(Location loc, JsonParser in)
+		throws IOException
+	{
+		RegionProfile me = new RegionProfile();
+		me.parse(in);
+		return me;
+	}
+
+	public void parse(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("biome"))
+			{
+			}
+		}
+	}
 }

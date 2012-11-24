@@ -11,13 +11,18 @@ public class LocationHelper
 
 	public static Location parse(String locStr, WorldConfig world)
 	{
+		return parse(locStr, world.getGeometry());
+	}
+
+	public static Location parse(String locStr, Geometry g)
+	{
 		Matcher m1 = vertexPattern.matcher(locStr);
 		if (m1.matches())
 		{
 			int r1 = Integer.parseInt(m1.group(1));
 			int r2 = Integer.parseInt(m1.group(2));
 			int r3 = Integer.parseInt(m1.group(3));
-			return world.getGeometry().getVertex(r1,r2,r3);
+			return g.getVertex(r1,r2,r3);
 		}
 
 		Matcher m2 = edgePattern.matcher(locStr);
@@ -25,7 +30,7 @@ public class LocationHelper
 		{
 			int r1 = Integer.parseInt(m2.group(1));
 			int r2 = Integer.parseInt(m2.group(2));
-			return world.getGeometry().getEdgeBetween(r1, r2);
+			return g.getEdgeBetween(r1, r2);
 		}
 
 		return new SimpleLocation(Integer.parseInt(locStr));
