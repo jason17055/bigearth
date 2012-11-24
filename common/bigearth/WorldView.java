@@ -52,6 +52,7 @@ public class WorldView extends JPanel
 	public void setMap(MapModel map)
 	{
 		this.map = map;
+		this.colors = new int[map.getGeometry().getCellCount()];
 	}
 
 	public interface Listener
@@ -217,9 +218,15 @@ public class WorldView extends JPanel
 				int col = colors[i];
 				if (col == 0)
 				{
+					RegionProfile r = map.getRegion(i+1);
+					if (r != null)
+					{
 					BiomeType biome = map.getRegion(i+1).getBiome();
 					if (biomeColors.containsKey(biome))
 						col = biomeColors.get(biome);
+					else
+						col = UNKNOWN_BIOME_COLOR;
+					}
 					else
 						col = UNKNOWN_BIOME_COLOR;
 				}
@@ -373,6 +380,9 @@ public class WorldView extends JPanel
 		{
 			int regionId = i+1;
 			RegionProfile r = map.getRegion(regionId);
+			if (r == null)
+				continue;
+
 			if (!r.hasAnyMobs())
 				continue;
 
