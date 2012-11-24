@@ -89,11 +89,9 @@ public class WorldMaster
 		return mob;
 	}
 
-	void newLeader(String leaderDisplayName)
+	void newLeader(String name)
 	{
-		String name = "leader"+(++lastSeqId);
 		LeaderInfo leader = new LeaderInfo(name);
-		leader.displayName = leaderDisplayName;
 		leaders.put(name, leader);
 	}
 
