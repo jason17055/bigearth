@@ -42,4 +42,6 @@ public interface Geometry
 
 	Point3d getCenterPoint(int cellId);
 	int findCell(Point3d pt);
+
+	Point3d [] getCellBoundary(int cellId);
 }

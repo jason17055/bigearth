@@ -89,7 +89,7 @@ public class Client
 		conn.setDoInput(true);
 		conn.connect();
 
-		map = new MapModel();
+		map = new MapModel(getGeometry());
 
 		JsonParser in = new JsonFactory().createJsonParser(
 					conn.getInputStream()

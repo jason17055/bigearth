@@ -223,38 +223,3 @@ public class WorldMaster
 		return p;
 	}
 }
-
-class RegionProfile
-{
-	BiomeType biome;
-
-	public void write(JsonGenerator out)
-		throws IOException
-	{
-		out.writeStartObject();
-		if (biome != null)
-			out.writeStringField("biome", biome.name());
-		out.writeEndObject();
-	}
-
-	static RegionProfile parse(Location loc, JsonParser in)
-		throws IOException
-	{
-		RegionProfile me = new RegionProfile();
-		me.parse(in);
-		return me;
-	}
-
-	public void parse(JsonParser in)
-		throws IOException
-	{
-		in.nextToken();
-		while (in.nextToken() == JsonToken.FIELD_NAME)
-		{
-			String s = in.getCurrentName();
-			if (s.equals("biome"))
-			{
-			}
-		}
-	}
-}

@@ -195,7 +195,7 @@ public class WorldViewer extends JFrame
 	void setWorld(MakeWorld newWorld)
 	{
 		world = newWorld;
-		view.world = newWorld;
+		view.setMap(new MapAdapter(this.world));
 		reloadImage();
 	}
 
@@ -848,5 +848,35 @@ assert(x >= 1);
 	public void onVertexSelected(Geometry.VertexId vertex)
 	{
 		System.out.println("selected "+vertex);
+	}
+}
+
+class MapAdapter extends MapModel
+{
+	MakeWorld mworld;
+
+	MapAdapter(MakeWorld mworld)
+	{
+		super(mworld.world.getGeometry());
+		this.mworld = mworld;
+	}
+
+	public RegionProfile getRegion(int regionId)
+	{
+		RegionServant realRegion = mworld.world.regions[regionId-1];
+		assert realRegion != null : "no servant for region "+regionId;
+
+		RegionProfile r = new RegionProfile();
+		r.biome = realRegion.getBiome();
+		for (int i = 0; i < 6; i++)
+		{
+			if (realRegion.sides[i] != null)
+				r.sides[i] = realRegion.sides[i].feature;
+			if (realRegion.corners[i] != null)
+				r.corners[i] = realRegion.corners[i].feature;
+		}
+		r.hasAnyMobs = !realRegion.presentMobs.isEmpty();
+
+		return r;
 	}
 }

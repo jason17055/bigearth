@@ -13,8 +13,8 @@ import javax.vecmath.*;
 public class WorldView extends JPanel
 	implements MouseListener, MouseMotionListener, MouseWheelListener
 {
-	MakeWorld world;
-	int [] colors;
+	MapAdapter map;
+	int [] colors; //overlay colors
 	BufferedImage image;
 	double curLongitude;
 	double curLatitude;
@@ -47,6 +47,11 @@ public class WorldView extends JPanel
 		transformMatrix = new Matrix3d();
 		inverseTransformMatrix = new Matrix3d();
 		updateTransformMatrix();
+	}
+
+	public void setMap(MapAdapter map)
+	{
+		this.map = map;
 	}
 
 	public interface Listener
@@ -102,7 +107,7 @@ public class WorldView extends JPanel
 
 	boolean isVisible(int regionId)
 	{
-		SphereGeometry g = world.g;
+		Geometry g = map.getGeometry();
 		Point q = toScreen(g.getCenterPoint(regionId));
 		return (q.x >= 0 && q.x < WIDTH
 			&& q.y >= 0 && q.y < HEIGHT);
@@ -212,8 +217,9 @@ public class WorldView extends JPanel
 				int col = colors[i];
 				if (col == 0)
 				{
-					if (biomeColors.containsKey(world.world.regions[i].biome))
-						col = biomeColors.get(world.world.regions[i].biome);
+					BiomeType biome = map.getRegion(i+1).getBiome();
+					if (biomeColors.containsKey(biome))
+						col = biomeColors.get(biome);
 					else
 						col = UNKNOWN_BIOME_COLOR;
 				}
@@ -247,10 +253,10 @@ public class WorldView extends JPanel
 
 	void regenerate()
 	{
-		if (world == null)
+		if (map == null)
 			return;
 
-		SphereGeometry g = world.g;
+		Geometry g = map.getGeometry();
 		updateTransformMatrix();
 
 		Point [] pts = new Point[colors.length];
@@ -306,7 +312,7 @@ public class WorldView extends JPanel
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
-				Point3d [] bb = world.g.getCellBoundary(i+1);
+				Point3d [] bb = g.getCellBoundary(i+1);
 				int [] x_coords = new int[bb.length];
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
@@ -318,7 +324,7 @@ public class WorldView extends JPanel
 				}
 				else
 				{
-					RegionServant r = world.world.regions[i];
+					RegionProfile r = map.getRegion(i+1);
 					drawRegionArea(gr, i+1, r, x_coords, y_coords);
 				}
 			}
@@ -333,12 +339,12 @@ public class WorldView extends JPanel
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
-				Point3d [] bb = world.g.getCellBoundary(i+1);
+				Point3d [] bb = g.getCellBoundary(i+1);
 				int [] x_coords = new int[bb.length];
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
 
-				RegionServant r = world.world.regions[i];
+				RegionProfile r = map.getRegion(i+1);
 				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
 			}
 
@@ -350,12 +356,12 @@ public class WorldView extends JPanel
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
-				Point3d [] bb = world.g.getCellBoundary(i+1);
+				Point3d [] bb = g.getCellBoundary(i+1);
 				int [] x_coords = new int[bb.length];
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
 
-				RegionServant r = world.world.regions[i];
+				RegionProfile r = map.getRegion(i+1);
 				drawRegionCorners(gr, i+1, r, x_coords, y_coords);
 			}
 		}
@@ -365,15 +371,15 @@ public class WorldView extends JPanel
 		// draw mobs
 		for (int i = 0; i < numRegions; i++)
 		{
-			RegionServant region = world.world.regions[i];
-			if (region.presentMobs.isEmpty())
+			int regionId = i+1;
+			RegionProfile r = map.getRegion(regionId);
+			if (!r.hasAnyMobs())
 				continue;
 
 			if (!screen.intersects(regionBounds[i]))
 				continue;
 
-			int regionId = i+1;
-			Point p = toScreen(world.g.getCenterPoint(regionId));
+			Point p = toScreen(g.getCenterPoint(regionId));
 
 			if (zoomFactor <= 2)
 				drawMobDot(gr, p, regionId);
@@ -580,7 +586,7 @@ System.err.println(e);
 		}
 	}
 
-	void drawRegionArea(Graphics gr, int regionId, RegionServant r, int [] x_coords, int [] y_coords)
+	void drawRegionArea(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
 	{
 		Graphics2D gr2 = (Graphics2D) gr;
 		Paint oldPaint = gr2.getPaint();
@@ -601,7 +607,7 @@ System.err.println(e);
 		gr2.setPaint(oldPaint);
 	}
 
-	void drawRegionBorder(Graphics gr, int regionId, RegionServant r, int [] x_coords, int [] y_coords)
+	void drawRegionBorder(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
 	{
 		int n = x_coords.length;
 
@@ -653,7 +659,7 @@ System.err.println(e);
 		}
 	}
 
-	void drawRegionCorners(Graphics gr, int regionId, RegionServant r, int [] x_coords, int [] y_coords)
+	void drawRegionCorners(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
 	{
 		int n = x_coords.length;
 		for (int i = 0; i < n; i++)
@@ -665,11 +671,11 @@ System.err.println(e);
 		}
 	}
 
-	void drawRegionCorner(Graphics gr, int regionId, RegionServant r, int cornerIdx, int x, int y)
+	void drawRegionCorner(Graphics gr, int regionId, RegionProfile r, int cornerIdx, int x, int y)
 	{
 		Graphics2D gr2 = (Graphics2D) gr;
 
-		RegionCornerDetail.PointFeature type = r.corners[cornerIdx].feature;
+		RegionCornerDetail.PointFeature type = r.getCornerFeature(cornerIdx);
 		int radius = type == RegionCornerDetail.PointFeature.LAKE ? 10 : 5;
 
 		Paint oldPaint = gr2.getPaint();
@@ -759,19 +765,20 @@ System.err.println(e);
 
 	private void selectNearestTo(Point3d pt)
 	{
-		int regionId = world.g.findCell(pt);
+		Geometry g = map.getGeometry();
+		int regionId = g.findCell(pt);
 		if (!allowVertexSelection)
 		{
 			selectRegion(regionId);
 			return;
 		}
 
-		Point3d regionCenterPoint = world.g.getCenterPoint(regionId);
+		Point3d regionCenterPoint = g.getCenterPoint(regionId);
 		Vector3d v = new Vector3d();
 		v.sub(pt, regionCenterPoint);
 		double r_dist = v.length();
 
-		Point3d [] borderPoints = world.g.getCellBoundary(regionId);
+		Point3d [] borderPoints = g.getCellBoundary(regionId);
 		int best = -1;
 		for (int i = 0; i < borderPoints.length; i++)
 		{
@@ -790,7 +797,7 @@ System.err.println(e);
 			return;
 		}
 
-		Geometry.VertexId [] vtxs = world.g.getSurroundingVertices(regionId);
+		Geometry.VertexId [] vtxs = g.getSurroundingVertices(regionId);
 		selectVertex(vtxs[best]);
 	}
 
