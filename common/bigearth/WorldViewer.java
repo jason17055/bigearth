@@ -370,7 +370,7 @@ public class WorldViewer extends JFrame
 	{
 		if (view.selectedRegion != 0)
 		{
-			RegionDetail r = world.world.regions[view.selectedRegion-1];
+			RegionServant r = world.world.regions[view.selectedRegion-1];
 			r.adjustWildlife(delta*100);
 		}
 	}
@@ -478,7 +478,7 @@ public class WorldViewer extends JFrame
 		if (nameField.getText().length() == 0)
 			throw new Exception("You must enter a name.");
 
-		RegionDetail region = world.world.getRegionForLocation(loc);
+		RegionServant region = world.world.getRegionForLocation(loc);
 		region.spawnCharacter(loc,
 			nameField.getText(),
 			avatarList[avatarSelect.getSelectedIndex()]
@@ -500,7 +500,7 @@ public class WorldViewer extends JFrame
 			return null;
 
 		int regionId = view.selectedRegion;
-		RegionDetail region = world.world.regions[regionId-1];
+		RegionServant region = world.world.regions[regionId-1];
 
 		return region.presentMobs.get(selectedMob);
 	}
@@ -782,7 +782,7 @@ assert(x >= 1);
 		{
 		return 0;
 
-//			RegionDetail r = world.regions[i];
+//			RegionServant r = world.regions[i];
 //			if (r.biome == BiomeType.LAKE)
 //				return 0x6666ff;
 //			else if (r.biome.isWater())
@@ -798,7 +798,7 @@ assert(x >= 1);
 		if (regionId == 0)
 			return;
 
-		RegionDetail region = world.world.regions[regionId-1];
+		RegionServant region = world.world.regions[regionId-1];
 		biomeLbl.setText(region.getBiome().name());
 		wildlifeLbl.setText(String.format("%d", region.wildlife));
 		nativesLbl.setText("0");
@@ -819,7 +819,7 @@ assert(x >= 1);
 			);
 		regionPane.setVisible(true);
 
-		RegionDetail region = world.world.regions[regionId-1];
+		RegionServant region = world.world.regions[regionId-1];
 		if (!region.presentMobs.isEmpty())
 		{
 			Set<String> mobNames = region.presentMobs.keySet();

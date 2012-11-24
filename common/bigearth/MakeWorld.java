@@ -90,7 +90,7 @@ public class MakeWorld
 		for (int i = 0; i < numCells; i++)
 		{
 			int regionId = i+1;
-			world.regions[i] = RegionDetail.create(world, regionId);
+			world.regions[i] = RegionServant.create(world, regionId);
 		}
 		world.load();
 
@@ -178,7 +178,7 @@ public class MakeWorld
 		// modify all regions according to the numbers we generated...
 		for (int i = 0; i < numCells; i++)
 		{
-			RegionDetail region = world.regions[i];
+			RegionServant region = world.regions[i];
 			region.elevation = this.elevation[i];
 			region.temperature = this.temperature[i];
 			region.annualRains = this.annualRains[i];
@@ -192,27 +192,6 @@ public class MakeWorld
 	void doOneStep()
 	{
 		world.doOneStep();
-	}
-
-	private RegionDetail loadRegionDetail_DEPRECATE(int regionId)
-	{
-		File regionFile = new File(worldDir, "region"+regionId+".txt");
-		if (regionFile.exists())
-		{
-			try
-			{
-				return RegionDetail.load(regionFile, world, regionId);
-			}
-			catch (IOException e)
-			{
-				// file exists but we got an error reading it
-				throw new Error("unexpected", e);
-			}
-		}
-		else
-		{
-			return RegionDetail.create(world, regionId);
-		}
 	}
 
 	void status(String message)
@@ -438,7 +417,7 @@ public class MakeWorld
 		int numCells = g.getCellCount();
 		for (int i = 0; i < numCells; i++)
 		{
-			RegionDetail region = world.regions[i];
+			RegionServant region = world.regions[i];
 			if (region.getBiome().isWater())
 				continue;
 

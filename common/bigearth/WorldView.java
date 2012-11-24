@@ -318,7 +318,7 @@ public class WorldView extends JPanel
 				}
 				else
 				{
-					RegionDetail r = world.world.regions[i];
+					RegionServant r = world.world.regions[i];
 					drawRegionArea(gr, i+1, r, x_coords, y_coords);
 				}
 			}
@@ -338,7 +338,7 @@ public class WorldView extends JPanel
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
 
-				RegionDetail r = world.world.regions[i];
+				RegionServant r = world.world.regions[i];
 				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
 			}
 
@@ -355,7 +355,7 @@ public class WorldView extends JPanel
 				int [] y_coords = new int[bb.length];
 				toScreen_a(bb, x_coords, y_coords);
 
-				RegionDetail r = world.world.regions[i];
+				RegionServant r = world.world.regions[i];
 				drawRegionCorners(gr, i+1, r, x_coords, y_coords);
 			}
 		}
@@ -365,7 +365,7 @@ public class WorldView extends JPanel
 		// draw mobs
 		for (int i = 0; i < numRegions; i++)
 		{
-			RegionDetail region = world.world.regions[i];
+			RegionServant region = world.world.regions[i];
 			if (region.presentMobs.isEmpty())
 				continue;
 
@@ -580,7 +580,7 @@ System.err.println(e);
 		}
 	}
 
-	void drawRegionArea(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)
+	void drawRegionArea(Graphics gr, int regionId, RegionServant r, int [] x_coords, int [] y_coords)
 	{
 		Graphics2D gr2 = (Graphics2D) gr;
 		Paint oldPaint = gr2.getPaint();
@@ -601,7 +601,7 @@ System.err.println(e);
 		gr2.setPaint(oldPaint);
 	}
 
-	void drawRegionBorder(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)
+	void drawRegionBorder(Graphics gr, int regionId, RegionServant r, int [] x_coords, int [] y_coords)
 	{
 		int n = x_coords.length;
 
@@ -653,7 +653,7 @@ System.err.println(e);
 		}
 	}
 
-	void drawRegionCorners(Graphics gr, int regionId, RegionDetail r, int [] x_coords, int [] y_coords)
+	void drawRegionCorners(Graphics gr, int regionId, RegionServant r, int [] x_coords, int [] y_coords)
 	{
 		int n = x_coords.length;
 		for (int i = 0; i < n; i++)
@@ -665,7 +665,7 @@ System.err.println(e);
 		}
 	}
 
-	void drawRegionCorner(Graphics gr, int regionId, RegionDetail r, int cornerIdx, int x, int y)
+	void drawRegionCorner(Graphics gr, int regionId, RegionServant r, int cornerIdx, int x, int y)
 	{
 		Graphics2D gr2 = (Graphics2D) gr;
 

@@ -825,7 +825,7 @@ System.out.println(lake);
 		//
 	void placeLakes()
 	{
-		for (RegionDetail r : world.world.regions)
+		for (RegionServant r : world.world.regions)
 		{
 			r.biome = BiomeType.GRASSLAND;
 			r.clearSides();
@@ -842,7 +842,7 @@ System.out.println(lake);
 				int [] cc = vId.getAdjacentCells();
 
 				int aRegion = cc[0];
-				RegionDetail region = world.world.regions[aRegion-1];
+				RegionServant region = world.world.regions[aRegion-1];
 				region.setLake(vId,
 					lake.type == LakeType.TERMINAL ? RegionCornerDetail.PointFeature.LAKE :
 					RegionCornerDetail.PointFeature.POND
@@ -895,7 +895,7 @@ System.out.println(lake);
 				bRegion = cc[1];
 			}
 
-			RegionDetail region = world.world.regions[bRegion-1];
+			RegionServant region = world.world.regions[bRegion-1];
 			region.setRiver(aRegion,
 				r.volume > 2000 ? RegionSideDetail.SideFeature.RIVER :
 				r.volume > 200 ? RegionSideDetail.SideFeature.CREEK :

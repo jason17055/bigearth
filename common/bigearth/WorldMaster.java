@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.*;
 public class WorldMaster
 {
 	WorldConfig config;
-	RegionDetail [] regions;
+	RegionServant [] regions;
 	Map<String, LeaderInfo> leaders;
 	Map<String, MobInfo> mobs;
 
@@ -17,7 +17,7 @@ public class WorldMaster
 	public WorldMaster(WorldConfig config)
 	{
 		this.config = config;
-		this.regions = new RegionDetail[config.getGeometry().getCellCount()];
+		this.regions = new RegionServant[config.getGeometry().getCellCount()];
 		this.leaders = new HashMap<String, LeaderInfo>();
 		this.mobs = new HashMap<String, MobInfo>();
 	}
@@ -55,7 +55,7 @@ public class WorldMaster
 		{
 			int regionId = i + 1;
 			File regionFilename = new File(config.path, "region"+regionId+".txt");
-			regions[i] = RegionDetail.load(regionFilename, this, regionId);
+			regions[i] = RegionServant.load(regionFilename, this, regionId);
 
 			for (String s : regions[i].presentMobs.keySet())
 			{
@@ -130,7 +130,7 @@ public class WorldMaster
 		}
 	}
 
-	public RegionDetail getRegionForLocation(Location loc)
+	public RegionServant getRegionForLocation(Location loc)
 	{
 		int regionId = getRegionIdForLocation(loc);
 		return regions[regionId-1];
@@ -166,11 +166,11 @@ public class WorldMaster
 	void doOneStep()
 	{
 		year++;
-		for (RegionDetail r : regions)
+		for (RegionServant r : regions)
 		{
 			r.endOfYear_stage1();
 		}
-		for (RegionDetail r : regions)
+		for (RegionServant r : regions)
 		{
 			r.endOfYear_cleanup();
 		}
@@ -183,7 +183,7 @@ public class WorldMaster
 
 	boolean regionHasMobOwnedBy(int regionId, String user)
 	{
-		RegionDetail region = regions[regionId-1];
+		RegionServant region = regions[regionId-1];
 		for (MobInfo mob : region.presentMobs.values())
 		{
 			if (mob.owner != null && mob.owner.equals(user))
@@ -215,7 +215,7 @@ public class WorldMaster
 	{
 		assert leaderCanSeeRegion(user, regionId);
 
-		RegionDetail region = regions[regionId-1];
+		RegionServant region = regions[regionId-1];
 
 		RegionProfile p = new RegionProfile();
 		p.biome = region.biome;

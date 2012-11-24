@@ -5,7 +5,7 @@ import java.util.*;
 import javax.vecmath.*;
 import com.fasterxml.jackson.core.*;
 
-class RegionDetail
+class RegionServant
 	implements ShadowRegion
 {
 	WorldMaster world;
@@ -38,7 +38,7 @@ class RegionDetail
 	static final double WILDLIFE_LIFESPAN = 5.0;
 	static final double WILDLIFE_EMIGRATION_RATE = 0.25;
 
-	RegionDetail(WorldMaster world, int regionId)
+	RegionServant(WorldMaster world, int regionId)
 	{
 		this.world = world;
 		this.regionId = regionId;
@@ -300,17 +300,17 @@ if (false)
 		out.close();
 	}
 
-	static RegionDetail create(WorldMaster world, int regionId)
+	static RegionServant create(WorldMaster world, int regionId)
 	{
-		RegionDetail m = new RegionDetail(world, regionId);
+		RegionServant m = new RegionServant(world, regionId);
 		m.init();
 		return m;
 	}
 
-	static RegionDetail load(File regionFile, WorldMaster world, int regionId)
+	static RegionServant load(File regionFile, WorldMaster world, int regionId)
 		throws IOException
 	{
-		RegionDetail m = new RegionDetail(world, regionId);
+		RegionServant m = new RegionServant(world, regionId);
 		m.load(regionFile);
 		return m;
 	}
