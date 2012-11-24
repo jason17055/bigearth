@@ -37,11 +37,8 @@ public class WorldConfig
 		properties.load(in);
 		in.close();
 
-		String [] geometryStr = properties.getProperty("geometry", "sphere:20").split(":", 2);
-		assert geometryStr[0].equals("sphere");
-
-		this.geometry = new SphereGeometry(
-				Integer.parseInt(geometryStr[1])
+		this.geometry = GeometryFactory.getInstance(
+				properties.getProperty("geometry", "sphere:20")
 				);
 	}
 

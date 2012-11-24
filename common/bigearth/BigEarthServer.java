@@ -227,6 +227,7 @@ class LoginServlet extends HttpServlet
 				JsonEncoding.UTF8);
 		out.writeStartObject();
 		out.writeNumberField("year", server.world.year);
+		out.writeStringField("geometry", server.world.getGeometry().toString());
 		out.writeEndObject();
 		out.close();
 	}

@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import javax.swing.*;
+import com.fasterxml.jackson.core.*;
 
 public class Client
 {
@@ -11,6 +12,7 @@ public class Client
 	String user;
 	String pass;
 	Map<String, String> cookies = new HashMap<String,String>();
+	WorldStub world;
 
 	static final int DEFAULT_PORT = 2626;
 
@@ -81,12 +83,18 @@ public class Client
 			throw new LoginFailedException();
 		}
 
-		InputStream in  = conn.getInputStream();
-		byte [] buf = new byte[1024];
-		int nread;
-		while ( (nread = in.read(buf)) != -1)
+		world = new WorldStub();
+		JsonParser in = new JsonFactory().createJsonParser(
+					conn.getInputStream()
+				);
+		in.nextToken();
+		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
-			System.out.write(buf, 0, nread);
+			String s = in.getCurrentName();
+			if (s.equals("year"))
+				world.year = in.nextIntValue(0);
+			else if (s.equals("geometry"))
+				world.geometry = GeometryFactory.getInstance(in.nextTextValue());
 		}
 		in.close();
 	}
@@ -133,4 +141,10 @@ public class Client
 
 class LoginFailedException extends Exception
 {
+}
+
+class WorldStub
+{
+	int year;
+	Geometry geometry;
 }

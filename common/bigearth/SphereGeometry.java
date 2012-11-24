@@ -96,6 +96,12 @@ public class SphereGeometry implements Geometry
 		this.size = size;
 	}
 
+	@Override
+	public String toString()
+	{
+		return "sphere:"+size;
+	}
+
 	//implements Geometry
 	public int getCellCount()
 	{
