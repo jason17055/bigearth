@@ -210,7 +210,6 @@ class GetMapServlet extends HttpServlet
 			return;
 		}
 
-		
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
@@ -220,6 +219,16 @@ class GetMapServlet extends HttpServlet
 				JsonEncoding.UTF8);
 		out.writeStartObject();
 		out.writeStringField("status", "success");
+
+		for (String mobName : server.world.mobs.keySet())
+		{
+			MobInfo mob = server.world.mobs.get(mobName);
+			if (!mob.owner.equals(s.user))
+				continue;
+
+			out.writeStringField(mobName, "foo");
+		}
+
 		out.writeEndObject();
 		out.close();
 	}

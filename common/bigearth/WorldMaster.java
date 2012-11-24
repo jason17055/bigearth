@@ -9,6 +9,7 @@ public class WorldMaster
 	WorldConfig config;
 	RegionDetail [] regions;
 	Map<String, LeaderInfo> leaders;
+	Map<String, MobInfo> mobs;
 
 	int year;
 	int lastSeqId;
@@ -18,6 +19,7 @@ public class WorldMaster
 		this.config = config;
 		this.regions = new RegionDetail[config.getGeometry().getCellCount()];
 		this.leaders = new HashMap<String, LeaderInfo>();
+		this.mobs = new HashMap<String, MobInfo>();
 	}
 
 	public void load()
@@ -54,6 +56,11 @@ public class WorldMaster
 			int regionId = i + 1;
 			File regionFilename = new File(config.path, "region"+regionId+".txt");
 			regions[i] = RegionDetail.load(regionFilename, this, regionId);
+
+			for (String s : regions[i].presentMobs.keySet())
+			{
+				mobs.put(s, regions[i].presentMobs.get(s));
+			}
 		}
 	}
 
