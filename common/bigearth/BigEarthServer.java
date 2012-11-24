@@ -1,6 +1,8 @@
 package bigearth;
 
 import java.io.*;
+import java.math.BigInteger;
+import java.security.*;
 import java.util.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -16,6 +18,10 @@ public class BigEarthServer
 	WorldMaster world;
 	Properties hostConfig;
 
+	SecureRandom random;
+
+	static final String COOKIE_NAME = "sid";
+
 	/**
 	 * Keep a reference to the node lock file so that the GC won't
 	 * discard it, causing it to be unlocked.
@@ -24,6 +30,7 @@ public class BigEarthServer
 
 	BigEarthServer()
 	{
+		random = new SecureRandom();
 	}
 
 	public static void main(String [] args)
@@ -133,22 +140,57 @@ public class BigEarthServer
 		Server server = new Server(portNumber);
 
 		Context context = new Context(server, "/", Context.SESSIONS);
-		context.addServlet(new ServletHolder(new TestServlet()), "/hello");
+		context.addServlet(new ServletHolder(new LoginServlet(this)), "/login");
 
 		server.start();
 		server.join();
 	}
+
+	Map<String, Session> sessions = new HashMap<String,Session>();
+	String newSession(String user)
+	{
+		String sid = new BigInteger(128, random).toString(16);
+		Session sess = new Session(user);
+		sessions.put(sid, sess);
+		return sid;
+	}
 }
 
-class TestServlet extends HttpServlet
+class Session
 {
+	String user;
+
+	public Session(String user)
+	{
+		this.user = user;
+	}
+}
+
+class LoginServlet extends HttpServlet
+{
+	BigEarthServer server;
+	LoginServlet(BigEarthServer server)
+	{
+		this.server = server;
+	}
+
 	@Override
-	public void doGet(HttpServletRequest request, HttpServletResponse response)
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		response.setContentType("text/html;charset=utf-8");
+		String user = request.getParameter("user");
+		//TODO - check that the user account is valid
+
+		String sid = server.newSession(user);
+		Cookie sessionCookie = new Cookie(BigEarthServer.COOKIE_NAME, sid);
+		response.addCookie(sessionCookie);
+
 		response.setStatus(HttpServletResponse.SC_OK);
-		response.getWriter().println("<h1>Hello World</h1>");
+		PrintWriter w = response.getWriter();
+
+		w.println("<h1>Hello</h1>");
+		w.println("You are <b>"+user+"</b>");
+		w.println("Your session id is <b>"+sid+"</b>");
+		w.close();
 	}
-	
 }

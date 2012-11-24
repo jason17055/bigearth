@@ -2,6 +2,7 @@ package bigearth;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
 import javax.swing.*;
 
 public class Client
@@ -48,13 +49,40 @@ public class Client
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
 		conn.setDoOutput(true);
+		conn.setDoInput(true);
 		conn.setRequestMethod("POST");
+		String x = "user=" + URLEncoder.encode(user, "UTF-8")
+			+ "&pass=" + URLEncoder.encode(pass, "UTF-8");
+		byte [] xx = x.getBytes("UTF-8");
+
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
 		OutputStream out = conn.getOutputStream();
-		String x = URLEncoder.encode(user, "UTF-8")
-			+ "&" + URLEncoder.encode(pass, "UTF-8");
-		out.write(x.getBytes("UTF-8"));
+		out.write(xx);
 		out.close();
 
+		// read cookie from response
+		Map<String,String> cookies = new HashMap<String,String>();
+		String headerName = null;
+		for (int i = 1; (headerName = conn.getHeaderFieldKey(i)) != null; i++)
+		{
+			if (headerName.equals("Set-Cookie"))
+			{
+				String cookie = conn.getHeaderField(i);
+				String [] parts = cookie.split(";");
+				String [] parts2 = parts[0].split("=");
+				cookies.put(parts2[0], parts2[1]);
+			}
+		}
+
+		InputStream in  = conn.getInputStream();
+		byte [] buf = new byte[1024];
+		int nread;
+		while ( (nread = in.read(buf)) != -1)
+		{
+			System.out.write(buf, 0, nread);
+		}
+		in.close();
 	}
 
 	public static void main(String [] args)
