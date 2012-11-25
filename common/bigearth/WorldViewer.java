@@ -58,6 +58,9 @@ public class WorldViewer extends JFrame
 	JLabel depthLbl;
 
 	JPanel mobPane;
+	JLabel mobTypeLbl;
+	JLabel mobOwnerLbl;
+
 	String selectedMob;
 
 	private void addToolButton(String command)
@@ -136,6 +139,27 @@ public class WorldViewer extends JFrame
 
 	private void initMobPane()
 	{
+		mobPane.setLayout(new GridBagLayout());
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridx = 0;
+		c1.anchor = GridBagConstraints.FIRST_LINE_START;
+		c1.weightx = 1.0;
+
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.gridx = 1;
+		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		c1.gridy = c2.gridy = 0;
+		mobPane.add(new JLabel("Type"), c1);
+
+		mobTypeLbl = new JLabel();
+		mobPane.add(mobTypeLbl, c2);
+
+		c1.gridy = c2.gridy = 1;
+		mobPane.add(new JLabel("Owner"), c1);
+
+		mobOwnerLbl = new JLabel();
+		mobPane.add(mobOwnerLbl, c2);
 	}
 
 	private void initRegionPane()
@@ -363,6 +387,13 @@ public class WorldViewer extends JFrame
 			}});
 		mobMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Set Type...");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onSetMobTypeClicked();
+			}});
+		mobMenu.add(menuItem);
+
 		setJMenuBar(menuBar);
 	}
 
@@ -503,6 +534,52 @@ public class WorldViewer extends JFrame
 		RegionServant region = world.world.regions[regionId-1];
 
 		return region.presentMobs.get(selectedMob);
+	}
+
+	void onSetMobTypeClicked()
+	{
+		try {
+
+		MobInfo mob = getSelectedMob();
+		if (mob == null)
+			throw new Exception("Please select a mob first.");
+
+		String [] avatars = new String[] {
+			"explorer", "lion", "settler", "trieme", "warrior"
+			};
+		int toSelect = 0;
+		for (int i = 0; i < avatars.length; i++)
+		{
+			if (avatars[i].equals(mob.avatarName))
+				toSelect=i;
+		}
+
+		JComboBox avatarSelect = new JComboBox(avatars);
+		avatarSelect.setSelectedIndex(toSelect);
+
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Type"),
+			avatarSelect
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Set Type",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		int sel = avatarSelect.getSelectedIndex();
+		mob.avatarName = avatars[sel];
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	void onSetOwnerClicked()
@@ -824,11 +901,30 @@ assert(x >= 1);
 		{
 			Set<String> mobNames = region.presentMobs.keySet();
 			String [] mobNamesA = mobNames.toArray(new String[0]);
-			selectedMob = mobNamesA[0];
+			selectMob(mobNamesA[0]);
+		}
+		else
+		{
+			selectMob(null);
+		}
+	}
 
+	private void selectMob(String mobName)
+	{
+		selectedMob = mobName;
+		if (selectedMob != null)
+		{
 			mobPane.setBorder(
-				BorderFactory.createTitledBorder("Mob "+mobNamesA[0])
+				BorderFactory.createTitledBorder("Mob "+selectedMob)
 				);
+
+			MobInfo mob = world.world.mobs.get(selectedMob);
+
+			mobTypeLbl.setText(mob.avatarName!=null ?
+				mob.avatarName : "");
+			mobOwnerLbl.setText(mob.owner != null ?
+				mob.owner : "");
+
 			mobPane.setVisible(true);
 		}
 		else
