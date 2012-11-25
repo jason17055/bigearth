@@ -10,6 +10,7 @@ public class WorldMaster
 	RegionServant [] regions;
 	Map<String, LeaderInfo> leaders;
 	Map<String, MobInfo> mobs;
+	Scheduler scheduler;
 
 	int year;
 	int lastSeqId;
@@ -20,6 +21,7 @@ public class WorldMaster
 		this.regions = new RegionServant[config.getGeometry().getCellCount()];
 		this.leaders = new HashMap<String, LeaderInfo>();
 		this.mobs = new HashMap<String, MobInfo>();
+		this.scheduler = new Scheduler(config);
 	}
 
 	public void load()
