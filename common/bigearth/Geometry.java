@@ -41,6 +41,8 @@ public interface Geometry
 	VertexId [] getNearbyVertices(VertexId vertex);
 
 	Point3d getCenterPoint(int cellId);
+	Point3d getPoint(Location loc);
+
 	int findCell(Point3d pt);
 
 	Point3d [] getCellBoundary(int cellId);

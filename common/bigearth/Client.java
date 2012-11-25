@@ -208,9 +208,11 @@ public class Client
 				passField.getPassword());
 		me.login();
 		MapModel map = me.getMap();
+		MobListModel myMobs = me.getMyMobs();
 
 		MainWindow w = new MainWindow();
 		w.setMap(map);
+		w.setMobList(myMobs);
 
 		w.setVisible(true);
 

@@ -7,12 +7,14 @@ import java.awt.event.*;
 public class MainWindow extends JFrame
 {
 	MapModel map;
+	MobListModel mobList;
 	WorldView view;
 
 	public MainWindow()
 	{
 		super("Big Earth");
 		view = new WorldView();
+		view.zoomFactor = 8;
 		add(view, BorderLayout.CENTER);
 
 		JPanel sideBar = new JPanel();
@@ -79,5 +81,18 @@ public class MainWindow extends JFrame
 	{
 		this.map = map;
 		this.view.setMap(map);
+	}
+
+	public void setMobList(MobListModel mobList)
+	{
+		this.mobList = mobList;
+
+		// find a unit to focus on
+		MobInfo [] mobs = mobList.mobs.values().toArray(new MobInfo[0]);
+		if (mobs.length != 0)
+		{
+			MobInfo mob = mobs[0];
+			view.panTo(mob.location);
+		}
 	}
 }

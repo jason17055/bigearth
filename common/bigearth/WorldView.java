@@ -939,6 +939,23 @@ System.err.println(e);
 		int yDelta = endPoint.y - dragStart.y;
 		Point3d pt = fromScreen(new Point(WIDTH/2 - xDelta, HEIGHT/2 - yDelta));
 
+		panTo(pt);
+		dragStart = null;
+	}
+
+	private void onDragged(Point curPoint)
+	{
+		//System.out.println(curPoint.x - dragStart.x);
+	}
+
+	public void panTo(Location loc)
+	{
+		Point3d pt = map.getGeometry().getPoint(loc);
+		panTo(pt);
+	}
+
+	public void panTo(Point3d pt)
+	{
 		double lat = Math.asin(pt.z);
 		double lgt = Math.atan2(pt.y, pt.x);
 
@@ -961,11 +978,5 @@ System.err.println(e);
 		curLongitude = lgt;
 
 		regenerate();
-		dragStart = null;
-	}
-
-	private void onDragged(Point curPoint)
-	{
-		//System.out.println(curPoint.x - dragStart.x);
 	}
 }

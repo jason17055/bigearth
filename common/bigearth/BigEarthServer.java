@@ -227,7 +227,8 @@ class GetMyMobsServlet extends HttpServlet
 			{
 				out.writeFieldName(mobName);
 				out.writeStartObject();
-				out.writeStringField("avatar", mob.avatarName);
+				out.writeStringField("avatarName", mob.avatarName);
+				out.writeStringField("location", mob.location.toString());
 				out.writeEndObject();
 			}
 		}

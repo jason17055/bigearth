@@ -634,4 +634,37 @@ public class SphereGeometry implements Geometry
 			lgt > 0 ? "E" : lgt < 0 ? "W" : ""
 			);
 	}
+
+	//implements Geometry
+	public Point3d getPoint(Location loc)
+	{
+		if (loc instanceof SimpleLocation)
+		{
+			SimpleLocation sloc = (SimpleLocation) loc;
+			return getCenterPoint(sloc.regionId);
+		}
+		else if (loc instanceof MyEdgeId)
+		{
+			MyEdgeId eloc = (MyEdgeId) loc;
+			Vector3d v = new Vector3d();
+			v.set(getCenterPoint(eloc.cell1));
+			v.add(getCenterPoint(eloc.cell2));
+			v.normalize();
+			return new Point3d(v);
+		}
+		else if (loc instanceof MyVertexId)
+		{
+			MyVertexId vloc = (MyVertexId) loc;
+			Vector3d v = new Vector3d();
+			v.set(getCenterPoint(vloc.cell1));
+			v.add(getCenterPoint(vloc.cell2));
+			v.add(getCenterPoint(vloc.cell3));
+			v.normalize();
+			return new Point3d(v);
+		}
+		else
+		{
+			throw new IllegalArgumentException("invalid location");
+		}
+	}
 }
