@@ -376,18 +376,6 @@ public class WorldView extends JPanel
 				
 		} //end if zoom factor >= 8
 
-		if (selectedRegion != 0)
-		{
-			Point3d [] pp = g.getCellBoundary(selectedRegion);
-
-			int [] x_coords = new int[pp.length];
-			int [] y_coords = new int[pp.length];
-			toScreen_a(pp, x_coords, y_coords);
-
-			gr.setColor(Color.YELLOW);
-			gr.drawPolygon(x_coords, y_coords, pp.length);
-		}
-
 		repaint();
 	}
 
@@ -584,12 +572,12 @@ public class WorldView extends JPanel
 	{
 		try
 		{
-System.err.println("trying to load "+textureName+" texture");
 		biomeTextures.put(biome, ImageIO.read(new File("../html/terrain_textures/"+textureName+".png")));
 		}
 		catch (IOException e)
 		{
 			//FIXME- do something?
+System.err.println("Warning: could not load "+textureName+" texture");
 System.err.println(e);
 		}
 	}
@@ -733,6 +721,27 @@ System.err.println(e);
 		{
 			drawMobs(g);
 		}
+
+		// draw selection rectangle
+		if (selectedRegion != 0)
+		{
+			drawSelectionRect(g);
+		}
+	}
+
+	void drawSelectionRect(Graphics gr)
+	{
+		assert selectedRegion != 0;
+
+		Geometry g = map.getGeometry();
+		Point3d [] pp = g.getCellBoundary(selectedRegion);
+
+		int [] x_coords = new int[pp.length];
+		int [] y_coords = new int[pp.length];
+		toScreen_a(pp, x_coords, y_coords);
+
+		gr.setColor(Color.YELLOW);
+		gr.drawPolygon(x_coords, y_coords, pp.length);
 	}
 
 	void drawMobs(Graphics gr)
@@ -864,6 +873,7 @@ System.err.println(e);
 		selectedRegion = regionId;
 		selectedVertex = null;
 		fireRegionSelected(selectedRegion);
+		repaint();
 	}
 
 	private void selectVertex(Geometry.VertexId vtx)
@@ -871,6 +881,7 @@ System.err.println(e);
 		selectedRegion = 0;
 		selectedVertex = vtx;
 		fireVertexSelected(selectedVertex);
+		repaint();
 	}
 
 	private void fireRegionSelected(int regionId)
