@@ -228,7 +228,13 @@ public class WorldMaster
 				p.corners[i] = region.corners[i].feature;
 		}
 
-		p.hasAnyMobs = !region.presentMobs.isEmpty();
+		p.mobs = new ArrayList<MobInfo>();
+		for (MobInfo realMob : region.presentMobs.values())
+		{
+			MobInfo mob = new MobInfo();
+			mob.avatarName = realMob.avatarName;
+			p.mobs.add(mob);
+		}
 
 		return p;
 	}

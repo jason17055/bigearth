@@ -99,7 +99,7 @@ public class Client
 		{
 			String s = in.getCurrentName();
 			Location loc = LocationHelper.parse(s, getGeometry());
-			RegionProfile p = RegionProfile.parse(loc, in);
+			RegionProfile p = RegionProfile.parse(loc, in, world);
 			map.put(loc, p);
 		}
 		in.close();

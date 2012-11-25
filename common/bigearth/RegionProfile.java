@@ -1,6 +1,7 @@
 package bigearth;
 
 import java.io.*;
+import java.util.*;
 import com.fasterxml.jackson.core.*;
 
 class RegionProfile
@@ -8,6 +9,7 @@ class RegionProfile
 	BiomeType biome;
 	RegionSideDetail.SideFeature [] sides;
 	RegionCornerDetail.PointFeature [] corners;
+	Collection<MobInfo> mobs;
 
 	public RegionProfile()
 	{
@@ -42,18 +44,36 @@ class RegionProfile
 				out.writeString(corners[i].name());
 			}
 		}
+
+		if (mobs != null)
+		{
+			out.writeFieldName("mobs");
+			writeMobs(out);
+		}
+
 		out.writeEndObject();
 	}
 
-	static RegionProfile parse(Location loc, JsonParser in)
+	void writeMobs(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartArray();
+		for (MobInfo mob : mobs)
+		{
+			mob.write(out);
+		}
+		out.writeEndArray();
+	}
+
+	static RegionProfile parse(Location loc, JsonParser in, WorldConfigIfc world)
 		throws IOException
 	{
 		RegionProfile me = new RegionProfile();
-		me.parse(in);
+		me.parse(in, world);
 		return me;
 	}
 
-	public void parse(JsonParser in)
+	public void parse(JsonParser in, WorldConfigIfc world)
 		throws IOException
 	{
 		in.nextToken();
@@ -86,6 +106,8 @@ class RegionProfile
 				corners[4] = RegionCornerDetail.PointFeature.valueOf(in.nextTextValue());
 			else if (s.equals("corner5"))
 				corners[5] = RegionCornerDetail.PointFeature.valueOf(in.nextTextValue());
+			else if (s.equals("mobs"))
+				parseMobs(in, world);
 			else
 			{
 				in.nextToken();
@@ -94,10 +116,24 @@ class RegionProfile
 		}
 	}
 
-	boolean hasAnyMobs;
+	void parseMobs(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		mobs = new ArrayList<MobInfo>();
+
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_ARRAY;
+
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			MobInfo mob = MobInfo.parse1(in, world);
+			mobs.add(mob);
+		}
+	}
+
 	public boolean hasAnyMobs()
 	{
-		return this.hasAnyMobs;
+		return this.mobs != null && !this.mobs.isEmpty();
 	}
 
 	public RegionSideDetail.SideFeature getSideFeature(int sideNumber)
