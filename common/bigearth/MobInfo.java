@@ -11,41 +11,19 @@ public class MobInfo
 	String owner;
 	Location location;
 
-	MobInfo()
-	{
-	}
-
 	MobInfo(String name)
 	{
 		this.name = name;
 		this.displayName = name;
 	}
 
-	public static MobInfo parse(JsonParser in, WorldConfigIfc world)
-		throws IOException
-	{
-		return parse(in, null, world);
-	}
-
-	public static MobInfo parse1(JsonParser in, WorldConfigIfc world)
-		throws IOException
-	{
-		return parse1(in, null, world);
-	}
-
 	public static MobInfo parse(JsonParser in, String mobName, WorldConfigIfc world)
 		throws IOException
 	{
 		in.nextToken();
-		return parse1(in, mobName, world);
-	}
-
-	public static MobInfo parse1(JsonParser in, String mobName, WorldConfigIfc world)
-		throws IOException
-	{
-		MobInfo m = new MobInfo(mobName);
-
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+		MobInfo m = new MobInfo(mobName);
 
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
