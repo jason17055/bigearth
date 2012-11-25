@@ -144,6 +144,7 @@ public class BigEarthServer
 		context.addServlet(new ServletHolder(new LoginServlet(this)), "/login");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
 		context.addServlet(new ServletHolder(new GetMyMobsServlet(this)), "/my/mobs");
+		context.addServlet(new ServletHolder(new MoveMobServlet(this)), "/move");
 
 		server.start();
 		server.join();
@@ -291,6 +292,68 @@ class GetMapServlet extends HttpServlet
 		out.writeEndObject();
 		out.close();
 	}
+}
+
+class MoveMobServlet extends HttpServlet
+{
+	BigEarthServer server;
+	MoveMobServlet(BigEarthServer server)
+	{
+		this.server = server;
+	}
+
+	@Override
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
+		throws IOException, ServletException
+	{
+		Session s = server.getSessionFromRequest(request);
+		if (s == null)
+		{
+			doFailure(response, "Not logged in");
+			return;
+		}
+
+		String mobName = request.getParameter("mob");
+		String destStr = request.getParameter("dest");
+
+		// check that the user is authorized to control the specified mob
+
+		MobInfo mob = server.world.mobs.get(mobName);
+		if (mob == null)
+		{
+			doFailure(response, "Invalid mob");
+			return;
+		}
+
+		if (mob.owner == null || !mob.owner.equals(s.user))
+		{
+			doFailure(response, "Not authorized");
+			return;
+		}
+
+		// make the actual change
+	//TODO
+
+		// report success
+		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+	}
+
+	private void doFailure(HttpServletResponse response, String errorMessage)
+		throws IOException
+	{
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeStringField("error", errorMessage);
+		out.writeEndObject();
+		out.close();
+	}
+
 }
 
 class LoginServlet extends HttpServlet

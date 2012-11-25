@@ -177,6 +177,27 @@ public class Client
 		in.close();
 	}
 
+	public void moveMobTo(String mobName, Location dest)
+		throws IOException
+	{
+		HttpURLConnection conn = makeRequest("POST", "/move");
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+
+		String x = "mob=" + URLEncoder.encode(mobName, "UTF-8")
+			+ "&dest=" + URLEncoder.encode(dest.toString(), "UTF-8");
+		byte [] xx = x.getBytes("UTF-8");
+
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
+		OutputStream out = conn.getOutputStream();
+		out.write(xx);
+		out.close();
+
+		int status = conn.getResponseCode();
+		assert status == 204;
+	}
+
 	public static void main(String [] args)
 		throws Exception
 	{
@@ -210,7 +231,7 @@ public class Client
 		MapModel map = me.getMap();
 		MobListModel myMobs = me.getMyMobs();
 
-		MainWindow w = new MainWindow();
+		MainWindow w = new MainWindow(me);
 		w.setMap(map);
 		w.setMobList(myMobs);
 

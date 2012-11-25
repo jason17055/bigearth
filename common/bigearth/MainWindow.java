@@ -10,10 +10,14 @@ public class MainWindow extends JFrame
 	MobListModel mobList;
 	WorldView view;
 	String selectedMob;
+	Client client;
 
-	public MainWindow()
+	public MainWindow(Client client)
 	{
 		super("Big Earth");
+
+		this.client = client;
+
 		view = new WorldView() {
 			public void onRightMouseClick(int regionId)
 			{
@@ -132,5 +136,13 @@ public class MainWindow extends JFrame
 		Location loc = new SimpleLocation(regionId);
 
 		System.out.println("want to move "+selectedMob+" to "+loc);
+		try
+	{
+		client.moveMobTo(selectedMob, loc);
+		}
+		catch (Exception e)
+		{
+			System.out.println(e);
+		}
 	}
 }
