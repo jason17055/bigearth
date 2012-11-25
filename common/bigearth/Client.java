@@ -107,6 +107,24 @@ public class Client
 		return map;
 	}
 
+	MobListModel getMyMobs()
+		throws IOException
+	{
+		HttpURLConnection conn = makeRequest("GET", "/my/mobs");
+		conn.setDoOutput(false);
+		conn.setDoInput(true);
+		conn.connect();
+
+		MobListModel model = new MobListModel();
+		JsonParser in = new JsonFactory().createJsonParser(
+					conn.getInputStream()
+				);
+		model.parse(in, world);
+		in.close();
+
+		return model;
+	}
+
 	void login()
 		throws IOException, LoginFailedException
 	{
@@ -209,8 +227,14 @@ class LoginFailedException extends Exception
 {
 }
 
-class WorldStub
+class WorldStub implements WorldConfigIfc
 {
 	int year;
 	Geometry geometry;
+
+	// implements WorldConfigIfc
+	public Geometry getGeometry()
+	{
+		return geometry;
+	}
 }

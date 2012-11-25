@@ -17,7 +17,7 @@ public class MobInfo
 		this.displayName = name;
 	}
 
-	public static MobInfo parse(JsonParser in, String mobName, WorldConfig world)
+	public static MobInfo parse(JsonParser in, String mobName, WorldConfigIfc world)
 		throws IOException
 	{
 		MobInfo m = new MobInfo(mobName);

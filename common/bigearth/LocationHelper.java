@@ -9,7 +9,7 @@ public class LocationHelper
 	static Pattern edgePattern = Pattern.compile("E<(\\d+),(\\d+)>");
 	static Pattern vertexPattern = Pattern.compile("V<(\\d+),(\\d+),(\\d+)>");
 
-	public static Location parse(String locStr, WorldConfig world)
+	public static Location parse(String locStr, WorldConfigIfc world)
 	{
 		return parse(locStr, world.getGeometry());
 	}

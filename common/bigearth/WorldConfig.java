@@ -9,7 +9,7 @@ import java.util.*;
  * If the world configuration changes, all hosts in the cluster
  * need to be restarted.
  */
-public class WorldConfig
+public class WorldConfig implements WorldConfigIfc
 {
 	File path;
 	Properties properties;
@@ -42,6 +42,7 @@ public class WorldConfig
 				);
 	}
 
+	// implements WorldConfigIfc
 	public Geometry getGeometry()
 	{
 		return this.geometry;

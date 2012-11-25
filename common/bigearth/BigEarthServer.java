@@ -143,6 +143,7 @@ public class BigEarthServer
 		Context context = new Context(server, "/", Context.SESSIONS);
 		context.addServlet(new ServletHolder(new LoginServlet(this)), "/login");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
+		context.addServlet(new ServletHolder(new GetMyMobsServlet(this)), "/my/mobs");
 
 		server.start();
 		server.join();
@@ -178,6 +179,61 @@ class Session
 	public Session(String user)
 	{
 		this.user = user;
+	}
+}
+
+class GetMyMobsServlet extends HttpServlet
+{
+	BigEarthServer server;
+	GetMyMobsServlet(BigEarthServer server)
+	{
+		this.server = server;
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response)
+		throws IOException, ServletException
+	{
+		Session s = server.getSessionFromRequest(request);
+		if (s == null)
+		{
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+
+			JsonGenerator out = new JsonFactory().createJsonGenerator(
+					response.getOutputStream(),
+					JsonEncoding.UTF8);
+			out.writeStartObject();
+			out.writeStringField("error", "not a valid session");
+			out.writeEndObject();
+			out.close();
+			return;
+		}
+
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+
+		for (String mobName : server.world.mobs.keySet())
+		{
+			MobInfo mob = server.world.mobs.get(mobName);
+			if (mob.owner != null && mob.owner.equals(s.user))
+			{
+				out.writeFieldName(mobName);
+				out.writeStartObject();
+				out.writeStringField("avatar", mob.avatarName);
+				out.writeEndObject();
+			}
+		}
+
+		out.writeEndObject();
+		out.close();
 	}
 }
 
