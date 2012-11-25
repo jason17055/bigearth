@@ -26,6 +26,7 @@ public class WorldView extends JPanel
 	ArrayList<Listener> listeners;
 	boolean showRivers;
 	boolean allowVertexSelection;
+	boolean showMobImages = true;
 
 	int selectedRegion;
 	Geometry.VertexId selectedVertex;
@@ -258,6 +259,7 @@ public class WorldView extends JPanel
 		}
 	}
 
+	Rectangle [] regionBounds;
 	void regenerate()
 	{
 		if (map == null)
@@ -272,11 +274,10 @@ public class WorldView extends JPanel
 			pts[i] = toScreen(g.getCenterPoint(i+1));
 		}
 
-		Rectangle [] regionBounds;
 		int numRegions = colors.length;
 		{
-			regionBounds = new Rectangle[colors.length];
-			for (int i = 0; i < pts.length; i++)
+			regionBounds = new Rectangle[numRegions];
+			for (int i = 0; i < numRegions; i++)
 			{
 				int min_x = pts[i].x;
 				int min_y = pts[i].y;
@@ -374,28 +375,6 @@ public class WorldView extends JPanel
 		}
 				
 		} //end if zoom factor >= 8
-
-		// draw mobs
-		for (int i = 0; i < numRegions; i++)
-		{
-			int regionId = i+1;
-			RegionProfile r = map.getRegion(regionId);
-			if (r == null)
-				continue;
-
-			if (!r.hasAnyMobs())
-				continue;
-
-			if (!screen.intersects(regionBounds[i]))
-				continue;
-
-			Point p = toScreen(g.getCenterPoint(regionId));
-
-			if (zoomFactor <= 2)
-				drawMobDot(gr, p, regionId);
-			else
-				drawMobPin(gr, p, regionId);
-		}
 
 		if (selectedRegion != 0)
 		{
@@ -720,15 +699,53 @@ System.err.println(e);
 		gr2.setPaint(oldPaint);
 	}
 
-	public void paint(Graphics g)
+	public void paintComponent(Graphics g)
 	{
-		if (image != null)
+		if (image == null || regionBounds == null)
+			return;
+
+		// draw the terrain
+		g.drawImage(image, 0, 0, Color.WHITE, null);
+
+		// draw latitude/longitude lines
+		drawCoordinateLines(g);
+
+		if (showMobImages)
 		{
-			g.drawImage(image, 0, 0, Color.WHITE, null);
+			drawMobs(g);
+		}
+	}
+
+	void drawMobs(Graphics gr)
+	{
+		assert map != null;
+		assert regionBounds != null;
+
+		Geometry g = map.getGeometry();
+		Rectangle screen = gr.getClipBounds();
+
+		// draw mobs
+		for (int i = 0; i < regionBounds.length; i++)
+		{
+			int regionId = i+1;
+			RegionProfile r = map.getRegion(regionId);
+			if (r == null)
+				continue;
+
+			if (!r.hasAnyMobs())
+				continue;
+
+			if (!screen.intersects(regionBounds[i]))
+				continue;
+
+			Point p = toScreen(g.getCenterPoint(regionId));
+
+			if (zoomFactor <= 2)
+				drawMobDot(gr, p, regionId);
+			else
+				drawMobPin(gr, p, regionId);
 		}
 
-		// draw latitude lines
-		drawCoordinateLines(g);
 	}
 
 	void updateTransformMatrix()
