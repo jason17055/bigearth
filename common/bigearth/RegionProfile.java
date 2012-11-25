@@ -136,6 +136,18 @@ class RegionProfile
 		return this.mobs != null && !this.mobs.isEmpty();
 	}
 
+	public MobInfo getTopmostMob()
+	{
+		if (this.mobs == null)
+			return null;
+
+		MobInfo [] mobs = this.mobs.toArray(new MobInfo[0]);
+		if (mobs.length == 0)
+			return null;
+
+		return mobs[0];
+	}
+
 	public RegionSideDetail.SideFeature getSideFeature(int sideNumber)
 	{
 		if (sides[sideNumber] != null)

@@ -561,6 +561,25 @@ public class WorldView extends JPanel
 		biomeColors.put(BiomeType.TUNDRA, 778362);
 	}
 
+	static Map<String, BufferedImage> mobImages = new HashMap<String, BufferedImage>();
+	static BufferedImage loadMobImage(String avatarName)
+	{
+		if (!mobImages.containsKey(avatarName))
+		{
+			try
+			{
+				BufferedImage img = ImageIO.read(new File("../html/unit_images/"+avatarName+".png"));
+				mobImages.put(avatarName, img);
+			}
+			catch (IOException e)
+			{
+				System.err.println(e);
+				return null;
+			}
+		}
+		return mobImages.get(avatarName);
+	}
+
 	static void loadTexture(BiomeType biome, String textureName)
 	{
 		try
@@ -740,10 +759,16 @@ System.err.println(e);
 
 			Point p = toScreen(g.getCenterPoint(regionId));
 
-			if (zoomFactor <= 2)
-				drawMobDot(gr, p, regionId);
-			else
-				drawMobPin(gr, p, regionId);
+		//	if (zoomFactor <= 2)
+		//		drawMobDot(gr, p, regionId);
+		//	else
+		//		drawMobPin(gr, p, regionId);
+
+			MobInfo mob = r.getTopmostMob();
+			BufferedImage img = loadMobImage(mob.avatarName);
+			int width = img.getWidth(null);
+			int height = img.getHeight(null);
+			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
 		}
 
 	}

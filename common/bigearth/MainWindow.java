@@ -15,6 +15,9 @@ public class MainWindow extends JFrame
 		view = new WorldView();
 		add(view, BorderLayout.CENTER);
 
+		JPanel sideBar = new JPanel();
+		add(sideBar, BorderLayout.WEST);
+
 		initMenu();
 
 		pack();
