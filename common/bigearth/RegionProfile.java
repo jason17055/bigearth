@@ -102,11 +102,17 @@ class RegionProfile
 
 	public RegionSideDetail.SideFeature getSideFeature(int sideNumber)
 	{
-		return sides[sideNumber];
+		if (sides[sideNumber] != null)
+			return sides[sideNumber];
+		else
+			return RegionSideDetail.SideFeature.NONE;
 	}
 
 	public RegionCornerDetail.PointFeature getCornerFeature(int cornerNumber)
 	{
-		return corners[cornerNumber];
+		if (corners[cornerNumber] != null)
+			return corners[cornerNumber];
+		else
+			return RegionCornerDetail.PointFeature.NONE;
 	}
 }

@@ -601,7 +601,7 @@ System.err.println(e);
 		Graphics2D gr2 = (Graphics2D) gr;
 		Paint oldPaint = gr2.getPaint();
 
-		BiomeType biome = r.getBiome();
+		BiomeType biome = r != null ? r.getBiome() : null;
 		if (biomeTextures.containsKey(biome))
 		{
 			Rectangle rect = biomeMappingRect.get(biome);
@@ -620,6 +620,9 @@ System.err.println(e);
 	void drawRegionBorder(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
 	{
 		int n = x_coords.length;
+
+		if (r == null)
+			return;
 
 		gr.setColor(Color.BLACK);
 		for (int i = 0; i < n; i++)
@@ -671,6 +674,9 @@ System.err.println(e);
 
 	void drawRegionCorners(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
 	{
+		if (r == null)
+			return;
+
 		int n = x_coords.length;
 		for (int i = 0; i < n; i++)
 		{

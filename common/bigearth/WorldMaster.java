@@ -220,6 +220,16 @@ public class WorldMaster
 		RegionProfile p = new RegionProfile();
 		p.biome = region.biome;
 
+		for (int i = 0; i < 6; i++)
+		{
+			if (region.sides[i] != null)
+				p.sides[i] = region.sides[i].feature;
+			if (region.corners[i] != null)
+				p.corners[i] = region.corners[i].feature;
+		}
+
+		p.hasAnyMobs = !region.presentMobs.isEmpty();
+
 		return p;
 	}
 }
