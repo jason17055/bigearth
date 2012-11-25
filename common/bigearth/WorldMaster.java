@@ -230,12 +230,13 @@ public class WorldMaster
 				p.corners[i] = region.corners[i].feature;
 		}
 
-		p.mobs = new ArrayList<MobInfo>();
-		for (MobInfo realMob : region.presentMobs.values())
+		p.mobs = new HashMap<String, MobInfo>();
+		for (String mobName : region.presentMobs.keySet())
 		{
-			MobInfo mob = new MobInfo();
+			MobInfo realMob = region.presentMobs.get(mobName);
+			MobInfo mob = new MobInfo(mobName);
 			mob.avatarName = realMob.avatarName;
-			p.mobs.add(mob);
+			p.mobs.put(mobName, mob);
 		}
 
 		return p;

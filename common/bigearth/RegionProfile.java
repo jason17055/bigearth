@@ -9,7 +9,7 @@ class RegionProfile
 	BiomeType biome;
 	RegionSideDetail.SideFeature [] sides;
 	RegionCornerDetail.PointFeature [] corners;
-	Collection<MobInfo> mobs;
+	Map<String, MobInfo> mobs;
 
 	public RegionProfile()
 	{
@@ -57,12 +57,14 @@ class RegionProfile
 	void writeMobs(JsonGenerator out)
 		throws IOException
 	{
-		out.writeStartArray();
-		for (MobInfo mob : mobs)
+		out.writeStartObject();
+		for (String mobName : mobs.keySet())
 		{
+			MobInfo mob = mobs.get(mobName);
+			out.writeFieldName(mobName);
 			mob.write(out);
 		}
-		out.writeEndArray();
+		out.writeEndObject();
 	}
 
 	static RegionProfile parse(Location loc, JsonParser in, WorldConfigIfc world)
@@ -119,15 +121,16 @@ class RegionProfile
 	void parseMobs(JsonParser in, WorldConfigIfc world)
 		throws IOException
 	{
-		mobs = new ArrayList<MobInfo>();
+		mobs = new HashMap<String, MobInfo>();
 
 		in.nextToken();
-		assert in.getCurrentToken() == JsonToken.START_ARRAY;
+		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
-		while (in.nextToken() != JsonToken.END_ARRAY)
+		while (in.nextToken() != JsonToken.END_OBJECT)
 		{
-			MobInfo mob = MobInfo.parse1(in, world);
-			mobs.add(mob);
+			String mobName = in.getCurrentName();
+			MobInfo mob = MobInfo.parse(in, mobName, world);
+			mobs.put(mobName, mob);
 		}
 	}
 
@@ -141,7 +144,7 @@ class RegionProfile
 		if (this.mobs == null)
 			return null;
 
-		MobInfo [] mobs = this.mobs.toArray(new MobInfo[0]);
+		MobInfo [] mobs = this.mobs.values().toArray(new MobInfo[0]);
 		if (mobs.length == 0)
 			return null;
 

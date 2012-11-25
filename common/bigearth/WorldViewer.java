@@ -971,7 +971,7 @@ class MapAdapter extends MapModel
 			if (realRegion.corners[i] != null)
 				r.corners[i] = realRegion.corners[i].feature;
 		}
-		r.mobs = realRegion.presentMobs.values();
+		r.mobs = realRegion.presentMobs;
 
 		return r;
 	}
