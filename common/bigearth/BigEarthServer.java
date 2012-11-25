@@ -332,7 +332,8 @@ class MoveMobServlet extends HttpServlet
 		}
 
 		// make the actual change
-	//TODO
+		Location dest = LocationHelper.parse(destStr, server.world.config);
+		server.world.requestMovement(mobName, dest);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -377,6 +378,7 @@ class LoginServlet extends HttpServlet
 		{
 			if (leader.checkPassword(request.getParameter("password")))
 			{
+				leader.streams.add(new NotificationStream());
 				doLoginSuccess(response, user);
 				return;
 			}

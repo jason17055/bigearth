@@ -15,6 +15,7 @@ public class Client
 	Map<String, String> cookies = new HashMap<String,String>();
 	WorldStub world;
 	MapModel map;
+	MyListenerThread listenerThread;
 
 	static final int DEFAULT_PORT = 2626;
 
@@ -99,7 +100,7 @@ public class Client
 		{
 			String s = in.getCurrentName();
 			Location loc = LocationHelper.parse(s, getGeometry());
-			RegionProfile p = RegionProfile.parse(loc, in, world);
+			RegionProfile p = RegionProfile.parse_s(in, world);
 			map.put(loc, p);
 		}
 		in.close();
@@ -177,6 +178,64 @@ public class Client
 		in.close();
 	}
 
+	int nextEventNumber = 0;
+	void getEvents()
+		throws IOException
+	{
+		HttpURLConnection conn = makeRequest("GET", "/events/"+nextEventNumber);
+		conn.setDoOutput(false);
+		conn.setDoInput(true);
+		conn.connect();
+
+		JsonParser in = new JsonFactory().createJsonParser(
+				conn.getInputStream()
+			);
+		in.nextToken();
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("next"))
+			{
+				nextEventNumber = in.nextIntValue(0);
+			}
+			else if (s.equals("event"))
+			{
+				in.nextToken();
+				assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+				Notification n = Notification.parse_1(in, world);
+				fireNotification(n);
+			}
+			else if (s.equals("events"))
+			{
+				parseEvents(in);
+			}
+		}
+		in.close();
+	}
+
+	void parseEvents(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_ARRAY;
+
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			Notification n = Notification.parse_1(in, world);
+			fireNotification(n);
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_ARRAY;
+	}
+
+	void fireNotification(Notification n)
+	{
+		//TODO
+
+		System.out.println("notification "+n);
+	}
+
 	public void moveMobTo(String mobName, Location dest)
 		throws IOException
 	{
@@ -196,6 +255,28 @@ public class Client
 
 		int status = conn.getResponseCode();
 		assert status == 204;
+	}
+
+	void startListenerThread()
+	{
+		listenerThread = new MyListenerThread();
+		listenerThread.start();
+	}
+
+	class MyListenerThread extends Thread
+	{
+		public void run()
+		{
+			try
+			{
+				while (true)
+					getEvents();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace(System.err);
+			}
+		}
 	}
 
 	public static void main(String [] args)
@@ -228,6 +309,8 @@ public class Client
 				userField.getText(),
 				passField.getPassword());
 		me.login();
+		me.startListenerThread();
+
 		MapModel map = me.getMap();
 		MobListModel myMobs = me.getMyMobs();
 

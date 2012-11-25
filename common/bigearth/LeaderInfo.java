@@ -2,17 +2,20 @@ package bigearth;
 
 import com.fasterxml.jackson.core.*;
 import java.io.*;
+import java.util.*;
 
 public class LeaderInfo
 {
 	String name;
 	String displayName;
 	String password;
+	Collection<NotificationStream> streams;
 
 	LeaderInfo(String name)
 	{
 		this.name = name;
 		this.displayName = name;
+		this.streams = new ArrayList<NotificationStream>();
 	}
 
 	boolean checkPassword(String inPassword)

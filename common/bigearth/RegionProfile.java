@@ -67,7 +67,7 @@ class RegionProfile
 		out.writeEndObject();
 	}
 
-	static RegionProfile parse(Location loc, JsonParser in, WorldConfigIfc world)
+	static RegionProfile parse_s(JsonParser in, WorldConfigIfc world)
 		throws IOException
 	{
 		RegionProfile me = new RegionProfile();

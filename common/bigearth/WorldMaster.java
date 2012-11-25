@@ -241,4 +241,47 @@ public class WorldMaster
 
 		return p;
 	}
+
+	void requestMovement(String mobName, Location dest)
+	{
+		MobInfo mob = mobs.get(mobName);
+		assert mob != null;
+
+		//TODO- reject request if the mob is busy
+
+		Location oldLoc = mob.location;
+		mob.location = dest;
+
+		RegionServant fromRegion = getRegionForLocation(mob.location);
+		fromRegion.presentMobs.remove(mobName);
+
+		RegionServant toRegion = getRegionForLocation(dest);
+		toRegion.presentMobs.put(mobName, mob);
+
+		//mobMoved(mobName, oldLoc, dest);
+		discoverTerrain(mob.owner, dest);
+		//discoverTerrainBorder(mob.owner, dest);
+	}
+
+	void discoverTerrain(String user, Location loc)
+	{
+		int regionId = getRegionIdForLocation(loc);
+		RegionProfile p = makeRegionProfileFor(user, regionId);
+		fireMapUpdate(user, regionId, p);
+	}
+
+	void fireMapUpdate(String user, int regionId, RegionProfile p)
+	{
+		MapUpdateNotification n = new MapUpdateNotification(regionId, p);
+		notifyLeader(user, n);
+	}
+
+	void notifyLeader(String user, Notification n)
+	{
+		LeaderInfo leader = leaders.get(user);
+		if (leader == null)
+			return;
+
+		//TODO
+	}
 }
