@@ -818,6 +818,9 @@ System.err.println(e);
 	// implements MouseListener
 	public void mousePressed(MouseEvent ev)
 	{
+		if (map == null)
+			return;
+
 		if (ev.getButton() == MouseEvent.BUTTON1)
 		{
 			dragStart = ev.getPoint();
@@ -827,7 +830,14 @@ System.err.println(e);
 		}
 		else if (ev.getButton() == MouseEvent.BUTTON3)
 		{
+			Point3d pt = fromScreen(ev.getPoint());
+			int regionId = map.getGeometry().findCell(pt);
+			onRightMouseClick(regionId);
 		}
+	}
+
+	protected void onRightMouseClick(int regionId)
+	{
 	}
 
 	private void selectNearestTo(Point3d pt)
@@ -872,8 +882,13 @@ System.err.println(e);
 	{
 		selectedRegion = regionId;
 		selectedVertex = null;
+		onRegionSelected(selectedRegion);
 		fireRegionSelected(selectedRegion);
 		repaint();
+	}
+
+	protected void onRegionSelected(int regionId)
+	{
 	}
 
 	private void selectVertex(Geometry.VertexId vtx)

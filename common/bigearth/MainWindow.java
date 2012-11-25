@@ -9,11 +9,22 @@ public class MainWindow extends JFrame
 	MapModel map;
 	MobListModel mobList;
 	WorldView view;
+	String selectedMob;
 
 	public MainWindow()
 	{
 		super("Big Earth");
-		view = new WorldView();
+		view = new WorldView() {
+			public void onRightMouseClick(int regionId)
+			{
+				moveMobTo(regionId);
+			}
+			public void onRegionSelected(int regionId)
+			{
+				selectMobAt(regionId);
+			}
+
+			};
 		view.zoomFactor = 8;
 		add(view, BorderLayout.CENTER);
 
@@ -94,5 +105,32 @@ public class MainWindow extends JFrame
 			MobInfo mob = mobs[0];
 			view.panTo(mob.location);
 		}
+	}
+
+	void selectMobAt(int regionId)
+	{
+		Location loc = new SimpleLocation(regionId);
+		for (MobInfo mob : mobList.mobs.values())
+		{
+			if (mob.location.equals(loc))
+			{
+				selectMob(mob.name);
+				return;
+			}
+		}
+		selectMob(null);
+	}
+
+	void selectMob(String mobName)
+	{
+		System.out.println("selected "+mobName);
+		selectedMob = mobName;
+	}
+
+	void moveMobTo(int regionId)
+	{
+		Location loc = new SimpleLocation(regionId);
+
+		System.out.println("want to move "+selectedMob+" to "+loc);
 	}
 }
