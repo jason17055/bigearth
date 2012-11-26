@@ -142,6 +142,7 @@ public class BigEarthServer
 
 		Context context = new Context(server, "/", Context.SESSIONS);
 		context.addServlet(new ServletHolder(new LoginServlet(this)), "/login");
+		context.addServlet(new ServletHolder(new GetEventsServlet(this)), "/events");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
 		context.addServlet(new ServletHolder(new GetMyMobsServlet(this)), "/my/mobs");
 		context.addServlet(new ServletHolder(new MoveMobServlet(this)), "/move");
@@ -155,6 +156,7 @@ public class BigEarthServer
 	{
 		String sid = new BigInteger(128, random).toString(16);
 		Session sess = new Session(user);
+		sess.notificationStream = new NotificationStream();
 		sessions.put(sid, sess);
 		return sid;
 	}
@@ -176,6 +178,7 @@ public class BigEarthServer
 class Session
 {
 	String user;
+	NotificationStream notificationStream;
 
 	public Session(String user)
 	{
@@ -234,6 +237,99 @@ class GetMyMobsServlet extends HttpServlet
 			}
 		}
 
+		out.writeEndObject();
+		out.close();
+	}
+}
+
+class GetEventsServlet extends HttpServlet
+{
+	BigEarthServer server;
+	GetEventsServlet(BigEarthServer server)
+	{
+		this.server = server;
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response)
+		throws IOException, ServletException
+	{
+		Session s = server.getSessionFromRequest(request);
+		if (s == null)
+		{
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+
+			JsonGenerator out = new JsonFactory().createJsonGenerator(
+					response.getOutputStream(),
+					JsonEncoding.UTF8);
+			out.writeStartObject();
+			out.writeStringField("error", "not a valid session");
+			out.writeEndObject();
+			out.close();
+			return;
+		}
+
+		LeaderInfo leader = server.world.leaders.get(s.user);
+		assert leader != null;
+
+		String fromStr = request.getParameter("from");
+		int eventNumber = Integer.parseInt(fromStr);
+
+		Notification [] events;
+		try
+		{
+			events = s.notificationStream.consumeFrom(eventNumber);
+		}
+		catch (InterruptedException e)
+		{
+			events = new Notification[0];
+		}
+		catch (NotificationStream.OutOfSyncException e)
+		{
+			doInvalidArgumentFailure(response);
+			return;
+		}
+
+		if (events.length == 0)
+		{
+			response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+			return;
+		}
+
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeNumberField("next", eventNumber + events.length);
+		out.writeFieldName("events");
+		out.writeStartArray();
+		for (Notification n : events)
+		{
+			n.write(out);
+		}
+		out.writeEndArray();
+		out.writeEndObject();
+		out.close();
+	}
+
+	void doInvalidArgumentFailure(HttpServletResponse response)
+		throws IOException
+	{
+		response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeStringField("error", "Invalid argument");
 		out.writeEndObject();
 		out.close();
 	}
@@ -378,8 +474,7 @@ class LoginServlet extends HttpServlet
 		{
 			if (leader.checkPassword(request.getParameter("password")))
 			{
-				leader.streams.add(new NotificationStream());
-				doLoginSuccess(response, user);
+				doLoginSuccess(response, user, leader);
 				return;
 			}
 		}
@@ -403,10 +498,13 @@ class LoginServlet extends HttpServlet
 		out.close();
 	}
 
-	private void doLoginSuccess(HttpServletResponse response, String user)
+	private void doLoginSuccess(HttpServletResponse response, String user, LeaderInfo leader)
 		throws IOException, ServletException
 	{
 		String sid = server.newSession(user);
+		Session s = server.sessions.get(sid);
+		leader.streams.add(s.notificationStream);
+
 		Cookie sessionCookie = new Cookie(BigEarthServer.COOKIE_NAME, sid);
 		response.addCookie(sessionCookie);
 

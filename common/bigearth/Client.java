@@ -182,7 +182,7 @@ public class Client
 	void getEvents()
 		throws IOException
 	{
-		HttpURLConnection conn = makeRequest("GET", "/events/"+nextEventNumber);
+		HttpURLConnection conn = makeRequest("GET", "/events?from="+nextEventNumber);
 		conn.setDoOutput(false);
 		conn.setDoInput(true);
 		conn.connect();
