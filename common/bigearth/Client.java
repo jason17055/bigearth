@@ -16,6 +16,7 @@ public class Client
 	WorldStub world;
 	MapModel map;
 	MyListenerThread listenerThread;
+	ArrayList<Listener> listeners = new ArrayList<Listener>();
 
 	static final int DEFAULT_PORT = 2626;
 
@@ -60,6 +61,26 @@ public class Client
 		if (sb.length() != 0)
 		{
 			conn.setRequestProperty("Cookie", sb.toString());
+		}
+	}
+
+	public void addListener(Listener l)
+	{
+		if (listeners.isEmpty())
+		{
+			startListenerThread();
+		}
+
+		listeners.add(l);
+	}
+
+	public void removeListener(Listener l)
+	{
+		listeners.remove(l);
+
+		if (listeners.isEmpty())
+		{
+			stopListenerThread();
 		}
 	}
 
@@ -263,19 +284,40 @@ public class Client
 		listenerThread.start();
 	}
 
+	void stopListenerThread()
+	{
+System.out.println("in stopListenerThread()");
+		listenerThread.requestStop();
+	}
+
 	class MyListenerThread extends Thread
 	{
+		boolean stopFlag = false;
+
 		public void run()
 		{
 			try
 			{
-				while (true)
+				while (!isStopFlagSet())
 					getEvents();
 			}
 			catch (IOException e)
 			{
 				e.printStackTrace(System.err);
 			}
+			System.out.println("MyListenerThread terminated");
+		}
+
+		synchronized boolean isStopFlagSet()
+		{
+			return stopFlag;
+		}
+
+		synchronized void requestStop()
+		{
+			stopFlag = true;
+
+			//TODO- close the http socket
 		}
 	}
 
@@ -309,7 +351,6 @@ public class Client
 				userField.getText(),
 				passField.getPassword());
 		me.login();
-		me.startListenerThread();
 
 		MapModel map = me.getMap();
 		MobListModel myMobs = me.getMyMobs();
@@ -326,6 +367,10 @@ public class Client
 			JOptionPane.showMessageDialog(null, e,
 				"Error", JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	interface Listener
+	{
 	}
 }
 

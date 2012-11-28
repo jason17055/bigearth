@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.event.*;
 
 public class MainWindow extends JFrame
+	implements Client.Listener
 {
 	MapModel map;
 	MobListModel mobList;
@@ -40,6 +41,20 @@ public class MainWindow extends JFrame
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(null);
+
+		addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent ev)
+			{
+				onWindowClosed();
+			}
+			});
+
+		client.addListener(this);
+	}
+
+	void onWindowClosed()
+	{
+		client.removeListener(this);
 	}
 
 	void initMenu()
