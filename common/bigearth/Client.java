@@ -252,6 +252,12 @@ public class Client
 	}
 
 	//implements Notification.Receiver
+	public void handleMobChangeNotification(MobChangeNotification n)
+	{
+		throw new Error("not implemented");
+	}
+
+	//implements Notification.Receiver
 	public void handleMapUpdateNotification(MapUpdateNotification n)
 	{
 		if (map == null)

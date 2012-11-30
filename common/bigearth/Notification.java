@@ -25,6 +25,12 @@ public abstract class Notification
 			n.parse_cont(in, world);
 			return n;
 		}
+		else if (eventType.equals(MobChangeNotification.EVENT_NAME))
+		{
+			MobChangeNotification n = new MobChangeNotification();
+			n.parse_cont(in, world);
+			return n;
+		}
 		else
 		{
 			//skip past this object
@@ -43,6 +49,58 @@ public abstract class Notification
 	public interface Receiver
 	{
 		void handleMapUpdateNotification(MapUpdateNotification n);
+		void handleMobChangeNotification(MobChangeNotification n);
+	}
+}
+
+class MobChangeNotification extends Notification
+{
+	String mobName;
+	MobInfo mobData;
+
+	static final String EVENT_NAME = "mob-change";
+
+	public MobChangeNotification()
+	{
+	}
+
+	public MobChangeNotification(String mobName, MobInfo mobData)
+	{
+		this.mobName = mobName;
+		this.mobData = mobData;
+	}
+
+	@Override
+	public void dispatch(Receiver r)
+	{
+		r.handleMobChangeNotification(this);
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("event", EVENT_NAME);
+		out.writeStringField("mob", mobName);
+		out.writeFieldName("data");
+		mobData.write(out);
+		out.writeEndObject();
+	}
+
+	public void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("mob"))
+				mobName = in.nextTextValue();
+			else if (s.equals("data"))
+				mobData = MobInfo.parse(in, mobName, world);
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 }
 
@@ -74,6 +132,7 @@ class MapUpdateNotification extends Notification
 		r.handleMapUpdateNotification(this);
 	}
 
+	@Override
 	public void write(JsonGenerator out)
 		throws IOException
 	{
