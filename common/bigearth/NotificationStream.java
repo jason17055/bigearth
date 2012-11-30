@@ -35,8 +35,7 @@ public class NotificationStream
 			}
 
 			notifications.subList(0, numToRemove).clear();
-			initIndex -= numToRemove;
-			start -= numToRemove;
+			initIndex += numToRemove;
 		}
 
 		if (start < initIndex)
