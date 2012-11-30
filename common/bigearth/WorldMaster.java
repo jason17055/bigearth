@@ -252,7 +252,7 @@ public class WorldMaster
 		Location oldLoc = mob.location;
 		mob.location = dest;
 
-		RegionServant fromRegion = getRegionForLocation(mob.location);
+		RegionServant fromRegion = getRegionForLocation(oldLoc);
 		fromRegion.presentMobs.remove(mobName);
 
 		RegionServant toRegion = getRegionForLocation(dest);
