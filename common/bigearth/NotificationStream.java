@@ -7,6 +7,8 @@ public class NotificationStream
 	int initIndex = 0;
 	ArrayList<Notification> notifications = new ArrayList<Notification>();
 
+	static final int DEFAULT_TIMEOUT = 15000;
+
 	public synchronized void add(Notification n)
 	{
 		notifications.add(n);
@@ -46,7 +48,7 @@ public class NotificationStream
 
 		if (notifications.isEmpty())
 		{
-			wait(60000); //maximum 60 seconds in milliseconds
+			wait(DEFAULT_TIMEOUT); //maximum 15 seconds (in milliseconds)
 
 			//FIXME- may need to reconsider what to do here
 		}
