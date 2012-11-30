@@ -7,6 +7,7 @@ import javax.swing.*;
 import com.fasterxml.jackson.core.*;
 
 public class Client
+	implements Notification.Receiver
 {
 	String host;
 	int port;
@@ -225,7 +226,7 @@ public class Client
 				assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
 				Notification n = Notification.parse_1(in, world);
-				fireNotification(n);
+				handleNotification(n);
 			}
 			else if (s.equals("events"))
 			{
@@ -244,17 +245,25 @@ public class Client
 		while (in.nextToken() != JsonToken.END_ARRAY)
 		{
 			Notification n = Notification.parse_1(in, world);
-			fireNotification(n);
+			handleNotification(n);
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_ARRAY;
 	}
 
-	void fireNotification(Notification n)
+	//implements Notification.Receiver
+	public void handleMapUpdateNotification(MapUpdateNotification n)
 	{
-		//TODO
+		if (map == null)
+			return;
 
-		System.out.println("notification "+n);
+		Location loc = n.getLocation();
+		map.put(loc, n.profile);
+	}
+
+	void handleNotification(Notification n)
+	{
+		n.dispatch(this);
 	}
 
 	public void moveMobTo(String mobName, Location dest)

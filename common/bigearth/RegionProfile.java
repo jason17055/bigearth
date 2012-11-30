@@ -22,6 +22,23 @@ class RegionProfile
 		return biome;
 	}
 
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append(biome.name());
+		int i = 0;
+		for (String mobName : mobs.keySet())
+		{
+			i++;
+			sb.append(" ");
+			sb.append(i);
+			sb.append(": ");
+			sb.append(mobName);
+		}
+		return sb.toString();
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{

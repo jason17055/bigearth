@@ -8,6 +8,8 @@ public abstract class Notification
 	public abstract void write(JsonGenerator out)
 		throws IOException;
 
+	public abstract void dispatch(Receiver r);
+
 	public static Notification parse_1(JsonParser in, WorldConfigIfc world)
 		throws IOException
 	{
@@ -37,6 +39,11 @@ public abstract class Notification
 			throw new IOException("unrecognized event type: "+eventType);
 		}
 	}
+
+	public interface Receiver
+	{
+		void handleMapUpdateNotification(MapUpdateNotification n);
+	}
 }
 
 class MapUpdateNotification extends Notification
@@ -54,6 +61,17 @@ class MapUpdateNotification extends Notification
 	{
 		this.regionId = regionId;
 		this.profile = profile;
+	}
+
+	public Location getLocation()
+	{
+		return new SimpleLocation(regionId);
+	}
+
+	@Override
+	public void dispatch(Receiver r)
+	{
+		r.handleMapUpdateNotification(this);
 	}
 
 	public void write(JsonGenerator out)
