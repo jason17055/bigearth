@@ -25,6 +25,14 @@ public class LeaderInfo
 			);
 	}
 
+	void sendNotification(Notification n)
+	{
+		for (NotificationStream ns : this.streams)
+		{
+			ns.add(n);
+		}
+	}
+
 	void parse(JsonParser in)
 		throws IOException
 	{

@@ -260,7 +260,7 @@ public class WorldMaster
 
 		//mobMoved(mobName, oldLoc, dest);
 		discoverTerrain(mob.owner, dest);
-		//discoverTerrainBorder(mob.owner, dest);
+		discoverTerrainBorder(mob.owner, dest);
 	}
 
 	void discoverTerrain(String user, Location loc)
@@ -268,6 +268,15 @@ public class WorldMaster
 		int regionId = getRegionIdForLocation(loc);
 		RegionProfile p = makeRegionProfileFor(user, regionId);
 		fireMapUpdate(user, regionId, p);
+	}
+
+	void discoverTerrainBorder(String user, Location loc)
+	{
+		int regionId = getRegionIdForLocation(loc);
+		for (int nid : getGeometry().getNeighbors(regionId))
+		{
+			discoverTerrain(user, new SimpleLocation(nid));
+		}
 	}
 
 	void fireMapUpdate(String user, int regionId, RegionProfile p)
@@ -282,6 +291,6 @@ public class WorldMaster
 		if (leader == null)
 			return;
 
-		//TODO
+		leader.sendNotification(n);
 	}
 }
