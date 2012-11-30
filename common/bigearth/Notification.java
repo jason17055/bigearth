@@ -139,7 +139,7 @@ class MapUpdateNotification extends Notification
 		out.writeStartObject();
 		out.writeStringField("event", EVENT_NAME);
 		out.writeNumberField("region", regionId);
-		out.writeFieldName("profile");
+		out.writeFieldName("data");
 		profile.write(out);
 		out.writeEndObject();
 	}
@@ -152,7 +152,7 @@ class MapUpdateNotification extends Notification
 			String s = in.getCurrentName();
 			if (s.equals("region"))
 				regionId = in.nextIntValue(0);
-			else if (s.equals("profile"))
+			else if (s.equals("data"))
 				profile = RegionProfile.parse_s(in, world);
 		}
 
