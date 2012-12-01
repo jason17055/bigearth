@@ -12,9 +12,11 @@ import javax.vecmath.*;
 
 public class WorldView extends JPanel
 	implements MouseListener, MouseMotionListener, MouseWheelListener,
-		MapModel.Listener
+		MapModel.Listener, MobListModel.Listener
 {
 	MapModel map;
+	MobListModel mobs;
+
 	int [] colors; //overlay colors
 	BufferedImage image;
 	double curLongitude;
@@ -66,6 +68,19 @@ public class WorldView extends JPanel
 		else
 		{
 			this.colors = null;
+		}
+	}
+
+	public void setMobs(MobListModel mobs)
+	{
+		if (this.mobs != null)
+			this.mobs.removeListener(this);
+
+		this.mobs = mobs;
+
+		if (this.mobs != null)
+		{
+			this.mobs.addListener(this);
 		}
 	}
 
@@ -400,6 +415,12 @@ public class WorldView extends JPanel
 		{
 			regenerate();
 		}});
+	}
+
+	// implements MobListModel.Listener
+	public void mobUpdated(String mobName)
+	{
+		repaint();
 	}
 
 	static final Color MOB_TACK_FILL_COLOR = new Color(0xff8778);

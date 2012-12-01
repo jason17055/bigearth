@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.*;
 public class MobListModel
 {
 	Map<String, MobInfo> mobs;
+	List<Listener> listeners = new ArrayList<Listener>();
 
 	public MobListModel()
 	{
@@ -32,5 +33,29 @@ public class MobListModel
 	void put(String mobName, MobInfo mob)
 	{
 		mobs.put(mobName, mob);
+		fireMobUpdated(mobName);
+	}
+
+	private void fireMobUpdated(String mobName)
+	{
+		for (Listener l : listeners)
+		{
+			l.mobUpdated(mobName);
+		}
+	}
+
+	public interface Listener
+	{
+		void mobUpdated(String mobName);
+	}
+
+	public void addListener(Listener l)
+	{
+		this.listeners.add(l);
+	}
+
+	public void removeListener(Listener l)
+	{
+		this.listeners.remove(l);
 	}
 }

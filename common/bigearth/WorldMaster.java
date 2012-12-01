@@ -293,6 +293,8 @@ public class WorldMaster
 		data.location = newLoc;
 		MobChangeNotification n = new MobChangeNotification(mobName, data);
 		notifyLeader(mob.owner, n);
+
+		//TODO- inform everyone else who can see this mob
 	}
 
 	void discoverTerrain(String user, Location loc)
