@@ -259,6 +259,7 @@ public class WorldMaster
 		toRegion.presentMobs.put(mobName, mob);
 
 		mobMoved(mobName, oldLoc, dest);
+		discoverTerrain(mob.owner, oldLoc);
 		discoverTerrain(mob.owner, dest);
 		discoverTerrainBorder(mob.owner, dest);
 	}

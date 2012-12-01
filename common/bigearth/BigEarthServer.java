@@ -364,6 +364,18 @@ class GetMapServlet extends HttpServlet
 			return;
 		}
 
+		MapModel map = new MapModel(server.world.getGeometry());
+		for (int i = 0; i < server.world.regions.length; i++)
+		{
+			int regionId = i + 1;
+			if (server.world.leaderCanSeeRegion(s.user, regionId))
+			{
+				Location loc = new SimpleLocation(regionId);
+				RegionProfile p = server.world.makeRegionProfileFor(s.user, regionId);
+				map.put(loc, p);
+			}
+		}
+
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
@@ -371,21 +383,7 @@ class GetMapServlet extends HttpServlet
 		JsonGenerator out = new JsonFactory().createJsonGenerator(
 				response.getOutputStream(),
 				JsonEncoding.UTF8);
-		out.writeStartObject();
-
-		for (int i = 0; i < server.world.regions.length; i++)
-		{
-			int regionId = i + 1;
-			if (server.world.leaderCanSeeRegion(s.user, regionId))
-			{
-				Location loc = new SimpleLocation(regionId);
-				out.writeFieldName(loc.toString());
-				RegionProfile p = server.world.makeRegionProfileFor(s.user, regionId);
-				p.write(out);
-			}
-		}
-
-		out.writeEndObject();
+		map.write(out);
 		out.close();
 	}
 }

@@ -113,19 +113,13 @@ public class Client
 		conn.setDoInput(true);
 		conn.connect();
 
-		map = new MapModel(getGeometry());
-
 		JsonParser in = new JsonFactory().createJsonParser(
 					conn.getInputStream()
 				);
-		in.nextToken();
-		while (in.nextToken() == JsonToken.FIELD_NAME)
-		{
-			String s = in.getCurrentName();
-			Location loc = LocationHelper.parse(s, getGeometry());
-			RegionProfile p = RegionProfile.parse_s(in, world);
-			map.put(loc, p);
-		}
+
+		map = new MapModel(getGeometry());
+		map.parse(in, world);
+
 		in.close();
 
 		return map;
@@ -139,10 +133,11 @@ public class Client
 		conn.setDoInput(true);
 		conn.connect();
 
-		mobs = new MobListModel();
 		JsonParser in = new JsonFactory().createJsonParser(
 					conn.getInputStream()
 				);
+
+		mobs = new MobListModel();
 		mobs.parse(in, world);
 		in.close();
 

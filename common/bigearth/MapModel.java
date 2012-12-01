@@ -1,6 +1,8 @@
 package bigearth;
 
+import java.io.*;
 import java.util.*;
+import com.fasterxml.jackson.core.*;
 
 public class MapModel
 {
@@ -52,5 +54,38 @@ public class MapModel
 	public interface Listener
 	{
 		void regionUpdated(Location loc);
+	}
+
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+
+		for (Location loc : regions.keySet())
+		{
+			out.writeFieldName(loc.toString());
+
+			RegionProfile p = regions.get(loc);
+			p.write(out);
+		}
+
+		out.writeEndObject();
+	}
+
+	public void parse(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			Location loc = LocationHelper.parse(s, getGeometry());
+			RegionProfile p = RegionProfile.parse_s(in, world);
+			this.put(loc, p);
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 }
