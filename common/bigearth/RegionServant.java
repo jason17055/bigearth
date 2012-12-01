@@ -6,7 +6,7 @@ import javax.vecmath.*;
 import com.fasterxml.jackson.core.*;
 
 class RegionServant
-	implements ShadowRegion
+	implements ShadowRegion, Saveable
 {
 	WorldMaster world;
 	int regionId;
@@ -253,9 +253,28 @@ if (false)
 		dirty = true;
 	}
 
-	void save(File regionFile)
+	File getRegionFilename()
+	{
+		return new File(world.config.path, "region"+regionId+".txt");
+	}
+
+	void addMob(String mobName, MobInfo mob)
+	{
+		presentMobs.put(mobName, mob);
+		world.wantSaved(this);
+	}
+
+	void removeMob(String mobName)
+	{
+		presentMobs.remove(mobName);
+		world.wantSaved(this);
+	}
+
+	//implements Saveable
+	public void save()
 		throws IOException
 	{
+		File regionFile = getRegionFilename();
 		JsonGenerator out = new JsonFactory().createJsonGenerator(regionFile,
 					JsonEncoding.UTF8);
 		out.writeStartObject();
@@ -307,17 +326,19 @@ if (false)
 		return m;
 	}
 
-	static RegionServant load(File regionFile, WorldMaster world, int regionId)
+	static RegionServant load(WorldMaster world, int regionId)
 		throws IOException
 	{
 		RegionServant m = new RegionServant(world, regionId);
-		m.load(regionFile);
+		m.load();
 		return m;
 	}
 
-	void load(File regionFile)
+	void load()
 		throws IOException
 	{
+		File regionFile = getRegionFilename();
+
 		JsonParser in = new JsonFactory().createJsonParser(regionFile);
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;

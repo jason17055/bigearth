@@ -56,8 +56,7 @@ public class WorldMaster
 		for (int i = 0; i < regions.length; i++)
 		{
 			int regionId = i + 1;
-			File regionFilename = new File(config.path, "region"+regionId+".txt");
-			regions[i] = RegionServant.load(regionFilename, this, regionId);
+			regions[i] = RegionServant.load(this, regionId);
 
 			for (String s : regions[i].presentMobs.keySet())
 			{
@@ -160,8 +159,7 @@ public class WorldMaster
 
 		for (int i = 0; i < regions.length; i++)
 		{
-			File regionFile = new File(config.path, "region"+(i+1)+".txt");
-			regions[i].save(regionFile);
+			regions[i].save();
 		}
 	}
 
@@ -242,6 +240,19 @@ public class WorldMaster
 		return p;
 	}
 
+	void wantSaved(Saveable obj)
+	{
+		try
+		{
+			obj.save();
+		}
+		catch (IOException e)
+		{
+			//lame
+			e.printStackTrace(System.err);
+		}
+	}
+
 	void requestMovement(String mobName, Location dest)
 	{
 		MobInfo mob = mobs.get(mobName);
@@ -253,10 +264,10 @@ public class WorldMaster
 		mob.location = dest;
 
 		RegionServant fromRegion = getRegionForLocation(oldLoc);
-		fromRegion.presentMobs.remove(mobName);
+		fromRegion.removeMob(mobName);
 
 		RegionServant toRegion = getRegionForLocation(dest);
-		toRegion.presentMobs.put(mobName, mob);
+		toRegion.addMob(mobName, mob);
 
 		mobMoved(mobName, oldLoc, dest);
 		discoverTerrain(mob.owner, oldLoc);
