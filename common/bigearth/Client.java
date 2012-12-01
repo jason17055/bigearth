@@ -16,6 +16,7 @@ public class Client
 	Map<String, String> cookies = new HashMap<String,String>();
 	WorldStub world;
 	MapModel map;
+	MobListModel mobs;
 	MyListenerThread listenerThread;
 	ArrayList<Listener> listeners = new ArrayList<Listener>();
 
@@ -138,14 +139,14 @@ public class Client
 		conn.setDoInput(true);
 		conn.connect();
 
-		MobListModel model = new MobListModel();
+		mobs = new MobListModel();
 		JsonParser in = new JsonFactory().createJsonParser(
 					conn.getInputStream()
 				);
-		model.parse(in, world);
+		mobs.parse(in, world);
 		in.close();
 
-		return model;
+		return mobs;
 	}
 
 	void login()
@@ -254,7 +255,10 @@ public class Client
 	//implements Notification.Receiver
 	public void handleMobChangeNotification(MobChangeNotification n)
 	{
-		throw new Error("not implemented");
+		if (mobs == null)
+			return;
+
+		mobs.put(n.mobName, n.mobData);
 	}
 
 	//implements Notification.Receiver

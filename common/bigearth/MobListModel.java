@@ -28,4 +28,9 @@ public class MobListModel
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
+
+	void put(String mobName, MobInfo mob)
+	{
+		mobs.put(mobName, mob);
+	}
 }

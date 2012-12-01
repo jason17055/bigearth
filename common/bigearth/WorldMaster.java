@@ -258,9 +258,21 @@ public class WorldMaster
 		RegionServant toRegion = getRegionForLocation(dest);
 		toRegion.presentMobs.put(mobName, mob);
 
-		//mobMoved(mobName, oldLoc, dest);
+		mobMoved(mobName, oldLoc, dest);
 		discoverTerrain(mob.owner, dest);
 		discoverTerrainBorder(mob.owner, dest);
+	}
+
+	void mobMoved(String mobName, Location oldLoc, Location newLoc)
+	{
+		MobInfo mob = mobs.get(mobName);
+		if (mob.owner == null)
+			return;
+
+		MobInfo data = new MobInfo(mobName);
+		data.location = newLoc;
+		MobChangeNotification n = new MobChangeNotification(mobName, data);
+		notifyLeader(mob.owner, n);
 	}
 
 	void discoverTerrain(String user, Location loc)
