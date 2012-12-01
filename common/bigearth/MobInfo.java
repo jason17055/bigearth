@@ -17,6 +17,21 @@ public class MobInfo
 		this.displayName = name;
 	}
 
+	public boolean hasAvatarName()
+	{
+		return avatarName != null;
+	}
+
+	public boolean hasOwner()
+	{
+		return owner != null;
+	}
+
+	public boolean hasLocation()
+	{
+		return location != null;
+	}
+
 	public static MobInfo parse(JsonParser in, String mobName, WorldConfigIfc world)
 		throws IOException
 	{

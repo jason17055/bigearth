@@ -797,27 +797,20 @@ System.err.println(e);
 		Rectangle screen = gr.getClipBounds();
 
 		// draw mobs
-		for (int i = 0; i < regionBounds.length; i++)
+		for (String mobName : mobs.mobs.keySet())
 		{
-			int regionId = i+1;
-			RegionProfile r = map.getRegion(regionId);
-			if (r == null)
-				continue;
+			MobInfo mob = mobs.mobs.get(mobName);
+			Location loc = mob.location;
 
-			if (!r.hasAnyMobs())
-				continue;
+			Point p = toScreen(g.getPoint(loc));
 
-			if (!screen.intersects(regionBounds[i]))
-				continue;
-
-			Point p = toScreen(g.getCenterPoint(regionId));
+		// TODO- skip if this point is clearly off the screen
 
 		//	if (zoomFactor <= 2)
 		//		drawMobDot(gr, p, regionId);
 		//	else
 		//		drawMobPin(gr, p, regionId);
 
-			MobInfo mob = r.getTopmostMob();
 			BufferedImage img = loadMobImage(mob.avatarName);
 			int width = img.getWidth(null);
 			int height = img.getHeight(null);

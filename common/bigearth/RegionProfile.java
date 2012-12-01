@@ -9,7 +9,6 @@ class RegionProfile
 	BiomeType biome;
 	RegionSideDetail.SideFeature [] sides;
 	RegionCornerDetail.PointFeature [] corners;
-	Map<String, MobInfo> mobs;
 
 	public RegionProfile()
 	{
@@ -27,15 +26,6 @@ class RegionProfile
 	{
 		StringBuilder sb = new StringBuilder();
 		sb.append(biome.name());
-		int i = 0;
-		for (String mobName : mobs.keySet())
-		{
-			i++;
-			sb.append(" ");
-			sb.append(i);
-			sb.append(": ");
-			sb.append(mobName);
-		}
 		return sb.toString();
 	}
 
@@ -62,25 +52,6 @@ class RegionProfile
 			}
 		}
 
-		if (mobs != null)
-		{
-			out.writeFieldName("mobs");
-			writeMobs(out);
-		}
-
-		out.writeEndObject();
-	}
-
-	void writeMobs(JsonGenerator out)
-		throws IOException
-	{
-		out.writeStartObject();
-		for (String mobName : mobs.keySet())
-		{
-			MobInfo mob = mobs.get(mobName);
-			out.writeFieldName(mobName);
-			mob.write(out);
-		}
 		out.writeEndObject();
 	}
 
@@ -125,47 +96,12 @@ class RegionProfile
 				corners[4] = RegionCornerDetail.PointFeature.valueOf(in.nextTextValue());
 			else if (s.equals("corner5"))
 				corners[5] = RegionCornerDetail.PointFeature.valueOf(in.nextTextValue());
-			else if (s.equals("mobs"))
-				parseMobs(in, world);
 			else
 			{
 				in.nextToken();
 				in.skipChildren();
 			}
 		}
-	}
-
-	void parseMobs(JsonParser in, WorldConfigIfc world)
-		throws IOException
-	{
-		mobs = new HashMap<String, MobInfo>();
-
-		in.nextToken();
-		assert in.getCurrentToken() == JsonToken.START_OBJECT;
-
-		while (in.nextToken() != JsonToken.END_OBJECT)
-		{
-			String mobName = in.getCurrentName();
-			MobInfo mob = MobInfo.parse(in, mobName, world);
-			mobs.put(mobName, mob);
-		}
-	}
-
-	public boolean hasAnyMobs()
-	{
-		return this.mobs != null && !this.mobs.isEmpty();
-	}
-
-	public MobInfo getTopmostMob()
-	{
-		if (this.mobs == null)
-			return null;
-
-		MobInfo [] mobs = this.mobs.values().toArray(new MobInfo[0]);
-		if (mobs.length == 0)
-			return null;
-
-		return mobs[0];
 	}
 
 	public RegionSideDetail.SideFeature getSideFeature(int sideNumber)

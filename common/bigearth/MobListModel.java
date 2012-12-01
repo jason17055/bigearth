@@ -30,9 +30,29 @@ public class MobListModel
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
-	void put(String mobName, MobInfo mob)
+	void update(String mobName, MobInfo newMobInfo)
 	{
-		mobs.put(mobName, mob);
+		MobInfo oldMobInfo = mobs.get(mobName);
+		if (oldMobInfo == null)
+		{
+			mobs.put(mobName, newMobInfo);
+			fireMobUpdated(mobName);
+			return;
+		}
+
+		if (newMobInfo.hasAvatarName())
+		{
+			oldMobInfo.avatarName = newMobInfo.avatarName;
+		}
+		if (newMobInfo.hasOwner())
+		{
+			oldMobInfo.owner = newMobInfo.owner;
+		}
+		if (newMobInfo.hasLocation())
+		{
+			oldMobInfo.location = newMobInfo.location;
+		}
+
 		fireMobUpdated(mobName);
 	}
 

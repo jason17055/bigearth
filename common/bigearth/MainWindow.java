@@ -116,6 +116,7 @@ public class MainWindow extends JFrame
 	public void setMobList(MobListModel mobList)
 	{
 		this.mobList = mobList;
+		this.view.setMobs(mobList);
 
 		// find a unit to focus on
 		MobInfo [] mobs = mobList.mobs.values().toArray(new MobInfo[0]);

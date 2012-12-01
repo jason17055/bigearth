@@ -253,7 +253,7 @@ public class Client
 		if (mobs == null)
 			return;
 
-		mobs.put(n.mobName, n.mobData);
+		mobs.update(n.mobName, n.mobData);
 	}
 
 	//implements Notification.Receiver
