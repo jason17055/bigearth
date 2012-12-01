@@ -280,6 +280,7 @@ public class WorldMaster
 		discoverTerrain(mob.owner, oldLoc);
 		discoverTerrain(mob.owner, dest);
 		discoverTerrainBorder(mob.owner, dest);
+		wantSaved(this);
 	}
 
 	void mobMoved(String mobName, Location oldLoc, Location newLoc)

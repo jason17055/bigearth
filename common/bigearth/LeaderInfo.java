@@ -87,6 +87,11 @@ public class LeaderInfo
 			{
 				password = in.nextTextValue();
 			}
+			else if (s.equals("map"))
+			{
+				map = new MapModel(world.getGeometry());
+				map.parse(in, world.config);
+			}
 			else
 			{
 				in.nextToken();
@@ -106,6 +111,11 @@ public class LeaderInfo
 		if (password != null)
 		{
 			out.writeStringField("password", password);
+		}
+		if (map != null)
+		{
+			out.writeFieldName("map");
+			map.write(out);
 		}
 
 		out.writeEndObject();
