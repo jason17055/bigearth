@@ -17,6 +17,7 @@ public abstract class Notification
 
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.FIELD_NAME;
+		assert in.getCurrentName().equals("event");
 
 		String eventType = in.nextTextValue();
 		if (eventType.equals(MapUpdateNotification.EVENT_NAME))
@@ -33,16 +34,9 @@ public abstract class Notification
 		}
 		else
 		{
-			//skip past this object
-			while (in.nextToken() == JsonToken.FIELD_NAME)
-			{
-				in.nextToken();
-				in.skipChildren();
-			}
-
-			assert in.getCurrentToken() == JsonToken.END_OBJECT;
-
-			throw new IOException("unrecognized event type: "+eventType);
+			UnknownNotification n = new UnknownNotification(eventType);
+			n.parse_cont(in, world);
+			return n;
 		}
 	}
 
@@ -50,6 +44,43 @@ public abstract class Notification
 	{
 		void handleMapUpdateNotification(MapUpdateNotification n);
 		void handleMobChangeNotification(MobChangeNotification n);
+	}
+}
+
+class UnknownNotification extends Notification
+{
+	String eventName;
+
+	public UnknownNotification(String eventName)
+	{
+		this.eventName = eventName;
+	}
+
+	public void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			in.nextToken();
+			in.skipChildren();
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+
+	@Override
+	public void dispatch(Receiver r)
+	{
+		// do nothing
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("event", eventName);
+		out.writeEndObject();
 	}
 }
 
@@ -98,6 +129,11 @@ class MobChangeNotification extends Notification
 				mobName = in.nextTextValue();
 			else if (s.equals("data"))
 				mobData = MobInfo.parse(in, mobName, world);
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+			}
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
@@ -154,6 +190,11 @@ class MapUpdateNotification extends Notification
 				regionId = in.nextIntValue(0);
 			else if (s.equals("data"))
 				profile = RegionProfile.parse_s(in, world);
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+			}
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
