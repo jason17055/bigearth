@@ -5,6 +5,7 @@ import java.util.*;
 import com.fasterxml.jackson.core.*;
 
 public class WorldMaster
+	implements Saveable
 {
 	WorldConfig config;
 	RegionServant [] regions;
@@ -137,26 +138,32 @@ public class WorldMaster
 		return regions[regionId-1];
 	}
 
-	public void saveAll()
+	//implements Saveable
+	public void save()
 		throws IOException
 	{
 		File f2 = new File(config.path, "world.txt");
-		JsonGenerator j = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
-		j.writeStartObject();
-		j.writeNumberField("year", year);
-		j.writeNumberField("lastSeqId", lastSeqId);
-		j.writeFieldName("leaders");
-		j.writeStartObject();
+		JsonGenerator out = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeNumberField("year", year);
+		out.writeNumberField("lastSeqId", lastSeqId);
+		out.writeFieldName("leaders");
+		out.writeStartObject();
 		for (String name : leaders.keySet())
 		{
-			j.writeFieldName(name);
-			leaders.get(name).write(j);
+			out.writeFieldName(name);
+			leaders.get(name).write(out);
 		}
-		j.writeEndObject(); //end "leaders" property
+		out.writeEndObject(); //end "leaders" property
 
-		j.writeEndObject();
-		j.close();
+		out.writeEndObject();
+		out.close();
+	}
 
+	public void saveAll()
+		throws IOException
+	{
+		save();
 		for (int i = 0; i < regions.length; i++)
 		{
 			regions[i].save();
