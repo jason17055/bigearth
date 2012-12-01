@@ -268,7 +268,6 @@ public class WorldMaster
 		toRegion.addMob(mobName, mob);
 
 		mobMoved(mobName, oldLoc, dest);
-		discoverTerrain(mob.owner, oldLoc);
 		discoverTerrain(mob.owner, dest);
 		discoverTerrainBorder(mob.owner, dest);
 		wantSaved(this);
@@ -290,10 +289,14 @@ public class WorldMaster
 
 	void discoverTerrain(String user, Location loc)
 	{
+		MapModel map = leaders.get(user).map;
+
 		int regionId = getRegionIdForLocation(loc);
 		RegionProfile p = makeRegionProfileFor(user, regionId);
-		leaders.get(user).map.put(loc, p);
-		fireMapUpdate(user, regionId, p);
+		if (map.updateRegion(loc, p))
+		{
+			fireMapUpdate(user, regionId, p);
+		}
 	}
 
 	void discoverTerrainBorder(String user, Location loc)

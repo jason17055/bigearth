@@ -33,6 +33,18 @@ public class MapModel
 		fireRegionUpdated(loc);
 	}
 
+	public boolean updateRegion(Location loc, RegionProfile p)
+	{
+		if (!regions.containsKey(loc)
+		|| !regions.get(loc).equals(p))
+		{
+			put(loc, p);
+			return true;
+		}
+		else
+			return false;
+	}
+
 	public void addListener(Listener l)
 	{
 		this.listeners.add(l);

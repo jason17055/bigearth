@@ -29,6 +29,27 @@ class RegionProfile
 		return sb.toString();
 	}
 
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (obj instanceof RegionProfile)
+		{
+			RegionProfile rhs = (RegionProfile) obj;
+			if (this.biome != rhs.biome)
+				return false;
+			for (int i = 0; i < 6; i++)
+			{
+				if (this.sides[i] != rhs.sides[i])
+					return false;
+				if (this.corners[i] != rhs.corners[i])
+					return false;
+			}
+			return true;
+		}
+		else
+			return false;
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{
