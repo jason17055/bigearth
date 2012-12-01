@@ -363,17 +363,10 @@ class GetMapServlet extends HttpServlet
 			return;
 		}
 
-		MapModel map = new MapModel(server.world.getGeometry());
-		for (int i = 0; i < server.world.regions.length; i++)
-		{
-			int regionId = i + 1;
-			if (server.world.leaderCanSeeRegion(s.user, regionId))
-			{
-				Location loc = new SimpleLocation(regionId);
-				RegionProfile p = server.world.makeRegionProfileFor(s.user, regionId);
-				map.put(loc, p);
-			}
-		}
+		assert server.world.leaders.containsKey(s.user);
+
+		MapModel map = server.world.leaders.get(s.user).map;
+		assert map != null;
 
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
