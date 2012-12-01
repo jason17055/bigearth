@@ -484,6 +484,6 @@ public class MakeWorld
 	void save()
 		throws IOException
 	{
-		world.save();
+		world.saveAll();
 	}
 }

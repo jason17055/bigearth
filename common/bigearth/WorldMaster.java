@@ -137,7 +137,7 @@ public class WorldMaster
 		return regions[regionId-1];
 	}
 
-	public void save()
+	public void saveAll()
 		throws IOException
 	{
 		File f2 = new File(config.path, "world.txt");

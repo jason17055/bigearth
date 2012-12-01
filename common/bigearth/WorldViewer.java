@@ -718,7 +718,7 @@ public class WorldViewer extends JFrame
 			world.generate();
 			try
 			{
-				world.world.save();
+				world.world.saveAll();
 			}
 			catch (IOException e)
 			{
