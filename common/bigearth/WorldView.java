@@ -11,7 +11,8 @@ import javax.swing.*;
 import javax.vecmath.*;
 
 public class WorldView extends JPanel
-	implements MouseListener, MouseMotionListener, MouseWheelListener
+	implements MouseListener, MouseMotionListener, MouseWheelListener,
+		MapModel.Listener
 {
 	MapModel map;
 	int [] colors; //overlay colors
@@ -52,8 +53,20 @@ public class WorldView extends JPanel
 
 	public void setMap(MapModel map)
 	{
+		if (this.map != null)
+			this.map.removeListener(this);
+
 		this.map = map;
-		this.colors = new int[map.getGeometry().getCellCount()];
+
+		if (this.map != null)
+		{
+			this.colors = new int[map.getGeometry().getCellCount()];
+			this.map.addListener(this);
+		}
+		else
+		{
+			this.colors = null;
+		}
 	}
 
 	public interface Listener
@@ -377,6 +390,16 @@ public class WorldView extends JPanel
 		} //end if zoom factor >= 8
 
 		repaint();
+	}
+
+	// implements MapModel.Listener
+	public void regionUpdated(Location loc)
+	{
+		SwingUtilities.invokeLater(new Runnable() {
+		public void run()
+		{
+			regenerate();
+		}});
 	}
 
 	static final Color MOB_TACK_FILL_COLOR = new Color(0xff8778);
