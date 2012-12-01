@@ -4,16 +4,22 @@ import com.fasterxml.jackson.core.*;
 import java.io.*;
 import java.util.*;
 
+//TODO- rename to LeaderServant
 public class LeaderInfo
+	implements Saveable
 {
+	WorldMaster world;
+
 	String name;
 	String displayName;
 	String password;
 	Collection<NotificationStream> streams;
 
-	LeaderInfo(String name)
+	LeaderInfo(String name, WorldMaster world)
 	{
 		this.name = name;
+		this.world = world;
+
 		this.displayName = name;
 		this.streams = new ArrayList<NotificationStream>();
 	}
@@ -31,6 +37,35 @@ public class LeaderInfo
 		{
 			ns.add(n);
 		}
+	}
+
+	File getLeaderFilename()
+	{
+		return new File(
+			new File(world.config.path, "leaders"),
+			name
+			);
+	}
+
+	void load()
+		throws IOException
+	{
+		File file = getLeaderFilename();
+
+		JsonParser in = new JsonFactory().createJsonParser(file);
+		parse(in);
+		in.close();
+	}
+
+	//implements Saveable
+	public void save()
+		throws IOException
+	{
+		File file = getLeaderFilename();
+		JsonGenerator out = new JsonFactory().createJsonGenerator(file,
+				JsonEncoding.UTF8);
+		write(out);
+		out.close();
 	}
 
 	void parse(JsonParser in)

@@ -76,7 +76,7 @@ public class WorldMaster
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String leaderName = in.getCurrentName();
-			LeaderInfo leader = new LeaderInfo(leaderName);
+			LeaderInfo leader = new LeaderInfo(leaderName, this);
 			leader.parse(in);
 			leaders.put(leaderName, leader);
 		}
@@ -99,7 +99,7 @@ public class WorldMaster
 
 	void newLeader(String name)
 	{
-		LeaderInfo leader = new LeaderInfo(name);
+		LeaderInfo leader = new LeaderInfo(name, this);
 		leaders.put(name, leader);
 	}
 
