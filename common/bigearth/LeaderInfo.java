@@ -13,6 +13,7 @@ public class LeaderInfo
 	String name;
 	String displayName;
 	String password;
+	MapModel map;
 	Collection<NotificationStream> streams;
 
 	LeaderInfo(String name, WorldMaster world)
@@ -21,6 +22,7 @@ public class LeaderInfo
 		this.world = world;
 
 		this.displayName = name;
+		this.map = new MapModel(world.getGeometry());
 		this.streams = new ArrayList<NotificationStream>();
 	}
 

@@ -298,6 +298,7 @@ public class WorldMaster
 	{
 		int regionId = getRegionIdForLocation(loc);
 		RegionProfile p = makeRegionProfileFor(user, regionId);
+		leaders.get(user).map.put(loc, p);
 		fireMapUpdate(user, regionId, p);
 	}
 
