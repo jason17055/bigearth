@@ -35,12 +35,14 @@ public class WorldView extends JPanel
 	Geometry.VertexId selectedVertex;
 
 	static final int UNKNOWN_BIOME_COLOR = 0x888888;
+	static final int DEFAULT_WIDTH = 720;
+	static final int DEFAULT_HEIGHT = 360;
 
 	public WorldView()
 	{
 		listeners = new ArrayList<Listener>();
 
-		setPreferredSize(new Dimension(WIDTH,HEIGHT));
+		setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
@@ -116,17 +118,31 @@ public class WorldView extends JPanel
 		}
 	}
 
-	boolean tryPixel(int x, int y, int c)
+	class MapPainter
 	{
-		if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+		BufferedImage image;
+		int width;
+		int height;
+
+		MapPainter(BufferedImage image)
 		{
-			if ((image.getRGB(x,y) & 0xffffff) == 0)
-			{
-				image.setRGB(x,y,c);
-				return true;
-			}
+			this.image = image;
+			this.width = image.getWidth();
+			this.height = image.getHeight();
 		}
-		return false;
+
+		boolean tryPixel(int x, int y, int c)
+		{
+			if (x >= 0 && x < width && y >= 0 && y < height)
+			{
+				if ((image.getRGB(x,y) & 0xffffff) == 0)
+				{
+					image.setRGB(x,y,c);
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	void generateImage(SphereGeometry g, int [] colors)
@@ -135,23 +151,15 @@ public class WorldView extends JPanel
 		regenerate();
 	}
 
-	boolean isVisible(int regionId)
-	{
-		Geometry g = map.getGeometry();
-		Point q = toScreen(g.getCenterPoint(regionId));
-		return (q.x >= 0 && q.x < WIDTH
-			&& q.y >= 0 && q.y < HEIGHT);
-	}
-
-	static final int WIDTH = 720;
-	static final int HEIGHT = 360;
-
 	Point3d fromScreen(Point p)
 	{
-		double lat = -(p.y - HEIGHT/2 - yOffset)
-			/ (zoomFactor * HEIGHT/Math.PI);
-		double lgt = (p.x - WIDTH/2 - xOffset)
-			/ (zoomFactor * WIDTH/(2*Math.PI));
+		int width = getWidth();
+		int height = getHeight();
+
+		double lat = -(p.y - height/2 - yOffset)
+			/ (zoomFactor * DEFAULT_HEIGHT/Math.PI);
+		double lgt = (p.x - width/2 - xOffset)
+			/ (zoomFactor * DEFAULT_WIDTH/(2*Math.PI));
 
 		double zz = Math.cos(lat);
 		Point3d pt = new Point3d(
@@ -178,45 +186,26 @@ public class WorldView extends JPanel
 
 	Point toScreen(Point3d pt)
 	{
+		int width = getWidth();
+		int height = getHeight();
+
 		pt = new Point3d(pt);
 		transformMatrix.transform(pt);
 
 		double lat = Math.asin(pt.y);
 		double lgt = Math.atan2(pt.x, pt.z);
 
-		double x = zoomFactor*lgt*WIDTH/(Math.PI*2);
-		double y = zoomFactor*lat*HEIGHT/Math.PI;
+		double x = zoomFactor*lgt*DEFAULT_WIDTH/(Math.PI*2);
+		double y = zoomFactor*lat*DEFAULT_HEIGHT/Math.PI;
 
 		// prevent extreme screen coordinates
 		// (i.e. coordinates that might overflow 32-bit int)
-		x = Math.max(-2*WIDTH, Math.min(2*WIDTH, x));
-		y = Math.max(-2*HEIGHT, Math.min(2*HEIGHT, y));
+		x = Math.max(-2*width, Math.min(2*width, x));
+		y = Math.max(-2*height, Math.min(2*height, y));
 
 		return new Point(
-			(int)Math.round(x) + WIDTH/2 + xOffset,
-			(int)Math.round(-y) + HEIGHT/2 + yOffset
-			);
-	}
-
-	Point toScreen_x(Point3d pt)
-	{
-		pt = new Point3d(pt);
-		transformMatrix.transform(pt);
-
-		if (pt.z <= 0)
-			return new Point(-WIDTH,-HEIGHT);
-
-		double x = pt.x * zoomFactor * WIDTH/2;
-		double y = pt.y * zoomFactor * HEIGHT/2;
-
-		// prevent extreme screen coordinates
-		// (i.e. coordinates that might overflow 32-bit int)
-		x = Math.max(-2*WIDTH, Math.min(2*WIDTH, x));
-		y = Math.max(-2*HEIGHT, Math.min(2*HEIGHT, y));
-
-		return new Point(
-			(int)Math.round(x) + WIDTH/2 + xOffset,
-			(int)Math.round(-y) + HEIGHT/2 + yOffset
+			(int)Math.round(x) + width/2 + xOffset,
+			(int)Math.round(-y) + height/2 + yOffset
 			);
 	}
 
@@ -231,6 +220,8 @@ public class WorldView extends JPanel
 		{
 			todo[i] = i;
 		}
+
+		MapPainter mp = new MapPainter(image);
 
 		int radius = 0;
 		int curCount = todo.length;
@@ -262,19 +253,19 @@ public class WorldView extends JPanel
 
 				if (radius == 0)
 				{
-					if (tryPixel(x, y, col))
+					if (mp.tryPixel(x, y, col))
 						flag = true;
 				}
 				else
 				for (int j = 0; j < radius; j++)
 				{
-					if (tryPixel(x-radius+j, y-j, col))
+					if (mp.tryPixel(x-radius+j, y-j, col))
 						flag = true;
-					if (tryPixel(x+j, y-radius+j, col))
+					if (mp.tryPixel(x+j, y-radius+j, col))
 						flag = true;
-					if (tryPixel(x+radius-j, y+j, col))
+					if (mp.tryPixel(x+radius-j, y+j, col))
 						flag = true;
-					if (tryPixel(x-j, y+radius-j, col))
+					if (mp.tryPixel(x-j, y+radius-j, col))
 						flag = true;
 				}
 					
@@ -315,10 +306,10 @@ public class WorldView extends JPanel
 				for (int n : g.getNeighbors(i+1))
 				{
 					Point p = pts[n-1];
-					if (p.x > -WIDTH && p.x < min_x) min_x = p.x;
-					if (p.y > -HEIGHT && p.y < min_y) min_y = p.y;
-					if (p.x < 2*WIDTH && p.x > max_x) max_x = p.x;
-					if (p.y < 2*HEIGHT && p.y > max_y) max_y = p.y;
+					if (p.x > -getWidth() && p.x < min_x) min_x = p.x;
+					if (p.y > -getHeight() && p.y < min_y) min_y = p.y;
+					if (p.x < 2*getWidth() && p.x > max_x) max_x = p.x;
+					if (p.y < 2*getHeight() && p.y > max_y) max_y = p.y;
 				}
 				regionBounds[i] = new Rectangle(
 					min_x,
@@ -328,9 +319,9 @@ public class WorldView extends JPanel
 			}
 		}
 
-		Rectangle screen = new Rectangle(0,0,WIDTH,HEIGHT);
+		Rectangle screen = new Rectangle(0,0,getWidth(),getHeight());
 
-		this.image = new BufferedImage(WIDTH,HEIGHT,
+		this.image = new BufferedImage(getWidth(),getHeight(),
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D gr = image.createGraphics();
 
@@ -1000,7 +991,7 @@ System.err.println(e);
 	{
 		int xDelta = endPoint.x - dragStart.x;
 		int yDelta = endPoint.y - dragStart.y;
-		Point3d pt = fromScreen(new Point(WIDTH/2 - xDelta, HEIGHT/2 - yDelta));
+		Point3d pt = fromScreen(new Point(getWidth()/2 - xDelta, getHeight()/2 - yDelta));
 
 		panTo(pt);
 		dragStart = null;
