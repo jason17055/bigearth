@@ -20,7 +20,9 @@ public class WorldView extends JPanel
 	MobListModel mobs;
 
 	int [] colors; //overlay colors
-	BufferedImage image;
+	BufferedImage image; //terrain image
+	boolean terrainDirty;
+
 	double curLongitude;
 	double curLatitude;
 	double zoomFactor;
@@ -195,11 +197,6 @@ public class WorldView extends JPanel
 
 		setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 		addAncestorListener(this);
-		addComponentListener(new ComponentAdapter() {
-		public void componentResized(ComponentEvent ev) {
-			WorldView.this.componentResized(ev);
-		}});
-
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
@@ -210,11 +207,6 @@ public class WorldView extends JPanel
 		transformMatrix = new Matrix3d();
 		inverseTransformMatrix = new Matrix3d();
 		updateTransformMatrix();
-	}
-
-	void componentResized(ComponentEvent ev)
-	{
-		regenerate();
 	}
 
 	public void setMap(MapModel map)
@@ -306,7 +298,8 @@ public class WorldView extends JPanel
 	void generateImage(SphereGeometry g, int [] colors)
 	{
 		this.colors = colors;
-		regenerate();
+		terrainDirty = true;
+		repaint();
 	}
 
 	Point3d fromScreen(Point p)
@@ -437,7 +430,7 @@ public class WorldView extends JPanel
 	}
 
 	Rectangle [] regionBounds;
-	void regenerate()
+	void regenerateTerrainImage()
 	{
 		if (map == null)
 			return;
@@ -553,7 +546,7 @@ public class WorldView extends JPanel
 				
 		} //end if zoom factor >= 8
 
-		repaint();
+		terrainDirty = false;
 	}
 
 	// implements MapModel.Listener
@@ -562,7 +555,8 @@ public class WorldView extends JPanel
 		SwingUtilities.invokeLater(new Runnable() {
 		public void run()
 		{
-			regenerate();
+			terrainDirty = true;
+			repaint();
 		}});
 	}
 
@@ -910,6 +904,13 @@ System.err.println(e);
 
 	public void paintComponent(Graphics gr)
 	{
+		if (terrainDirty || image == null
+			|| image.getWidth() != getWidth()
+			|| image.getHeight() != getHeight())
+		{
+			regenerateTerrainImage();
+		}
+
 		if (image == null || regionBounds == null)
 			return;
 
@@ -1213,7 +1214,8 @@ System.err.println(e);
 	public void zoomIn()
 	{
 		zoomFactor *= 2;
-		regenerate();
+		terrainDirty = true;
+		repaint();
 	}
 
 	public void zoomOut()
@@ -1224,7 +1226,8 @@ System.err.println(e);
 			zoomFactor = 1;
 			curLatitude = 0;
 		}
-		regenerate();
+		terrainDirty = true;
+		repaint();
 	}
 
 	// implements MouseListener
@@ -1302,6 +1305,7 @@ System.err.println(e);
 		curLatitude = lat;
 		curLongitude = lgt;
 
-		regenerate();
+		terrainDirty = true;
+		repaint();
 	}
 }
