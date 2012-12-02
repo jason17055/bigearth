@@ -305,6 +305,7 @@ System.out.println("in stopListenerThread()");
 	}
 
 	class MyListenerThread extends Thread
+		implements Stoppable
 	{
 		boolean stopFlag = false;
 
@@ -327,7 +328,7 @@ System.out.println("in stopListenerThread()");
 			return stopFlag;
 		}
 
-		synchronized void requestStop()
+		public synchronized void requestStop()
 		{
 			stopFlag = true;
 
