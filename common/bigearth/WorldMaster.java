@@ -257,12 +257,32 @@ public class WorldMaster
 		}
 	}
 
+	boolean isAdjacent(Location loc1, Location loc2)
+	{
+		assert loc1 instanceof SimpleLocation;
+		assert loc2 instanceof SimpleLocation;
+
+		int region1 = ((SimpleLocation) loc1).regionId;
+		int region2 = ((SimpleLocation) loc2).regionId;
+
+		for (int nid : getGeometry().getNeighbors(region1))
+		{
+			if (nid == region2)
+				return true;
+		}
+		return false;
+	}
+
 	void requestMovement(String mobName, Location dest)
 	{
 		MobInfo mob = mobs.get(mobName);
 		assert mob != null;
 
 		//TODO- reject request if the mob is busy
+
+		// ignore request if movement not allowed
+		if (!isAdjacent(mob.location, dest))
+			return;
 
 		Location oldLoc = mob.location;
 		mob.location = dest;
