@@ -329,10 +329,24 @@ public class WorldMaster
 		leader.sendNotification(n);
 	}
 
+	EventDispatchThread eventDispatchThread;
 	public void start()
 	{
-		EventDispatchThread evt = new EventDispatchThread(scheduler);
-		evt.start();
+		assert eventDispatchThread == null;
+
+		eventDispatchThread = new EventDispatchThread(scheduler);
+		eventDispatchThread.start();
+	}
+
+	public void stop()
+		throws InterruptedException
+	{
+		assert eventDispatchThread != null;
+
+System.out.println("in world::stop()");
+
+		eventDispatchThread.requestStop();
+		eventDispatchThread.join();
 	}
 
 	class RealTimeLockHack implements Runnable

@@ -60,6 +60,13 @@ public class BigEarthServer
 
 		be.load();
 		be.start();
+
+		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+		in.readLine();
+
+		System.out.println("Shutting down");
+		be.stop();
+		//be.world.saveAll();
 	}
 
 	void load()
@@ -134,21 +141,29 @@ public class BigEarthServer
 		world.load();
 	}
 
+	Server httpServer;
 	void start()
 		throws Exception
 	{
 		int portNumber = Integer.parseInt(hostConfig.getProperty("http.port", "2626"));
-		Server server = new Server(portNumber);
+		httpServer = new Server(portNumber);
 
-		Context context = new Context(server, "/", Context.SESSIONS);
+		Context context = new Context(httpServer, "/", Context.SESSIONS);
 		context.addServlet(new ServletHolder(new LoginServlet(this)), "/login");
 		context.addServlet(new ServletHolder(new GetEventsServlet(this)), "/events");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
 		context.addServlet(new ServletHolder(new GetMyMobsServlet(this)), "/my/mobs");
 		context.addServlet(new ServletHolder(new MoveMobServlet(this)), "/move");
 
-		server.start();
+		httpServer.start();
 		world.start();
+	}
+
+	void stop()
+		throws Exception
+	{
+		httpServer.stop();
+		world.stop();
 	}
 
 	Map<String, Session> sessions = new HashMap<String,Session>();
