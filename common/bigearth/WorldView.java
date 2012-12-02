@@ -9,6 +9,7 @@ import javax.imageio.*;
 import java.util.*;
 import javax.swing.*;
 import javax.vecmath.*;
+import javax.imageio.stream.*;
 
 public class WorldView extends JPanel
 	implements MouseListener, MouseMotionListener, MouseWheelListener,
@@ -90,8 +91,34 @@ public class WorldView extends JPanel
 			this.selectedRegion = 0;
 			this.selectedVertex = null;
 			this.selectedMob = mobName;
+
+			onMobSelected(mobName);
 			repaint();
+
 		}
+	}
+
+	javax.swing.Timer mobFocusAnimationTimer;
+	void onMobSelected(String mobName)
+	{
+		if (mobFocusAnimationTimer != null)
+		{
+			mobFocusAnimationTimer.stop();
+			mobFocusAnimationTimer = null;
+		}
+
+		animationIndex = 0;
+		ActionListener taskPerformer = new ActionListener() {
+		public void actionPerformed(ActionEvent ev)
+		{
+			animationIndex++;
+			repaintSelectedMob();
+		}
+		};
+
+		// start animation
+		mobFocusAnimationTimer = new javax.swing.Timer(140, taskPerformer);
+		mobFocusAnimationTimer.start();
 	}
 
 	static final int UNKNOWN_BIOME_COLOR = 0x888888;
@@ -638,6 +665,15 @@ public class WorldView extends JPanel
 		biomeColors.put(BiomeType.PLAINS, 0x7e9e32);
 		biomeColors.put(BiomeType.SWAMP, 0x365436);
 		biomeColors.put(BiomeType.TUNDRA, 778362);
+
+		try
+		{
+		loadMobSelectionAnimation();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace(System.err);
+		}
 	}
 
 	static Map<String, BufferedImage> mobImages = new HashMap<String, BufferedImage>();
@@ -824,6 +860,42 @@ System.err.println(e);
 		}
 	}
 
+	int animationIndex = 0;
+	void repaintSelectedMob()
+	{
+		MobInfo mob = mobs.mobs.get(selection.getMob());
+		if (mob == null)
+			return;
+
+		Location loc = mob.location;
+		Point p = toScreen(map.getGeometry().getPoint(loc));
+
+		Graphics gr = getGraphics();
+		drawMob(gr, p, mob);
+		drawFleetSelectionCircle(gr, p);
+	}
+
+	void drawMob(Graphics gr, Point p, MobInfo mob)
+	{
+		assert gr != null;
+		assert p != null;
+		assert mob != null;
+
+		// TODO- skip if this point is clearly off the screen
+
+		//	if (zoomFactor <= 2)
+		//		drawMobDot(gr, p, regionId);
+		//	else
+		//		drawMobPin(gr, p, regionId);
+
+			BufferedImage img = loadMobImage(mob.avatarName);
+		assert img != null;
+
+			int width = img.getWidth(null);
+			int height = img.getHeight(null);
+			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
+	}
+
 	void drawSelectionRectMob(Graphics gr)
 	{
 		MobInfo mob = mobs.mobs.get(selection.getMob());
@@ -838,6 +910,51 @@ System.err.println(e);
 
 		gr.setColor(Color.YELLOW);
 		gr.drawRect(p.x - 16, p.y - 16, 32, 32);
+
+		drawFleetSelectionCircle(gr, p);
+	}
+
+	static BufferedImage [] mobSelectionFrontImages;
+	static BufferedImage [] mobSelectionBackImages;
+
+	static void loadMobSelectionAnimation()
+		throws IOException
+	{
+		Iterator readers = ImageIO.getImageReadersByFormatName("gif");
+		ImageReader reader = (ImageReader) readers.next();
+
+		File f = new File("../html/ui_images/fleet_selection_circle_front.gif");
+		ImageInputStream iis = ImageIO.createImageInputStream(f);
+
+		reader.setInput(iis, true);
+
+		ArrayList<BufferedImage> imageArray = new ArrayList<BufferedImage>();
+		int count = 0;
+		while (true)
+		{
+			try
+			{
+				BufferedImage img = reader.read(count);
+				imageArray.add(img);
+				count++;
+			}
+			catch (IndexOutOfBoundsException e)
+			{
+				break;
+			}
+		}
+
+		mobSelectionFrontImages = imageArray.toArray(new BufferedImage[0]);
+
+	}
+
+	void drawFleetSelectionCircle(Graphics gr, Point p)
+	{
+		int count = mobSelectionFrontImages.length;
+		BufferedImage img = mobSelectionFrontImages[animationIndex % count];
+		int width = img.getWidth(null);
+		int height = img.getHeight(null);
+		gr.drawImage(img, p.x - width/2, p.y - height/2, null);
 	}
 
 	void drawSelectionRect(Graphics gr)
