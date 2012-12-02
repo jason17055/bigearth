@@ -10,7 +10,7 @@ public class Scheduler
 	///amount added to a game time to convert to equivalent real time
 	long realTimeOffset;
 
-	PriorityQueue<Event> queue;
+	PriorityQueue<Event> queue = new PriorityQueue<Event>();
 
 	public Scheduler(WorldConfig config)
 	{

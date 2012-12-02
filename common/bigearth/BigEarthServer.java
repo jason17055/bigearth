@@ -402,6 +402,11 @@ class MoveMobServlet extends HttpServlet
 
 		String mobName = request.getParameter("mob");
 		String destStr = request.getParameter("dest");
+		Location dest = LocationHelper.parse(destStr, server.world.config);
+
+		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
+		try
+		{
 
 		// check that the user is authorized to control the specified mob
 
@@ -419,11 +424,16 @@ class MoveMobServlet extends HttpServlet
 		}
 
 		// make the actual change
-		Location dest = LocationHelper.parse(destStr, server.world.config);
 		server.world.requestMovement(mobName, dest);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+
+		}
+		finally
+		{
+			lock.release();
+		}
 	}
 
 	private void doFailure(HttpServletResponse response, String errorMessage)

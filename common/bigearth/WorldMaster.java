@@ -331,45 +331,63 @@ public class WorldMaster
 
 	public void start()
 	{
-		EventDispatchThread evt = new EventDispatchThread();
+		EventDispatchThread evt = new EventDispatchThread(scheduler);
 		evt.start();
 	}
 
-	class EventDispatchThread extends Thread
-		implements Stoppable
+	class RealTimeLockHack implements Runnable
 	{
-		boolean stopRequested = false;
-
-		synchronized boolean isStopRequested()
-		{
-			return stopRequested;
-		}
-
-		synchronized void setStopRequested()
-		{
-			stopRequested = true;
-		}
+		long time;
+		boolean activated = false;
+		boolean released = false;
 
 		public void run()
 		{
-			while (!isStopRequested())
+			this.time = EventDispatchThread.currentTime();
+			acquire();
+			waitForRelease();
+		}
+
+		synchronized void acquire()
+		{
+			this.activated = true;
+			notifyAll();
+		}
+
+		synchronized void waitForAcquisition()
+		{
+			while (!activated)
 			{
-				try
-				{
-					Scheduler.Event ev = scheduler.nextEvent();
-					ev.run();
-				}
-				catch (InterruptedException e)
-				{
-					//ignore and loop back
-				}
+				try {
+				wait();
+				} catch (InterruptedException e) {}
 			}
 		}
 
-		public void requestStop()
+		synchronized void release()
 		{
-			setStopRequested();
-			interrupt();
+			this.released = true;
+			notifyAll();
 		}
+
+		synchronized void waitForRelease()
+		{
+			while (!released)
+			{
+				try {
+				wait();
+				} catch (InterruptedException e) {}
+			}
+		}
+	}
+
+	RealTimeLockHack acquireRealTimeLock()
+	{
+		RealTimeLockHack hack = new RealTimeLockHack();
+		long t = scheduler.convertToGameTime(System.currentTimeMillis());
+		scheduler.scheduleAt(hack, t);
+
+		hack.waitForAcquisition();
+		return hack;
 	}
 }
