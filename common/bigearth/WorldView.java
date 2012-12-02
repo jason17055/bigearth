@@ -37,6 +37,39 @@ public class WorldView extends JPanel
 	{
 		int selectedRegion;
 		Geometry.VertexId selectedVertex;
+
+		public Location getLocation()
+		{
+			if (selectedVertex != null)
+			{
+				return selectedVertex;
+			}
+			else if (selectedRegion != 0)
+			{
+				return new SimpleLocation(selectedRegion);
+			}
+			else
+			{
+				assert false;
+				return null;
+			}
+		}
+
+		public int getRegion()
+		{
+			assert isRegion();
+			return selectedRegion;
+		}
+
+		public boolean isLocation()
+		{
+			return selectedRegion != 0 || selectedVertex != null;
+		}
+
+		public boolean isRegion()
+		{
+			return selectedRegion != 0;
+		}
 	}
 
 	static final int UNKNOWN_BIOME_COLOR = 0x888888;
@@ -109,13 +142,9 @@ public class WorldView extends JPanel
 
 	public Location getSelectedLocation()
 	{
-		if (selection.selectedVertex != null)
+		if (selection.isLocation())
 		{
-			return selection.selectedVertex;
-		}
-		else if (selection.selectedRegion != 0)
-		{
-			return new SimpleLocation(selection.selectedRegion);
+			return selection.getLocation();
 		}
 		else
 		{
@@ -763,7 +792,7 @@ System.err.println(e);
 		}
 
 		// draw selection rectangle
-		if (selection.selectedRegion != 0)
+		if (selection.isRegion())
 		{
 			drawSelectionRect(g);
 		}
@@ -771,10 +800,8 @@ System.err.println(e);
 
 	void drawSelectionRect(Graphics gr)
 	{
-		assert selection.selectedRegion != 0;
-
 		Geometry g = map.getGeometry();
-		Point3d [] pp = g.getCellBoundary(selection.selectedRegion);
+		Point3d [] pp = g.getCellBoundary(selection.getRegion());
 
 		int [] x_coords = new int[pp.length];
 		int [] y_coords = new int[pp.length];
