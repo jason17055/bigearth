@@ -8,11 +8,12 @@ import java.io.IOException;
 import javax.imageio.*;
 import java.util.*;
 import javax.swing.*;
+import javax.swing.event.*;
 import javax.vecmath.*;
 import javax.imageio.stream.*;
 
 public class WorldView extends JPanel
-	implements MouseListener, MouseMotionListener, MouseWheelListener,
+	implements AncestorListener, MouseListener, MouseMotionListener, MouseWheelListener,
 		MapModel.Listener, MobListModel.Listener
 {
 	MapModel map;
@@ -92,9 +93,41 @@ public class WorldView extends JPanel
 			this.selectedVertex = null;
 			this.selectedMob = mobName;
 
+			onSelectionChanged();
 			onMobSelected(mobName);
 			repaint();
 
+		}
+	}
+
+	public void ancestorAdded(AncestorEvent evt)
+	{
+	}
+
+	public void ancestorMoved(AncestorEvent evt)
+	{
+	}
+
+	public void ancestorRemoved(AncestorEvent evt)
+	{
+		stopAnimating();
+	}
+
+	void onSelectionChanged()
+	{
+		if (mobFocusAnimationTimer != null)
+		{
+			mobFocusAnimationTimer.stop();
+			mobFocusAnimationTimer = null;
+		}
+	}
+
+	void stopAnimating()
+	{
+		if (mobFocusAnimationTimer != null)
+		{
+			mobFocusAnimationTimer.stop();
+			mobFocusAnimationTimer = null;
 		}
 	}
 
@@ -130,6 +163,7 @@ public class WorldView extends JPanel
 		listeners = new ArrayList<Listener>();
 
 		setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+		addAncestorListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
@@ -871,6 +905,7 @@ System.err.println(e);
 		Point p = toScreen(map.getGeometry().getPoint(loc));
 
 		Graphics gr = getGraphics();
+		drawFleetSelectionBack(gr, p);
 		drawMob(gr, p, mob);
 		drawFleetSelectionCircle(gr, p);
 	}
@@ -946,12 +981,41 @@ System.err.println(e);
 
 		mobSelectionFrontImages = imageArray.toArray(new BufferedImage[0]);
 
+		f = new File("../html/ui_images/fleet_selection_circle_back.gif");
+		iis = ImageIO.createImageInputStream(f);
+		reader.setInput(iis, true);
+
+		imageArray.clear();
+		count = 0;
+		while (true)
+		{
+			try
+			{
+				BufferedImage img = reader.read(count);
+				imageArray.add(img);
+				count++;
+			}
+			catch (IndexOutOfBoundsException e)
+			{
+				break;
+			}
+		}
+		mobSelectionBackImages = imageArray.toArray(new BufferedImage[0]);
 	}
 
 	void drawFleetSelectionCircle(Graphics gr, Point p)
 	{
 		int count = mobSelectionFrontImages.length;
 		BufferedImage img = mobSelectionFrontImages[animationIndex % count];
+		int width = img.getWidth(null);
+		int height = img.getHeight(null);
+		gr.drawImage(img, p.x - width/2, p.y - height/2, null);
+	}
+
+	void drawFleetSelectionBack(Graphics gr, Point p)
+	{
+		int count = mobSelectionBackImages.length;
+		BufferedImage img = mobSelectionBackImages[animationIndex % count];
 		int width = img.getWidth(null);
 		int height = img.getHeight(null);
 		gr.drawImage(img, p.x - width/2, p.y - height/2, null);
@@ -1101,6 +1165,7 @@ System.err.println(e);
 	{
 		selection.selectedRegion = regionId;
 		selection.selectedVertex = null;
+		onSelectionChanged();
 		onRegionSelected(selection.selectedRegion);
 		fireRegionSelected(selection.selectedRegion);
 		repaint();
@@ -1114,6 +1179,7 @@ System.err.println(e);
 	{
 		selection.selectedRegion = 0;
 		selection.selectedVertex = vtx;
+		onSelectionChanged();
 		fireVertexSelected(selection.selectedVertex);
 		repaint();
 	}
