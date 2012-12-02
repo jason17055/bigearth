@@ -148,6 +148,7 @@ public class BigEarthServer
 		context.addServlet(new ServletHolder(new MoveMobServlet(this)), "/move");
 
 		server.start();
+		world.start();
 	}
 
 	Map<String, Session> sessions = new HashMap<String,Session>();

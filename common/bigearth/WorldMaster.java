@@ -322,4 +322,48 @@ public class WorldMaster
 
 		leader.sendNotification(n);
 	}
+
+	public void start()
+	{
+		EventDispatchThread evt = new EventDispatchThread();
+		evt.start();
+	}
+
+	class EventDispatchThread extends Thread
+		implements Stoppable
+	{
+		boolean stopRequested = false;
+
+		synchronized boolean isStopRequested()
+		{
+			return stopRequested;
+		}
+
+		synchronized void setStopRequested()
+		{
+			stopRequested = true;
+		}
+
+		public void run()
+		{
+			while (!isStopRequested())
+			{
+				try
+				{
+					Scheduler.Event ev = scheduler.nextEvent();
+					ev.run();
+				}
+				catch (InterruptedException e)
+				{
+					//ignore and loop back
+				}
+			}
+		}
+
+		public void requestStop()
+		{
+			setStopRequested();
+			interrupt();
+		}
+	}
 }
