@@ -195,6 +195,11 @@ public class WorldView extends JPanel
 
 		setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 		addAncestorListener(this);
+		addComponentListener(new ComponentAdapter() {
+		public void componentResized(ComponentEvent ev) {
+			WorldView.this.componentResized(ev);
+		}});
+
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
@@ -205,6 +210,11 @@ public class WorldView extends JPanel
 		transformMatrix = new Matrix3d();
 		inverseTransformMatrix = new Matrix3d();
 		updateTransformMatrix();
+	}
+
+	void componentResized(ComponentEvent ev)
+	{
+		regenerate();
 	}
 
 	public void setMap(MapModel map)
