@@ -1,0 +1,2 @@
+Client.java:
+	use an interruptible http client, join the listener thread when last listener removed
