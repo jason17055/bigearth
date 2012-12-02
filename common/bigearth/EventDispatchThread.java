@@ -32,6 +32,7 @@ public class EventDispatchThread extends Thread
 			{
 				Scheduler.Event ev = scheduler.nextEvent();
 				lastEventTime = ev.time;
+System.out.printf("[t=%8d] dispatching %s\n", lastEventTime, ev.getClass().getName());
 				ev.run();
 			}
 			catch (InterruptedException e)

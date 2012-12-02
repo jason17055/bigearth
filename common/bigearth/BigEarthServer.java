@@ -215,6 +215,10 @@ class GetMyMobsServlet extends HttpServlet
 			return;
 		}
 
+		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
+		try
+		{
+
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
@@ -239,6 +243,12 @@ class GetMyMobsServlet extends HttpServlet
 
 		out.writeEndObject();
 		out.close();
+
+		}
+		finally
+		{
+			lock.release();
+		}
 	}
 }
 
@@ -364,6 +374,10 @@ class GetMapServlet extends HttpServlet
 			return;
 		}
 
+		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
+		try
+		{
+
 		assert server.world.leaders.containsKey(s.user);
 
 		MapModel map = server.world.leaders.get(s.user).map;
@@ -378,6 +392,12 @@ class GetMapServlet extends HttpServlet
 				JsonEncoding.UTF8);
 		map.write(out);
 		out.close();
+
+		}
+		finally
+		{
+			lock.release();
+		}
 	}
 }
 
@@ -502,6 +522,10 @@ class LoginServlet extends HttpServlet
 	private void doLoginSuccess(HttpServletResponse response, String user, LeaderInfo leader)
 		throws IOException, ServletException
 	{
+		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
+		try
+		{
+
 		String sid = server.newSession(user);
 		Session s = server.sessions.get(sid);
 		leader.streams.add(s.notificationStream);
@@ -518,8 +542,15 @@ class LoginServlet extends HttpServlet
 				JsonEncoding.UTF8);
 		out.writeStartObject();
 		out.writeNumberField("year", server.world.year);
+		out.writeNumberField("gameTime", lock.time);
 		out.writeStringField("geometry", server.world.getGeometry().toString());
 		out.writeEndObject();
 		out.close();
+
+		}
+		finally
+		{
+			lock.release();
+		}
 	}
 }

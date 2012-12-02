@@ -192,8 +192,16 @@ public class Client
 				world.year = in.nextIntValue(0);
 			else if (s.equals("geometry"))
 				world.geometry = GeometryFactory.getInstance(in.nextTextValue());
+			else
+			{
+				System.err.println("warning: unrecognized property: " + s);
+				in.nextToken();
+				in.skipChildren();
+			}
 		}
 		in.close();
+
+		assert world.geometry != null;
 	}
 
 	int nextEventNumber = 0;
@@ -379,6 +387,7 @@ System.out.println("in stopListenerThread()");
 		}
 		catch (Exception e)
 		{
+			e.printStackTrace(System.err);
 			JOptionPane.showMessageDialog(null, e,
 				"Error", JOptionPane.ERROR_MESSAGE);
 		}
