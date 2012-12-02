@@ -6,6 +6,10 @@ public class Scheduler
 {
 	WorldConfig config;
 	long time;
+
+	///amount added to a game time to convert to equivalent real time
+	long realTimeOffset;
+
 	PriorityQueue<Event> queue;
 
 	public Scheduler(WorldConfig config)
@@ -20,7 +24,19 @@ public class Scheduler
 
 	public long convertToGameTime(long realTime)
 	{
-		return realTime;
+		return realTime - realTimeOffset;
+	}
+
+	public synchronized long currentTime()
+	{
+		return time;
+	}
+
+	public synchronized void setGameTime(long newTime)
+	{
+		long curRealTime = System.currentTimeMillis();
+		realTimeOffset = (curRealTime - newTime);
+		notifyAll();
 	}
 
 	public synchronized Event nextEvent()
@@ -40,6 +56,7 @@ public class Scheduler
 
 		if (nextTime <= curTime)
 		{
+			time = nextTime;
 			return queue.remove();
 		}
 

@@ -45,6 +45,11 @@ public class WorldMaster
 			{
 				parseLeaders(in);
 			}
+			else if (s.equals("gameTime"))
+			{
+				in.nextToken();
+				scheduler.setGameTime(in.getLongValue());
+			}
 			else
 			{
 				in.nextToken();
@@ -146,6 +151,7 @@ public class WorldMaster
 		JsonGenerator out = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
 		out.writeStartObject();
 		out.writeNumberField("year", year);
+		out.writeNumberField("gameTime", scheduler.currentTime());
 		out.writeNumberField("lastSeqId", lastSeqId);
 		out.writeFieldName("leaders");
 		out.writeStartObject();
