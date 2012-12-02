@@ -37,6 +37,7 @@ public class WorldView extends JPanel
 	{
 		int selectedRegion;
 		Geometry.VertexId selectedVertex;
+		String selectedMob;
 
 		public Location getLocation()
 		{
@@ -55,6 +56,12 @@ public class WorldView extends JPanel
 			}
 		}
 
+		public String getMob()
+		{
+			assert isMob();
+			return selectedMob;
+		}
+
 		public int getRegion()
 		{
 			assert isRegion();
@@ -66,9 +73,24 @@ public class WorldView extends JPanel
 			return selectedRegion != 0 || selectedVertex != null;
 		}
 
+		public boolean isMob()
+		{
+			return selectedMob != null;
+		}
+
 		public boolean isRegion()
 		{
 			return selectedRegion != 0;
+		}
+
+		public void selectMob(String mobName)
+		{
+			assert mobName != null;
+
+			this.selectedRegion = 0;
+			this.selectedVertex = null;
+			this.selectedMob = mobName;
+			repaint();
 		}
 	}
 
@@ -796,6 +818,26 @@ System.err.println(e);
 		{
 			drawSelectionRect(g);
 		}
+		else if (selection.isMob())
+		{
+			drawSelectionRectMob(g);
+		}
+	}
+
+	void drawSelectionRectMob(Graphics gr)
+	{
+		MobInfo mob = mobs.mobs.get(selection.getMob());
+		if (mob == null)
+			return;
+
+		Location loc = mob.location;
+		assert loc != null;
+		
+		Geometry g = map.getGeometry();
+		Point p = toScreen(g.getPoint(loc));
+
+		gr.setColor(Color.YELLOW);
+		gr.drawRect(p.x - 16, p.y - 16, 32, 32);
 	}
 
 	void drawSelectionRect(Graphics gr)

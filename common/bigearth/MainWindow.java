@@ -10,7 +10,6 @@ public class MainWindow extends JFrame
 	MapModel map;
 	MobListModel mobList;
 	WorldView view;
-	String selectedMob;
 	Client client;
 
 	public MainWindow(Client client)
@@ -138,23 +137,29 @@ public class MainWindow extends JFrame
 				return;
 			}
 		}
-		selectMob(null);
 	}
 
 	void selectMob(String mobName)
 	{
-		System.out.println("selected "+mobName);
-		selectedMob = mobName;
+		System.out.println("selecting "+mobName);
+		view.selection.selectMob(mobName);
 	}
 
 	void moveMobTo(int regionId)
 	{
+		if (!view.selection.isMob())
+		{
+			// the user has not selected a mob
+			System.out.println("not a mob");
+			return;
+		}
+
 		Location loc = new SimpleLocation(regionId);
 
-		System.out.println("want to move "+selectedMob+" to "+loc);
+		System.out.println("want to move "+view.selection.getMob()+" to "+loc);
 		try
 	{
-		client.moveMobTo(selectedMob, loc);
+		client.moveMobTo(view.selection.getMob(), loc);
 		}
 		catch (Exception e)
 		{
