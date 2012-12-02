@@ -85,6 +85,11 @@ public class WorldView extends JPanel
 			return selectedRegion != 0;
 		}
 
+		public boolean isSelectedMob(String mobName)
+		{
+			return selectedMob != null && selectedMob.equals(mobName);
+		}
+
 		public void selectMob(String mobName)
 		{
 			assert mobName != null;
@@ -96,7 +101,33 @@ public class WorldView extends JPanel
 			onSelectionChanged();
 			onMobSelected(mobName);
 			repaint();
+		}
 
+		public void selectRegion(int regionId)
+		{
+			assert regionId != 0;
+
+			this.selectedRegion = regionId;
+			this.selectedVertex = null;
+			this.selectedMob = null;
+
+			onSelectionChanged();
+			onRegionSelected(this.selectedRegion);
+			fireRegionSelected(this.selectedRegion);
+			repaint();
+		}
+
+		public void selectVertex(Geometry.VertexId vtx)
+		{
+			assert vtx != null;
+
+			this.selectedRegion = 0;
+			this.selectedVertex = vtx;
+			this.selectedMob = null;
+
+			onSelectionChanged();
+			fireVertexSelected(selection.selectedVertex);
+			repaint();
 		}
 	}
 
@@ -867,30 +898,37 @@ System.err.println(e);
 		gr2.setPaint(oldPaint);
 	}
 
-	public void paintComponent(Graphics g)
+	public void paintComponent(Graphics gr)
 	{
 		if (image == null || regionBounds == null)
 			return;
 
 		// draw the terrain
-		g.drawImage(image, 0, 0, Color.WHITE, null);
+		gr.drawImage(image, 0, 0, Color.WHITE, null);
 
 		// draw latitude/longitude lines
-		drawCoordinateLines(g);
+		drawCoordinateLines(gr);
 
 		if (showMobImages)
 		{
-			drawMobs(g);
+			drawMobs(gr);
 		}
 
 		// draw selection rectangle
 		if (selection.isRegion())
 		{
-			drawSelectionRect(g);
+			drawSelectionRect(gr);
 		}
 		else if (selection.isMob())
 		{
-			drawSelectionRectMob(g);
+			MobInfo mob = mobs.mobs.get(selection.getMob());
+			assert mob != null;
+			assert mob.location != null;
+
+			Point p = toScreen(map.getGeometry().getPoint(mob.location));
+			drawFleetSelectionBack(gr, p);
+			drawMob(gr, p, mob);
+			drawFleetSelectionCircle(gr, p);
 		}
 	}
 
@@ -929,24 +967,6 @@ System.err.println(e);
 			int width = img.getWidth(null);
 			int height = img.getHeight(null);
 			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
-	}
-
-	void drawSelectionRectMob(Graphics gr)
-	{
-		MobInfo mob = mobs.mobs.get(selection.getMob());
-		if (mob == null)
-			return;
-
-		Location loc = mob.location;
-		assert loc != null;
-		
-		Geometry g = map.getGeometry();
-		Point p = toScreen(g.getPoint(loc));
-
-		gr.setColor(Color.YELLOW);
-		gr.drawRect(p.x - 16, p.y - 16, 32, 32);
-
-		drawFleetSelectionCircle(gr, p);
 	}
 
 	static BufferedImage [] mobSelectionFrontImages;
@@ -1045,6 +1065,9 @@ System.err.println(e);
 		// draw mobs
 		for (String mobName : mobs.mobs.keySet())
 		{
+			if (selection.isSelectedMob(mobName))
+				continue;
+
 			MobInfo mob = mobs.mobs.get(mobName);
 			Location loc = mob.location;
 
@@ -1129,7 +1152,7 @@ System.err.println(e);
 		int regionId = g.findCell(pt);
 		if (!allowVertexSelection)
 		{
-			selectRegion(regionId);
+			selection.selectRegion(regionId);
 			return;
 		}
 
@@ -1153,35 +1176,16 @@ System.err.println(e);
 
 		if (best == -1)
 		{
-			selectRegion(regionId);
+			selection.selectRegion(regionId);
 			return;
 		}
 
 		Geometry.VertexId [] vtxs = g.getSurroundingVertices(regionId);
-		selectVertex(vtxs[best]);
-	}
-
-	private void selectRegion(int regionId)
-	{
-		selection.selectedRegion = regionId;
-		selection.selectedVertex = null;
-		onSelectionChanged();
-		onRegionSelected(selection.selectedRegion);
-		fireRegionSelected(selection.selectedRegion);
-		repaint();
+		selection.selectVertex(vtxs[best]);
 	}
 
 	protected void onRegionSelected(int regionId)
 	{
-	}
-
-	private void selectVertex(Geometry.VertexId vtx)
-	{
-		selection.selectedRegion = 0;
-		selection.selectedVertex = vtx;
-		onSelectionChanged();
-		fireVertexSelected(selection.selectedVertex);
-		repaint();
 	}
 
 	private void fireRegionSelected(int regionId)
