@@ -31,8 +31,13 @@ public class WorldView extends JPanel
 	boolean allowVertexSelection;
 	boolean showMobImages = true;
 
-	int selectedRegion;
-	Geometry.VertexId selectedVertex;
+	Selection selection = new Selection();
+
+	class Selection
+	{
+		int selectedRegion;
+		Geometry.VertexId selectedVertex;
+	}
 
 	static final int UNKNOWN_BIOME_COLOR = 0x888888;
 	static final int DEFAULT_WIDTH = 720;
@@ -104,13 +109,13 @@ public class WorldView extends JPanel
 
 	public Location getSelectedLocation()
 	{
-		if (selectedVertex != null)
+		if (selection.selectedVertex != null)
 		{
-			return selectedVertex;
+			return selection.selectedVertex;
 		}
-		else if (selectedRegion != 0)
+		else if (selection.selectedRegion != 0)
 		{
-			return new SimpleLocation(selectedRegion);
+			return new SimpleLocation(selection.selectedRegion);
 		}
 		else
 		{
@@ -758,7 +763,7 @@ System.err.println(e);
 		}
 
 		// draw selection rectangle
-		if (selectedRegion != 0)
+		if (selection.selectedRegion != 0)
 		{
 			drawSelectionRect(g);
 		}
@@ -766,10 +771,10 @@ System.err.println(e);
 
 	void drawSelectionRect(Graphics gr)
 	{
-		assert selectedRegion != 0;
+		assert selection.selectedRegion != 0;
 
 		Geometry g = map.getGeometry();
-		Point3d [] pp = g.getCellBoundary(selectedRegion);
+		Point3d [] pp = g.getCellBoundary(selection.selectedRegion);
 
 		int [] x_coords = new int[pp.length];
 		int [] y_coords = new int[pp.length];
@@ -908,10 +913,10 @@ System.err.println(e);
 
 	private void selectRegion(int regionId)
 	{
-		selectedRegion = regionId;
-		selectedVertex = null;
-		onRegionSelected(selectedRegion);
-		fireRegionSelected(selectedRegion);
+		selection.selectedRegion = regionId;
+		selection.selectedVertex = null;
+		onRegionSelected(selection.selectedRegion);
+		fireRegionSelected(selection.selectedRegion);
 		repaint();
 	}
 
@@ -921,9 +926,9 @@ System.err.println(e);
 
 	private void selectVertex(Geometry.VertexId vtx)
 	{
-		selectedRegion = 0;
-		selectedVertex = vtx;
-		fireVertexSelected(selectedVertex);
+		selection.selectedRegion = 0;
+		selection.selectedVertex = vtx;
+		fireVertexSelected(selection.selectedVertex);
 		repaint();
 	}
 

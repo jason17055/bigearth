@@ -399,9 +399,9 @@ public class WorldViewer extends JFrame
 
 	void onAdjustWildlifeClicked(int delta)
 	{
-		if (view.selectedRegion != 0)
+		if (view.selection.selectedRegion != 0)
 		{
-			RegionServant r = world.world.regions[view.selectedRegion-1];
+			RegionServant r = world.world.regions[view.selection.selectedRegion-1];
 			r.adjustWildlife(delta*100);
 		}
 	}
@@ -418,13 +418,13 @@ public class WorldViewer extends JFrame
 			throw new Exception("Must generate rivers first");
 
 		MakeRivers.LakeInfo lake = null;
-		if (view.selectedVertex != null)
+		if (view.selection.selectedVertex != null)
 		{
-			lake = mrivers.getLakeAt(view.selectedVertex);
+			lake = mrivers.getLakeAt(view.selection.selectedVertex);
 		}
-		else if (view.selectedRegion != 0)
+		else if (view.selection.selectedRegion != 0)
 		{
-			lake = mrivers.lakesByRegion.get(view.selectedRegion);
+			lake = mrivers.lakesByRegion.get(view.selection.selectedRegion);
 		}
 		
 		if (lake == null)
@@ -530,7 +530,7 @@ public class WorldViewer extends JFrame
 		if (selectedMob == null)
 			return null;
 
-		int regionId = view.selectedRegion;
+		int regionId = view.selection.selectedRegion;
 		RegionServant region = world.world.regions[regionId-1];
 
 		return region.presentMobs.get(selectedMob);
@@ -871,7 +871,7 @@ assert(x >= 1);
 
 	void reloadRegionStats()
 	{
-		int regionId = view.selectedRegion;
+		int regionId = view.selection.selectedRegion;
 		if (regionId == 0)
 			return;
 
@@ -888,7 +888,7 @@ assert(x >= 1);
 	//implements WorldView.Listener
 	public void onRegionSelected(int regionId)
 	{
-		assert regionId == view.selectedRegion;
+		assert regionId == view.selection.selectedRegion;
 		reloadRegionStats();
 
 		regionPane.setBorder(
