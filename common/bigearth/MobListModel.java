@@ -52,7 +52,11 @@ public class MobListModel
 		{
 			oldMobInfo.location = newMobInfo.location;
 		}
-
+		if (newMobInfo.hasActivity())
+		{
+			oldMobInfo.activity = newMobInfo.activity;
+			oldMobInfo.activityStarted = newMobInfo.activityStarted;
+		}
 		fireMobUpdated(mobName);
 	}
 

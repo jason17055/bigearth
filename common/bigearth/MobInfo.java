@@ -10,11 +10,18 @@ public class MobInfo
 	String avatarName;
 	String owner;
 	Location location;
+	String activity;
+	long activityStarted;
 
 	MobInfo(String name)
 	{
 		this.name = name;
 		this.displayName = name;
+	}
+
+	public boolean hasActivity()
+	{
+		return activity != null;
 	}
 
 	public boolean hasAvatarName()
@@ -51,6 +58,13 @@ public class MobInfo
 				m.location = LocationHelper.parse(in.nextTextValue(), world);
 			else if (s.equals("owner"))
 				m.owner = in.nextTextValue();
+			else if (s.equals("activity"))
+				m.activity = in.nextTextValue();
+			else if (s.equals("activityStarted"))
+			{
+				in.nextToken();
+				m.activityStarted = in.getLongValue();
+			}
 			else
 			{
 				in.nextToken();
@@ -75,6 +89,11 @@ public class MobInfo
 			out.writeStringField("location", location.toString());
 		if (owner != null)
 			out.writeStringField("owner", owner);
+		if (activity != null)
+		{
+			out.writeStringField("activity", activity);
+			out.writeNumberField("activityStarted", activityStarted);
+		}
 		out.writeEndObject();
 	}
 }

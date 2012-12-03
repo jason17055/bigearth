@@ -299,16 +299,42 @@ public class WorldMaster
 		wantSaved(this);
 	}
 
+	void setActivity(String mobName, String activityName)
+	{
+		MobInfo mob = mobs.get(mobName);
+		assert mob != null;
+
+		mob.activity = activityName;
+		mob.activityStarted = eventDispatchThread.lastEventTime;
+		mobChanged(mobName);
+	}
+
+	void mobChanged(String mobName)
+	{
+		MobInfo mob = mobs.get(mobName);
+
+		if (mob.owner != null)
+		{
+			MobInfo data = new MobInfo(mobName);
+			data.activity = mob.activity;
+			data.activityStarted = mob.activityStarted;
+			MobChangeNotification n = new MobChangeNotification(mobName, data);
+			notifyLeader(mob.owner, n);
+		}
+
+		//TODO- inform everyone else who can see this mob
+	}
+
 	void mobMoved(String mobName, Location oldLoc, Location newLoc)
 	{
 		MobInfo mob = mobs.get(mobName);
-		if (mob.owner == null)
-			return;
-
-		MobInfo data = new MobInfo(mobName);
-		data.location = newLoc;
-		MobChangeNotification n = new MobChangeNotification(mobName, data);
-		notifyLeader(mob.owner, n);
+		if (mob.owner != null)
+		{
+			MobInfo data = new MobInfo(mobName);
+			data.location = newLoc;
+			MobChangeNotification n = new MobChangeNotification(mobName, data);
+			notifyLeader(mob.owner, n);
+		}
 
 		//TODO- inform everyone else who can see this mob
 	}

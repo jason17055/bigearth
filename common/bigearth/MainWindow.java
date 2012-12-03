@@ -105,6 +105,16 @@ public class MainWindow extends JFrame
 			}});
 		viewMenu.add(menuItem);
 
+		JMenu ordersMenu = new JMenu("Orders");
+		menuBar.add(ordersMenu);
+
+		menuItem = new JMenuItem("Build City");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onBuildCityClicked();
+			}});
+		ordersMenu.add(menuItem);
+
 		setJMenuBar(menuBar);
 	}
 
@@ -181,6 +191,26 @@ public class MainWindow extends JFrame
 		catch (Exception e)
 		{
 			System.out.println(e);
+		}
+	}
+
+	void onBuildCityClicked()
+	{
+		if (!view.selection.isMob())
+			return;
+
+		try
+		{
+			client.setMobActivity(view.selection.getMob(),
+				"build-city");
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }
