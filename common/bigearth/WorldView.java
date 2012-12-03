@@ -989,10 +989,31 @@ System.err.println(e);
 			ACTIVITY_IND_SIZE,
 			ACTIVITY_IND_SIZE);
 
-		gr.setColor(Color.WHITE);
-		gr.fill(indRect);
-		gr.setColor(Color.BLACK);
-		gr.draw(indRect);
+		if (mob.activity != null &&
+			!mob.activity.equals(""))
+		{
+			gr.setColor(Color.WHITE);
+			gr.fill(indRect);
+			gr.setColor(Color.BLACK);
+			gr.draw(indRect);
+
+			String sym = getActivitySymbol(mob.activity);
+			FontMetrics metrics = gr.getFontMetrics();
+			int hgt = metrics.getAscent();
+			int adv = metrics.stringWidth(sym);
+			Dimension sz = new Dimension(adv, hgt);
+			gr.drawString(sym,
+				indRect.x+indRect.width/2-sz.width/2,
+				indRect.y+indRect.height/2+sz.height/2);
+		}
+	}
+
+	static String getActivitySymbol(String activityName)
+	{
+		assert activityName != null;
+		assert !activityName.equals("");
+
+		return "X";
 	}
 
 	static BufferedImage [] mobSelectionFrontImages;
