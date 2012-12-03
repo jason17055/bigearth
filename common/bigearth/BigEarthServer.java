@@ -66,7 +66,7 @@ public class BigEarthServer
 
 		System.out.println("Shutting down");
 		be.stop();
-		//be.world.saveAll();
+		be.world.saveAll();
 	}
 
 	void load()
