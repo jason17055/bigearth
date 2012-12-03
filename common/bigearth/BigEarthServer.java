@@ -253,6 +253,8 @@ class GetMyMobsServlet extends HttpServlet
 				out.writeStartObject();
 				out.writeStringField("avatarName", mob.avatarName);
 				out.writeStringField("location", mob.location.toString());
+				//TODO- only if we own this mob
+				out.writeStringField("activity", mob.activity);
 				out.writeEndObject();
 			}
 		}
