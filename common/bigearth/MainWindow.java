@@ -11,6 +11,7 @@ public class MainWindow extends JFrame
 	MobListModel mobList;
 	WorldView view;
 	Client client;
+	static final int SIDE_BAR_WIDTH = 180;
 
 	public MainWindow(Client client)
 	{
@@ -33,6 +34,7 @@ public class MainWindow extends JFrame
 		add(view, BorderLayout.CENTER);
 
 		JPanel sideBar = new JPanel();
+		setSideBarDimensions(sideBar);
 		add(sideBar, BorderLayout.WEST);
 
 		initMenu();
@@ -49,6 +51,21 @@ public class MainWindow extends JFrame
 			});
 
 		client.addListener(this);
+	}
+
+	private void setSideBarDimensions(JPanel sideBar)
+	{
+		Dimension d = new Dimension(sideBar.getMinimumSize());
+		d.width = SIDE_BAR_WIDTH;
+		sideBar.setMinimumSize(d);
+
+		d = new Dimension(sideBar.getPreferredSize());
+		d.width = SIDE_BAR_WIDTH;
+		sideBar.setPreferredSize(d);
+
+		d = new Dimension(sideBar.getMaximumSize());
+		d.width = SIDE_BAR_WIDTH;
+		sideBar.setMaximumSize(d);
 	}
 
 	void onWindowClosed()
