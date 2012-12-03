@@ -902,8 +902,10 @@ System.err.println(e);
 		gr2.setPaint(oldPaint);
 	}
 
-	public void paintComponent(Graphics gr)
+	public void paintComponent(Graphics gr_x)
 	{
+		Graphics2D gr = (Graphics2D) gr_x;
+
 		if (terrainDirty || image == null
 			|| image.getWidth() != getWidth()
 			|| image.getHeight() != getHeight())
@@ -953,13 +955,15 @@ System.err.println(e);
 		Location loc = mob.location;
 		Point p = toScreen(map.getGeometry().getPoint(loc));
 
-		Graphics gr = getGraphics();
+		Graphics2D gr = (Graphics2D) getGraphics();
 		drawFleetSelectionBack(gr, p);
 		drawMob(gr, p, mob);
 		drawFleetSelectionCircle(gr, p);
 	}
 
-	void drawMob(Graphics gr, Point p, MobInfo mob)
+	static final int ACTIVITY_IND_SIZE = 16;
+
+	void drawMob(Graphics2D gr, Point p, MobInfo mob)
 	{
 		assert gr != null;
 		assert p != null;
@@ -978,6 +982,17 @@ System.err.println(e);
 			int width = img.getWidth(null);
 			int height = img.getHeight(null);
 			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
+
+		Rectangle indRect = new Rectangle(
+			p.x + width/2 - ACTIVITY_IND_SIZE,
+			p.y - height/2,
+			ACTIVITY_IND_SIZE,
+			ACTIVITY_IND_SIZE);
+
+		gr.setColor(Color.WHITE);
+		gr.fill(indRect);
+		gr.setColor(Color.BLACK);
+		gr.draw(indRect);
 	}
 
 	static BufferedImage [] mobSelectionFrontImages;
@@ -1065,7 +1080,7 @@ System.err.println(e);
 		gr.drawPolygon(x_coords, y_coords, pp.length);
 	}
 
-	void drawMobs(Graphics gr)
+	void drawMobs(Graphics2D gr)
 	{
 		assert map != null;
 		assert regionBounds != null;
@@ -1083,18 +1098,7 @@ System.err.println(e);
 			Location loc = mob.location;
 
 			Point p = toScreen(g.getPoint(loc));
-
-		// TODO- skip if this point is clearly off the screen
-
-		//	if (zoomFactor <= 2)
-		//		drawMobDot(gr, p, regionId);
-		//	else
-		//		drawMobPin(gr, p, regionId);
-
-			BufferedImage img = loadMobImage(mob.avatarName);
-			int width = img.getWidth(null);
-			int height = img.getHeight(null);
-			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
+			drawMob(gr, p, mob);
 		}
 
 	}
