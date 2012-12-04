@@ -425,4 +425,70 @@ if (false)
 		mob.avatarName = avatarName;
 		presentMobs.put(mob.name, mob);
 	}
+
+	MobInfo getMob(String mobName)
+	{
+		return presentMobs.get(mobName);
+	}
+
+	long currentTime()
+	{
+		return world.eventDispatchThread.lastEventTime;
+	}
+
+	void notifyLeader(String user, Notification n)
+	{
+		world.notifyLeader(user, n);
+	}
+
+	void mobActivity(final String mobName)
+	{
+		assert mobName != null;
+
+		final MobInfo mob = getMob(mobName);
+		assert mob != null;
+		assert mob.activity != null;
+
+		long wakeUp = mob.activityStarted + 3000;
+		world.scheduler.scheduleAt(new Runnable() {
+		public void run()
+		{
+			mob.activity = "";
+			mobChanged(mobName);
+		}
+		}, wakeUp);
+	}
+
+	void mobChanged(String mobName)
+	{
+		assert mobName != null;
+
+		MobInfo mob = getMob(mobName);
+		assert mob != null;
+
+		if (mob.owner != null)
+		{
+			MobInfo data = new MobInfo(mobName);
+			data.activity = mob.activity;
+			data.activityStarted = mob.activityStarted;
+			MobChangeNotification n = new MobChangeNotification(mobName, data);
+			notifyLeader(mob.owner, n);
+		}
+
+		//TODO- inform everyone else who can see this mob
+	}
+
+	void mobSetActivity(String mobName, String activityName)
+	{
+		assert mobName != null;
+		assert activityName != null;
+
+		MobInfo mob = getMob(mobName);
+		assert mob != null;
+
+		mob.activity = activityName;
+		mob.activityStarted = currentTime();
+		mobActivity(mobName);
+		mobChanged(mobName);
+	}
 }

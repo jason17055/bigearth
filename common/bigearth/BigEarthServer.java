@@ -534,7 +534,8 @@ class SetActivityServlet extends HttpServlet
 		}
 
 		// make the actual change
-		server.world.setActivity(mobName, activityName);
+		RegionServant svt = server.world.getRegionForMob(mobName);
+		svt.mobSetActivity(mobName, activityName);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);

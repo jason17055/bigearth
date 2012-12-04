@@ -315,57 +315,6 @@ public class WorldMaster
 		wantSaved(this);
 	}
 
-	void mobActivity(final String mobName)
-	{
-		assert mobName != null;
-
-		final MobInfo mob = getMob(mobName);
-		assert mob != null;
-		assert mob.activity != null;
-
-		long wakeUp = mob.activityStarted + 3000;
-		scheduler.scheduleAt(new Runnable() {
-		public void run()
-		{
-			mob.activity = "";
-			mobChanged(mobName);
-		}
-		}, wakeUp);
-	}
-
-	void setActivity(String mobName, String activityName)
-	{
-		assert mobName != null;
-		assert activityName != null;
-
-		MobInfo mob = getMob(mobName);
-		assert mob != null;
-
-		mob.activity = activityName;
-		mob.activityStarted = eventDispatchThread.lastEventTime;
-		mobActivity(mobName);
-		mobChanged(mobName);
-	}
-
-	void mobChanged(String mobName)
-	{
-		assert mobName != null;
-
-		MobInfo mob = getMob(mobName);
-		assert mob != null;
-
-		if (mob.owner != null)
-		{
-			MobInfo data = new MobInfo(mobName);
-			data.activity = mob.activity;
-			data.activityStarted = mob.activityStarted;
-			MobChangeNotification n = new MobChangeNotification(mobName, data);
-			notifyLeader(mob.owner, n);
-		}
-
-		//TODO- inform everyone else who can see this mob
-	}
-
 	void mobMoved(String mobName, Location oldLoc, Location newLoc)
 	{
 		MobInfo mob = getMob(mobName);
