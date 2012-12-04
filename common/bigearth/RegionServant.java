@@ -454,7 +454,7 @@ if (false)
 		assert mob.activity != null;
 		assert mob.wakeUp == null;
 
-		long wakeUp = mob.activityStarted + 3000;
+		long wakeUp = mob.activityStarted + 5000;
 		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
 		public void run()
 		{
@@ -488,6 +488,10 @@ if (false)
 	{
 		assert mobName != null;
 		assert activityName != null;
+
+		if (mobIsHot(mobName))
+			return;
+		mobCancelActivity(mobName);
 
 		MobInfo mob = getMob(mobName);
 		assert mob != null;
