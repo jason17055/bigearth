@@ -82,6 +82,23 @@ class RegionServant
 		return v > 0 ? v : 0;
 	}
 
+	/**
+	 * Determine ease of finding a wild animal for game, given
+	 * a particular number of hunters.
+	 *
+	 * @param numWorkers how many workers are assigned to hunting
+	 * @return the expected number of animals/year harvested by
+	 *     the given number of hunters.
+	 */
+	double calculateHuntingRate(int numWorkers)
+	{
+		if (wildlife == 0)
+			return 0.0;
+
+		double s = 0.5 * Math.sqrt(wildlife / 400.0);
+		return wildlife - wildlife * Math.exp(-s * numWorkers / (double) wildlife);
+	}
+
 	static final int WILDLIFE_PREFERRED_TEMPERATURE = 240;
 	static final int WILDLIFE_TEMPERATURE_TOLERANCE = 80;
 	void doWildlifeMaintenance_stage1()
@@ -190,6 +207,7 @@ if (false)
 		throw new Error("Unexpected: region "+neighborId+" is not a neighbor");
 	}
 
+	//implements ShadowRegion
 	public BiomeType getBiome()
 	{
 		return biome;
@@ -213,6 +231,7 @@ if (false)
 		}
 	}
 
+	//implements ShadowRegion
 	public void importWildlife(int newWildlife)
 	{
 		assert newWildlife >= 0;
@@ -467,9 +486,19 @@ if (false)
 		{
 			// FIXME- is there an actual mob property I can use here?
 			final int MY_POPULATION = 100;
+			final double FOOD_PER_ANIMAL = 0.1;
+			final double PSUEDO_YEAR = 20000;
 
-			//double huntingRate = calculateHuntingRate(MY_POPULATION);
-			requiredTime = 8000;
+			// animals per year
+			double huntingRate = calculateHuntingRate(MY_POPULATION);
+
+			// food per year
+			double foodRate = FOOD_PER_ANIMAL * huntingRate;
+
+			// time required to harvest one unit of food
+			requiredTime = (long) Math.ceil(
+				PSUEDO_YEAR / foodRate
+				);
 		}
 		else
 		{
