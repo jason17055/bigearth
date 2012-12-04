@@ -12,6 +12,7 @@ public class MobInfo
 	Location location;
 	String activity;
 	long activityStarted;
+	transient Scheduler.Event wakeUp;
 
 	MobInfo(String name)
 	{

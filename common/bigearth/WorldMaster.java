@@ -306,12 +306,20 @@ public class WorldMaster
 		if (!fromRegion.mobCanMoveTo(mobName, dest))
 			return;
 
+		// check whether mob is busy
+		if (fromRegion.mobIsUninterruptible(mobName))
+			return;
+
+		fromRegion.mobCancelActivity(mobName);
+
+		long delay = fromRegion.mobMovementDelay(mobName, dest);
+		assert delay > 0;
+
 		Location oldLoc = mob.location;
-		mob.location = dest;
 
 		fromRegion.removeMob(mobName);
-		toRegion.addMob(mobName, mob);
-		mobs.put(mobName, toRegion);
+
+		toRegion.mobMovedIn(mobName, mob, dest, delay);
 
 		mobMoved(mobName, oldLoc, dest);
 		discoverTerrain(mob.owner, dest);

@@ -452,11 +452,13 @@ if (false)
 		final MobInfo mob = getMob(mobName);
 		assert mob != null;
 		assert mob.activity != null;
+		assert mob.wakeUp == null;
 
 		long wakeUp = mob.activityStarted + 3000;
-		world.scheduler.scheduleAt(new Runnable() {
+		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
 		public void run()
 		{
+			mob.wakeUp = null;
 			mob.activity = "";
 			mobChanged(mobName);
 		}
@@ -507,5 +509,69 @@ if (false)
 		BiomeType destBiome = destRegion.getBiome();
 
 		return !destBiome.isWater();
+	}
+
+	long mobMovementDelay(String mobName, Location dest)
+	{
+		assert mobName != null;
+		assert dest != null;
+		assert dest instanceof SimpleLocation;
+
+		int destRegionId = ((SimpleLocation) dest).regionId;
+		ShadowRegion destRegion = world.getShadowRegion(destRegionId);
+		BiomeType destBiome = destRegion.getBiome();
+		BiomeType myBiome = getBiome();
+
+		return 1200;
+	}
+
+	void mobMovedIn(final String mobName, final MobInfo mob,
+		Location dest, long delay)
+	{
+		addMob(mobName, mob);
+		world.mobs.put(mobName, this);
+
+		Location oldLoc = mob.location;
+		mob.location = dest;
+		mob.activity = "move";
+		mob.activityStarted = currentTime();
+
+		assert mob.wakeUp == null;
+
+		long wakeUp = mob.activityStarted + delay;
+		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
+		public void run()
+		{
+			mob.wakeUp = null;
+			mob.activity = "";
+			mobChanged(mobName);
+		}
+		}, wakeUp);
+	}
+
+	boolean mobIsUninterruptible(String mobName)
+	{
+		MobInfo mob = getMob(mobName);
+		assert mob != null;
+
+		if (mob.activity == null || mob.activity.equals(""))
+			return false;
+
+		if (mob.activity.equals("move"))
+			return true;
+
+		return false;
+	}
+
+	void mobCancelActivity(String mobName)
+	{
+		MobInfo mob = getMob(mobName);
+		assert mob != null;
+
+		if (mob.wakeUp != null)
+		{
+			world.scheduler.cancel(mob.wakeUp);
+			mob.wakeUp = null;
+		}
 	}
 }

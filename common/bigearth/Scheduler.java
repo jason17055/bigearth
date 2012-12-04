@@ -17,9 +17,11 @@ public class Scheduler
 		this.config = config;
 	}
 
-	public void scheduleAt(Runnable callback, long aTime)
+	public Event scheduleAt(Runnable callback, long aTime)
 	{
-		schedule(new Event(callback, aTime));
+		Event ev = new Event(callback, aTime);
+		schedule(ev);
+		return ev;
 	}
 
 	public long convertToGameTime(long realTime)
@@ -74,6 +76,12 @@ public class Scheduler
 		{
 			notifyAll();
 		}
+	}
+
+	public synchronized void cancel(Event ev)
+	{
+		queue.remove(ev);
+		notifyAll();
 	}
 
 	class Event implements Comparable<Event>, Runnable
