@@ -5,7 +5,7 @@ import javax.swing.*;
 import java.awt.event.*;
 
 public class MainWindow extends JFrame
-	implements Client.Listener
+	implements Client.Listener, MobListModel.Listener
 {
 	MapModel map;
 	MobListModel mobList;
@@ -192,6 +192,7 @@ public class MainWindow extends JFrame
 	public void setMobList(MobListModel mobList)
 	{
 		this.mobList = mobList;
+		this.mobList.addListener(this);
 		this.view.setMobs(mobList);
 
 		// find a unit to focus on
@@ -208,6 +209,16 @@ public class MainWindow extends JFrame
 		mobPane.setVisible(false);
 	}
 
+	private void loadMobInfo(String mobName)
+	{
+		MobInfo mob = mobList.mobs.get(mobName);
+		mobTypeLbl.setText(mob.avatarName != null ?
+			mob.avatarName : "");
+
+		mobStockMeatLbl.setText(mob.hasStock() ?
+			Long.toString(mob.getStock(CommodityType.MEAT)) : "");
+	}
+
 	void onMobSelected()
 	{
 		String mobName = view.selection.getMob();
@@ -215,12 +226,7 @@ public class MainWindow extends JFrame
 			BorderFactory.createTitledBorder(mobName)
 			);
 
-		MobInfo mob = mobList.mobs.get(mobName);
-		mobTypeLbl.setText(mob.avatarName != null ?
-			mob.avatarName : "");
-
-		mobStockMeatLbl.setText(mob.hasStock() ?
-			Long.toString(mob.getStock(CommodityType.MEAT)) : "");
+		loadMobInfo(mobName);
 
 		mobPane.setVisible(true);
 	}
@@ -286,4 +292,15 @@ public class MainWindow extends JFrame
 				JOptionPane.ERROR_MESSAGE);
 		}
 	}
+
+	// implements MobListModel.Listener
+	public void mobUpdated(String mobName)
+	{
+		if (view.selection.isMob()
+		&& view.selection.getMob().equals(mobName))
+		{
+			loadMobInfo(mobName);
+		}
+	}
+
 }
