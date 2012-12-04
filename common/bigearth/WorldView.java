@@ -33,6 +33,7 @@ public class WorldView extends JPanel
 	ArrayList<Listener> listeners;
 	boolean showRivers;
 	boolean allowVertexSelection;
+	boolean allowMobSelection = true;
 	boolean showMobImages = true;
 
 	Selection selection = new Selection();
@@ -1186,6 +1187,20 @@ System.err.println(e);
 	{
 		Geometry g = map.getGeometry();
 		int regionId = g.findCell(pt);
+		if (allowMobSelection)
+		{
+			// check whether any mobs are at this location
+			SimpleLocation loc = new SimpleLocation(regionId);
+			for (MobInfo mob : mobs.mobs.values())
+			{
+				if (mob.location.equals(loc))
+				{
+					selection.selectMob(mob.name);
+					return;
+				}
+			}
+		}
+
 		if (!allowVertexSelection)
 		{
 			selection.selectRegion(regionId);

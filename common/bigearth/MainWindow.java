@@ -24,9 +24,13 @@ public class MainWindow extends JFrame
 			{
 				moveMobTo(regionId);
 			}
-			public void onRegionSelected(int regionId)
+			public void onSelectionChanged()
 			{
-				selectMobAt(regionId);
+				super.onSelectionChanged();
+				if (selection.isMob())
+				{
+					MainWindow.this.onMobSelected();
+				}
 			}
 
 			};
@@ -153,23 +157,10 @@ public class MainWindow extends JFrame
 		}
 	}
 
-	void selectMobAt(int regionId)
+	void onMobSelected()
 	{
-		Location loc = new SimpleLocation(regionId);
-		for (MobInfo mob : mobList.mobs.values())
-		{
-			if (mob.location.equals(loc))
-			{
-				selectMob(mob.name);
-				return;
-			}
-		}
-	}
-
-	void selectMob(String mobName)
-	{
-		System.out.println("selecting "+mobName);
-		view.selection.selectMob(mobName);
+		String mobName = view.selection.getMob();
+		System.out.println("selected "+mobName);
 	}
 
 	void moveMobTo(int regionId)
