@@ -298,15 +298,19 @@ public class WorldMaster
 		if (!isAdjacent(mob.location, dest))
 			return;
 
+		RegionServant fromRegion = getRegionForMob(mobName);
+		RegionServant toRegion = getRegionForLocation(dest);
+
+		// ignore request if destination is not tolerable
+		// to this mob
+		if (!fromRegion.mobCanMoveTo(mobName, dest))
+			return;
+
 		Location oldLoc = mob.location;
 		mob.location = dest;
 
-		RegionServant fromRegion = getRegionForLocation(oldLoc);
 		fromRegion.removeMob(mobName);
-
-		RegionServant toRegion = getRegionForLocation(dest);
 		toRegion.addMob(mobName, mob);
-
 		mobs.put(mobName, toRegion);
 
 		mobMoved(mobName, oldLoc, dest);

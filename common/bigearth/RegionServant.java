@@ -491,4 +491,17 @@ if (false)
 		mobActivity(mobName);
 		mobChanged(mobName);
 	}
+
+	boolean mobCanMoveTo(String mobName, Location dest)
+	{
+		assert mobName != null;
+		assert dest != null;
+		assert dest instanceof SimpleLocation;
+
+		int destRegionId = ((SimpleLocation) dest).regionId;
+		ShadowRegion destRegion = world.getShadowRegion(destRegionId);
+		BiomeType destBiome = destRegion.getBiome();
+
+		return !destBiome.isWater();
+	}
 }
