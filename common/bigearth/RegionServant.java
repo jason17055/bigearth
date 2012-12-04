@@ -445,6 +445,14 @@ if (false)
 		world.notifyLeader(user, n);
 	}
 
+	void mobHunt(final String mobName, final MobInfo mob)
+	{
+		
+	}
+
+	/**
+	 * Called to start a mob activity.
+	 */
 	void mobActivity(final String mobName)
 	{
 		assert mobName != null;
@@ -454,15 +462,34 @@ if (false)
 		assert mob.activity != null;
 		assert mob.wakeUp == null;
 
-		long wakeUp = mob.activityStarted + 5000;
+		long requiredTime;
+		if (mob.activity.equals("hunt"))
+		{
+			// FIXME- is there an actual mob property I can use here?
+			final int MY_POPULATION = 100;
+
+			//double huntingRate = calculateHuntingRate(MY_POPULATION);
+			requiredTime = 8000;
+		}
+		else
+		{
+			requiredTime = 5000;
+		}
+
+		long wakeUp = mob.activityStarted + requiredTime;
 		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
 		public void run()
 		{
 			mob.wakeUp = null;
-			mob.activity = "";
-			mobChanged(mobName);
+			mobActivityCompleted(mobName, mob);
 		}
 		}, wakeUp);
+	}
+
+	void mobActivityCompleted(String mobName, MobInfo mob)
+	{
+		mob.activity = "";
+		mobChanged(mobName);
 	}
 
 	void mobChanged(String mobName)
