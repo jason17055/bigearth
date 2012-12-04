@@ -299,13 +299,35 @@ public class WorldMaster
 		wantSaved(this);
 	}
 
+	void mobActivity(final String mobName)
+	{
+		assert mobName != null;
+
+		final MobInfo mob = mobs.get(mobName);
+		assert mob != null;
+		assert mob.activity != null;
+
+		long wakeUp = mob.activityStarted + 3000;
+		scheduler.scheduleAt(new Runnable() {
+		public void run()
+		{
+			mob.activity = "";
+			mobChanged(mobName);
+		}
+		}, wakeUp);
+	}
+
 	void setActivity(String mobName, String activityName)
 	{
+		assert mobName != null;
+		assert activityName != null;
+
 		MobInfo mob = mobs.get(mobName);
 		assert mob != null;
 
 		mob.activity = activityName;
 		mob.activityStarted = eventDispatchThread.lastEventTime;
+		mobActivity(mobName);
 		mobChanged(mobName);
 	}
 
