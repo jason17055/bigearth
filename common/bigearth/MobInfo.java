@@ -2,6 +2,7 @@ package bigearth;
 
 import com.fasterxml.jackson.core.*;
 import java.io.*;
+import java.util.*;
 
 public class MobInfo
 {
@@ -12,12 +13,37 @@ public class MobInfo
 	Location location;
 	String activity;
 	long activityStarted;
+	EnumMap<CommodityType, Long> stock;
 	transient Scheduler.Event wakeUp;
 
 	MobInfo(String name)
 	{
 		this.name = name;
 		this.displayName = name;
+	}
+
+	public void addCommodity(CommodityType ct, long amount)
+	{
+		if (stock == null)
+		{
+			stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		}
+
+		if (stock.containsKey(ct))
+		{
+			long amt = stock.get(ct);
+			amt += amount;
+			stock.put(ct, amt);
+		}
+		else
+		{
+			stock.put(ct, amount);
+		}
+	}
+
+	public long getStock(CommodityType ct)
+	{
+		return stock.get(ct);
 	}
 
 	public boolean hasActivity()
@@ -38,6 +64,11 @@ public class MobInfo
 	public boolean hasLocation()
 	{
 		return location != null;
+	}
+
+	public boolean hasStock()
+	{
+		return stock != null;
 	}
 
 	public static MobInfo parse(JsonParser in, String mobName, WorldConfigIfc world)
@@ -66,6 +97,8 @@ public class MobInfo
 				in.nextToken();
 				m.activityStarted = in.getLongValue();
 			}
+			else if (s.equals("stock"))
+				m.parseCommodities(in);
 			else
 			{
 				in.nextToken();
@@ -77,6 +110,25 @@ public class MobInfo
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 
 		return m;
+	}
+
+	private void parseCommodities(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		assert in.getCurrentToken() == JsonToken.START_OBJECT;
+
+		stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			CommodityType ct = CommodityType.valueOf(in.getCurrentName());
+			in.nextToken();
+			long amt = in.getLongValue();
+
+			stock.put(ct, amt);
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
 	public void write(JsonGenerator out)
@@ -94,6 +146,25 @@ public class MobInfo
 		{
 			out.writeStringField("activity", activity);
 			out.writeNumberField("activityStarted", activityStarted);
+		}
+		if (stock != null)
+		{
+			out.writeFieldName("stock");
+			writeCommodities(out);
+		}
+		out.writeEndObject();
+	}
+
+	void writeCommodities(JsonGenerator out)
+		throws IOException
+	{
+		assert stock != null;
+
+		out.writeStartObject();
+		for (CommodityType ct : stock.keySet())
+		{
+			long amt = stock.get(ct);
+			out.writeNumberField(ct.name(), amt);
 		}
 		out.writeEndObject();
 	}

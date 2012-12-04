@@ -255,6 +255,13 @@ class GetMyMobsServlet extends HttpServlet
 				out.writeStringField("location", mob.location.toString());
 				//TODO- only if we own this mob
 				out.writeStringField("activity", mob.activity);
+				if (mob.hasStock())
+				{
+					out.writeFieldName("stock");
+					mob.writeCommodities(out);
+				}
+				// end only if we own this mob
+
 				out.writeEndObject();
 			}
 		}

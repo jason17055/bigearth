@@ -486,18 +486,14 @@ if (false)
 		{
 			// FIXME- is there an actual mob property I can use here?
 			final int MY_POPULATION = 100;
-			final double FOOD_PER_ANIMAL = 0.1;
 			final double PSUEDO_YEAR = 20000;
 
 			// animals per year
 			double huntingRate = calculateHuntingRate(MY_POPULATION);
 
-			// food per year
-			double foodRate = FOOD_PER_ANIMAL * huntingRate;
-
-			// time required to harvest one unit of food
+			// time required to harvest one animal
 			requiredTime = (long) Math.ceil(
-				PSUEDO_YEAR / foodRate
+				PSUEDO_YEAR / huntingRate
 				);
 		}
 		else
@@ -517,6 +513,13 @@ if (false)
 
 	void mobActivityCompleted(String mobName, MobInfo mob)
 	{
+		if (mob.activity.equals("hunt"))
+		{
+			// completed hunting
+			mob.addCommodity(CommodityType.MEAT, 1);
+			wildlifeHunted++;
+		}
+
 		mob.activity = "";
 		mobChanged(mobName);
 	}
@@ -533,6 +536,7 @@ if (false)
 			MobInfo data = new MobInfo(mobName);
 			data.activity = mob.activity;
 			data.activityStarted = mob.activityStarted;
+			data.stock = mob.stock;
 			MobChangeNotification n = new MobChangeNotification(mobName, data);
 			notifyLeader(mob.owner, n);
 		}

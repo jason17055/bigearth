@@ -57,6 +57,10 @@ public class MobListModel
 			oldMobInfo.activity = newMobInfo.activity;
 			oldMobInfo.activityStarted = newMobInfo.activityStarted;
 		}
+		if (newMobInfo.hasStock())
+		{
+			oldMobInfo.stock = newMobInfo.stock;
+		}
 		fireMobUpdated(mobName);
 	}
 
