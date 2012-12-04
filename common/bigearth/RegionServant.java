@@ -420,10 +420,14 @@ if (false)
 	{
 		assert world.getRegionIdForLocation(loc) == this.regionId;
 
-		MobInfo mob = world.newMob();
+		String mobName = world.nextUniqueName("mob");
+		MobInfo mob = new MobInfo(mobName);
 		mob.displayName = characterName;
 		mob.avatarName = avatarName;
 		presentMobs.put(mob.name, mob);
+
+		// tell WorldMaster where this mob is
+		world.mobs.put(mobName, this);
 	}
 
 	MobInfo getMob(String mobName)

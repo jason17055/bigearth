@@ -93,14 +93,14 @@ public class WorldMaster
 	ShadowRegion getShadowRegion(int regionId)
 	{
 		assert regionId >= 1 && regionId <= regions.length;
+		assert regions[regionId-1] != null;
+
 		return regions[regionId-1];
 	}
 
-	MobInfo newMob()
+	String nextUniqueName(String prefix)
 	{
-		String name = "mob"+(++lastSeqId);
-		MobInfo mob = new MobInfo(name);
-		return mob;
+		return prefix + (++lastSeqId);
 	}
 
 	void newLeader(String name)
