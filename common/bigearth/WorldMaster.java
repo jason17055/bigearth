@@ -10,7 +10,7 @@ public class WorldMaster
 	WorldConfig config;
 	RegionServant [] regions;
 	Map<String, LeaderInfo> leaders;
-	Map<String, MobInfo> mobs;
+	Map<String, RegionServant> mobs;
 	Scheduler scheduler;
 
 	int year;
@@ -21,7 +21,7 @@ public class WorldMaster
 		this.config = config;
 		this.regions = new RegionServant[config.getGeometry().getCellCount()];
 		this.leaders = new HashMap<String, LeaderInfo>();
-		this.mobs = new HashMap<String, MobInfo>();
+		this.mobs = new HashMap<String, RegionServant>();
 		this.scheduler = new Scheduler(config);
 	}
 
@@ -66,7 +66,7 @@ public class WorldMaster
 
 			for (String s : regions[i].presentMobs.keySet())
 			{
-				mobs.put(s, regions[i].presentMobs.get(s));
+				mobs.put(s, regions[i]);
 			}
 		}
 	}
@@ -135,6 +135,14 @@ public class WorldMaster
 		{
 			throw new IllegalArgumentException("not a recognized loc");
 		}
+	}
+
+	public RegionServant getRegionForMob(String mobName)
+	{
+		assert mobName != null;
+		assert mobs.containsKey(mobName);
+
+		return mobs.get(mobName);
 	}
 
 	public RegionServant getRegionForLocation(Location loc)
@@ -273,9 +281,15 @@ public class WorldMaster
 		return false;
 	}
 
+	MobInfo getMob(String mobName)
+	{
+		RegionServant svt = getRegionForMob(mobName);
+		return svt.presentMobs.get(mobName);
+	}
+
 	void requestMovement(String mobName, Location dest)
 	{
-		MobInfo mob = mobs.get(mobName);
+		MobInfo mob = getMob(mobName);
 		assert mob != null;
 
 		//TODO- reject request if the mob is busy
@@ -293,6 +307,8 @@ public class WorldMaster
 		RegionServant toRegion = getRegionForLocation(dest);
 		toRegion.addMob(mobName, mob);
 
+		mobs.put(mobName, toRegion);
+
 		mobMoved(mobName, oldLoc, dest);
 		discoverTerrain(mob.owner, dest);
 		discoverTerrainBorder(mob.owner, dest);
@@ -303,7 +319,7 @@ public class WorldMaster
 	{
 		assert mobName != null;
 
-		final MobInfo mob = mobs.get(mobName);
+		final MobInfo mob = getMob(mobName);
 		assert mob != null;
 		assert mob.activity != null;
 
@@ -322,7 +338,7 @@ public class WorldMaster
 		assert mobName != null;
 		assert activityName != null;
 
-		MobInfo mob = mobs.get(mobName);
+		MobInfo mob = getMob(mobName);
 		assert mob != null;
 
 		mob.activity = activityName;
@@ -333,7 +349,10 @@ public class WorldMaster
 
 	void mobChanged(String mobName)
 	{
-		MobInfo mob = mobs.get(mobName);
+		assert mobName != null;
+
+		MobInfo mob = getMob(mobName);
+		assert mob != null;
 
 		if (mob.owner != null)
 		{
@@ -349,7 +368,7 @@ public class WorldMaster
 
 	void mobMoved(String mobName, Location oldLoc, Location newLoc)
 	{
-		MobInfo mob = mobs.get(mobName);
+		MobInfo mob = getMob(mobName);
 		if (mob.owner != null)
 		{
 			MobInfo data = new MobInfo(mobName);

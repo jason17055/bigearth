@@ -246,7 +246,7 @@ class GetMyMobsServlet extends HttpServlet
 
 		for (String mobName : server.world.mobs.keySet())
 		{
-			MobInfo mob = server.world.mobs.get(mobName);
+			MobInfo mob = server.world.getMob(mobName);
 			if (mob.owner != null && mob.owner.equals(s.user))
 			{
 				out.writeFieldName(mobName);
@@ -448,7 +448,7 @@ class MoveMobServlet extends HttpServlet
 
 		// check that the user is authorized to control the specified mob
 
-		MobInfo mob = server.world.mobs.get(mobName);
+		MobInfo mob = server.world.getMob(mobName);
 		if (mob == null)
 		{
 			doFailure(response, "Invalid mob");
@@ -520,7 +520,7 @@ class SetActivityServlet extends HttpServlet
 
 		// check that the user is authorized to control the specified mob
 
-		MobInfo mob = server.world.mobs.get(mobName);
+		MobInfo mob = server.world.getMob(mobName);
 		if (mob == null)
 		{
 			doFailure(response, "Invalid mob");

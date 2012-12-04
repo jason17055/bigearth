@@ -918,7 +918,7 @@ assert(x >= 1);
 				BorderFactory.createTitledBorder("Mob "+selectedMob)
 				);
 
-			MobInfo mob = world.world.mobs.get(selectedMob);
+			MobInfo mob = world.world.getMob(selectedMob);
 
 			mobTypeLbl.setText(mob.avatarName!=null ?
 				mob.avatarName : "");
