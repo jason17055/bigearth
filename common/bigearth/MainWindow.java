@@ -11,6 +11,9 @@ public class MainWindow extends JFrame
 	MobListModel mobList;
 	WorldView view;
 	Client client;
+	JPanel mobPane;
+	JLabel mobTypeLbl;
+
 	static final int SIDE_BAR_WIDTH = 180;
 
 	public MainWindow(Client client)
@@ -31,6 +34,10 @@ public class MainWindow extends JFrame
 				{
 					MainWindow.this.onMobSelected();
 				}
+				else
+				{
+					MainWindow.this.onOtherSelected();
+				}
 			}
 
 			};
@@ -38,8 +45,14 @@ public class MainWindow extends JFrame
 		add(view, BorderLayout.CENTER);
 
 		JPanel sideBar = new JPanel();
+		sideBar.setLayout(new BoxLayout(sideBar, BoxLayout.PAGE_AXIS));
 		setSideBarDimensions(sideBar);
 		add(sideBar, BorderLayout.WEST);
+
+		mobPane = new JPanel();
+		mobPane.setVisible(false);
+		initMobPane();
+		sideBar.add(mobPane);
 
 		initMenu();
 
@@ -55,6 +68,25 @@ public class MainWindow extends JFrame
 			});
 
 		client.addListener(this);
+	}
+
+	private void initMobPane()
+	{
+		mobPane.setLayout(new GridBagLayout());
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridx = 0;
+		c1.anchor = GridBagConstraints.FIRST_LINE_START;
+		c1.weightx = 1.0;
+
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.gridx = 1;
+		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		c1.gridy = c2.gridy = 0;
+		mobPane.add(new JLabel("Type"), c1);
+
+		mobTypeLbl = new JLabel();
+		mobPane.add(mobTypeLbl, c2);
 	}
 
 	private void setSideBarDimensions(JPanel sideBar)
@@ -157,10 +189,23 @@ public class MainWindow extends JFrame
 		}
 	}
 
+	void onOtherSelected()
+	{
+		mobPane.setVisible(false);
+	}
+
 	void onMobSelected()
 	{
 		String mobName = view.selection.getMob();
-		System.out.println("selected "+mobName);
+		mobPane.setBorder(
+			BorderFactory.createTitledBorder(mobName)
+			);
+
+		MobInfo mob = mobList.mobs.get(mobName);
+		mobTypeLbl.setText(mob.avatarName != null ?
+			mob.avatarName : "");
+
+		mobPane.setVisible(true);
 	}
 
 	void moveMobTo(int regionId)
