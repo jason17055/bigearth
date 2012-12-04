@@ -549,7 +549,11 @@ if (false)
 		}, wakeUp);
 	}
 
-	boolean mobIsUninterruptible(String mobName)
+	/**
+	 * Checks whether the specified mob is "hot", i.e. cannot
+	 * change activity until a cooldown period has elapsed.
+	 */
+	boolean mobIsHot(String mobName)
 	{
 		MobInfo mob = getMob(mobName);
 		assert mob != null;
@@ -567,6 +571,7 @@ if (false)
 	{
 		MobInfo mob = getMob(mobName);
 		assert mob != null;
+		assert !mobIsHot(mobName);
 
 		if (mob.wakeUp != null)
 		{

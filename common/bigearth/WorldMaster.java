@@ -307,7 +307,7 @@ public class WorldMaster
 			return;
 
 		// check whether mob is busy
-		if (fromRegion.mobIsUninterruptible(mobName))
+		if (fromRegion.mobIsHot(mobName))
 			return;
 
 		fromRegion.mobCancelActivity(mobName);
