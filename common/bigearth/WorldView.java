@@ -923,7 +923,7 @@ System.err.println(e);
 		// draw latitude/longitude lines
 		drawCoordinateLines(gr);
 
-		if (showMobImages)
+		if (showMobImages && mobs != null)
 		{
 			drawMobs(gr);
 		}
@@ -1106,6 +1106,7 @@ System.err.println(e);
 	{
 		assert map != null;
 		assert regionBounds != null;
+		assert mobs != null;
 
 		Geometry g = map.getGeometry();
 		Rectangle screen = gr.getClipBounds();
@@ -1187,7 +1188,7 @@ System.err.println(e);
 	{
 		Geometry g = map.getGeometry();
 		int regionId = g.findCell(pt);
-		if (allowMobSelection)
+		if (allowMobSelection && mobs != null)
 		{
 			// check whether any mobs are at this location
 			SimpleLocation loc = new SimpleLocation(regionId);
