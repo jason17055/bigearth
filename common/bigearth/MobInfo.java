@@ -15,8 +15,11 @@ public class MobInfo
 	long activityStarted;
 	EnumMap<CommodityType, Long> stock;
 	EncumbranceLevel encumbrance;
+	HungerStatus hunger;
 	transient Scheduler.Event wakeUp;
 	transient double totalMass;
+	int nutrition;
+	boolean nutritionIsKnown;
 
 	MobInfo(String name)
 	{
@@ -64,6 +67,11 @@ public class MobInfo
 		return encumbrance != null;
 	}
 
+	public boolean hasHunger()
+	{
+		return hunger != null;
+	}
+
 	public boolean hasOwner()
 	{
 		return owner != null;
@@ -72,6 +80,11 @@ public class MobInfo
 	public boolean hasLocation()
 	{
 		return location != null;
+	}
+
+	public boolean hasNutrition()
+	{
+		return nutritionIsKnown;
 	}
 
 	public boolean hasStock()
@@ -96,8 +109,16 @@ public class MobInfo
 				m.avatarName = in.nextTextValue();
 			else if (s.equals("encumbrance"))
 				m.encumbrance = EncumbranceLevel.valueOf(in.nextTextValue());
+			else if (s.equals("hunger"))
+				m.hunger = HungerStatus.valueOf(in.nextTextValue());
 			else if (s.equals("location"))
 				m.location = LocationHelper.parse(in.nextTextValue(), world);
+			else if (s.equals("nutrition"))
+			{
+				in.nextToken();
+				m.nutrition = in.getIntValue();
+				m.nutritionIsKnown = true;
+			}
 			else if (s.equals("owner"))
 				m.owner = in.nextTextValue();
 			else if (s.equals("activity"))
@@ -166,6 +187,10 @@ public class MobInfo
 		}
 		if (encumbrance != null)
 			out.writeStringField("encumbrance", encumbrance.name());
+		if (hunger != null)
+			out.writeStringField("hunger", hunger.name());
+		if (nutritionIsKnown)
+			out.writeNumberField("nutrition", nutrition);
 		out.writeEndObject();
 	}
 
@@ -205,6 +230,15 @@ public class MobInfo
 			level <= 2.5 ? EncumbranceLevel.STRAINED :
 			level <= 3 ? EncumbranceLevel.OVERTAXED :
 			EncumbranceLevel.OVERLOADED
+			);
+
+		m.hunger = (
+			nutrition < 0 ? HungerStatus.FAINTING :
+			nutrition < 50 ? HungerStatus.WEAK :
+			nutrition < 150 ? HungerStatus.HUNGRY :
+			nutrition < 1000 ? HungerStatus.NOT_HUNGRY :
+			nutrition < 2000 ? HungerStatus.SATIATED :
+			HungerStatus.OVERSATIATED
 			);
 
 		return m;
