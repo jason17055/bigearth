@@ -14,6 +14,7 @@ public class WorldConfig implements WorldConfigIfc
 	File path;
 	Properties properties;
 	Geometry geometry;
+	long ticksPerYear;
 
 	private WorldConfig(File path)
 	{
@@ -40,12 +41,21 @@ public class WorldConfig implements WorldConfigIfc
 		this.geometry = GeometryFactory.getInstance(
 				properties.getProperty("geometry", "sphere:20")
 				);
+		this.ticksPerYear = Long.parseLong(
+				properties.getProperty("ticksPerYear", "60000")
+				);
 	}
 
 	// implements WorldConfigIfc
 	public Geometry getGeometry()
 	{
 		return this.geometry;
+	}
+
+	// implements WorldConfigIfc
+	public long getTicksPerYear()
+	{
+		return this.ticksPerYear;
 	}
 
 	public boolean isValidHost(String hostName)

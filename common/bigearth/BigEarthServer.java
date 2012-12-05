@@ -631,6 +631,7 @@ class LoginServlet extends HttpServlet
 		out.writeNumberField("year", server.world.year);
 		out.writeNumberField("gameTime", lock.time);
 		out.writeStringField("geometry", server.world.getGeometry().toString());
+		out.writeNumberField("ticksPerYear", server.world.config.getTicksPerYear());
 		out.writeEndObject();
 		out.close();
 

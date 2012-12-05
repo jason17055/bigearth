@@ -192,6 +192,11 @@ public class Client
 				world.year = in.nextIntValue(0);
 			else if (s.equals("geometry"))
 				world.geometry = GeometryFactory.getInstance(in.nextTextValue());
+			else if (s.equals("ticksPerYear"))
+			{
+				in.nextToken();
+				world.ticksPerYear = in.getLongValue();
+			}
 			else
 			{
 				System.err.println("warning: unrecognized property: " + s);
@@ -427,10 +432,17 @@ class WorldStub implements WorldConfigIfc
 {
 	int year;
 	Geometry geometry;
+	long ticksPerYear;
 
 	// implements WorldConfigIfc
 	public Geometry getGeometry()
 	{
 		return geometry;
+	}
+
+	// implements WorldConfigIfc
+	public long getTicksPerYear()
+	{
+		return ticksPerYear;
 	}
 }
