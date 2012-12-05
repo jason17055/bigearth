@@ -249,20 +249,9 @@ class GetMyMobsServlet extends HttpServlet
 			MobInfo mob = server.world.getMob(mobName);
 			if (mob.owner != null && mob.owner.equals(s.user))
 			{
+				MobInfo mobProfile = mob.makeProfileForOwner();
 				out.writeFieldName(mobName);
-				out.writeStartObject();
-				out.writeStringField("avatarName", mob.avatarName);
-				out.writeStringField("location", mob.location.toString());
-				//TODO- only if we own this mob
-				out.writeStringField("activity", mob.activity);
-				if (mob.hasStock())
-				{
-					out.writeFieldName("stock");
-					mob.writeCommodities(out);
-				}
-				// end only if we own this mob
-
-				out.writeEndObject();
+				mobProfile.write(out);
 			}
 		}
 

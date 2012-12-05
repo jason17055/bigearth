@@ -14,6 +14,7 @@ public class MainWindow extends JFrame
 	JPanel mobPane;
 	JLabel mobTypeLbl;
 	JLabel mobStockMeatLbl;
+	JLabel mobEncumbranceLbl;
 
 	static final int SIDE_BAR_WIDTH = 180;
 
@@ -94,6 +95,12 @@ public class MainWindow extends JFrame
 
 		mobStockMeatLbl = new JLabel();
 		mobPane.add(mobStockMeatLbl, c2);
+
+		c1.gridy = c2.gridy = 2;
+		mobPane.add(new JLabel("Encumbrance"), c1);
+
+		mobEncumbranceLbl = new JLabel();
+		mobPane.add(mobEncumbranceLbl, c2);
 	}
 
 	private void setSideBarDimensions(JPanel sideBar)
@@ -217,6 +224,9 @@ public class MainWindow extends JFrame
 
 		mobStockMeatLbl.setText(mob.hasStock() ?
 			Long.toString(mob.getStock(CommodityType.MEAT)) : "");
+
+		mobEncumbranceLbl.setText(mob.hasEncumbrance() ?
+			mob.encumbrance.name() : "");
 	}
 
 	void onMobSelected()

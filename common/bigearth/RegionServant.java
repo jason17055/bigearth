@@ -533,10 +533,7 @@ if (false)
 
 		if (mob.owner != null)
 		{
-			MobInfo data = new MobInfo(mobName);
-			data.activity = mob.activity;
-			data.activityStarted = mob.activityStarted;
-			data.stock = mob.stock;
+			MobInfo data = mob.makeProfileForOwner();
 			MobChangeNotification n = new MobChangeNotification(mobName, data);
 			notifyLeader(mob.owner, n);
 		}

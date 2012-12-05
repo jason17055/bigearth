@@ -14,7 +14,9 @@ public class MobInfo
 	String activity;
 	long activityStarted;
 	EnumMap<CommodityType, Long> stock;
+	EncumbranceLevel encumbrance;
 	transient Scheduler.Event wakeUp;
+	transient double totalMass;
 
 	MobInfo(String name)
 	{
@@ -39,6 +41,7 @@ public class MobInfo
 		{
 			stock.put(ct, amount);
 		}
+		totalMass += ct.mass * amount;
 	}
 
 	public long getStock(CommodityType ct)
@@ -54,6 +57,11 @@ public class MobInfo
 	public boolean hasAvatarName()
 	{
 		return avatarName != null;
+	}
+
+	public boolean hasEncumbrance()
+	{
+		return encumbrance != null;
 	}
 
 	public boolean hasOwner()
@@ -86,6 +94,8 @@ public class MobInfo
 				m.displayName = in.nextTextValue();
 			else if (s.equals("avatarName"))
 				m.avatarName = in.nextTextValue();
+			else if (s.equals("encumbrance"))
+				m.encumbrance = EncumbranceLevel.valueOf(in.nextTextValue());
 			else if (s.equals("location"))
 				m.location = LocationHelper.parse(in.nextTextValue(), world);
 			else if (s.equals("owner"))
@@ -119,6 +129,7 @@ public class MobInfo
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
 		stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		totalMass = 0.0;
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			CommodityType ct = CommodityType.valueOf(in.getCurrentName());
@@ -126,6 +137,7 @@ public class MobInfo
 			long amt = in.getLongValue();
 
 			stock.put(ct, amt);
+			totalMass += ct.mass * amt;
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
@@ -152,6 +164,8 @@ public class MobInfo
 			out.writeFieldName("stock");
 			writeCommodities(out);
 		}
+		if (encumbrance != null)
+			out.writeStringField("encumbrance", encumbrance.name());
 		out.writeEndObject();
 	}
 
@@ -167,5 +181,32 @@ public class MobInfo
 			out.writeNumberField(ct.name(), amt);
 		}
 		out.writeEndObject();
+	}
+
+	double getEncumbranceFactor()
+	{
+		double capacity = 100 * 20;
+		return totalMass / capacity;
+	}
+
+	MobInfo makeProfileForOwner()
+	{
+		MobInfo m = new MobInfo(this.name);
+		m.avatarName = this.avatarName;
+		m.location = this.location;
+		m.avatarName = this.avatarName;
+		m.stock = this.stock;
+
+		double level = getEncumbranceFactor();
+		m.encumbrance = (
+			level <= 1 ? EncumbranceLevel.UNENCUMBERED :
+			level <= 1.5 ? EncumbranceLevel.BURDENED :
+			level <= 2 ? EncumbranceLevel.STRESSED :
+			level <= 2.5 ? EncumbranceLevel.STRAINED :
+			level <= 3 ? EncumbranceLevel.OVERTAXED :
+			EncumbranceLevel.OVERLOADED
+			);
+
+		return m;
 	}
 }

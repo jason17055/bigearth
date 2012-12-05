@@ -61,6 +61,10 @@ public class MobListModel
 		{
 			oldMobInfo.stock = newMobInfo.stock;
 		}
+		if (newMobInfo.hasEncumbrance())
+		{
+			oldMobInfo.encumbrance = newMobInfo.encumbrance;
+		}
 		fireMobUpdated(mobName);
 	}
 
