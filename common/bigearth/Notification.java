@@ -128,7 +128,7 @@ class MobChangeNotification extends Notification
 			if (s.equals("mob"))
 				mobName = in.nextTextValue();
 			else if (s.equals("data"))
-				mobData = MobInfo.parse(in, mobName, world);
+				mobData = MobInfo.parse(in, world);
 			else
 			{
 				in.nextToken();

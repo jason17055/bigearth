@@ -6,7 +6,6 @@ import java.util.*;
 
 public class MobInfo
 {
-	String name;
 	String displayName;
 	String avatarName;
 	String owner;
@@ -17,10 +16,8 @@ public class MobInfo
 	EncumbranceLevel encumbrance;
 	HungerStatus hunger;
 
-	MobInfo(String name)
+	MobInfo()
 	{
-		this.name = name;
-		this.displayName = name;
 	}
 
 	public long getStock(CommodityType ct)
@@ -63,13 +60,13 @@ public class MobInfo
 		return stock != null;
 	}
 
-	public static MobInfo parse(JsonParser in, String mobName, WorldConfigIfc world)
+	public static MobInfo parse(JsonParser in, WorldConfigIfc world)
 		throws IOException
 	{
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
-		MobInfo m = new MobInfo(mobName);
+		MobInfo m = new MobInfo();
 
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{

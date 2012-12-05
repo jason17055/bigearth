@@ -23,7 +23,7 @@ public class MobListModel
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String mobName = in.getCurrentName();
-			MobInfo mob = MobInfo.parse(in, mobName, world);
+			MobInfo mob = MobInfo.parse(in, world);
 			mobs.put(mobName, mob);
 		}
 

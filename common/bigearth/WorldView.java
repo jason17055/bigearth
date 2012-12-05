@@ -1191,11 +1191,13 @@ System.err.println(e);
 		{
 			// check whether any mobs are at this location
 			SimpleLocation loc = new SimpleLocation(regionId);
-			for (MobInfo mob : mobs.mobs.values())
+			for (Map.Entry<String, MobInfo> x : mobs.mobs.entrySet())
 			{
+				String mobName = x.getKey();
+				MobInfo mob = x.getValue();
 				if (mob.location.equals(loc))
 				{
-					selection.selectMob(mob.name);
+					selection.selectMob(mobName);
 					return;
 				}
 			}

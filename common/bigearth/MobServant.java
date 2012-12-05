@@ -144,8 +144,8 @@ public class MobServant
 
 	MobInfo makeProfileForOwner()
 	{
-		MobInfo m = new MobInfo(this.name);
-		m.avatarName = this.avatarName;
+		MobInfo m = new MobInfo();
+		m.displayName = this.displayName;
 		m.location = this.location;
 		m.avatarName = this.avatarName;
 		m.stock = this.stock;

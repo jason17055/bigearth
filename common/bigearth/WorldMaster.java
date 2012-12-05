@@ -332,7 +332,7 @@ public class WorldMaster
 		MobServant mob = getMob(mobName);
 		if (mob.owner != null)
 		{
-			MobInfo data = new MobInfo(mobName);
+			MobInfo data = new MobInfo();
 			data.location = newLoc;
 			MobChangeNotification n = new MobChangeNotification(mobName, data);
 			notifyLeader(mob.owner, n);
