@@ -532,8 +532,9 @@ public class WorldViewer extends JFrame
 
 		int regionId = view.selection.selectedRegion;
 		RegionServant region = world.world.regions[regionId-1];
+		MobServant mob = region.presentMobs.get(selectedMob);
 
-		return region.presentMobs.get(selectedMob);
+		return mob.makeProfileForOwner();
 	}
 
 	void onSetMobTypeClicked()
@@ -918,7 +919,7 @@ assert(x >= 1);
 				BorderFactory.createTitledBorder("Mob "+selectedMob)
 				);
 
-			MobInfo mob = world.world.getMob(selectedMob);
+			MobInfo mob = getSelectedMob();
 
 			mobTypeLbl.setText(mob.avatarName!=null ?
 				mob.avatarName : "");

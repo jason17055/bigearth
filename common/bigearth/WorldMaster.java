@@ -205,7 +205,7 @@ public class WorldMaster
 	boolean regionHasMobOwnedBy(int regionId, String user)
 	{
 		RegionServant region = regions[regionId-1];
-		for (MobInfo mob : region.presentMobs.values())
+		for (MobServant mob : region.presentMobs.values())
 		{
 			if (mob.owner != null && mob.owner.equals(user))
 				return true;
@@ -281,7 +281,7 @@ public class WorldMaster
 		return false;
 	}
 
-	MobInfo getMob(String mobName)
+	MobServant getMob(String mobName)
 	{
 		RegionServant svt = getRegionForMob(mobName);
 		return svt.presentMobs.get(mobName);
@@ -289,7 +289,7 @@ public class WorldMaster
 
 	void requestMovement(String mobName, Location dest)
 	{
-		MobInfo mob = getMob(mobName);
+		MobServant mob = getMob(mobName);
 		assert mob != null;
 
 		//TODO- reject request if the mob is busy
@@ -329,7 +329,7 @@ public class WorldMaster
 
 	void mobMoved(String mobName, Location oldLoc, Location newLoc)
 	{
-		MobInfo mob = getMob(mobName);
+		MobServant mob = getMob(mobName);
 		if (mob.owner != null)
 		{
 			MobInfo data = new MobInfo(mobName);

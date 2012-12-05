@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.*;
 import java.io.*;
 import java.util.*;
 
-public class MobInfo
+public class MobServant
 {
 	String name;
 	String displayName;
@@ -14,13 +14,32 @@ public class MobInfo
 	String activity;
 	long activityStarted;
 	Map<CommodityType, Long> stock;
-	EncumbranceLevel encumbrance;
-	HungerStatus hunger;
+	transient Scheduler.Event wakeUp;
+	transient double totalMass;
+	int nutrition;
 
-	MobInfo(String name)
+	MobServant(String name)
 	{
 		this.name = name;
 		this.displayName = name;
+		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+	}
+
+	public void addCommodity(CommodityType ct, long amount)
+	{
+		assert stock != null;
+
+		if (stock.containsKey(ct))
+		{
+			long amt = stock.get(ct);
+			amt += amount;
+			stock.put(ct, amt);
+		}
+		else
+		{
+			stock.put(ct, amount);
+		}
+		totalMass += ct.mass * amount;
 	}
 
 	public long getStock(CommodityType ct)
@@ -38,38 +57,18 @@ public class MobInfo
 		return avatarName != null;
 	}
 
-	public boolean hasEncumbrance()
-	{
-		return encumbrance != null;
-	}
-
-	public boolean hasHunger()
-	{
-		return hunger != null;
-	}
-
 	public boolean hasOwner()
 	{
 		return owner != null;
 	}
 
-	public boolean hasLocation()
-	{
-		return location != null;
-	}
-
-	public boolean hasStock()
-	{
-		return stock != null;
-	}
-
-	public static MobInfo parse(JsonParser in, String mobName, WorldConfigIfc world)
+	public static MobServant parse(JsonParser in, String mobName, WorldConfigIfc world)
 		throws IOException
 	{
+		MobServant m = new MobServant(mobName);
+
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
-
-		MobInfo m = new MobInfo(mobName);
 
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
@@ -78,12 +77,13 @@ public class MobInfo
 				m.displayName = in.nextTextValue();
 			else if (s.equals("avatarName"))
 				m.avatarName = in.nextTextValue();
-			else if (s.equals("encumbrance"))
-				m.encumbrance = EncumbranceLevel.valueOf(in.nextTextValue());
-			else if (s.equals("hunger"))
-				m.hunger = HungerStatus.valueOf(in.nextTextValue());
 			else if (s.equals("location"))
 				m.location = LocationHelper.parse(in.nextTextValue(), world);
+			else if (s.equals("nutrition"))
+			{
+				in.nextToken();
+				m.nutrition = in.getIntValue();
+			}
 			else if (s.equals("owner"))
 				m.owner = in.nextTextValue();
 			else if (s.equals("activity"))
@@ -105,6 +105,13 @@ public class MobInfo
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 
+		m.totalMass = 0;
+		for (CommodityType ct : m.stock.keySet())
+		{
+			long amt = m.stock.get(ct);
+			m.totalMass += ct.mass * amt;
+		}
+
 		return m;
 	}
 
@@ -115,8 +122,7 @@ public class MobInfo
 		out.writeStringField("displayName", displayName);
 		if (avatarName != null)
 			out.writeStringField("avatarName", avatarName);
-		if (location != null)
-			out.writeStringField("location", location.toString());
+		out.writeStringField("location", location.toString());
 		if (owner != null)
 			out.writeStringField("owner", owner);
 		if (activity != null)
@@ -124,15 +130,45 @@ public class MobInfo
 			out.writeStringField("activity", activity);
 			out.writeNumberField("activityStarted", activityStarted);
 		}
-		if (stock != null)
-		{
-			out.writeFieldName("stock");
-			CommoditiesHelper.writeCommodities(stock, out);
-		}
-		if (encumbrance != null)
-			out.writeStringField("encumbrance", encumbrance.name());
-		if (hunger != null)
-			out.writeStringField("hunger", hunger.name());
+		out.writeFieldName("stock");
+		CommoditiesHelper.writeCommodities(stock, out);
+		out.writeNumberField("nutrition", nutrition);
 		out.writeEndObject();
+	}
+
+	double getEncumbranceFactor()
+	{
+		double capacity = 100 * 20;
+		return totalMass / capacity;
+	}
+
+	MobInfo makeProfileForOwner()
+	{
+		MobInfo m = new MobInfo(this.name);
+		m.avatarName = this.avatarName;
+		m.location = this.location;
+		m.avatarName = this.avatarName;
+		m.stock = this.stock;
+
+		double level = getEncumbranceFactor();
+		m.encumbrance = (
+			level <= 1 ? EncumbranceLevel.UNENCUMBERED :
+			level <= 1.5 ? EncumbranceLevel.BURDENED :
+			level <= 2 ? EncumbranceLevel.STRESSED :
+			level <= 2.5 ? EncumbranceLevel.STRAINED :
+			level <= 3 ? EncumbranceLevel.OVERTAXED :
+			EncumbranceLevel.OVERLOADED
+			);
+
+		m.hunger = (
+			nutrition < 0 ? HungerStatus.FAINTING :
+			nutrition < 50 ? HungerStatus.WEAK :
+			nutrition < 150 ? HungerStatus.HUNGRY :
+			nutrition < 1000 ? HungerStatus.NOT_HUNGRY :
+			nutrition < 2000 ? HungerStatus.SATIATED :
+			HungerStatus.OVERSATIATED
+			);
+
+		return m;
 	}
 }

@@ -15,7 +15,7 @@ class RegionServant
 	RegionSideDetail [] sides;
 	RegionCornerDetail [] corners;
 	int waterLevel;
-	Map<String, MobInfo> presentMobs;
+	Map<String, MobServant> presentMobs;
 
 	/// Elevation as generated randomly by MakeWorld.
 	int elevation;
@@ -46,7 +46,7 @@ class RegionServant
 		this.sides = new RegionSideDetail[6];
 		this.corners = new RegionCornerDetail[6];
 		this.waterLevel = Integer.MIN_VALUE;
-		this.presentMobs = new HashMap<String, MobInfo>();
+		this.presentMobs = new HashMap<String, MobServant>();
 	}
 
 	private void init()
@@ -277,7 +277,7 @@ if (false)
 		return new File(world.config.path, "region"+regionId+".txt");
 	}
 
-	void addMob(String mobName, MobInfo mob)
+	void addMob(String mobName, MobServant mob)
 	{
 		presentMobs.put(mobName, mob);
 		world.wantSaved(this);
@@ -424,7 +424,7 @@ if (false)
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String mobName = in.getCurrentName();
-			MobInfo mob = MobInfo.parse(in, mobName, world.config);
+			MobServant mob = MobServant.parse(in, mobName, world.config);
 			if (mob.location == null)
 			{
 				mob.location = new SimpleLocation(regionId);
@@ -440,7 +440,7 @@ if (false)
 		assert world.getRegionIdForLocation(loc) == this.regionId;
 
 		String mobName = world.nextUniqueName("mob");
-		MobInfo mob = new MobInfo(mobName);
+		MobServant mob = new MobServant(mobName);
 		mob.displayName = characterName;
 		mob.avatarName = avatarName;
 		presentMobs.put(mob.name, mob);
@@ -449,7 +449,7 @@ if (false)
 		world.mobs.put(mobName, this);
 	}
 
-	MobInfo getMob(String mobName)
+	MobServant getMob(String mobName)
 	{
 		return presentMobs.get(mobName);
 	}
@@ -464,7 +464,7 @@ if (false)
 		world.notifyLeader(user, n);
 	}
 
-	void mobHunt(final String mobName, final MobInfo mob)
+	void mobHunt(final String mobName, final MobServant mob)
 	{
 		
 	}
@@ -476,7 +476,7 @@ if (false)
 	{
 		assert mobName != null;
 
-		final MobInfo mob = getMob(mobName);
+		final MobServant mob = getMob(mobName);
 		assert mob != null;
 		assert mob.activity != null;
 		assert mob.wakeUp == null;
@@ -511,7 +511,7 @@ if (false)
 		}, wakeUp);
 	}
 
-	void mobActivityCompleted(String mobName, MobInfo mob)
+	void mobActivityCompleted(String mobName, MobServant mob)
 	{
 		if (mob.activity.equals("hunt"))
 		{
@@ -528,7 +528,7 @@ if (false)
 	{
 		assert mobName != null;
 
-		MobInfo mob = getMob(mobName);
+		MobServant mob = getMob(mobName);
 		assert mob != null;
 
 		if (mob.owner != null)
@@ -550,7 +550,7 @@ if (false)
 			return;
 		mobCancelActivity(mobName);
 
-		MobInfo mob = getMob(mobName);
+		MobServant mob = getMob(mobName);
 		assert mob != null;
 
 		mob.activity = activityName;
@@ -586,7 +586,7 @@ if (false)
 		return 1200;
 	}
 
-	void mobMovedIn(final String mobName, final MobInfo mob,
+	void mobMovedIn(final String mobName, final MobServant mob,
 		Location dest, long delay)
 	{
 		addMob(mobName, mob);
@@ -616,7 +616,7 @@ if (false)
 	 */
 	boolean mobIsHot(String mobName)
 	{
-		MobInfo mob = getMob(mobName);
+		MobServant mob = getMob(mobName);
 		assert mob != null;
 
 		if (mob.activity == null || mob.activity.equals(""))
@@ -630,7 +630,7 @@ if (false)
 
 	void mobCancelActivity(String mobName)
 	{
-		MobInfo mob = getMob(mobName);
+		MobServant mob = getMob(mobName);
 		assert mob != null;
 		assert !mobIsHot(mobName);
 
