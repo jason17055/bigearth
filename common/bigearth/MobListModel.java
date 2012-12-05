@@ -65,6 +65,10 @@ public class MobListModel
 		{
 			oldMobInfo.encumbrance = newMobInfo.encumbrance;
 		}
+		if (newMobInfo.hasHunger())
+		{
+			oldMobInfo.hunger = newMobInfo.hunger;
+		}
 		fireMobUpdated(mobName);
 	}
 

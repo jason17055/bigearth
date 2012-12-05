@@ -521,6 +521,7 @@ if (false)
 		}
 
 		mob.activity = "";
+		mob.checkpoint();
 		mobChanged(mobName);
 	}
 
@@ -596,6 +597,7 @@ if (false)
 		mob.location = dest;
 		mob.activity = "move";
 		mob.activityStarted = currentTime();
+		mob.nutrition -= MobServant.NUTRITION_COST_FOR_MOVEMENT;
 
 		assert mob.wakeUp == null;
 
@@ -605,6 +607,7 @@ if (false)
 		{
 			mob.wakeUp = null;
 			mob.activity = "";
+			mob.checkpoint();
 			mobChanged(mobName);
 		}
 		}, wakeUp);

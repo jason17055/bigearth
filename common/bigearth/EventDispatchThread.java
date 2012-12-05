@@ -48,8 +48,19 @@ System.out.printf("[t=%8d] dispatching %s\n", lastEventTime, ev.callback.getClas
 		interrupt();
 	}
 
+	/**
+	 * Checks whether the currently running thread is an
+	 * EventDispatchThread.
+	 */
+	public static boolean isActive()
+	{
+		return Thread.currentThread() instanceof EventDispatchThread;
+	}
+
 	public static long currentTime()
 	{
+		assert EventDispatchThread.isActive();
+
 		EventDispatchThread me = (EventDispatchThread) Thread.currentThread();
 		return me.lastEventTime;
 	}

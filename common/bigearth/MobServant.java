@@ -18,6 +18,8 @@ public class MobServant
 	transient double totalMass;
 	int nutrition;
 
+	static final int NUTRITION_COST_FOR_MOVEMENT = 100;
+
 	MobServant(String name)
 	{
 		this.name = name;
@@ -40,6 +42,26 @@ public class MobServant
 			stock.put(ct, amount);
 		}
 		totalMass += ct.mass * amount;
+	}
+
+	public void subtractCommodity(CommodityType ct, long amount)
+	{
+		assert stock != null;
+
+		if (stock.containsKey(ct))
+		{
+			long curBal = stock.get(ct);
+			if (amount < curBal)
+			{
+				stock.put(ct, curBal - amount);
+				totalMass -= ct.mass * amount;
+			}
+			else
+			{
+				stock.remove(ct);
+				totalMass -= ct.mass * curBal;
+			}
+		}
 	}
 
 	public long getStock(CommodityType ct)
@@ -170,5 +192,29 @@ public class MobServant
 			);
 
 		return m;
+	}
+
+	boolean eatSomething()
+	{
+		if (!stock.containsKey(CommodityType.MEAT))
+			return false;
+
+	System.out.println("eating one unit of MEAT");
+
+		subtractCommodity(CommodityType.MEAT, 1);
+		nutrition += CommodityType.MEAT.nutrition;
+	System.out.println("nutrition level is now "+nutrition);
+
+		return true;
+	}
+
+	void checkpoint()
+	{
+		assert EventDispatchThread.isActive();
+
+		if (nutrition < 150)
+		{
+			eatSomething();
+		}
 	}
 }
