@@ -38,6 +38,7 @@ public class Scheduler
 	{
 		long curRealTime = System.currentTimeMillis();
 		realTimeOffset = (curRealTime - newTime);
+		time = newTime;
 		notifyAll();
 	}
 
