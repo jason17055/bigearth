@@ -843,7 +843,7 @@ public class WorldViewer extends JFrame
 		}
 		else if (showWildlifeBtn.isSelected())
 		{
-			int wildlife = world.world.regions[i].wildlife;
+			int wildlife = world.world.regions[i].getWildlifeCount();
 			if (wildlife <= 0)
 			{
 				return 0; //no wildlife
