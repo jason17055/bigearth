@@ -22,7 +22,7 @@ public class MobInfo
 
 	public long getStock(CommodityType ct)
 	{
-		return stock.get(ct);
+		return stock.containsKey(ct) ? stock.get(ct) : 0;
 	}
 
 	public boolean hasActivity()

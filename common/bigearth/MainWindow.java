@@ -13,9 +13,11 @@ public class MainWindow extends JFrame
 	Client client;
 	JPanel mobPane;
 	JLabel mobTypeLbl;
-	JLabel mobStockMeatLbl;
 	JLabel mobEncumbranceLbl;
 	JLabel mobHungerLbl;
+	JLabel mobStockMeatLbl;
+	JLabel mobStockSheepLbl;
+	JLabel mobStockPigLbl;
 
 	static final int SIDE_BAR_WIDTH = 180;
 
@@ -92,22 +94,34 @@ public class MainWindow extends JFrame
 		mobPane.add(mobTypeLbl, c2);
 
 		c1.gridy = c2.gridy = 1;
-		mobPane.add(new JLabel("Meat"), c1);
-
-		mobStockMeatLbl = new JLabel();
-		mobPane.add(mobStockMeatLbl, c2);
-
-		c1.gridy = c2.gridy = 2;
 		mobPane.add(new JLabel("Encumbrance"), c1);
 
 		mobEncumbranceLbl = new JLabel();
 		mobPane.add(mobEncumbranceLbl, c2);
 
-		c1.gridy = c2.gridy = 3;
+		c1.gridy = c2.gridy = 2;
 		mobPane.add(new JLabel("Hunger"), c1);
 
 		mobHungerLbl = new JLabel();
 		mobPane.add(mobHungerLbl, c2);
+
+		c1.gridy = c2.gridy = 3;
+		mobPane.add(new JLabel("Meat"), c1);
+
+		mobStockMeatLbl = new JLabel();
+		mobPane.add(mobStockMeatLbl, c2);
+
+		c1.gridy = c2.gridy = 4;
+		mobPane.add(new JLabel("Sheep"), c1);
+
+		mobStockSheepLbl = new JLabel();
+		mobPane.add(mobStockSheepLbl, c2);
+
+		c1.gridy = c2.gridy = 5;
+		mobPane.add(new JLabel("Pig"), c1);
+
+		mobStockPigLbl = new JLabel();
+		mobPane.add(mobStockPigLbl, c2);
 	}
 
 	private void setSideBarDimensions(JPanel sideBar)
@@ -229,13 +243,17 @@ public class MainWindow extends JFrame
 		mobTypeLbl.setText(mob.avatarName != null ?
 			mob.avatarName : "");
 
-		mobStockMeatLbl.setText(mob.hasStock() ?
-			Long.toString(mob.getStock(CommodityType.MEAT)) : "");
-
 		mobEncumbranceLbl.setText(mob.hasEncumbrance() ?
 			mob.encumbrance.name().toLowerCase() : "");
 		mobHungerLbl.setText(mob.hasHunger() ?
 			mob.hunger.name().toLowerCase() : "");
+
+		mobStockMeatLbl.setText(mob.hasStock() ?
+			Long.toString(mob.getStock(CommodityType.MEAT)) : "");
+		mobStockSheepLbl.setText(mob.hasStock() ?
+			Long.toString(mob.getStock(CommodityType.SHEEP)) : "");
+		mobStockPigLbl.setText(mob.hasStock() ?
+			Long.toString(mob.getStock(CommodityType.PIG)) : "");
 	}
 
 	void onMobSelected()
