@@ -302,6 +302,8 @@ class RegionServant
 				System.err.println("unrecognized property: "+s);
 			}
 		}
+
+		wildlife.initPigsAndSheep();
 	}
 
 	private void loadMobs(JsonParser in)
@@ -401,13 +403,31 @@ class RegionServant
 		}, wakeUp);
 	}
 
+	private void mobCompletedHunting(String mobName, MobServant mob)
+	{
+		if (Math.random() < wildlife.chanceOfCatchingSheep())
+		{
+			mob.addCommodity(CommodityType.SHEEP, 1);
+			wildlife.wildSheepCount--;
+		}
+		else if (Math.random() < wildlife.chanceOfCatchingPig())
+		{
+			mob.addCommodity(CommodityType.PIG, 1);
+			wildlife.wildPigCount--;
+		}
+		else
+		{
+			mob.addCommodity(CommodityType.MEAT, 1);
+			wildlife.wildlifeHunted++;
+		}
+	}
+
 	void mobActivityCompleted(String mobName, MobServant mob)
 	{
 		if (mob.activity.equals("hunt"))
 		{
 			// completed hunting
-			mob.addCommodity(CommodityType.MEAT, 1);
-			wildlife.wildlifeHunted++;
+			mobCompletedHunting(mobName, mob);
 		}
 
 		mob.activity = "";

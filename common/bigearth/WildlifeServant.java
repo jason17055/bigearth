@@ -12,6 +12,9 @@ class WildlifeServant
 	int wildlifeEmigrants;
 	int wildlifeImmigrants;
 
+	int wildSheepCount;
+	int wildPigCount;
+
 	static final double WILDLIFE_LIFESPAN = 5.0;
 	static final double WILDLIFE_EMIGRATION_RATE = 0.25;
 
@@ -131,5 +134,54 @@ if (false)
 
 		double s = 0.5 * Math.sqrt(wildlife / 400.0);
 		return wildlife - wildlife * Math.exp(-s * numWorkers / (double) wildlife);
+	}
+
+	void initPigsAndSheep()
+	{
+		switch(parentRegion.getBiome())
+		{
+		case HILLS:
+			if (Math.random() < 0.6)
+				wildSheepCount = (int) Math.round(15 + 50 * Math.random());
+			break;
+
+		case PLAINS:
+		case GRASSLAND:
+			double r = Math.random();
+			if (r < 0.2)
+				wildSheepCount = (int)Math.round(10 + 40 * Math.random());
+			else if (r < 0.4)
+				wildPigCount = (int)Math.round(10 + 40 * Math.random());
+			break;
+
+		case FOREST:
+			if (Math.random() < 0.6)
+				wildPigCount = (int) Math.round(15 + 50 * Math.random());
+			break;
+
+		default:
+		}
+	}
+
+	double chanceOfCatchingSheep()
+	{
+		if (wildSheepCount == 0)
+			return 0.0;
+
+		if (wildSheepCount > 50)
+			return 0.25;
+		else
+			return 0.05;
+	}
+
+	double chanceOfCatchingPig()
+	{
+		if (wildPigCount == 0)
+			return 0.0;
+
+		if (wildPigCount > 50)
+			return 0.25;
+		else
+			return 0.05;
 	}
 }
