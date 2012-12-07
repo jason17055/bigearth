@@ -15,6 +15,7 @@ public class MainWindow extends JFrame
 	JLabel mobTypeLbl;
 	JLabel mobEncumbranceLbl;
 	JLabel mobHungerLbl;
+	JLabel mobStockWoodLbl;
 	JLabel mobStockMeatLbl;
 	JLabel mobStockSheepLbl;
 	JLabel mobStockPigLbl;
@@ -105,19 +106,25 @@ public class MainWindow extends JFrame
 		mobHungerLbl = new JLabel();
 		mobPane.add(mobHungerLbl, c2);
 
-		c1.gridy = c2.gridy = 3;
+		c1.gridy = ++c2.gridy;
+		mobPane.add(new JLabel("Wood"), c1);
+
+		mobStockWoodLbl = new JLabel();
+		mobPane.add(mobStockWoodLbl, c2);
+
+		c1.gridy = ++c2.gridy;
 		mobPane.add(new JLabel("Meat"), c1);
 
 		mobStockMeatLbl = new JLabel();
 		mobPane.add(mobStockMeatLbl, c2);
 
-		c1.gridy = c2.gridy = 4;
+		c1.gridy = ++c2.gridy;
 		mobPane.add(new JLabel("Sheep"), c1);
 
 		mobStockSheepLbl = new JLabel();
 		mobPane.add(mobStockSheepLbl, c2);
 
-		c1.gridy = c2.gridy = 5;
+		c1.gridy = ++c2.gridy;
 		mobPane.add(new JLabel("Pig"), c1);
 
 		mobStockPigLbl = new JLabel();
@@ -179,17 +186,17 @@ public class MainWindow extends JFrame
 		JMenu ordersMenu = new JMenu("Orders");
 		menuBar.add(ordersMenu);
 
-		menuItem = new JMenuItem("Build City");
-		menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ev) {
-				onBuildCityClicked();
-			}});
-		ordersMenu.add(menuItem);
-
 		menuItem = new JMenuItem("Hunt");
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
-				onHuntClicked();
+				onSimpleOrderClicked("hunt");
+			}});
+		ordersMenu.add(menuItem);
+
+		menuItem = new JMenuItem("Gather Wood");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onSimpleOrderClicked("gather-wood");
 			}});
 		ordersMenu.add(menuItem);
 
@@ -248,6 +255,8 @@ public class MainWindow extends JFrame
 		mobHungerLbl.setText(mob.hasHunger() ?
 			mob.hunger.name().toLowerCase() : "");
 
+		mobStockWoodLbl.setText(mob.hasStock() ?
+			Long.toString(mob.getStock(CommodityType.WOOD)) : "");
 		mobStockMeatLbl.setText(mob.hasStock() ?
 			Long.toString(mob.getStock(CommodityType.MEAT)) : "");
 		mobStockSheepLbl.setText(mob.hasStock() ?
@@ -290,35 +299,14 @@ public class MainWindow extends JFrame
 		}
 	}
 
-	void onBuildCityClicked()
+	void onSimpleOrderClicked(String orderName)
 	{
 		if (!view.selection.isMob())
 			return;
 
 		try
 		{
-			client.setMobActivity(view.selection.getMob(),
-				"build-city");
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace(System.err);
-
-			JOptionPane.showMessageDialog(this, e,
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
-	void onHuntClicked()
-	{
-		if (!view.selection.isMob())
-			return;
-
-		try
-		{
-			client.setMobActivity(view.selection.getMob(),
-				"hunt");
+			client.setMobActivity(view.selection.getMob(), orderName);
 		}
 		catch (Exception e)
 		{

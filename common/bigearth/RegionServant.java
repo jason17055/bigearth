@@ -385,6 +385,10 @@ class RegionServant
 				ONE_YEAR / huntingRate
 				);
 		}
+		else if (mob.activity.equals("gather-wood"))
+		{
+			requiredTime = 5000;
+		}
 		else
 		{
 			requiredTime = 5000;
@@ -419,12 +423,21 @@ class RegionServant
 		}
 	}
 
+	private void mobCompletedGatheringWood(String mobName, MobServant mob)
+	{
+		mob.addCommodity(CommodityType.WOOD, 1);
+	}
+
 	void mobActivityCompleted(String mobName, MobServant mob)
 	{
 		if (mob.activity.equals("hunt"))
 		{
 			// completed hunting
 			mobCompletedHunting(mobName, mob);
+		}
+		else if (mob.activity.equals("gather-wood"))
+		{
+			mobCompletedGatheringWood(mobName, mob);
 		}
 
 		mob.activity = "";
