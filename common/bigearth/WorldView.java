@@ -1014,7 +1014,15 @@ System.err.println(e);
 		assert activityName != null;
 		assert !activityName.equals("");
 
-		return "X";
+		if (activityName.equals("gather-wood") ||
+			activityName.equals("hunt"))
+		{
+			return "M"; // M == Mine
+		}
+		else
+		{
+			return "A"; // all other activities
+		}
 	}
 
 	static BufferedImage [] mobSelectionFrontImages;
