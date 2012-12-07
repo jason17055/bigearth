@@ -74,6 +74,14 @@ public class InventoryDialog extends JDialog
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
 
+		JButton refreshBtn = new JButton("Refresh");
+		refreshBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onRefreshClicked();
+			}});
+		buttonPane.add(refreshBtn);
+
 		closeBtn = new JButton("Close");
 		closeBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
@@ -85,6 +93,12 @@ public class InventoryDialog extends JDialog
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(owner);
+	}
+
+	private void onRefreshClicked()
+	{
+		reloadTable();
+		reloadTable2();
 	}
 
 	static final String [] COLUMN_NAMES = { "Commodity", "Amount" };
