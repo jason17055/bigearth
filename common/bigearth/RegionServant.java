@@ -378,14 +378,14 @@ class RegionServant
 		{
 			// FIXME- is there an actual mob property I can use here?
 			final int MY_POPULATION = 100;
-			final double PSUEDO_YEAR = 20000;
+			final double ONE_YEAR = world.config.ticksPerYear;
 
 			// animals per year
 			double huntingRate = wildlife.calculateHuntingRate(MY_POPULATION);
 
 			// time required to harvest one animal
 			requiredTime = (long) Math.ceil(
-				PSUEDO_YEAR / huntingRate
+				ONE_YEAR / huntingRate
 				);
 		}
 		else
