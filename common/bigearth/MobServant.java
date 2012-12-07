@@ -180,6 +180,8 @@ public class MobServant
 		m.location = this.location;
 		m.avatarName = this.avatarName;
 		m.stock = this.stock;
+		m.activity = this.activity;
+		m.activityStarted = this.activityStarted;
 
 		double level = getEncumbranceFactor();
 		m.encumbrance = (
