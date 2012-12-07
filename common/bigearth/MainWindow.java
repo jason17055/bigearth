@@ -200,6 +200,13 @@ public class MainWindow extends JFrame
 			}});
 		ordersMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Inventory");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onInventoryClicked();
+			}});
+		ordersMenu.add(menuItem);
+
 		setJMenuBar(menuBar);
 	}
 
@@ -316,6 +323,15 @@ public class MainWindow extends JFrame
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	void onInventoryClicked()
+	{
+		if (!view.selection.isMob())
+			return;
+
+		InventoryDialog dlg = new InventoryDialog(this, client, view.selection.getMob());
+		dlg.setVisible(true);
 	}
 
 	// implements MobListModel.Listener
