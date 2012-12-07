@@ -12,6 +12,7 @@ public class InventoryDialog extends JDialog
 	String mobName;
 
 	JTable inventoryTable;
+	JTable availableTable;
 	JButton closeBtn;
 
 	InventoryDialog(Window owner, Client client, String mobName)
@@ -28,7 +29,47 @@ public class InventoryDialog extends JDialog
 		inventoryTable.setFillsViewportHeight(true);
 		reloadTable();
 
-		mainPane.add(scrollPane);
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridx = 0;
+		c1.gridy = 0;
+		mainPane.add(new JLabel("Carrying/Herding"), c1);
+		c1.gridy++;
+		mainPane.add(scrollPane, c1);
+
+		availableTable = new JTable();
+		JScrollPane scrollPane2 = new JScrollPane(availableTable);
+		reloadTable2();
+
+		JPanel middleButtonsPane = new JPanel();
+		middleButtonsPane.setLayout(new BoxLayout(middleButtonsPane, BoxLayout.PAGE_AXIS));
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridx = 1;
+		c3.gridy = 0;
+		c3.gridheight = 2;
+		mainPane.add(middleButtonsPane, c3);
+
+		JButton takeBtn = new JButton("<- Take");
+		takeBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onTakeClicked();
+			}});
+		middleButtonsPane.add(takeBtn);
+
+		JButton dropBtn = new JButton("Drop ->");
+		dropBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onDropClicked();
+			}});
+		middleButtonsPane.add(dropBtn);
+	
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.gridx = 2;
+		c2.gridy = 0;
+		mainPane.add(new JLabel("At this Location"), c2);
+		c2.gridy++;
+		mainPane.add(scrollPane2, c2);
 
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -62,5 +103,23 @@ public class InventoryDialog extends JDialog
 
 		DefaultTableModel model = new DefaultTableModel(data, COLUMN_NAMES);
 		inventoryTable.setModel(model);
+	}
+
+	private void reloadTable2()
+	{
+		Object [][] data = new Object[1][2];
+		data[0][0] = CommodityType.WOOD;
+		data[0][1] = new Long(42);
+
+		DefaultTableModel model = new DefaultTableModel(data, COLUMN_NAMES);
+		availableTable.setModel(model);
+	}
+
+	private void onTakeClicked()
+	{
+	}
+
+	private void onDropClicked()
+	{
 	}
 }
