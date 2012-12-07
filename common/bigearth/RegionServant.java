@@ -376,14 +376,11 @@ class RegionServant
 		long requiredTime;
 		if (mob.activity.equals("hunt"))
 		{
-			// FIXME- is there an actual mob property I can use here?
-			final int MY_POPULATION = 100;
-			final double ONE_YEAR = world.config.ticksPerYear;
-
-			// animals per year
-			double huntingRate = wildlife.calculateHuntingRate(MY_POPULATION);
+			// animals per year, given the size of this mob
+			double huntingRate = wildlife.calculateHuntingRate(mob.population);
 
 			// time required to harvest one animal
+			final double ONE_YEAR = world.config.ticksPerYear;
 			requiredTime = (long) Math.ceil(
 				ONE_YEAR / huntingRate
 				);

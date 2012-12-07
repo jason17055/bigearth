@@ -14,9 +14,11 @@ public class MobServant
 	String activity;
 	long activityStarted;
 	Map<CommodityType, Long> stock;
+	int nutrition;
+	int population;
+
 	transient Scheduler.Event wakeUp;
 	transient double totalMass;
-	int nutrition;
 
 	static final int NUTRITION_COST_FOR_MOVEMENT = 100;
 
@@ -25,6 +27,7 @@ public class MobServant
 		this.name = name;
 		this.displayName = name;
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		this.population = 100; //default population
 	}
 
 	public void addCommodity(CommodityType ct, long amount)
@@ -117,6 +120,11 @@ public class MobServant
 			}
 			else if (s.equals("stock"))
 				m.stock = CommoditiesHelper.parseCommodities(in);
+			else if (s.equals("population"))
+			{
+				in.nextToken();
+				m.population = in.getIntValue();
+			}
 			else
 			{
 				in.nextToken();
@@ -155,6 +163,7 @@ public class MobServant
 		out.writeFieldName("stock");
 		CommoditiesHelper.writeCommodities(stock, out);
 		out.writeNumberField("nutrition", nutrition);
+		out.writeNumberField("population", population);
 		out.writeEndObject();
 	}
 
