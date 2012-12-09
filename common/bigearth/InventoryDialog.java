@@ -26,7 +26,9 @@ public class InventoryDialog extends JDialog
 
 		inventoryTable = new JTable();
 		JScrollPane scrollPane = new JScrollPane(inventoryTable);
-		inventoryTable.setFillsViewportHeight(true);
+		inventoryTable.setFillsViewportHeight(false);
+		inventoryTable.setPreferredScrollableViewportSize(
+			new Dimension(200,200));
 		reloadTable();
 
 		GridBagConstraints c1 = new GridBagConstraints();
@@ -38,6 +40,9 @@ public class InventoryDialog extends JDialog
 
 		availableTable = new JTable();
 		JScrollPane scrollPane2 = new JScrollPane(availableTable);
+		availableTable.setFillsViewportHeight(false);
+		availableTable.setPreferredScrollableViewportSize(
+			new Dimension(200,200));
 		reloadTable2();
 
 		JPanel middleButtonsPane = new JPanel();
