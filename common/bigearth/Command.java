@@ -53,6 +53,17 @@ public class Command
 		Command c = new Command();
 
 		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+		{
+			// backwards-compat: at one time, the mob's current
+			// activity was just a string
+			String s = in.getText();
+			if (s.equals(""))
+				return null;
+			c.activity = s;
+			return c;
+		}
+
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
 		while (in.nextToken() == JsonToken.FIELD_NAME)

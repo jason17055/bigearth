@@ -27,6 +27,7 @@ class RegionServant
 	int floods;
 
 	WildlifeServant wildlife;
+	Map<CommodityType, Long> stock;
 
 	boolean dirty;
 
@@ -40,6 +41,7 @@ class RegionServant
 		this.waterLevel = Integer.MIN_VALUE;
 		this.presentMobs = new HashMap<String, MobServant>();
 		this.wildlife = new WildlifeServant(this);
+		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
 	}
 
 	private void init()
@@ -191,6 +193,8 @@ class RegionServant
 		out.writeNumberField("temperature", temperature);
 		out.writeNumberField("annualRains", annualRains);
 		out.writeNumberField("floods", floods);
+		out.writeFieldName("stock");
+		CommoditiesHelper.writeCommodities(stock, out);
 
 		for (int i = 0; i < sides.length; i++)
 		{
@@ -298,6 +302,8 @@ class RegionServant
 				corners[5] = RegionCornerDetail.parse(in);
 			else if (s.equals("mobs"))
 				loadMobs(in);
+			else if (s.equals("stock"))
+				stock = CommoditiesHelper.parseCommodities(in);
 			else
 			{
 				in.nextToken();
@@ -319,7 +325,7 @@ class RegionServant
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String mobName = in.getCurrentName();
-			MobServant mob = MobServant.parse(in, mobName, world.config);
+			MobServant mob = MobServant.parse(in, this, mobName);
 			if (mob.location == null)
 			{
 				mob.location = new SimpleLocation(regionId);
@@ -335,7 +341,7 @@ class RegionServant
 		assert world.getRegionIdForLocation(loc) == this.regionId;
 
 		String mobName = world.nextUniqueName("mob");
-		MobServant mob = new MobServant(mobName);
+		MobServant mob = new MobServant(this, mobName);
 		mob.displayName = characterName;
 		mob.avatarName = avatarName;
 		mob.location = loc;
@@ -392,6 +398,10 @@ class RegionServant
 		else if (mob.activity.activity.equals("gather-wood"))
 		{
 			requiredTime = 5000;
+		}
+		else if (mob.activity.activity.equals("drop"))
+		{
+			requiredTime = mob.activity_Drop();
 		}
 		else
 		{
@@ -576,5 +586,26 @@ class RegionServant
 	void resetWildlife()
 	{
 		wildlife.wildlife = 0;
+	}
+
+	public void addCommodity(CommodityType ct, long amount)
+	{
+		assert stock != null;
+
+		if (stock.containsKey(ct))
+		{
+			long amt = stock.get(ct);
+			amt += amount;
+			stock.put(ct, amt);
+		}
+		else
+		{
+			stock.put(ct, amount);
+		}
+	}
+
+	public WorldConfigIfc getWorldConfig()
+	{
+		return world.config;
 	}
 }

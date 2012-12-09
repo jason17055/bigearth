@@ -6,7 +6,9 @@ import java.util.*;
 
 public class MobServant
 {
-	String name;
+	transient RegionServant parentRegion;
+	transient String name;
+
 	String displayName;
 	String avatarName;
 	String owner;
@@ -22,8 +24,9 @@ public class MobServant
 
 	static final int NUTRITION_COST_FOR_MOVEMENT = 100;
 
-	MobServant(String name)
+	MobServant(RegionServant parentRegion, String name)
 	{
+		this.parentRegion = parentRegion;
 		this.name = name;
 		this.displayName = name;
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
@@ -47,7 +50,10 @@ public class MobServant
 		totalMass += ct.mass * amount;
 	}
 
-	public void subtractCommodity(CommodityType ct, long amount)
+	/**
+	 * @return the amount actually subtracted
+	 */
+	public long subtractCommodity(CommodityType ct, long amount)
 	{
 		assert stock != null;
 
@@ -58,13 +64,16 @@ public class MobServant
 			{
 				stock.put(ct, curBal - amount);
 				totalMass -= ct.mass * amount;
+				return amount;
 			}
 			else
 			{
 				stock.remove(ct);
 				totalMass -= ct.mass * curBal;
+				return curBal;
 			}
 		}
+		return 0;
 	}
 
 	public long getStock(CommodityType ct)
@@ -87,10 +96,10 @@ public class MobServant
 		return owner != null;
 	}
 
-	public static MobServant parse(JsonParser in, String mobName, WorldConfigIfc world)
+	public static MobServant parse(JsonParser in, RegionServant parentRegion, String mobName)
 		throws IOException
 	{
-		MobServant m = new MobServant(mobName);
+		MobServant m = new MobServant(parentRegion, mobName);
 
 		in.nextToken();
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
@@ -103,7 +112,7 @@ public class MobServant
 			else if (s.equals("avatarName"))
 				m.avatarName = in.nextTextValue();
 			else if (s.equals("location"))
-				m.location = LocationHelper.parse(in.nextTextValue(), world);
+				m.location = LocationHelper.parse(in.nextTextValue(), parentRegion.getWorldConfig());
 			else if (s.equals("nutrition"))
 			{
 				in.nextToken();
@@ -112,7 +121,7 @@ public class MobServant
 			else if (s.equals("owner"))
 				m.owner = in.nextTextValue();
 			else if (s.equals("activity"))
-				m.activity = Command.parse(in, world);
+				m.activity = Command.parse(in, parentRegion.getWorldConfig());
 			else if (s.equals("activityStarted"))
 			{
 				in.nextToken();
@@ -231,5 +240,16 @@ public class MobServant
 		{
 			eatSomething();
 		}
+	}
+
+	static final long TIME_PER_UNIT_DROPPED = 50;
+	long activity_Drop()
+	{
+		long amt = subtractCommodity(activity.commodity, activity.amount);
+		if (amt != 0)
+		{
+			parentRegion.addCommodity(activity.commodity, amt);
+		}
+		return amt * TIME_PER_UNIT_DROPPED;
 	}
 }
