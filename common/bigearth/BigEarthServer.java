@@ -509,6 +509,8 @@ class SetActivityServlet extends HttpServlet
 
 		String mobName = request.getParameter("mob");
 		String activityName = request.getParameter("activity");
+		String commodityName = request.getParameter("commodity");
+		String amountStr = request.getParameter("amount");
 
 		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
 		try
@@ -529,9 +531,16 @@ class SetActivityServlet extends HttpServlet
 			return;
 		}
 
+		// construct the command structure
+		Command c = Command.newInstance(activityName);
+		if (commodityName != null)
+			c.setCommodityType(CommodityType.valueOf(commodityName));
+		if (amountStr != null)
+			c.setAmount(Long.parseLong(amountStr));
+
 		// make the actual change
 		RegionServant svt = server.world.getRegionForMob(mobName);
-		svt.mobSetActivity(mobName, activityName);
+		svt.mobSetActivity(mobName, c);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);

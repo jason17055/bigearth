@@ -378,7 +378,7 @@ class RegionServant
 		assert mob.wakeUp == null;
 
 		long requiredTime;
-		if (mob.activity.equals("hunt"))
+		if (mob.activity.activity.equals("hunt"))
 		{
 			// animals per year, given the size of this mob
 			double huntingRate = wildlife.calculateHuntingRate(mob.population);
@@ -389,7 +389,7 @@ class RegionServant
 				ONE_YEAR / huntingRate
 				);
 		}
-		else if (mob.activity.equals("gather-wood"))
+		else if (mob.activity.activity.equals("gather-wood"))
 		{
 			requiredTime = 5000;
 		}
@@ -434,7 +434,7 @@ class RegionServant
 
 	void mobActivityCompleted(String mobName, MobServant mob)
 	{
-		if (mob.activity.equals("hunt"))
+		if (mob.activity.activity.equals("hunt"))
 		{
 			// completed hunting
 			mobCompletedHunting(mobName, mob);
@@ -444,7 +444,7 @@ class RegionServant
 			mobCompletedGatheringWood(mobName, mob);
 		}
 
-		mob.activity = "";
+		mob.activity = null;
 		mob.checkpoint();
 		mobChanged(mobName);
 	}
@@ -466,10 +466,10 @@ class RegionServant
 		//TODO- inform everyone else who can see this mob
 	}
 
-	void mobSetActivity(String mobName, String activityName)
+	void mobSetActivity(String mobName, Command command)
 	{
 		assert mobName != null;
-		assert activityName != null;
+		assert command != null;
 
 		if (mobIsHot(mobName))
 			return;
@@ -478,7 +478,7 @@ class RegionServant
 		MobServant mob = getMob(mobName);
 		assert mob != null;
 
-		mob.activity = activityName;
+		mob.activity = command;
 		mob.activityStarted = currentTime();
 		mobActivity(mobName);
 		mobChanged(mobName);
@@ -519,7 +519,7 @@ class RegionServant
 
 		Location oldLoc = mob.location;
 		mob.location = dest;
-		mob.activity = "move";
+		mob.activity = Command.newInstance("move");
 		mob.activityStarted = currentTime();
 		mob.nutrition -= MobServant.NUTRITION_COST_FOR_MOVEMENT;
 
@@ -530,7 +530,7 @@ class RegionServant
 		public void run()
 		{
 			mob.wakeUp = null;
-			mob.activity = "";
+			mob.activity = null;
 			mob.checkpoint();
 			mobChanged(mobName);
 		}

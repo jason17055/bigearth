@@ -11,7 +11,7 @@ public class MobServant
 	String avatarName;
 	String owner;
 	Location location;
-	String activity;
+	Command activity;
 	long activityStarted;
 	Map<CommodityType, Long> stock;
 	int nutrition;
@@ -112,7 +112,7 @@ public class MobServant
 			else if (s.equals("owner"))
 				m.owner = in.nextTextValue();
 			else if (s.equals("activity"))
-				m.activity = in.nextTextValue();
+				m.activity = Command.parse(in, world);
 			else if (s.equals("activityStarted"))
 			{
 				in.nextToken();
@@ -157,7 +157,8 @@ public class MobServant
 			out.writeStringField("owner", owner);
 		if (activity != null)
 		{
-			out.writeStringField("activity", activity);
+			out.writeFieldName("activity");
+			activity.write(out);
 			out.writeNumberField("activityStarted", activityStarted);
 		}
 		out.writeFieldName("stock");
@@ -180,7 +181,10 @@ public class MobServant
 		m.location = this.location;
 		m.avatarName = this.avatarName;
 		m.stock = this.stock;
-		m.activity = this.activity;
+		if (this.activity != null)
+			m.activity = this.activity.activity;
+		else
+			m.activity = "";
 		m.activityStarted = this.activityStarted;
 
 		double level = getEncumbranceFactor();
