@@ -1,0 +1,25 @@
+<project name="bigearth" default="compile">
+
+<property name="srcdir" location="common" />
+<property name="builddir" location="target/build" />
+<property name="distdir" location="target/dist" />
+
+<path id="build-classpath">
+  <fileset dir="extlib">
+    <include name="*.jar" />
+  </fileset>
+</path>
+
+<target name="compile">
+<mkdir dir="${builddir}" />
+<javac srcdir="${srcdir}"
+       destdir="${builddir}"
+       classpathref="build-classpath"
+	includeantruntime="false"
+       >
+	<compilerarg value="-Xlint:unchecked" />
+	<compilerarg value="-Xlint:deprecation" />
+</javac>
+</target>
+
+</project>
