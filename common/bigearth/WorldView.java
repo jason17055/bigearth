@@ -38,6 +38,8 @@ public class WorldView extends JPanel
 
 	Selection selection = new Selection();
 
+	static final File IMAGES_DIR = new File("html");
+
 	class Selection
 	{
 		int selectedRegion;
@@ -753,7 +755,7 @@ public class WorldView extends JPanel
 		{
 			try
 			{
-				BufferedImage img = ImageIO.read(new File("../html/unit_images/"+avatarName+".png"));
+				BufferedImage img = ImageIO.read(new File(IMAGES_DIR, "unit_images/"+avatarName+".png"));
 				mobImages.put(avatarName, img);
 			}
 			catch (IOException e)
@@ -769,7 +771,7 @@ public class WorldView extends JPanel
 	{
 		try
 		{
-		biomeTextures.put(biome, ImageIO.read(new File("../html/terrain_textures/"+textureName+".png")));
+		biomeTextures.put(biome, ImageIO.read(new File(IMAGES_DIR, "terrain_textures/"+textureName+".png")));
 		}
 		catch (IOException e)
 		{
@@ -1034,7 +1036,7 @@ System.err.println(e);
 		Iterator readers = ImageIO.getImageReadersByFormatName("gif");
 		ImageReader reader = (ImageReader) readers.next();
 
-		File f = new File("../html/ui_images/fleet_selection_circle_front.gif");
+		File f = new File(IMAGES_DIR, "ui_images/fleet_selection_circle_front.gif");
 		ImageInputStream iis = ImageIO.createImageInputStream(f);
 
 		reader.setInput(iis, true);
@@ -1057,7 +1059,7 @@ System.err.println(e);
 
 		mobSelectionFrontImages = imageArray.toArray(new BufferedImage[0]);
 
-		f = new File("../html/ui_images/fleet_selection_circle_back.gif");
+		f = new File(IMAGES_DIR, "ui_images/fleet_selection_circle_back.gif");
 		iis = ImageIO.createImageInputStream(f);
 		reader.setInput(iis, true);
 
