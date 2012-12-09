@@ -568,4 +568,9 @@ class RegionServant
 	{
 		return wildlife.wildlife;
 	}
+
+	void resetWildlife()
+	{
+		wildlife.wildlife = 0;
+	}
 }

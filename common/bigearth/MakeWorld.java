@@ -417,6 +417,8 @@ public class MakeWorld
 		for (int i = 0; i < numCells; i++)
 		{
 			RegionServant region = world.regions[i];
+			region.resetWildlife();
+
 			if (region.getBiome().isWater())
 				continue;
 
