@@ -92,7 +92,7 @@ class WildlifeServant
 			BiomeType neighborBiome = neighborRegion.getBiome();
 
 			double emigrants = eligibleEmigrants / nn.length;
-			if (neighborBiome == BiomeType.OCEAN)
+			if (neighborBiome.isWater())
 				emigrants = 0;
 
 			int emigrantsI = (int) Math.round(Randomizer(emigrants));
