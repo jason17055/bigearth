@@ -16,6 +16,7 @@ class RegionServant
 	RegionCornerDetail [] corners;
 	int waterLevel;
 	Map<String, MobServant> presentMobs;
+	CityServant city; //may be null
 
 	/// Elevation as generated randomly by MakeWorld.
 	int elevation;
@@ -196,6 +197,12 @@ class RegionServant
 		out.writeFieldName("stock");
 		CommoditiesHelper.writeCommodities(stock, out);
 
+		if (hasCity())
+		{
+			out.writeFieldName("city");
+			city.write(out);
+		}
+
 		for (int i = 0; i < sides.length; i++)
 		{
 			if (sides[i] != null)
@@ -304,6 +311,8 @@ class RegionServant
 				loadMobs(in);
 			else if (s.equals("stock"))
 				stock = CommoditiesHelper.parseCommodities(in);
+			else if (s.equals("city"))
+				city = CityServant.parse(in, this);
 			else
 			{
 				in.nextToken();
@@ -608,5 +617,10 @@ class RegionServant
 	public WorldConfigIfc getWorldConfig()
 	{
 		return world.config;
+	}
+
+	boolean hasCity()
+	{
+		return city != null;
 	}
 }
