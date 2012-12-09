@@ -318,7 +318,7 @@ public class MobServant
 		{
 			completedHunting();
 		}
-		else if (activity.equals("gather-wood"))
+		else if (activity.activity.equals("gather-wood"))
 		{
 			completedGatheringWood();
 		}
