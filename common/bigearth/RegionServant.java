@@ -247,6 +247,9 @@ class RegionServant
 
 		JsonParser in = new JsonFactory().createJsonParser(regionFile);
 		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+			throw new InputMismatchException(regionFile + ": " + in.getCurrentLocation() + ": expected START_OBJECT");
+
 		assert in.getCurrentToken() == JsonToken.START_OBJECT;
 
 		while (in.nextToken() == JsonToken.FIELD_NAME)
@@ -335,6 +338,7 @@ class RegionServant
 		MobServant mob = new MobServant(mobName);
 		mob.displayName = characterName;
 		mob.avatarName = avatarName;
+		mob.location = loc;
 		presentMobs.put(mob.name, mob);
 
 		// tell WorldMaster where this mob is
