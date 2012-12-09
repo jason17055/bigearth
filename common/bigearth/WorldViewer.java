@@ -220,6 +220,7 @@ public class WorldViewer extends JFrame
 	{
 		world = newWorld;
 		view.setMap(new MapAdapter(this.world));
+		view.setMobs(new MobListAdapter(this.world));
 		reloadImage();
 	}
 
@@ -975,4 +976,23 @@ class MapAdapter extends MapModel
 
 		return r;
 	}
+}
+
+class MobListAdapter extends MobListModel
+{
+	MakeWorld mworld;
+
+	MobListAdapter(MakeWorld mworld)
+	{
+		this.mworld = mworld;
+		for (RegionServant realRegion : mworld.world.regions)
+		{
+			for (String mobName : realRegion.presentMobs.keySet())
+			{
+				mobs.put(mobName, realRegion.presentMobs.get(mobName).makeProfileForOwner());
+			}
+		}
+	}
+
+	
 }
