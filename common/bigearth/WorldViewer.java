@@ -33,7 +33,6 @@ public class WorldViewer extends JFrame
 
 	WorldView view;
 	MakeRivers mrivers;
-	JButton generateBtn;
 	JButton expandLakeBtn;
 	JButton stepBtn;
 	JCheckBoxMenuItem showElevationBtn;
@@ -105,10 +104,6 @@ public class WorldViewer extends JFrame
 
 		JPanel buttonsPane = new JPanel();
 		add(buttonsPane, BorderLayout.SOUTH);
-
-		generateBtn = new JButton("Generate");
-		generateBtn.addActionListener(this);
-		buttonsPane.add(generateBtn);
 
 		expandLakeBtn = new JButton("Expand Lake");
 		expandLakeBtn.addActionListener(this);
@@ -290,6 +285,13 @@ public class WorldViewer extends JFrame
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
 				onNewWorldClicked();
+			}});
+		fileMenu.add(menuItem);
+
+		menuItem = new JMenuItem("Generate Terrain");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onGenerateTerrainClicked();
 			}});
 		fileMenu.add(menuItem);
 
@@ -708,26 +710,26 @@ public class WorldViewer extends JFrame
 		}
 	}
 
+	private void onGenerateTerrainClicked()
+	{
+		world.generate();
+		try
+		{
+			world.world.saveAll();
+		}
+		catch (IOException e)
+		{
+			System.err.println(e.getMessage());
+		}
+		reloadImage();
+	}
+
 	//implements ActionListener
 	public void actionPerformed(ActionEvent ev)
 	{
 		if (toolBtns.containsKey(ev.getActionCommand()))
 		{
 			onToolSelected(ev.getActionCommand());
-		}
-		else if (ev.getSource() == generateBtn)
-		{
-			world.generate();
-			try
-			{
-				world.world.saveAll();
-			}
-			catch (IOException e)
-			{
-				System.err.println(e.getMessage());
-			}
-			reloadImage();
-	
 		}
 		else if (ev.getSource() == expandLakeBtn)
 		{
