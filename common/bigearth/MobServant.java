@@ -15,6 +15,7 @@ public class MobServant
 	Location location;
 	Command activity;
 	long activityStarted;
+	long activityRequiredTime;
 	Map<CommodityType, Long> stock;
 	int nutrition;
 	int population;
@@ -251,5 +252,37 @@ public class MobServant
 			parentRegion.addCommodity(activity.commodity, amt);
 		}
 		return amt * TIME_PER_UNIT_DROPPED;
+	}
+
+	private WorldMaster getWorldMaster()
+	{
+		return parentRegion.world;
+	}
+
+	void onActivityStarted()
+	{
+		if (activity.activity.equals("hunt"))
+		{
+			// animals per year, given the size of this mob
+			double huntingRate = parentRegion.wildlife.calculateHuntingRate(this.population);
+
+			// time required to harvest one animal
+			final double ONE_YEAR = getWorldMaster().config.ticksPerYear;
+			activityRequiredTime = (long) Math.ceil(
+				ONE_YEAR / huntingRate
+				);
+		}
+		else if (activity.activity.equals("gather-wood"))
+		{
+			activityRequiredTime = 5000;
+		}
+		else if (activity.activity.equals("drop"))
+		{
+			activityRequiredTime = activity_Drop();
+		}
+		else
+		{
+			System.err.println("Warning: unrecognized activity: "+activity.activity);
+		}
 	}
 }

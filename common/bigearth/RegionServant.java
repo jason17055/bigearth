@@ -392,32 +392,12 @@ class RegionServant
 		assert mob.activity != null;
 		assert mob.wakeUp == null;
 
-		long requiredTime;
-		if (mob.activity.activity.equals("hunt"))
-		{
-			// animals per year, given the size of this mob
-			double huntingRate = wildlife.calculateHuntingRate(mob.population);
+		mob.activityRequiredTime = 0;
+		mob.onActivityStarted();
 
-			// time required to harvest one animal
-			final double ONE_YEAR = world.config.ticksPerYear;
-			requiredTime = (long) Math.ceil(
-				ONE_YEAR / huntingRate
-				);
-		}
-		else if (mob.activity.activity.equals("gather-wood"))
-		{
-			requiredTime = 5000;
-		}
-		else if (mob.activity.activity.equals("drop"))
-		{
-			requiredTime = mob.activity_Drop();
-		}
-		else
-		{
-			requiredTime = 5000;
-		}
+		assert mob.activityRequiredTime >= 0;
 
-		long wakeUp = mob.activityStarted + requiredTime;
+		long wakeUp = mob.activityStarted + mob.activityRequiredTime;
 		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
 		public void run()
 		{
