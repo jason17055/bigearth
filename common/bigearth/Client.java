@@ -326,6 +326,29 @@ public class Client
 		assert status == 204;
 	}
 
+	public void dropCommodity(String mobName, CommodityType ct, long amt)
+		throws IOException
+	{
+		HttpURLConnection conn = makeRequest("POST", "/orders");
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+
+		String x = "mob=" + URLEncoder.encode(mobName, "UTF-8")
+			+ "&activity=drop"
+			+ "&commodity=" + URLEncoder.encode(ct.name(), "UTF-8")
+			+ "&amount=" + amt;
+		byte [] xx = x.getBytes("UTF-8");
+
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
+		OutputStream out = conn.getOutputStream();
+		out.write(xx);
+		out.close();
+
+		int status = conn.getResponseCode();
+		assert status == 204;
+	}
+
 	void startListenerThread()
 	{
 		listenerThread = new MyListenerThread();

@@ -131,9 +131,45 @@ public class InventoryDialog extends JDialog
 
 	private void onTakeClicked()
 	{
+		int row = availableTable.getSelectedRow();
+		if (row == -1)
+		{
+			JOptionPane.showMessageDialog(this,
+				"Select something from at this location.",
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		CommodityType ct = (CommodityType) availableTable.getValueAt(row, 0);
+		System.out.println("want to take "+ct);
 	}
 
 	private void onDropClicked()
 	{
+		int row = inventoryTable.getSelectedRow();
+		if (row == -1)
+		{
+			JOptionPane.showMessageDialog(this,
+				"Select something from inventory.",
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		try{
+
+		CommodityType ct = (CommodityType) inventoryTable.getValueAt(row, 0);
+		client.dropCommodity(mobName, ct, 1);
+
+		}catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(this,
+				e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
 	}
 }
