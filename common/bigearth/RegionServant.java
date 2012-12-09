@@ -395,21 +395,14 @@ class RegionServant
 		mob.activityRequiredTime = 0;
 		mob.onActivityStarted();
 
-		if (mob.activityRequiredTime != 0)
+		long wakeUp = mob.activityStarted + mob.activityRequiredTime;
+		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
+		public void run()
 		{
-			long wakeUp = mob.activityStarted + mob.activityRequiredTime;
-			mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
-			public void run()
-			{
-				mob.wakeUp = null;
-				mobActivityCompleted(mobName, mob);
-			}
-			}, wakeUp);
-		}
-		else
-		{
+			mob.wakeUp = null;
 			mobActivityCompleted(mobName, mob);
 		}
+		}, wakeUp);
 	}
 
 	void mobActivityCompleted(String mobName, MobServant mob)

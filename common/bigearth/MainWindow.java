@@ -200,6 +200,13 @@ public class MainWindow extends JFrame
 			}});
 		ordersMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Build City");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onSimpleOrderClicked("build-city");
+			}});
+		ordersMenu.add(menuItem);
+
 		menuItem = new JMenuItem("Inventory");
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
@@ -323,6 +330,13 @@ public class MainWindow extends JFrame
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	//implements Client.Listener
+	public void mobMessage(String mobName, String message)
+	{
+		JOptionPane.showMessageDialog(this, message,
+			mobName, JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	void onInventoryClicked()

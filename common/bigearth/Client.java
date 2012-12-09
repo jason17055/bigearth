@@ -260,6 +260,12 @@ public class Client
 		assert in.getCurrentToken() == JsonToken.END_ARRAY;
 	}
 
+	private void fireMobMessage(String mobName, String message)
+	{
+		for (Listener l : listeners)
+			l.mobMessage(mobName, message);
+	}
+
 	//implements Notification.Receiver
 	public void handleMobChangeNotification(MobChangeNotification n)
 	{
@@ -267,6 +273,12 @@ public class Client
 			return;
 
 		mobs.update(n.mobName, n.mobData);
+	}
+
+	//implements Notification.Receiver
+	public void handleMobMessageNotification(MobMessageNotification n)
+	{
+		fireMobMessage(n.mobName, n.message);
 	}
 
 	//implements Notification.Receiver
@@ -444,6 +456,7 @@ System.out.println("in stopListenerThread()");
 
 	interface Listener
 	{
+		void mobMessage(String mobName, String message);
 	}
 }
 

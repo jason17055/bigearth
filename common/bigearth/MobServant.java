@@ -259,6 +259,28 @@ public class MobServant
 		return parentRegion.world;
 	}
 
+	void activityFailed(String message)
+	{
+		MobMessageNotification n = new MobMessageNotification(name, message);
+		getWorldMaster().notifyLeader(owner, n);
+	}
+
+	void startBuildingCity()
+	{
+	final long WOOD_REQUIRED = 10;
+
+		// check for the required commodities
+		if (getStock(CommodityType.WOOD) < WOOD_REQUIRED)
+		{
+			// not enough wood
+			activityFailed("Not enough wood");
+			return;
+		}
+
+		subtractCommodity(CommodityType.WOOD, WOOD_REQUIRED);
+		activityRequiredTime = 30000;
+	}
+
 	void onActivityStarted()
 	{
 		if (activity.activity.equals("hunt"))
@@ -279,6 +301,10 @@ public class MobServant
 		else if (activity.activity.equals("drop"))
 		{
 			activityRequiredTime = activity_Drop();
+		}
+		else if (activity.activity.equals("build-city"))
+		{
+			startBuildingCity();
 		}
 		else
 		{
