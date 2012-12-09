@@ -530,12 +530,11 @@ public class WorldViewer extends JFrame
 
 	MobInfo getSelectedMob()
 	{
-		if (selectedMob == null)
+		if (!view.selection.isMob())
 			return null;
 
-		int regionId = view.selection.selectedRegion;
-		RegionServant region = world.world.regions[regionId-1];
-		MobServant mob = region.presentMobs.get(selectedMob);
+		String mobName = view.selection.getMob();
+		MobServant mob = world.world.getMob(mobName);
 
 		return mob.makeProfileForOwner();
 	}
@@ -900,17 +899,24 @@ assert(x >= 1);
 			);
 		regionPane.setVisible(true);
 
-		RegionServant region = world.world.regions[regionId-1];
-		if (!region.presentMobs.isEmpty())
-		{
-			Set<String> mobNames = region.presentMobs.keySet();
-			String [] mobNamesA = mobNames.toArray(new String[0]);
-			selectMob(mobNamesA[0]);
-		}
-		else
-		{
-			selectMob(null);
-		}
+		mobPane.setVisible(false);
+	}
+
+	//implements WorldView.Listener
+	public void onMobSelected(String mobName)
+	{
+		mobPane.setBorder(
+			BorderFactory.createTitledBorder("Mob "+selectedMob)
+			);
+
+		MobInfo mob = getSelectedMob();
+
+		mobTypeLbl.setText(mob.avatarName!=null ?
+			mob.avatarName : "");
+		mobOwnerLbl.setText(mob.owner != null ?
+			mob.owner : "");
+
+		mobPane.setVisible(true);
 	}
 
 	private void selectMob(String mobName)
@@ -918,18 +924,6 @@ assert(x >= 1);
 		selectedMob = mobName;
 		if (selectedMob != null)
 		{
-			mobPane.setBorder(
-				BorderFactory.createTitledBorder("Mob "+selectedMob)
-				);
-
-			MobInfo mob = getSelectedMob();
-
-			mobTypeLbl.setText(mob.avatarName!=null ?
-				mob.avatarName : "");
-			mobOwnerLbl.setText(mob.owner != null ?
-				mob.owner : "");
-
-			mobPane.setVisible(true);
 		}
 		else
 		{

@@ -105,6 +105,7 @@ public class WorldView extends JPanel
 
 			onSelectionChanged();
 			onMobSelected(mobName);
+			fireMobSelected(this.selectedMob);
 			repaint();
 		}
 
@@ -245,6 +246,7 @@ public class WorldView extends JPanel
 
 	public interface Listener
 	{
+		void onMobSelected(String mobName);
 		void onRegionSelected(int regionId);
 		void onVertexSelected(Geometry.VertexId vertex);
 	}
@@ -1250,6 +1252,12 @@ System.err.println(e);
 
 	protected void onRegionSelected(int regionId)
 	{
+	}
+
+	private void fireMobSelected(String mobName)
+	{
+		for (Listener l : listeners)
+			l.onMobSelected(mobName);
 	}
 
 	private void fireRegionSelected(int regionId)
