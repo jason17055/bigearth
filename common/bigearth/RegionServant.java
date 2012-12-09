@@ -528,6 +528,7 @@ class RegionServant
 		world.mobs.put(mobName, this);
 
 		Location oldLoc = mob.location;
+		mob.parentRegion = this;
 		mob.location = dest;
 		mob.activity = Command.newInstance("move");
 		mob.activityStarted = currentTime();
