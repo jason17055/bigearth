@@ -543,7 +543,10 @@ public class WorldViewer extends JFrame
 	{
 		try {
 
-		MobInfo mob = getSelectedMob();
+		if (!view.selection.isMob())
+			throw new Exception("Please select a mob first.");
+
+		MobServant mob = world.world.getMob(view.selection.getMob());
 		if (mob == null)
 			throw new Exception("Please select a mob first.");
 
@@ -589,9 +592,10 @@ public class WorldViewer extends JFrame
 	{
 		try {
 
-		MobInfo mob = getSelectedMob();
-		if (mob == null)
+		if (!view.selection.isMob())
 			throw new Exception("Please select a mob first.");
+
+		MobServant mob = world.world.getMob(view.selection.getMob());
 
 		String [] leaderNames = world.world.leaders.keySet().toArray(new String[0]);
 		String [] leaderDisplayNames = new String[leaderNames.length+1];
