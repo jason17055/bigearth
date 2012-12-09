@@ -285,4 +285,42 @@ public class MobServant
 			System.err.println("Warning: unrecognized activity: "+activity.activity);
 		}
 	}
+
+	void onActivityFinished()
+	{
+		if (activity.activity.equals("hunt"))
+		{
+			completedHunting();
+		}
+		else if (activity.equals("gather-wood"))
+		{
+			completedGatheringWood();
+		}
+	}
+
+	private void completedHunting()
+	{
+		WildlifeServant wildlife = parentRegion.wildlife;
+		if (Math.random() < wildlife.chanceOfCatchingSheep())
+		{
+			this.addCommodity(CommodityType.SHEEP, 1);
+			wildlife.wildSheepCount--;
+		}
+		else if (Math.random() < wildlife.chanceOfCatchingPig())
+		{
+			this.addCommodity(CommodityType.PIG, 1);
+			wildlife.wildPigCount--;
+		}
+		else
+		{
+			this.addCommodity(CommodityType.MEAT, 1);
+			wildlife.wildlifeHunted++;
+		}
+	}
+
+	private void completedGatheringWood()
+	{
+		addCommodity(CommodityType.WOOD, 1);
+	}
+
 }

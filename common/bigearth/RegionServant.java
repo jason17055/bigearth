@@ -395,54 +395,26 @@ class RegionServant
 		mob.activityRequiredTime = 0;
 		mob.onActivityStarted();
 
-		assert mob.activityRequiredTime >= 0;
-
-		long wakeUp = mob.activityStarted + mob.activityRequiredTime;
-		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
-		public void run()
+		if (mob.activityRequiredTime != 0)
 		{
-			mob.wakeUp = null;
-			mobActivityCompleted(mobName, mob);
-		}
-		}, wakeUp);
-	}
-
-	private void mobCompletedHunting(String mobName, MobServant mob)
-	{
-		if (Math.random() < wildlife.chanceOfCatchingSheep())
-		{
-			mob.addCommodity(CommodityType.SHEEP, 1);
-			wildlife.wildSheepCount--;
-		}
-		else if (Math.random() < wildlife.chanceOfCatchingPig())
-		{
-			mob.addCommodity(CommodityType.PIG, 1);
-			wildlife.wildPigCount--;
+			long wakeUp = mob.activityStarted + mob.activityRequiredTime;
+			mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
+			public void run()
+			{
+				mob.wakeUp = null;
+				mobActivityCompleted(mobName, mob);
+			}
+			}, wakeUp);
 		}
 		else
 		{
-			mob.addCommodity(CommodityType.MEAT, 1);
-			wildlife.wildlifeHunted++;
+			mobActivityCompleted(mobName, mob);
 		}
-	}
-
-	private void mobCompletedGatheringWood(String mobName, MobServant mob)
-	{
-		mob.addCommodity(CommodityType.WOOD, 1);
 	}
 
 	void mobActivityCompleted(String mobName, MobServant mob)
 	{
-		if (mob.activity.activity.equals("hunt"))
-		{
-			// completed hunting
-			mobCompletedHunting(mobName, mob);
-		}
-		else if (mob.activity.equals("gather-wood"))
-		{
-			mobCompletedGatheringWood(mobName, mob);
-		}
-
+		mob.onActivityFinished();
 		mob.activity = null;
 		mob.checkpoint();
 		mobChanged(mobName);
