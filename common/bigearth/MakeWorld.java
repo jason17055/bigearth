@@ -92,7 +92,6 @@ public class MakeWorld
 			int regionId = i+1;
 			world.regions[i] = RegionServant.create(world, regionId);
 		}
-		world.load();
 
 		me.world = world;
 		return me;
