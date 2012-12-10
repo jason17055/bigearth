@@ -322,6 +322,10 @@ public class MobServant
 		{
 			completedGatheringWood();
 		}
+		else if (activity.activity.equals("build-city"))
+		{
+			completedBuildingCity();
+		}
 	}
 
 	private void completedHunting()
@@ -349,4 +353,8 @@ public class MobServant
 		addCommodity(CommodityType.WOOD, 1);
 	}
 
+	private void completedBuildingCity()
+	{
+		parentRegion.spawnCity(location, owner);
+	}
 }

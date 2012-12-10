@@ -345,6 +345,16 @@ class RegionServant
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
+	void spawnCity(Location loc, String owner)
+	{
+		assert world.getRegionIdForLocation(loc) == this.regionId;
+		assert this.city == null;
+
+		city = new CityServant(this);
+		city.location = loc;
+		city.owner = owner;
+	}
+
 	void spawnCharacter(Location loc, String characterName, String avatarName)
 	{
 		assert world.getRegionIdForLocation(loc) == this.regionId;
