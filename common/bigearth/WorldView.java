@@ -1023,6 +1023,10 @@ System.err.println(e);
 		{
 			return "M"; // M == Mine
 		}
+		else if (activityName.equals("build-city"))
+		{
+			return "B"; // B == Build
+		}
 		else
 		{
 			return "A"; // all other activities
