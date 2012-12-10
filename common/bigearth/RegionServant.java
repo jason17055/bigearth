@@ -353,6 +353,7 @@ class RegionServant
 		city = new CityServant(this);
 		city.location = loc;
 		city.owner = owner;
+		world.regionChanged(regionId);
 	}
 
 	void spawnCharacter(Location loc, String characterName, String avatarName)

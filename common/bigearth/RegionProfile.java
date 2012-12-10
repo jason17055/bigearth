@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.*;
 class RegionProfile
 {
 	BiomeType biome;
+	int citySize;
 	RegionSideDetail.SideFeature [] sides;
 	RegionCornerDetail.PointFeature [] corners;
 
@@ -37,6 +38,8 @@ class RegionProfile
 			RegionProfile rhs = (RegionProfile) obj;
 			if (this.biome != rhs.biome)
 				return false;
+			if (this.citySize != rhs.citySize)
+				return false;
 			for (int i = 0; i < 6; i++)
 			{
 				if (this.sides[i] != rhs.sides[i])
@@ -56,6 +59,8 @@ class RegionProfile
 		out.writeStartObject();
 		if (biome != null)
 			out.writeStringField("biome", biome.name());
+		if (citySize != 0)
+			out.writeNumberField("citySize", citySize);
 		for (int i = 0; i < sides.length; i++)
 		{
 			if (sides[i] != null)
@@ -93,6 +98,11 @@ class RegionProfile
 			String s = in.getCurrentName();
 			if (s.equals("biome"))
 				biome = BiomeType.valueOf(in.nextTextValue());
+			else if (s.equals("citySize"))
+			{
+				in.nextToken();
+				citySize = in.getIntValue();
+			}
 			else if (s.equals("side0"))
 				sides[0] = RegionSideDetail.SideFeature.valueOf(in.nextTextValue());
 			else if (s.equals("side1"))

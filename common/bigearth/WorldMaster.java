@@ -213,6 +213,17 @@ public class WorldMaster
 		return false;
 	}
 
+	void regionChanged(int regionId)
+	{
+		for (String leaderName : leaders.keySet())
+		{
+			if (leaderCanSeeRegion(leaderName, regionId))
+			{
+				discoverTerrain(leaderName, new SimpleLocation(regionId));
+			}
+		}
+	}
+
 	boolean leaderCanSeeRegion(String user, int regionId)
 	{
 		// check whether the designated region has a mob owned by this
@@ -240,6 +251,7 @@ public class WorldMaster
 
 		RegionProfile p = new RegionProfile();
 		p.biome = region.biome;
+		p.citySize = 1;
 
 		for (int i = 0; i < 6; i++)
 		{
