@@ -251,7 +251,8 @@ public class WorldMaster
 
 		RegionProfile p = new RegionProfile();
 		p.biome = region.biome;
-		p.citySize = 1;
+		if (region.city != null)
+			p.citySize = 1;
 
 		for (int i = 0; i < 6; i++)
 		{
