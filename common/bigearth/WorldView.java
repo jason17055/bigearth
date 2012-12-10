@@ -785,10 +785,12 @@ System.err.println(e);
 
 	void drawRegionArea(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
 	{
+		assert r != null;
+
 		Graphics2D gr2 = (Graphics2D) gr;
 		Paint oldPaint = gr2.getPaint();
 
-		BiomeType biome = r != null ? r.getBiome() : null;
+		BiomeType biome = r.getBiome();
 		if (biomeTextures.containsKey(biome))
 		{
 			Rectangle rect = biomeMappingRect.get(biome);
@@ -802,6 +804,12 @@ System.err.println(e);
 
 		gr2.fillPolygon(x_coords, y_coords, x_coords.length);
 		gr2.setPaint(oldPaint);
+
+		if (r.citySize != 0)
+		{
+			gr2.setColor(Color.YELLOW);
+			gr2.fillPolygon(x_coords, y_coords, x_coords.length);
+		}
 	}
 
 	void drawRegionBorder(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)

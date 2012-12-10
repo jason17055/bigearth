@@ -21,10 +21,14 @@ public class MapModel
 		return geometry;
 	}
 
+	static final RegionProfile UNKNOWN_REGION = new RegionProfile();
 	public RegionProfile getRegion(int regionId)
 	{
 		Location loc = new SimpleLocation(regionId);
-		return regions.get(loc);
+		if (regions.containsKey(loc))
+			return regions.get(loc);
+		else
+			return UNKNOWN_REGION;
 	}
 
 	public void put(Location loc, RegionProfile p)
