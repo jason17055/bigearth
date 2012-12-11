@@ -42,4 +42,19 @@ class CommoditiesHelper
 		out.writeEndObject();
 	}
 
+	static boolean contentsEqual(Map<CommodityType, Long> stock1, Map<CommodityType, Long> stock2)
+	{
+		if (stock1.size() != stock2.size())
+			return false;
+		for (CommodityType ct : stock1.keySet())
+		{
+			if (!stock2.containsKey(ct))
+				return false;
+			long amt1 = stock1.get(ct);
+			long amt2 = stock2.get(ct);
+			if (amt1 != amt2)
+				return false;
+		}
+		return true;
+	}
 }
