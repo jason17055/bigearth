@@ -288,7 +288,7 @@ public class Client
 			return;
 
 		Location loc = n.getLocation();
-		map.put(loc, n.profile);
+		map.updateRegion(loc, n.profile);
 	}
 
 	void handleNotification(Notification n)
