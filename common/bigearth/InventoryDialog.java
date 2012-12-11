@@ -29,7 +29,7 @@ public class InventoryDialog extends JDialog
 		inventoryTable.setFillsViewportHeight(false);
 		inventoryTable.setPreferredScrollableViewportSize(
 			new Dimension(200,200));
-		reloadTable();
+		reloadMobInventory();
 
 		GridBagConstraints c1 = new GridBagConstraints();
 		c1.gridx = 0;
@@ -43,7 +43,7 @@ public class InventoryDialog extends JDialog
 		availableTable.setFillsViewportHeight(false);
 		availableTable.setPreferredScrollableViewportSize(
 			new Dimension(200,200));
-		reloadTable2();
+		reloadRegionStock();
 
 		JPanel middleButtonsPane = new JPanel();
 		middleButtonsPane.setLayout(new BoxLayout(middleButtonsPane, BoxLayout.PAGE_AXIS));
@@ -102,12 +102,12 @@ public class InventoryDialog extends JDialog
 
 	private void onRefreshClicked()
 	{
-		reloadTable();
-		reloadTable2();
+		reloadMobInventory();
+		reloadRegionStock();
 	}
 
 	static final String [] COLUMN_NAMES = { "Commodity", "Amount" };
-	private void reloadTable()
+	private void reloadMobInventory()
 	{
 		MobListModel mobList = client.mobs;
 		MobInfo mob = mobList.mobs.get(mobName);
@@ -124,14 +124,36 @@ public class InventoryDialog extends JDialog
 		inventoryTable.setModel(model);
 	}
 
-	private void reloadTable2()
+	private void reloadRegionStock()
 	{
-		Object [][] data = new Object[1][2];
-		data[0][0] = CommodityType.WOOD;
-		data[0][1] = new Long(42);
+		MobListModel mobList = client.mobs;
+		MobInfo mob = mobList.mobs.get(mobName);
+		MapModel map = client.map;
+		RegionProfile region = map.getRegion(mob.location);
+
+		if (region.hasStock())
+		{
+			loadTableFromStock(availableTable, region.stock);
+			availableTable.setVisible(true);
+		}
+		else
+		{
+			availableTable.setVisible(false);
+		}
+	}
+
+	private void loadTableFromStock(JTable jtable, Map<CommodityType, Long> stock)
+	{
+		CommodityType [] commodities = stock.keySet().toArray(new CommodityType[0]);
+		Object [][] data = new Object[commodities.length][2];
+		for (int i = 0; i < commodities.length; i++)
+		{
+			data[i][0] = commodities[i];
+			data[i][1] = stock.get(commodities[i]);
+		}
 
 		DefaultTableModel model = new DefaultTableModel(data, COLUMN_NAMES);
-		availableTable.setModel(model);
+		jtable.setModel(model);
 	}
 
 	private void onTakeClicked()

@@ -24,7 +24,11 @@ public class MapModel
 	static final RegionProfile UNKNOWN_REGION = new RegionProfile();
 	public RegionProfile getRegion(int regionId)
 	{
-		Location loc = new SimpleLocation(regionId);
+		return getRegion(new SimpleLocation(regionId));
+	}
+
+	public RegionProfile getRegion(Location loc)
+	{
 		if (regions.containsKey(loc))
 			return regions.get(loc);
 		else
