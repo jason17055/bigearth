@@ -39,14 +39,21 @@ public class MapModel
 
 	public boolean updateRegion(Location loc, RegionProfile p)
 	{
-		if (!regions.containsKey(loc)
-		|| !regions.get(loc).equals(p))
+		if (regions.containsKey(loc))
 		{
-			put(loc, p);
+			RegionProfile old = regions.get(loc);
+			if (old.equals(p))
+			{
+				return false;
+			}
+			regions.put(loc, old.merge(p));
 			return true;
 		}
 		else
-			return false;
+		{
+			regions.put(loc, p);
+			return true;
+		}
 	}
 
 	public void addListener(Listener l)

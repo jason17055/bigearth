@@ -5,6 +5,7 @@ import java.util.*;
 import com.fasterxml.jackson.core.*;
 
 class RegionProfile
+	implements Cloneable
 {
 	BiomeType biome;
 	int citySize;
@@ -21,6 +22,21 @@ class RegionProfile
 	public BiomeType getBiome()
 	{
 		return biome;
+	}
+
+	public boolean hasBiome()
+	{
+		return biome != null;
+	}
+
+	public boolean hasCitySize()
+	{
+		return citySize != 0;
+	}
+
+	public boolean hasStock()
+	{
+		return stock != null;
 	}
 
 	@Override
@@ -65,14 +81,55 @@ class RegionProfile
 			return false;
 	}
 
+	public Object clone()
+	{
+		try
+		{
+		return super.clone();
+		}
+		catch (CloneNotSupportedException e)
+		{
+			throw new Error("unexpected");
+		}
+	}
+
+	/**
+	 * Returns a new region profile, with properties set to the
+	 * combination of this profile and the reference profile.
+	 * Where properties conflict, the reference profile is favored.
+	 */
+	public RegionProfile merge(RegionProfile ref)
+	{
+		RegionProfile n = (RegionProfile) clone();
+		if (ref.hasBiome())
+			n.biome = ref.biome;
+		if (ref.hasCitySize())
+			n.citySize = ref.citySize;
+		if (ref.hasStock())
+			n.stock = ref.stock;
+		for (int i = 0; i < 6; i++)
+		{
+			if (ref.sides[i] != null)
+				n.sides[i] = ref.sides[i];
+			if (ref.corners[i] != null)
+				n.corners[i] = ref.corners[i];
+		}
+		return n;
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{
 		out.writeStartObject();
-		if (biome != null)
+		if (hasBiome())
 			out.writeStringField("biome", biome.name());
-		if (citySize != 0)
+		if (hasCitySize())
 			out.writeNumberField("citySize", citySize);
+		if (hasStock())
+		{
+			out.writeFieldName("stock");
+			CommoditiesHelper.writeCommodities(stock, out);
+		}
 		for (int i = 0; i < sides.length; i++)
 		{
 			if (sides[i] != null)
@@ -88,11 +145,6 @@ class RegionProfile
 				out.writeFieldName("corner"+i);
 				out.writeString(corners[i].name());
 			}
-		}
-		if (stock != null)
-		{
-			out.writeFieldName("stock");
-			CommoditiesHelper.writeCommodities(stock, out);
 		}
 		out.writeEndObject();
 	}
