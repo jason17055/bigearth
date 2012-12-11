@@ -219,7 +219,7 @@ public class WorldMaster
 		{
 			if (leaderCanSeeRegion(leaderName, regionId))
 			{
-				discoverTerrain(leaderName, new SimpleLocation(regionId));
+				discoverTerrain(leaderName, new SimpleLocation(regionId), false);
 			}
 		}
 	}
@@ -243,7 +243,7 @@ public class WorldMaster
 		return false;
 	}
 
-	RegionProfile makeRegionProfileFor(String user, int regionId)
+	RegionProfile makeRegionProfileFor(String user, int regionId, boolean isOccupant)
 	{
 		assert leaderCanSeeRegion(user, regionId);
 
@@ -253,6 +253,9 @@ public class WorldMaster
 		p.biome = region.biome;
 		if (region.city != null)
 			p.citySize = 1;
+
+		if (isOccupant)
+			p.stock = region.stock;
 
 		for (int i = 0; i < 6; i++)
 		{
@@ -335,7 +338,7 @@ public class WorldMaster
 		toRegion.mobMovedIn(mobName, mob, dest, delay);
 
 		mobMoved(mobName, oldLoc, dest);
-		discoverTerrain(mob.owner, dest);
+		discoverTerrain(mob.owner, dest, true);
 		discoverTerrainBorder(mob.owner, dest);
 		wantSaved(this);
 	}
@@ -354,12 +357,18 @@ public class WorldMaster
 		//TODO- inform everyone else who can see this mob
 	}
 
-	void discoverTerrain(String user, Location loc)
+	/**
+	 * @param isOccupant true if the leader has a unit in this region,
+	 *     false if the leader is simply observing the region from a
+	 *     distance. This determines what properties of the region
+	 *     the leader can see.
+	 */
+	void discoverTerrain(String user, Location loc, boolean isOccupant)
 	{
 		MapModel map = leaders.get(user).map;
 
 		int regionId = getRegionIdForLocation(loc);
-		RegionProfile p = makeRegionProfileFor(user, regionId);
+		RegionProfile p = makeRegionProfileFor(user, regionId, isOccupant);
 		if (map.updateRegion(loc, p))
 		{
 			fireMapUpdate(user, regionId, p);
@@ -371,7 +380,7 @@ public class WorldMaster
 		int regionId = getRegionIdForLocation(loc);
 		for (int nid : getGeometry().getNeighbors(regionId))
 		{
-			discoverTerrain(user, new SimpleLocation(nid));
+			discoverTerrain(user, new SimpleLocation(nid), false);
 		}
 	}
 
