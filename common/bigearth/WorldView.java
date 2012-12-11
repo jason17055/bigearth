@@ -548,7 +548,21 @@ public class WorldView extends JPanel
 				drawRegionCorners(gr, i+1, r, x_coords, y_coords);
 			}
 		}
-				
+
+			//
+			// draw region emblems
+			//
+			for (int i = 0; i < regionBounds.length; i++)
+			{
+				if (!screen.intersects(regionBounds[i]))
+					continue;
+
+				Point3d pt = g.getCenterPoint(i+1);
+				Point p = toScreen(pt);
+				RegionProfile r = map.getRegion(i+1);
+				drawRegionEmblem(gr, i+1, r, p);
+			}
+
 		} //end if zoom factor >= 8
 
 		terrainDirty = false;
@@ -781,6 +795,21 @@ public class WorldView extends JPanel
 System.err.println("Warning: could not load "+textureName+" texture");
 System.err.println(e);
 		}
+	}
+
+	void drawRegionEmblem(Graphics2D gr, int regionId, RegionProfile r, Point p)
+	{
+		if (!r.hasStock())
+			return;
+
+		if (r.stock.isEmpty())
+			return;
+
+		int [] x_coords = new int[] { p.x - 8, p.x, p.x + 8 };
+		int [] y_coords = new int[] { p.y + 4, p.y - 10, p.y + 4 };
+
+		gr.setColor(Color.MAGENTA);
+		gr.fillPolygon(x_coords, y_coords, x_coords.length);
 	}
 
 	void drawRegionArea(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
