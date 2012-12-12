@@ -10,6 +10,8 @@ public class InventoryDialog extends JDialog
 {
 	Client client;
 	String mobName;
+	Location mobLocation;
+	MyListener listner;
 
 	JTable inventoryTable;
 	JTable availableTable;
@@ -20,6 +22,10 @@ public class InventoryDialog extends JDialog
 		super(owner, "Inventory", Dialog.ModalityType.APPLICATION_MODAL);
 		this.client = client;
 		this.mobName = mobName;
+		this.listner = new MyListener();
+
+		this.client.map.addListener(listner);
+		this.client.mobs.addListener(listner);
 
 		JPanel mainPane = new JPanel(new GridBagLayout());
 		getContentPane().add(mainPane, BorderLayout.CENTER);
@@ -111,6 +117,7 @@ public class InventoryDialog extends JDialog
 	{
 		MobListModel mobList = client.mobs;
 		MobInfo mob = mobList.mobs.get(mobName);
+		mobLocation = mob.location;
 
 		CommodityType [] commodities = mob.stock.keySet().toArray(new CommodityType[0]);
 		Object [][] data = new Object[commodities.length][2];
@@ -209,5 +216,27 @@ public class InventoryDialog extends JDialog
 			return;
 		}
 
+	}
+
+	private class MyListener
+		implements MapModel.Listener, MobListModel.Listener
+	{
+		//implements MapModel.Listener
+		public void regionUpdated(Location loc)
+		{
+			if (!loc.equals(mobLocation))
+				return; //not interested
+
+			reloadRegionStock();
+		}
+
+		//implements MobListModel.Listener
+		public void mobUpdated(String mobName)
+		{
+			if (!mobName.equals(InventoryDialog.this.mobName))
+				return; //not interested
+
+			reloadMobInventory();
+		}
 	}
 }
