@@ -34,6 +34,7 @@ public class WorldView extends JPanel
 	boolean showRivers;
 	boolean allowVertexSelection;
 	boolean allowMobSelection = true;
+	boolean showCoordinateLines = false;
 	boolean showMobImages = true;
 	boolean showCities = true;
 
@@ -989,8 +990,9 @@ System.err.println(e);
 		// draw the terrain
 		gr.drawImage(image, 0, 0, Color.WHITE, null);
 
-		// draw latitude/longitude lines
-		drawCoordinateLines(gr);
+		// latitude/longitude lines
+		if (showCoordinateLines)
+			drawCoordinateLines(gr);
 
 		if (showCities)
 		{
