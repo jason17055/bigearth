@@ -243,20 +243,16 @@ public class MobServant
 		}
 	}
 
-	static final long TIME_PER_UNIT_DROPPED = 50;
-	long activity_Drop()
-	{
-		long amt = subtractCommodity(activity.commodity, activity.amount);
-		if (amt != 0)
-		{
-			parentRegion.addCommodity(activity.commodity, amt);
-		}
-		return amt * TIME_PER_UNIT_DROPPED;
-	}
-
 	private WorldMaster getWorldMaster()
 	{
 		return parentRegion.world;
+	}
+
+	void stockChanged()
+	{
+		// only the owner needs to be notified
+		MobChangeNotification n = new MobChangeNotification(name, makeProfileForOwner());
+		getWorldMaster().notifyLeader(owner, n);
 	}
 
 	void activityFailed(String message)
@@ -281,6 +277,32 @@ public class MobServant
 		activityRequiredTime = 30000;
 	}
 
+	void startDropping()
+	{
+	final long TIME_PER_UNIT_DROPPED = 50;
+		long amt = subtractCommodity(activity.commodity, activity.amount);
+		if (amt != 0)
+		{
+			parentRegion.addCommodity(activity.commodity, amt);
+			stockChanged();
+			parentRegion.stockChanged();
+		}
+		activityRequiredTime = amt * TIME_PER_UNIT_DROPPED;
+	}
+
+	void startTaking()
+	{
+	final long TIME_PER_UNIT_TOOK = 50;
+		long amt = parentRegion.subtractCommodity(activity.commodity, activity.amount);
+		if (amt != 0)
+		{
+			addCommodity(activity.commodity, amt);
+			parentRegion.stockChanged();
+			stockChanged();
+		}
+		activityRequiredTime = amt * TIME_PER_UNIT_TOOK;
+	}
+
 	void onActivityStarted()
 	{
 		if (activity.activity.equals("hunt"))
@@ -300,7 +322,11 @@ public class MobServant
 		}
 		else if (activity.activity.equals("drop"))
 		{
-			activityRequiredTime = activity_Drop();
+			startDropping();
+		}
+		else if (activity.activity.equals("take"))
+		{
+			startTaking();
 		}
 		else if (activity.activity.equals("build-city"))
 		{

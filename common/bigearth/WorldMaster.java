@@ -217,7 +217,11 @@ public class WorldMaster
 	{
 		for (String leaderName : leaders.keySet())
 		{
-			if (leaderCanSeeRegion(leaderName, regionId))
+			if (regionHasMobOwnedBy(regionId, leaderName))
+			{
+				discoverTerrain(leaderName, new SimpleLocation(regionId), true);
+			}
+			else if (leaderCanSeeRegion(leaderName, regionId))
 			{
 				discoverTerrain(leaderName, new SimpleLocation(regionId), false);
 			}

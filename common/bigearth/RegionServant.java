@@ -356,6 +356,11 @@ class RegionServant
 		world.regionChanged(regionId);
 	}
 
+	void stockChanged()
+	{
+		world.regionChanged(regionId);
+	}
+
 	void spawnCharacter(Location loc, String characterName, String avatarName)
 	{
 		assert world.getRegionIdForLocation(loc) == this.regionId;
@@ -568,6 +573,25 @@ class RegionServant
 		{
 			stock.put(ct, amount);
 		}
+	}
+
+	public long subtractCommodity(CommodityType ct, long amount)
+	{
+		if (stock.containsKey(ct))
+		{
+			long bal = stock.get(ct);
+			if (amount < bal)
+			{
+				stock.put(ct, bal-amount);
+				return amount;
+			}
+			else
+			{
+				stock.remove(ct);
+				return bal;
+			}
+		}
+		return 0;
 	}
 
 	public WorldConfigIfc getWorldConfig()

@@ -168,8 +168,19 @@ public class InventoryDialog extends JDialog
 			return;
 		}
 
+		try {
+
 		CommodityType ct = (CommodityType) availableTable.getValueAt(row, 0);
-		System.out.println("want to take "+ct);
+		client.takeCommodity(mobName, ct, 1);
+
+		}catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(this,
+				e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 	}
 
 	private void onDropClicked()
