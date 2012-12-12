@@ -35,6 +35,7 @@ public class WorldView extends JPanel
 	boolean allowVertexSelection;
 	boolean allowMobSelection = true;
 	boolean showMobImages = true;
+	boolean showCities = true;
 
 	Selection selection = new Selection();
 
@@ -783,6 +784,20 @@ public class WorldView extends JPanel
 		return mobImages.get(avatarName);
 	}
 
+	static BufferedImage loadCityImage()
+	{
+		try
+		{
+			BufferedImage img = ImageIO.read(new File(IMAGES_DIR, "city_images/city1.png"));
+			return img;
+		}
+		catch (IOException e)
+		{
+			System.err.println(e);
+			return null;
+		}
+	}
+
 	static void loadTexture(BiomeType biome, String textureName)
 	{
 		try
@@ -833,11 +848,24 @@ System.err.println(e);
 
 		gr2.fillPolygon(x_coords, y_coords, x_coords.length);
 		gr2.setPaint(oldPaint);
+	}
 
-		if (r.citySize != 0)
+	void drawCities(Graphics2D gr)
+	{
+		Geometry g = map.getGeometry();
+		for (int i = 0; i < regionBounds.length; i++)
 		{
-			gr2.setColor(Color.YELLOW);
-			gr2.fillPolygon(x_coords, y_coords, x_coords.length);
+			Rectangle rb = regionBounds[i];
+			if (!gr.hitClip(rb.x, rb.y, rb.width, rb.height))
+				continue;
+
+			RegionProfile r = map.getRegion(i+1);
+			if (!r.hasCitySize())
+				continue;
+
+			Point p = toScreen(g.getCenterPoint(i+1));
+			CityInfo city = new CityInfo();
+			drawCity(gr, p, city);
 		}
 	}
 
@@ -964,6 +992,11 @@ System.err.println(e);
 		// draw latitude/longitude lines
 		drawCoordinateLines(gr);
 
+		if (showCities)
+		{
+			drawCities(gr);
+		}
+
 		if (showMobImages && mobs != null)
 		{
 			drawMobs(gr);
@@ -1004,6 +1037,17 @@ System.err.println(e);
 	}
 
 	static final int ACTIVITY_IND_SIZE = 16;
+
+	void drawCity(Graphics2D gr, Point p, CityInfo city)
+	{
+		BufferedImage img = loadCityImage();
+		if (img != null)
+		{
+			int width = img.getWidth(null);
+			int height = img.getHeight(null);
+			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
+		}
+	}
 
 	void drawMob(Graphics2D gr, Point p, MobInfo mob)
 	{
