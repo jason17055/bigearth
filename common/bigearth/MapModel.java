@@ -51,11 +51,13 @@ public class MapModel
 				return false;
 			}
 			regions.put(loc, old.merge(p));
+			fireRegionUpdated(loc);
 			return true;
 		}
 		else
 		{
 			regions.put(loc, p);
+			fireRegionUpdated(loc);
 			return true;
 		}
 	}
