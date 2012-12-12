@@ -259,7 +259,7 @@ public class WorldMaster
 			p.citySize = 1;
 
 		if (isOccupant)
-			p.stock = region.stock;
+			p.stock = CommoditiesHelper.makeClone(region.stock);
 
 		for (int i = 0; i < 6; i++)
 		{

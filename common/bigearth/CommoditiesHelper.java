@@ -42,6 +42,13 @@ class CommoditiesHelper
 		out.writeEndObject();
 	}
 
+	static Map<CommodityType, Long> makeClone(Map<CommodityType, Long> stock)
+	{
+		Map<CommodityType, Long> rv = new EnumMap<CommodityType, Long>(CommodityType.class);
+		rv.putAll(stock);
+		return rv;
+	}
+
 	static boolean contentsEqual(Map<CommodityType, Long> stock1, Map<CommodityType, Long> stock2)
 	{
 		if (stock1.size() != stock2.size())
