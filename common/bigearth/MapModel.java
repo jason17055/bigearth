@@ -46,11 +46,12 @@ public class MapModel
 		if (regions.containsKey(loc))
 		{
 			RegionProfile old = regions.get(loc);
+			p = old.merge(p);
 			if (old.equals(p))
 			{
 				return false;
 			}
-			regions.put(loc, old.merge(p));
+			regions.put(loc, p);
 			fireRegionUpdated(loc);
 			return true;
 		}
