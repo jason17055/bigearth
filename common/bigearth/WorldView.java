@@ -866,6 +866,7 @@ System.err.println(e);
 
 			Point p = toScreen(g.getCenterPoint(i+1));
 			CityInfo city = new CityInfo();
+			city.displayName = "Philadelphia";
 			drawCity(gr, p, city);
 		}
 	}
@@ -1042,12 +1043,40 @@ System.err.println(e);
 
 	void drawCity(Graphics2D gr, Point p, CityInfo city)
 	{
+		final int CAPTION_Y_OFFSET = 16;
+		final int CAPTION_PADDING = 4;
+		final int CAPTION_FONT_SIZE = 18;
+
 		BufferedImage img = loadCityImage();
 		if (img != null)
 		{
 			int width = img.getWidth(null);
 			int height = img.getHeight(null);
 			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
+		}
+
+		if (city.hasDisplayName())
+		{
+			Font oldFont = gr.getFont();
+
+			gr.setFont(new Font("Verdana", Font.BOLD, CAPTION_FONT_SIZE));
+			FontMetrics metrics = gr.getFontMetrics();
+			int hgt = metrics.getHeight();
+			int adv = metrics.stringWidth(city.displayName);
+			Dimension sz = new Dimension(adv, hgt);
+
+			gr.setColor(new Color(0,0,0,128));
+			gr.fillRect(p.x-(sz.width+CAPTION_PADDING*2)/2,
+				p.y+CAPTION_Y_OFFSET,
+				sz.width+CAPTION_PADDING*2,
+				sz.height+CAPTION_PADDING*2);
+
+			gr.setColor(Color.WHITE);
+			gr.drawString(city.displayName,
+				p.x-sz.width/2,
+				p.y+CAPTION_Y_OFFSET+CAPTION_PADDING+sz.height-metrics.getDescent());
+
+			gr.setFont(oldFont);
 		}
 	}
 
