@@ -33,6 +33,7 @@ public class WorldView extends JPanel
 	ArrayList<Listener> listeners;
 	boolean showRivers;
 	boolean allowVertexSelection;
+	boolean allowCitySelection = true;
 	boolean allowMobSelection = true;
 	boolean showCoordinateLines = false;
 	boolean showMobImages = true;
@@ -47,6 +48,7 @@ public class WorldView extends JPanel
 		int selectedRegion;
 		Geometry.VertexId selectedVertex;
 		String selectedMob;
+		Location selectedCity;
 
 		public Location getLocation()
 		{
@@ -97,6 +99,20 @@ public class WorldView extends JPanel
 			return selectedMob != null && selectedMob.equals(mobName);
 		}
 
+		public void selectCity(Location cityLocation)
+		{
+			assert cityLocation != null;
+
+			this.selectedRegion = 0;
+			this.selectedVertex = null;
+			this.selectedMob = null;
+			this.selectedCity = cityLocation;
+
+			onSelectionChanged();
+			fireCitySelected(this.selectedCity);
+			repaint();
+		}
+
 		public void selectMob(String mobName)
 		{
 			assert mobName != null;
@@ -104,6 +120,7 @@ public class WorldView extends JPanel
 			this.selectedRegion = 0;
 			this.selectedVertex = null;
 			this.selectedMob = mobName;
+			this.selectedCity = null;
 
 			onSelectionChanged();
 			onMobSelected(mobName);
@@ -118,6 +135,7 @@ public class WorldView extends JPanel
 			this.selectedRegion = regionId;
 			this.selectedVertex = null;
 			this.selectedMob = null;
+			this.selectedCity = null;
 
 			onSelectionChanged();
 			onRegionSelected(this.selectedRegion);
@@ -132,9 +150,10 @@ public class WorldView extends JPanel
 			this.selectedRegion = 0;
 			this.selectedVertex = vtx;
 			this.selectedMob = null;
+			this.selectedCity = null;
 
 			onSelectionChanged();
-			fireVertexSelected(selection.selectedVertex);
+			fireVertexSelected(this.selectedVertex);
 			repaint();
 		}
 	}
@@ -248,6 +267,7 @@ public class WorldView extends JPanel
 
 	public interface Listener
 	{
+		void onCitySelected(Location cityLocation);
 		void onMobSelected(String mobName);
 		void onRegionSelected(int regionId);
 		void onVertexSelected(Geometry.VertexId vertex);
@@ -1332,6 +1352,18 @@ System.err.println(e);
 			}
 		}
 
+		if (allowCitySelection && map != null)
+		{
+			// check for a city at this location
+			RegionProfile r = map.getRegion(regionId);
+			if (r.hasCitySize())
+			{
+				Location cityLocation = new SimpleLocation(regionId);
+				selection.selectCity(cityLocation);
+				return;
+			}
+		}
+
 		if (!allowVertexSelection)
 		{
 			selection.selectRegion(regionId);
@@ -1368,6 +1400,12 @@ System.err.println(e);
 
 	protected void onRegionSelected(int regionId)
 	{
+	}
+
+	private void fireCitySelected(Location cityLocation)
+	{
+		for (Listener l : listeners)
+			l.onCitySelected(cityLocation);
 	}
 
 	private void fireMobSelected(String mobName)

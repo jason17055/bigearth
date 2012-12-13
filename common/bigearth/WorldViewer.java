@@ -907,6 +907,12 @@ assert(x >= 1);
 	}
 
 	//implements WorldView.Listener
+	public void onCitySelected(Location cityLocation)
+	{
+		// not implemented
+	}
+
+	//implements WorldView.Listener
 	public void onMobSelected(String mobName)
 	{
 		mobPane.setBorder(
