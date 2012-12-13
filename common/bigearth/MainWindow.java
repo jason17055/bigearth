@@ -40,6 +40,10 @@ public class MainWindow extends JFrame
 				{
 					MainWindow.this.onMobSelected();
 				}
+				else if (selection.isCity())
+				{
+					MainWindow.this.onCitySelected();
+				}
 				else
 				{
 					MainWindow.this.onOtherSelected();
@@ -277,6 +281,13 @@ public class MainWindow extends JFrame
 			Long.toString(mob.getStock(CommodityType.SHEEP)) : "");
 		mobStockPigLbl.setText(mob.hasStock() ?
 			Long.toString(mob.getStock(CommodityType.PIG)) : "");
+	}
+
+	void onCitySelected()
+	{
+		Location cityLocation = view.selection.getCity();
+		CityDialog dlg = new CityDialog(this, client, cityLocation);
+		dlg.setVisible(true);
 	}
 
 	void onMobSelected()

@@ -67,6 +67,12 @@ public class WorldView extends JPanel
 			}
 		}
 
+		public Location getCity()
+		{
+			assert isCity();
+			return selectedCity;
+		}
+
 		public String getMob()
 		{
 			assert isMob();
@@ -77,6 +83,11 @@ public class WorldView extends JPanel
 		{
 			assert isRegion();
 			return selectedRegion;
+		}
+
+		public boolean isCity()
+		{
+			return selectedCity != null;
 		}
 
 		public boolean isLocation()
