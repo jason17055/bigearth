@@ -1170,6 +1170,10 @@ System.err.println(e);
 		{
 			return "B"; // B == Build
 		}
+		else if (activityName.equals("move"))
+		{
+			return "G"; // G == Go To
+		}
 		else
 		{
 			return "A"; // all other activities
