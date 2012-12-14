@@ -203,17 +203,32 @@ class Session
 	}
 }
 
-class GetMyMobsServlet extends HttpServlet
+abstract class BigEarthServlet extends HttpServlet
 {
-	BigEarthServer server;
-	GetMyMobsServlet(BigEarthServer server)
+	protected BigEarthServer server;
+	protected BigEarthServlet(BigEarthServer server)
 	{
 		this.server = server;
 	}
 
-	@Override
-	public void doGet(HttpServletRequest request, HttpServletResponse response)
-		throws IOException, ServletException
+	protected void doFailure(HttpServletResponse response, int statusCode, String errorMessage)
+		throws IOException
+	{
+		response.setStatus(statusCode);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeStringField("error", errorMessage);
+		out.writeEndObject();
+		out.close();
+	}
+
+	protected Session checkSession(HttpServletRequest request, HttpServletResponse response)
+		throws IOException
 	{
 		Session s = server.getSessionFromRequest(request);
 		if (s == null)
@@ -229,8 +244,25 @@ class GetMyMobsServlet extends HttpServlet
 			out.writeStringField("error", "not a valid session");
 			out.writeEndObject();
 			out.close();
-			return;
 		}
+		return s;
+	}
+}
+
+class GetMyMobsServlet extends BigEarthServlet
+{
+	GetMyMobsServlet(BigEarthServer server)
+	{
+		super(server);
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response)
+		throws IOException, ServletException
+	{
+		Session s = checkSession(request, response);
+		if (s == null)
+			return;
 
 		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
 		try
@@ -267,34 +299,20 @@ class GetMyMobsServlet extends HttpServlet
 	}
 }
 
-class GetEventsServlet extends HttpServlet
+class GetEventsServlet extends BigEarthServlet
 {
-	BigEarthServer server;
 	GetEventsServlet(BigEarthServer server)
 	{
-		this.server = server;
+		super(server);
 	}
 
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		Session s = server.getSessionFromRequest(request);
+		Session s = checkSession(request, response);
 		if (s == null)
-		{
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
-
-			JsonGenerator out = new JsonFactory().createJsonGenerator(
-					response.getOutputStream(),
-					JsonEncoding.UTF8);
-			out.writeStartObject();
-			out.writeStringField("error", "not a valid session");
-			out.writeEndObject();
-			out.close();
 			return;
-		}
 
 		LeaderInfo leader = server.world.leaders.get(s.user);
 		assert leader != null;
@@ -360,49 +378,11 @@ class GetEventsServlet extends HttpServlet
 	}
 }
 
-class GetCityServlet extends HttpServlet
+class GetCityServlet extends BigEarthServlet
 {
-	BigEarthServer server;
 	GetCityServlet(BigEarthServer server)
 	{
-		this.server = server;
-	}
-
-	protected Session checkSession(HttpServletRequest request, HttpServletResponse response)
-		throws IOException
-	{
-		Session s = server.getSessionFromRequest(request);
-		if (s == null)
-		{
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
-
-			JsonGenerator out = new JsonFactory().createJsonGenerator(
-					response.getOutputStream(),
-					JsonEncoding.UTF8);
-			out.writeStartObject();
-			out.writeStringField("error", "not a valid session");
-			out.writeEndObject();
-			out.close();
-		}
-		return s;
-	}
-
-	protected void doFailure(HttpServletResponse response, String errorMessage)
-		throws IOException
-	{
-		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-		response.setContentType("application/json");
-		response.setCharacterEncoding("UTF-8");
-
-		JsonGenerator out = new JsonFactory().createJsonGenerator(
-				response.getOutputStream(),
-				JsonEncoding.UTF8);
-		out.writeStartObject();
-		out.writeStringField("error", errorMessage);
-		out.writeEndObject();
-		out.close();
+		super(server);
 	}
 
 	@Override
@@ -464,16 +444,18 @@ class GetCityServlet extends HttpServlet
 		assert server.world.leaders.containsKey(s.user);
 
 		CityServant city = server.world.getCity(cityLocation);
-		assert city != null;
+		if (city == null)
+		{
+			doFailure(response, HttpServletResponse.SC_NOT_FOUND, "Invalid city");
+			return;
+		}
 
 		if (!city.canUserRename(s.user))
 		{
 			// permission denied
-			doFailure(response, "Forbidden");
+			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
 		}
-
-System.out.println("renaming city at "+cityLocation+" to "+newName);
 
 		city.displayName = newName;
 
@@ -488,34 +470,20 @@ System.out.println("renaming city at "+cityLocation+" to "+newName);
 	}
 }
 
-class GetMapServlet extends HttpServlet
+class GetMapServlet extends BigEarthServlet
 {
-	BigEarthServer server;
 	GetMapServlet(BigEarthServer server)
 	{
-		this.server = server;
+		super(server);
 	}
 
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		Session s = server.getSessionFromRequest(request);
+		Session s = checkSession(request, response);
 		if (s == null)
-		{
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
-
-			JsonGenerator out = new JsonFactory().createJsonGenerator(
-					response.getOutputStream(),
-					JsonEncoding.UTF8);
-			out.writeStartObject();
-			out.writeStringField("error", "not a valid session");
-			out.writeEndObject();
-			out.close();
 			return;
-		}
 
 		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
 		try
@@ -544,24 +512,20 @@ class GetMapServlet extends HttpServlet
 	}
 }
 
-class MoveMobServlet extends HttpServlet
+class MoveMobServlet extends BigEarthServlet
 {
-	BigEarthServer server;
 	MoveMobServlet(BigEarthServer server)
 	{
-		this.server = server;
+		super(server);
 	}
 
 	@Override
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		Session s = server.getSessionFromRequest(request);
+		Session s = checkSession(request, response);
 		if (s == null)
-		{
-			doFailure(response, "Not logged in");
 			return;
-		}
 
 		String mobName = request.getParameter("mob");
 		String destStr = request.getParameter("dest");
@@ -576,13 +540,13 @@ class MoveMobServlet extends HttpServlet
 		MobServant mob = server.world.getMob(mobName);
 		if (mob == null)
 		{
-			doFailure(response, "Invalid mob");
+			doFailure(response, HttpServletResponse.SC_NOT_FOUND, "Invalid mob");
 			return;
 		}
 
 		if (mob.owner == null || !mob.owner.equals(s.user))
 		{
-			doFailure(response, "Not authorized");
+			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
 		}
 
@@ -598,43 +562,22 @@ class MoveMobServlet extends HttpServlet
 			lock.release();
 		}
 	}
-
-	private void doFailure(HttpServletResponse response, String errorMessage)
-		throws IOException
-	{
-		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-		response.setContentType("application/json");
-		response.setCharacterEncoding("UTF-8");
-
-		JsonGenerator out = new JsonFactory().createJsonGenerator(
-				response.getOutputStream(),
-				JsonEncoding.UTF8);
-		out.writeStartObject();
-		out.writeStringField("error", errorMessage);
-		out.writeEndObject();
-		out.close();
-	}
-
 }
 
-class SetActivityServlet extends HttpServlet
+class SetActivityServlet extends BigEarthServlet
 {
-	BigEarthServer server;
 	SetActivityServlet(BigEarthServer server)
 	{
-		this.server = server;
+		super(server);
 	}
 
 	@Override
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		Session s = server.getSessionFromRequest(request);
+		Session s = checkSession(request, response);
 		if (s == null)
-		{
-			doFailure(response, "Not logged in");
 			return;
-		}
 
 		String mobName = request.getParameter("mob");
 		String activityName = request.getParameter("activity");
@@ -650,13 +593,13 @@ class SetActivityServlet extends HttpServlet
 		MobServant mob = server.world.getMob(mobName);
 		if (mob == null)
 		{
-			doFailure(response, "Invalid mob");
+			doFailure(response, HttpServletResponse.SC_NOT_FOUND, "Invalid mob");
 			return;
 		}
 
 		if (mob.owner == null || !mob.owner.equals(s.user))
 		{
-			doFailure(response, "Not authorized");
+			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
 		}
 
@@ -680,23 +623,6 @@ class SetActivityServlet extends HttpServlet
 			lock.release();
 		}
 	}
-
-	private void doFailure(HttpServletResponse response, String errorMessage)
-		throws IOException
-	{
-		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-		response.setContentType("application/json");
-		response.setCharacterEncoding("UTF-8");
-
-		JsonGenerator out = new JsonFactory().createJsonGenerator(
-				response.getOutputStream(),
-				JsonEncoding.UTF8);
-		out.writeStartObject();
-		out.writeStringField("error", errorMessage);
-		out.writeEndObject();
-		out.close();
-	}
-
 }
 
 class LoginServlet extends HttpServlet
