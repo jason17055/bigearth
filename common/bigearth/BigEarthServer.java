@@ -150,6 +150,7 @@ public class BigEarthServer
 
 		Context context = new Context(httpServer, "/", Context.SESSIONS);
 		context.addServlet(new ServletHolder(new LoginServlet(this)), "/login");
+		context.addServlet(new ServletHolder(new GetCityServlet(this)), "/city");
 		context.addServlet(new ServletHolder(new GetEventsServlet(this)), "/events");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
 		context.addServlet(new ServletHolder(new GetMyMobsServlet(this)), "/my/mobs");
@@ -356,6 +357,134 @@ class GetEventsServlet extends HttpServlet
 		out.writeStringField("error", "Invalid argument");
 		out.writeEndObject();
 		out.close();
+	}
+}
+
+class GetCityServlet extends HttpServlet
+{
+	BigEarthServer server;
+	GetCityServlet(BigEarthServer server)
+	{
+		this.server = server;
+	}
+
+	protected Session checkSession(HttpServletRequest request, HttpServletResponse response)
+		throws IOException
+	{
+		Session s = server.getSessionFromRequest(request);
+		if (s == null)
+		{
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+
+			JsonGenerator out = new JsonFactory().createJsonGenerator(
+					response.getOutputStream(),
+					JsonEncoding.UTF8);
+			out.writeStartObject();
+			out.writeStringField("error", "not a valid session");
+			out.writeEndObject();
+			out.close();
+		}
+		return s;
+	}
+
+	protected void doFailure(HttpServletResponse response, String errorMessage)
+		throws IOException
+	{
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		out.writeStartObject();
+		out.writeStringField("error", errorMessage);
+		out.writeEndObject();
+		out.close();
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response)
+		throws IOException, ServletException
+	{
+		Session s = checkSession(request, response);
+		if (s == null)
+			return;
+
+		String locStr = request.getParameter("location");
+		Location cityLocation = LocationHelper.parse(locStr, server.world.config);
+
+		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
+		try
+		{
+
+		assert server.world.leaders.containsKey(s.user);
+
+		CityServant city = server.world.getCity(cityLocation);
+		assert city != null;
+
+		CityInfo ci = city.makeInfoFor(s.user);
+
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+
+		JsonGenerator out = new JsonFactory().createJsonGenerator(
+				response.getOutputStream(),
+				JsonEncoding.UTF8);
+		ci.write(out);
+		out.close();
+
+		}
+		finally
+		{
+			lock.release();
+		}
+	}
+
+	@Override
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
+		throws IOException
+	{
+		Session s = checkSession(request, response);
+		if (s == null)
+			return;
+
+		String locStr = request.getParameter("location");
+		Location cityLocation = LocationHelper.parse(locStr, server.world.config);
+
+		String newName = request.getParameter("name");
+
+		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
+		try
+		{
+
+		assert server.world.leaders.containsKey(s.user);
+
+		CityServant city = server.world.getCity(cityLocation);
+		assert city != null;
+
+		if (!city.canUserRename(s.user))
+		{
+			// permission denied
+			doFailure(response, "Forbidden");
+			return;
+		}
+
+System.out.println("renaming city at "+cityLocation+" to "+newName);
+
+		city.displayName = newName;
+
+		// report success
+		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+
+		}
+		finally
+		{
+			lock.release();
+		}
 	}
 }
 

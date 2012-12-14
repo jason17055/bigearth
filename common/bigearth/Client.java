@@ -105,6 +105,46 @@ public class Client
 		return world.geometry;
 	}
 
+	void setCityName(Location cityLocation, String newName)
+		throws IOException
+	{
+		String qs = "location="+URLEncoder.encode(cityLocation.toString(), "UTF-8");
+		HttpURLConnection conn = makeRequest("POST", "/city?" + qs);
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+
+		String x = "name=" + URLEncoder.encode(newName, "UTF-8");
+		byte [] xx = x.getBytes("UTF-8");
+
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
+		OutputStream out = conn.getOutputStream();
+		out.write(xx);
+		out.close();
+
+
+		int status = conn.getResponseCode();
+		assert status == 204;
+	}
+
+	CityInfo getCity(Location cityLocation)
+		throws IOException
+	{
+		String qs = "location="+URLEncoder.encode(cityLocation.toString(), "UTF-8");
+		HttpURLConnection conn = makeRequest("GET", "/city?" + qs);
+		conn.setDoOutput(false);
+		conn.setDoInput(true);
+		conn.connect();
+
+		JsonParser in = new JsonFactory().createJsonParser(
+					conn.getInputStream()
+				);
+		CityInfo city = CityInfo.parse(in, world);
+		in.close();
+
+		return city;
+	}
+
 	MapModel getMap()
 		throws IOException
 	{

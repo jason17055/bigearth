@@ -301,6 +301,24 @@ public class WorldMaster
 		return false;
 	}
 
+	CityServant getCity(Location cityLocation)
+	{
+		RegionServant svt = getRegionForLocation(cityLocation);
+		if (svt == null)
+		{
+			// invalid location given
+			return null;
+		}
+
+		if (svt.city == null)
+		{
+			// no city at this location
+			return null;
+		}
+
+		return svt.city;
+	}
+
 	MobServant getMob(String mobName)
 	{
 		RegionServant svt = getRegionForMob(mobName);

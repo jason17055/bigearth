@@ -1,5 +1,6 @@
 package bigearth;
 
+import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
@@ -10,6 +11,8 @@ public class CityDialog extends JDialog
 	Client client;
 	Location cityLocation;
 	MyListener listner;
+
+	JLabel nameLbl;
 
 	CityDialog(Window owner, Client client, Location cityLocation)
 	{
@@ -24,16 +27,20 @@ public class CityDialog extends JDialog
 		JPanel mainPane = new JPanel(new GridBagLayout());
 		getContentPane().add(mainPane, BorderLayout.CENTER);
 
+		mainPane.add(new JLabel("Name"));
+		nameLbl = new JLabel();
+		mainPane.add(nameLbl);
+
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
 
-		JButton refreshBtn = new JButton("Refresh");
-		refreshBtn.addActionListener(new ActionListener() {
+		JButton renameBtn = new JButton("Rename City");
+		renameBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
 			{
-				onRefreshClicked();
+				onRenameClicked();
 			}});
-		buttonPane.add(refreshBtn);
+		buttonPane.add(renameBtn);
 
 		JButton closeBtn = new JButton("Close");
 		closeBtn.addActionListener(new ActionListener() {
@@ -43,9 +50,28 @@ public class CityDialog extends JDialog
 			}});
 		buttonPane.add(closeBtn);
 
+		reloadCityInfo();
+
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(owner);
+	}
+
+	private void reloadCityInfo()
+	{
+		try
+		{
+			CityInfo city = client.getCity(cityLocation);
+			if (city == null)
+				return;
+
+			nameLbl.setText(city.displayName);
+		}
+		catch (IOException e)
+		{
+			//FIXME
+			e.printStackTrace(System.err);
+		}
 	}
 
 	private void onCloseClicked()
@@ -53,8 +79,34 @@ public class CityDialog extends JDialog
 		dispose();
 	}
 
-	private void onRefreshClicked()
+	private void onRenameClicked()
 	{
+		JTextField nameField = new JTextField();
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Name"),
+			nameField
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Rename City",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		try {
+		if (nameField.getText().length() == 0)
+			throw new Exception("You must enter a name.");
+
+		client.setCityName(cityLocation, nameField.getText());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	private class MyListener

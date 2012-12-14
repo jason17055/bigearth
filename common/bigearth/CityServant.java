@@ -34,6 +34,19 @@ public class CityServant
 		return parentRegion.getWorldConfig();
 	}
 
+	CityInfo makeInfoFor(String user)
+	{
+		CityInfo ci = new CityInfo();
+		ci.displayName = displayName;
+		ci.location = location;
+		return ci;
+	}
+
+	boolean canUserRename(String user)
+	{
+		return (owner != null && owner.equals(user));
+	}
+
 	private void parse(JsonParser in)
 		throws IOException
 	{
