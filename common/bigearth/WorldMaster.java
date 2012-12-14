@@ -330,46 +330,6 @@ public class WorldMaster
 		return svt.presentMobs.get(mobName);
 	}
 
-	void requestMovement(String mobName, Location dest)
-	{
-		MobServant mob = getMob(mobName);
-		assert mob != null;
-
-		//TODO- reject request if the mob is busy
-
-		// ignore request if movement not allowed
-		if (!isAdjacent(mob.location, dest))
-			return;
-
-		RegionServant fromRegion = getRegionForMob(mobName);
-		RegionServant toRegion = getRegionForLocation(dest);
-
-		// ignore request if destination is not tolerable
-		// to this mob
-		if (!fromRegion.mobCanMoveTo(mobName, dest))
-			return;
-
-		// check whether mob is busy
-		if (fromRegion.mobIsHot(mobName))
-			return;
-
-		fromRegion.mobCancelActivity(mobName);
-
-		long delay = fromRegion.mobMovementDelay(mobName, dest);
-		assert delay > 0;
-
-		Location oldLoc = mob.location;
-
-		fromRegion.removeMob(mobName);
-
-		toRegion.mobMovedIn(mobName, mob, dest, delay);
-
-		mobMoved(mobName, oldLoc, dest);
-		discoverTerrain(mob.owner, dest, true);
-		discoverTerrainBorder(mob.owner, dest);
-		wantSaved(this);
-	}
-
 	void mobMoved(String mobName, Location oldLoc, Location newLoc)
 	{
 		MobServant mob = getMob(mobName);

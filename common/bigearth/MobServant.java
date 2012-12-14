@@ -290,6 +290,40 @@ public class MobServant
 		activityRequiredTime = amt * TIME_PER_UNIT_DROPPED;
 	}
 
+	void startMoving()
+	{
+		Location dest = activity.destination;
+		assert dest != null;
+
+		final WorldMaster world = getWorldMaster();
+
+		if (!world.isAdjacent(this.location, dest))
+		{
+			activityFailed("Not adjacent");
+			return;
+		}
+
+		RegionServant toRegion = world.getRegionForLocation(dest);
+		assert toRegion != null;
+
+		if (!parentRegion.mobCanMoveTo(this.name, dest))
+		{
+			activityFailed("Cannot move there");
+			return;
+		}
+
+		long delay = parentRegion.mobMovementDelay(this.name, dest);
+		assert delay > 0;
+
+		Location oldLoc = this.location;
+		parentRegion.removeMob(this.name);
+
+		toRegion.mobMovedIn(this.name, this, dest, delay);
+		world.mobMoved(this.name, oldLoc, dest);
+		world.discoverTerrain(this.owner, dest, true);
+		world.discoverTerrainBorder(this.owner, dest);
+	}
+
 	void startTaking()
 	{
 	final long TIME_PER_UNIT_TOOK = 50;
@@ -323,6 +357,10 @@ public class MobServant
 		else if (activity.activity.equals("drop"))
 		{
 			startDropping();
+		}
+		else if (activity.activity.equals("move"))
+		{
+			startMoving();
 		}
 		else if (activity.activity.equals("take"))
 		{
@@ -382,5 +420,28 @@ public class MobServant
 	private void completedBuildingCity()
 	{
 		parentRegion.spawnCity(location, owner);
+	}
+
+	/**
+	 * Called when the wake-up timer fires.
+	 */
+	void completeActivity()
+	{
+		onActivityFinished();
+		activity = null;
+		checkpoint();
+		mobChanged();
+	}
+
+	void mobChanged()
+	{
+		if (owner != null)
+		{
+			MobInfo data = makeProfileForOwner();
+			MobChangeNotification n = new MobChangeNotification(name, data);
+			getWorldMaster().notifyLeader(owner, n);
+		}
+
+		//TODO- inform everyone else who can see this mob
 	}
 }

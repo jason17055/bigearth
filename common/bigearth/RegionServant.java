@@ -409,41 +409,19 @@ class RegionServant
 		assert mob.wakeUp == null;
 
 		mob.activityRequiredTime = 0;
+
 		mob.onActivityStarted();
+		if (mob.parentRegion != this)
+			return;
 
 		long wakeUp = mob.activityStarted + mob.activityRequiredTime;
 		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
 		public void run()
 		{
 			mob.wakeUp = null;
-			mobActivityCompleted(mobName, mob);
+			mob.completeActivity();
 		}
 		}, wakeUp);
-	}
-
-	void mobActivityCompleted(String mobName, MobServant mob)
-	{
-		mob.onActivityFinished();
-		mob.activity = null;
-		mob.checkpoint();
-		mobChanged(mobName);
-	}
-
-	void mobChanged(String mobName)
-	{
-		assert mobName != null;
-
-		MobServant mob = getMob(mobName);
-		assert mob != null;
-
-		if (mob.owner != null)
-		{
-			MobInfo data = mob.makeProfileForOwner();
-			MobChangeNotification n = new MobChangeNotification(mobName, data);
-			notifyLeader(mob.owner, n);
-		}
-
-		//TODO- inform everyone else who can see this mob
 	}
 
 	void mobSetActivity(String mobName, Command command)
@@ -461,7 +439,7 @@ class RegionServant
 		mob.activity = command;
 		mob.activityStarted = currentTime();
 		mobActivity(mobName);
-		mobChanged(mobName);
+		mob.mobChanged();
 	}
 
 	boolean mobCanMoveTo(String mobName, Location dest)
@@ -513,7 +491,7 @@ class RegionServant
 			mob.wakeUp = null;
 			mob.activity = null;
 			mob.checkpoint();
-			mobChanged(mobName);
+			mob.mobChanged();
 		}
 		}, wakeUp);
 	}

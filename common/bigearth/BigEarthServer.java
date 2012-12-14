@@ -550,8 +550,13 @@ class MoveMobServlet extends BigEarthServlet
 			return;
 		}
 
-		// make the actual change
-		server.world.requestMovement(mobName, dest);
+		// construct a command object
+		Command c = Command.newInstance("move");
+		c.setDestination(dest);
+
+		// dispatch to the mob
+		RegionServant svt = server.world.getRegionForMob(mobName);
+		svt.mobSetActivity(mobName, c);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);

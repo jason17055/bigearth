@@ -6,6 +6,7 @@ import java.io.*;
 public class Command
 {
 	String activity;
+	Location destination;
 	CommodityType commodity;
 	long amount;
 	boolean amountIsSpecified;
@@ -35,6 +36,11 @@ public class Command
 		this.amountIsSpecified = true;
 	}
 
+	public void setDestination(Location destination)
+	{
+		this.destination = destination;
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{
@@ -44,6 +50,8 @@ public class Command
 			out.writeStringField("commodity", commodity.name());
 		if (amountIsSpecified)
 			out.writeNumberField("amount", amount);
+		if (destination != null)
+			out.writeStringField("destination", destination.toString());
 		out.writeEndObject();
 	}
 
@@ -78,6 +86,8 @@ public class Command
 				in.nextToken();
 				c.setAmount(in.getLongValue());
 			}
+			else if (s.equals("destination"))
+				c.destination = LocationHelper.parse(in.nextTextValue(), world);
 			else
 			{
 				in.nextToken();
