@@ -508,7 +508,7 @@ class RegionServant
 		if (mob.activity == null || mob.activity.equals(""))
 			return false;
 
-		if (mob.activity.equals("move"))
+		if (mob.activity.activity.equals("move"))
 			return true;
 
 		return false;
