@@ -9,6 +9,7 @@ class RegionProfile
 {
 	BiomeType biome;
 	int citySize;
+	String cityName;
 	RegionSideDetail.SideFeature [] sides;
 	RegionCornerDetail.PointFeature [] corners;
 	Map<CommodityType, Long> stock;
@@ -27,6 +28,11 @@ class RegionProfile
 	public boolean hasBiome()
 	{
 		return biome != null;
+	}
+
+	public boolean hasCityName()
+	{
+		return cityName != null;
 	}
 
 	public boolean hasCitySize()
@@ -68,6 +74,15 @@ class RegionProfile
 			{
 				return false;
 			}
+			if (this.cityName != null)
+			{
+				if (!this.cityName.equals(rhs.cityName))
+					return false;
+			}
+			else if (rhs.cityName != null)
+			{
+				return false;
+			}
 			for (int i = 0; i < 6; i++)
 			{
 				if (this.sides[i] != rhs.sides[i])
@@ -105,6 +120,8 @@ class RegionProfile
 			n.biome = ref.biome;
 		if (ref.hasCitySize())
 			n.citySize = ref.citySize;
+		if (ref.hasCityName())
+			n.cityName = ref.cityName;
 		if (ref.hasStock())
 			n.stock = ref.stock;
 		for (int i = 0; i < 6; i++)
@@ -125,6 +142,8 @@ class RegionProfile
 			out.writeStringField("biome", biome.name());
 		if (hasCitySize())
 			out.writeNumberField("citySize", citySize);
+		if (hasCityName())
+			out.writeStringField("cityName", cityName);
 		if (hasStock())
 		{
 			out.writeFieldName("stock");
@@ -171,6 +190,8 @@ class RegionProfile
 				in.nextToken();
 				citySize = in.getIntValue();
 			}
+			else if (s.equals("cityName"))
+				cityName = in.nextTextValue();
 			else if (s.equals("stock"))
 				stock = CommoditiesHelper.parseCommodities(in);
 			else if (s.equals("side0"))

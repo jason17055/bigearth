@@ -256,10 +256,15 @@ public class WorldMaster
 		RegionProfile p = new RegionProfile();
 		p.biome = region.biome;
 		if (region.city != null)
+		{
 			p.citySize = 1;
+			p.cityName = region.city.displayName;
+		}
 
 		if (isOccupant)
+		{
 			p.stock = CommoditiesHelper.makeClone(region.stock);
+		}
 
 		for (int i = 0; i < 6; i++)
 		{

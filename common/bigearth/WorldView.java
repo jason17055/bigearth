@@ -897,7 +897,7 @@ System.err.println(e);
 
 			Point p = toScreen(g.getCenterPoint(i+1));
 			CityInfo city = new CityInfo();
-			city.displayName = "Philadelphia";
+			city.displayName = r.cityName;
 			drawCity(gr, p, city);
 		}
 	}
