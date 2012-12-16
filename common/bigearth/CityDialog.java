@@ -13,6 +13,7 @@ public class CityDialog extends JDialog
 	MyListener listner;
 
 	JLabel nameLbl;
+	JLabel populationLbl;
 
 	CityDialog(Window owner, Client client, Location cityLocation)
 	{
@@ -27,9 +28,24 @@ public class CityDialog extends JDialog
 		JPanel mainPane = new JPanel(new GridBagLayout());
 		getContentPane().add(mainPane, BorderLayout.CENTER);
 
-		mainPane.add(new JLabel("Name"));
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridx = 0;
+		c1.anchor = GridBagConstraints.FIRST_LINE_START;
+		c1.weightx = 1.0;
+
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.gridx = 1;
+		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		c1.gridy = c2.gridy = 0;
+		mainPane.add(new JLabel("Name"), c1);
 		nameLbl = new JLabel();
-		mainPane.add(nameLbl);
+		mainPane.add(nameLbl, c2);
+
+		c1.gridy = c2.gridy = 1;
+		mainPane.add(new JLabel("Population"), c1);
+		populationLbl = new JLabel();
+		mainPane.add(populationLbl, c2);
 
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -66,6 +82,8 @@ public class CityDialog extends JDialog
 				return;
 
 			nameLbl.setText(city.displayName);
+			populationLbl.setText(city.hasPopulation() ?
+				Integer.toString(city.population) : null);
 		}
 		catch (IOException e)
 		{

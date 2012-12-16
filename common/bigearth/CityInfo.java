@@ -10,6 +10,8 @@ public class CityInfo
 	String owner;
 	Location location;
 	Map<CommodityType, Long> stock;
+	int population;
+	boolean populationIsKnown;
 
 	CityInfo()
 	{
@@ -30,9 +32,20 @@ public class CityInfo
 		return location != null;
 	}
 
+	public boolean hasPopulation()
+	{
+		return populationIsKnown;
+	}
+
 	public boolean hasStock()
 	{
 		return stock != null;
+	}
+
+	public void setPopulation(int population)
+	{
+		this.population = population;
+		this.populationIsKnown = true;
 	}
 
 	public static CityInfo parse(JsonParser in, WorldConfigIfc world)
@@ -60,6 +73,12 @@ public class CityInfo
 				location = LocationHelper.parse(in.nextTextValue(), world);
 			else if (s.equals("stock"))
 				stock = CommoditiesHelper.parseCommodities(in);
+			else if (s.equals("population"))
+			{
+				in.nextToken();
+				population = in.getIntValue();
+				populationIsKnown = true;
+			}
 			else
 			{
 				in.nextToken();
@@ -81,6 +100,8 @@ public class CityInfo
 			out.writeStringField("location", location.toString());
 		if (hasOwner())
 			out.writeStringField("owner", owner);
+		if (hasPopulation())
+			out.writeNumberField("population", population);
 		if (hasStock())
 		{
 			out.writeFieldName("stock");

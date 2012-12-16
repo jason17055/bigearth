@@ -45,7 +45,7 @@ public class CityServant
 	{
 		if (owner != null)
 		{
-			CityInfo data = makeInfoFor(owner);
+			CityInfo data = makeProfile(true);
 			CityUpdateNotification n = new CityUpdateNotification(owner, data);
 			notifyLeader(owner, n);
 		}
@@ -66,11 +66,19 @@ public class CityServant
 		getWorldMaster().notifyLeader(user, n);
 	}
 
-	CityInfo makeInfoFor(String user)
+	CityInfo makeProfileFor(String user)
+	{
+		assert user != null;
+
+		return makeProfile(user.equals(owner));
+	}
+
+	CityInfo makeProfile(boolean isOwner)
 	{
 		CityInfo ci = new CityInfo();
 		ci.displayName = displayName;
 		ci.location = location;
+		ci.setPopulation(population);
 		return ci;
 	}
 

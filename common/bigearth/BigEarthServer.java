@@ -410,7 +410,7 @@ class GetCityServlet extends BigEarthServlet
 		CityServant city = server.world.getCity(cityLocation);
 		assert city != null;
 
-		CityInfo ci = city.makeInfoFor(s.user);
+		CityInfo ci = city.makeProfileFor(s.user);
 
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
