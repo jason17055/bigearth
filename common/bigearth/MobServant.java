@@ -34,6 +34,32 @@ public class MobServant
 		this.population = 100; //default population
 	}
 
+	//implements BigEarthServant
+	public void start()
+	{
+		assert wakeUp == null;
+		if (activity != null)
+		{
+			// an activity has been started; figure out when it should end
+			scheduleWakeUp();
+		}
+	}
+
+	void scheduleWakeUp()
+	{
+		assert wakeUp == null;
+		assert activity != null;
+		assert activityRequiredTime >= 0;
+
+		long time = activityStarted + activityRequiredTime;
+		wakeUp = getWorldMaster().scheduler.scheduleAt(new Runnable() {
+		public void run()
+		{
+			wakeUp = null;
+			completeActivity();
+		}}, time);
+	}
+
 	public void addCommodity(CommodityType ct, long amount)
 	{
 		assert stock != null;

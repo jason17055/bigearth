@@ -50,6 +50,21 @@ class RegionServant
 		int numSides = world.getGeometry().getNeighborCount(regionId);
 	}
 
+	//implements BigEarthServant
+	public void start()
+	{
+		assert wildlife != null;
+		wildlife.start();
+
+		if (city != null)
+			city.start();
+
+		for (MobServant mob : presentMobs.values())
+		{
+			mob.start();
+		}
+	}
+
 	public void adjustWildlife(int delta)
 	{
 		wildlife.adjust(delta);
@@ -414,14 +429,7 @@ class RegionServant
 		if (mob.parentRegion != this)
 			return;
 
-		long wakeUp = mob.activityStarted + mob.activityRequiredTime;
-		mob.wakeUp = world.scheduler.scheduleAt(new Runnable() {
-		public void run()
-		{
-			mob.wakeUp = null;
-			mob.completeActivity();
-		}
-		}, wakeUp);
+		mob.scheduleWakeUp();
 	}
 
 	void mobSetActivity(String mobName, Command command)

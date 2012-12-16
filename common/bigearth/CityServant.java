@@ -21,6 +21,12 @@ public class CityServant
 		this.population = 0;
 	}
 
+	// called when server is starting up
+	public void start()
+	{
+		//nothing to do
+	}
+
 	public static CityServant parse(JsonParser in, RegionServant parentRegion)
 		throws IOException
 	{

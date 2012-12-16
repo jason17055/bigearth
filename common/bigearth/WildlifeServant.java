@@ -27,6 +27,12 @@ class WildlifeServant
 		this.world = parentRegion.world;
 	}
 
+	// called when server is starting up
+	public void start()
+	{
+		//nothing to do
+	}
+
 	void adjust(int delta)
 	{
 		this.wildlife += delta;

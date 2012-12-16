@@ -391,6 +391,11 @@ public class WorldMaster
 	{
 		assert eventDispatchThread == null;
 
+		for (int i = 0; i < regions.length; i++)
+		{
+			regions[i].start();
+		}
+
 		eventDispatchThread = new EventDispatchThread(scheduler);
 		eventDispatchThread.start();
 	}
