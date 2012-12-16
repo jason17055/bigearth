@@ -211,6 +211,13 @@ public class MainWindow extends JFrame
 			}});
 		ordersMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Disband");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onSimpleOrderClicked("disband");
+			}});
+		ordersMenu.add(menuItem);
+
 		menuItem = new JMenuItem("Inventory...");
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {

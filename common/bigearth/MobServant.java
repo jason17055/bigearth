@@ -335,6 +335,21 @@ public class MobServant
 		activityRequiredTime = 30000;
 	}
 
+	void startDisbanding()
+	{
+		if (parentRegion.city != null)
+		{
+			parentRegion.city.addPopulation(this.population);
+			this.population = 0;
+			disband();
+		}
+		else
+		{
+			activityFailed("Cannot disband here.");
+			return;
+		}
+	}
+
 	void startDropping()
 	{
 	final long TIME_PER_UNIT_DROPPED = 50;
@@ -488,6 +503,10 @@ public class MobServant
 		{
 			startBuildingCity();
 		}
+		else if (activity.isActivity("disband"))
+		{
+			startDisbanding();
+		}
 		else if (activity.isActivity("set-flag"))
 		{
 			startSettingFlag();
@@ -583,6 +602,26 @@ public class MobServant
 		}
 	}
 
+	void disband()
+	{
+		// first, tell other users that this mob is being eliminated
+		for (String user : parentRegion.usersWhoCanSeeThisRegion())
+		{
+			MobRemoveNotification n = new MobRemoveNotification(name, MobInfo.RemovalDisposition.DISBANDED);
+			notifyLeader(user, n);
+		}
+
+		// next, update owner's visibility map
+		HashMap<SimpleLocation, RegionSight> tmp = new HashMap<SimpleLocation, RegionSight>();
+		newVisibility(tmp);
+
+		// finally, separate this object from the parent region so that this object
+		// will be garbaged-disposed. Also, this lets our caller know that a
+		// wake-up event should not be scheduled.
+		parentRegion.removeMob(this.name);
+		this.parentRegion = null;
+	}
+
 	/**
 	 * Called when another user has newly observed this mob.
 	 */
@@ -634,6 +673,11 @@ public class MobServant
 			newCanSee.put(new SimpleLocation(nid), RegionSight.EXTERNAL);
 		}
 
+		newVisibility(newCanSee);
+	}
+
+	void newVisibility(Map<SimpleLocation, RegionSight> newCanSee)
+	{
 		for (Iterator<Map.Entry<SimpleLocation,RegionSight> > it = canSee.entrySet().iterator(); it.hasNext(); )
 		{
 			Map.Entry<SimpleLocation, RegionSight> entry = it.next();

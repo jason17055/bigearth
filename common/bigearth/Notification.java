@@ -20,7 +20,13 @@ public abstract class Notification
 		assert in.getCurrentName().equals("event");
 
 		String eventType = in.nextTextValue();
-		if (eventType.equals(MapUpdateNotification.EVENT_NAME))
+		if (eventType.equals(CityUpdateNotification.EVENT_NAME))
+		{
+			CityUpdateNotification n = new CityUpdateNotification();
+			n.parse_cont(in, world);
+			return n;
+		}
+		else if (eventType.equals(MapUpdateNotification.EVENT_NAME))
 		{
 			MapUpdateNotification n = new MapUpdateNotification();
 			n.parse_cont(in, world);
@@ -54,6 +60,7 @@ public abstract class Notification
 
 	public interface Receiver
 	{
+		void handleCityUpdateNotification(CityUpdateNotification n);
 		void handleMapUpdateNotification(MapUpdateNotification n);
 		void handleMobChangeNotification(MobChangeNotification n);
 		void handleMobMessageNotification(MobMessageNotification n);
@@ -95,6 +102,62 @@ class UnknownNotification extends Notification
 		out.writeStartObject();
 		out.writeStringField("event", eventName);
 		out.writeEndObject();
+	}
+}
+
+class CityUpdateNotification extends Notification
+{
+	String cityName;
+	CityInfo cityData;
+
+	static final String EVENT_NAME = "city-update";
+
+	public CityUpdateNotification()
+	{
+	}
+
+	public CityUpdateNotification(String cityName, CityInfo cityData)
+	{
+		this.cityName = cityName;
+		this.cityData = cityData;
+	}
+
+	@Override
+	public void dispatch(Receiver r)
+	{
+		r.handleCityUpdateNotification(this);
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("event", EVENT_NAME);
+		out.writeStringField("city", cityName);
+		out.writeFieldName("data");
+		cityData.write(out);
+		out.writeEndObject();
+	}
+
+	public void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("city"))
+				cityName = in.nextTextValue();
+			else if (s.equals("data"))
+				cityData = CityInfo.parse(in, world);
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+			}
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 }
 

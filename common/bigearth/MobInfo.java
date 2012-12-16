@@ -146,7 +146,8 @@ public class MobInfo
 	public static enum RemovalDisposition
 	{
 		LOST_SIGHT,
-		MOVED_AWAY;
+		MOVED_AWAY,
+		DISBANDED;
 	}
 
 }

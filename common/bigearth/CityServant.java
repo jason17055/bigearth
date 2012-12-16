@@ -35,9 +35,35 @@ public class CityServant
 		return city;
 	}
 
+	public void addPopulation(int population)
+	{
+		this.population += population;
+		cityChanged();
+	}
+
+	void cityChanged()
+	{
+		if (owner != null)
+		{
+			CityInfo data = makeInfoFor(owner);
+			CityUpdateNotification n = new CityUpdateNotification(owner, data);
+			notifyLeader(owner, n);
+		}
+	}
+
 	private WorldConfigIfc getWorldConfig()
 	{
 		return parentRegion.getWorldConfig();
+	}
+
+	private WorldMaster getWorldMaster()
+	{
+		return parentRegion.world;
+	}
+
+	private void notifyLeader(String user, Notification n)
+	{
+		getWorldMaster().notifyLeader(user, n);
 	}
 
 	CityInfo makeInfoFor(String user)

@@ -344,6 +344,12 @@ public class Client
 	}
 
 	//implements Notification.Receiver
+	public void handleCityUpdateNotification(CityUpdateNotification n)
+	{
+		//TODO
+	}
+
+	//implements Notification.Receiver
 	public void handleMobChangeNotification(MobChangeNotification n)
 	{
 		if (mobs == null)
