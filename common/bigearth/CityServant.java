@@ -43,6 +43,46 @@ public class CityServant
 		}
 	}
 
+	int subtractWorkers(int amount, CityJob fromJob)
+	{
+		assert amount >= 0;
+		if (amount > 0)
+		{
+			Integer x = workers.get(fromJob);
+			if (x == null)
+				return 0;
+
+			int curBal = x.intValue();
+			if (amount < curBal)
+			{
+				curBal -= amount;
+				assert curBal > 0;
+				workers.put(fromJob, curBal);
+				newWorkerRate(fromJob);
+				return amount;
+			}
+			else
+			{
+				workers.remove(fromJob);
+				workerRates.remove(fromJob);
+				return curBal;
+			}
+		}
+		return 0;
+	}
+
+	int transferWorkers(int amount, CityJob fromJob, CityJob toJob)
+	{
+		assert amount >= 0;
+		if (amount > 0)
+		{
+			amount = subtractWorkers(amount, fromJob);
+			addWorkers(amount, toJob);
+			return amount;
+		}
+		return 0;
+	}
+
 	static double nextRandomWorkerRate()
 	{
 		double t = Math.random();
@@ -279,5 +319,16 @@ public class CityServant
 	//implements EndOfYear
 	public void endOfYear_cleanup()
 	{
+		governor_endOfYear();
+		cityChanged();
+	}
+
+	private void governor_endOfYear()
+	{
+		int amt = getWorkersInJob(CityJob.IDLE);
+		if (amt != 0)
+		{
+			transferWorkers(amt, CityJob.IDLE, CityJob.HUNT);
+		}
 	}
 }
