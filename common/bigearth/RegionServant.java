@@ -634,4 +634,18 @@ class RegionServant
 			seenBy.remove(sb);
 		}
 	}
+
+	Set<String> usersWhoCanSeeThisRegion()
+	{
+		HashSet<String> users = new HashSet<String>();
+
+		for (SeenBy sb : seenBy)
+		{
+			String mobName = sb.objectName;
+			
+			//TODO
+		}
+
+		return users;
+	}
 }

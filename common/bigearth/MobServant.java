@@ -215,6 +215,19 @@ public class MobServant
 		return totalMass / capacity;
 	}
 
+	MobInfo makeProfileForObserver()
+	{
+		MobInfo m = new MobInfo();
+		m.displayName = this.displayName;
+		m.location = this.location;
+		m.avatarName = this.avatarName;
+		if (this.activity != null)
+			m.activity = this.activity.activity;
+		else
+			m.activity = "";
+		return m;
+	}
+
 	MobInfo makeProfileForOwner()
 	{
 		MobInfo m = new MobInfo();
@@ -478,7 +491,15 @@ public class MobServant
 			getWorldMaster().notifyLeader(owner, n);
 		}
 
-		//TODO- inform everyone else who can see this mob
+		for (String user : parentRegion.usersWhoCanSeeThisRegion())
+		{
+			if (user.equals(owner))
+				continue;  //owner already informed
+
+			MobInfo data = makeProfileForObserver();
+			MobChangeNotification n = new MobChangeNotification(name, data);
+			getWorldMaster().notifyLeader(user, n);
+		}
 	}
 
 	void updateVisibility()
