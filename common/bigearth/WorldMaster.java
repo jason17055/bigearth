@@ -247,36 +247,6 @@ public class WorldMaster
 		return false;
 	}
 
-	RegionProfile makeRegionProfileFor(String user, int regionId, boolean isOccupant)
-	{
-		assert leaderCanSeeRegion(user, regionId);
-
-		RegionServant region = regions[regionId-1];
-
-		RegionProfile p = new RegionProfile();
-		p.biome = region.biome;
-		if (region.city != null)
-		{
-			p.citySize = 1;
-			p.cityName = region.city.displayName;
-		}
-
-		if (isOccupant)
-		{
-			p.stock = CommoditiesHelper.makeClone(region.stock);
-		}
-
-		for (int i = 0; i < 6; i++)
-		{
-			if (region.sides[i] != null)
-				p.sides[i] = region.sides[i].feature;
-			if (region.corners[i] != null)
-				p.corners[i] = region.corners[i].feature;
-		}
-
-		return p;
-	}
-
 	void wantSaved(Saveable obj)
 	{
 		try
@@ -357,11 +327,13 @@ public class WorldMaster
 	{
 		MapModel map = leaders.get(user).map;
 
-		int regionId = getRegionIdForLocation(loc);
-		RegionProfile p = makeRegionProfileFor(user, regionId, isOccupant);
+		RegionServant region = getRegionForLocation(loc);
+		RegionProfile p = region.makeProfile(
+			isOccupant ? RegionSight.INTERNAL : RegionSight.EXTERNAL
+			);
 		if (map.updateRegion(loc, p))
 		{
-			fireMapUpdate(user, regionId, p);
+			fireMapUpdate(user, region.regionId, p);
 		}
 	}
 

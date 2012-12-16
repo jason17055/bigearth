@@ -706,4 +706,33 @@ class RegionServant
 	{
 		return seenByUser.keySet();
 	}
+
+	RegionProfile makeProfile(RegionSight sight)
+	{
+		assert sight.seeExternal;
+
+		RegionProfile p = new RegionProfile();
+
+		p.biome = this.biome;
+		if (this.city != null)
+		{
+			p.citySize = 1;
+			p.cityName = this.city.displayName;
+		}
+
+		for (int i = 0; i < 6; i++)
+		{
+			if (this.sides[i] != null)
+				p.sides[i] = this.sides[i].feature;
+			if (this.corners[i] != null)
+				p.corners[i] = this.corners[i].feature;
+		}
+
+		if (sight.seeInternal)
+		{
+			p.stock = CommoditiesHelper.makeClone(this.stock);
+		}
+
+		return p;
+	}
 }
