@@ -38,6 +38,12 @@ public abstract class Notification
 			n.parse_cont(in, world);
 			return n;
 		}
+		else if (eventType.equals(MobRemoveNotification.EVENT_NAME))
+		{
+			MobRemoveNotification n = new MobRemoveNotification();
+			n.parse_cont(in, world);
+			return n;
+		}
 		else
 		{
 			UnknownNotification n = new UnknownNotification(eventType);
@@ -51,6 +57,7 @@ public abstract class Notification
 		void handleMapUpdateNotification(MapUpdateNotification n);
 		void handleMobChangeNotification(MobChangeNotification n);
 		void handleMobMessageNotification(MobMessageNotification n);
+		void handleMobRemoveNotification(MobRemoveNotification n);
 	}
 }
 
@@ -138,6 +145,62 @@ class MobChangeNotification extends Notification
 				mobData = MobInfo.parse(in, world);
 			else
 			{
+				in.nextToken();
+				in.skipChildren();
+			}
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+}
+
+class MobRemoveNotification extends Notification
+{
+	String mobName;
+	MobInfo.RemovalDisposition disposition;
+
+	static final String EVENT_NAME = "mob-remove";
+
+	public MobRemoveNotification()
+	{
+	}
+
+	public MobRemoveNotification(String mobName, MobInfo.RemovalDisposition disposition)
+	{
+		this.mobName = mobName;
+		this.disposition = disposition;
+	}
+
+	@Override
+	public void dispatch(Receiver r)
+	{
+		r.handleMobRemoveNotification(this);
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("event", EVENT_NAME);
+		out.writeStringField("mob", mobName);
+		out.writeStringField("disposition", disposition.name());
+		out.writeEndObject();
+	}
+
+	public void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("mob"))
+				mobName = in.nextTextValue();
+			else if (s.equals("disposition"))
+				disposition = MobInfo.RemovalDisposition.valueOf(in.nextTextValue());
+			else
+			{
+				System.err.println(getClass().getName() + ": unrecognized json field: " + s);
 				in.nextToken();
 				in.skipChildren();
 			}

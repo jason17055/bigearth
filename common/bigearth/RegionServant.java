@@ -719,6 +719,14 @@ class RegionServant
 				mob.discoverMob(user);
 			}
 		}
+		else if (usOld.externalCount != 0 && usNew.externalCount == 0)
+		{
+			// tell user they lost sight of the mobs in this region
+			for (MobServant mob : presentMobs.values())
+			{
+				mob.lostSightOfMob(user);
+			}
+		}
 	}
 
 	/**

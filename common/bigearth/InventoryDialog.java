@@ -231,6 +231,15 @@ public class InventoryDialog extends JDialog
 		}
 
 		//implements MobListModel.Listener
+		public void mobRemoved(String mobName, MobInfo.RemovalDisposition disposition)
+		{
+			if (!mobName.equals(InventoryDialog.this.mobName))
+				return; //not interested
+
+			dispose();
+		}
+
+		//implements MobListModel.Listener
 		public void mobUpdated(String mobName)
 		{
 			if (!mobName.equals(InventoryDialog.this.mobName))

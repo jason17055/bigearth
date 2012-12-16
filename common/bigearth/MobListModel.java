@@ -30,6 +30,12 @@ public class MobListModel
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
+	void remove(String mobName, MobInfo.RemovalDisposition disposition)
+	{
+		mobs.remove(mobName);
+		fireMobRemoved(mobName, disposition);
+	}
+
 	void update(String mobName, MobInfo newMobInfo)
 	{
 		MobInfo oldMobInfo = mobs.get(mobName);
@@ -72,6 +78,14 @@ public class MobListModel
 		fireMobUpdated(mobName);
 	}
 
+	private void fireMobRemoved(String mobName, MobInfo.RemovalDisposition disposition)
+	{
+		for (Listener l : listeners)
+		{
+			l.mobRemoved(mobName, disposition);
+		}
+	}
+
 	private void fireMobUpdated(String mobName)
 	{
 		for (Listener l : listeners)
@@ -82,6 +96,7 @@ public class MobListModel
 
 	public interface Listener
 	{
+		void mobRemoved(String mobName, MobInfo.RemovalDisposition disposition);
 		void mobUpdated(String mobName);
 	}
 

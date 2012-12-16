@@ -132,4 +132,10 @@ public class MobInfo
 			out.writeStringField("hunger", hunger.name());
 		out.writeEndObject();
 	}
+
+	public static enum RemovalDisposition
+	{
+		LOST_SIGHT;
+	}
+
 }

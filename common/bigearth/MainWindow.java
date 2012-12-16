@@ -360,6 +360,12 @@ public class MainWindow extends JFrame
 	}
 
 	// implements MobListModel.Listener
+	public void mobRemoved(String mobName, MobInfo.RemovalDisposition disposition)
+	{
+		//nothing needed
+	}
+
+	// implements MobListModel.Listener
 	public void mobUpdated(String mobName)
 	{
 		if (view.selection.isMob()

@@ -322,6 +322,15 @@ public class Client
 	}
 
 	//implements Notification.Receiver
+	public void handleMobRemoveNotification(MobRemoveNotification n)
+	{
+		if (mobs == null)
+			return;
+
+		mobs.remove(n.mobName, n.disposition);
+	}
+
+	//implements Notification.Receiver
 	public void handleMapUpdateNotification(MapUpdateNotification n)
 	{
 		if (map == null)

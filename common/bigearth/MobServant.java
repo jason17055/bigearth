@@ -510,6 +510,15 @@ public class MobServant
 		getWorldMaster().notifyLeader(user, n);
 	}
 
+	void lostSightOfMob(String user)
+	{
+		assert user != null;
+
+		MobRemoveNotification n = new MobRemoveNotification(name,
+			MobInfo.RemovalDisposition.LOST_SIGHT);
+		getWorldMaster().notifyLeader(user, n);
+	}
+
 	void updateVisibility()
 	{
 		assert canSee != null;

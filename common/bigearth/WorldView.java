@@ -67,6 +67,17 @@ public class WorldView extends JPanel
 			}
 		}
 
+		public void clear()
+		{
+			this.selectedRegion = 0;
+			this.selectedVertex = null;
+			this.selectedMob = null;
+			this.selectedCity = null;
+
+			onSelectionChanged();
+			repaint();
+		}
+
 		public Location getCity()
 		{
 			assert isCity();
@@ -610,6 +621,16 @@ public class WorldView extends JPanel
 			terrainDirty = true;
 			repaint();
 		}});
+	}
+
+	// implements MobListModel.Listener
+	public void mobRemoved(String mobName, MobInfo.RemovalDisposition disposition)
+	{
+		if (selection.isMob() && selection.getMob().equals(mobName))
+		{
+			selection.clear();
+		}
+		repaint();
 	}
 
 	// implements MobListModel.Listener
