@@ -383,7 +383,19 @@ public class CityServant
 
 		// TODO- check child care
 
-		
+		endOfYear_hunting();
+	}
+
+	private void endOfYear_hunting()
+	{
+		double manYears = getProduction(CityJob.HUNT);
+		double huntingYield = parentRegion.wildlife.calculateHuntingRate(manYears);
+		int numAnimals = (int) Math.floor(huntingYield);
+		assert numAnimals >= 0;
+
+		//TODO- add meat (and maybe some live animals) to the city's stock
+
+		production.remove(CityJob.HUNT);
 	}
 
 	//implements EndOfYear
@@ -400,5 +412,11 @@ public class CityServant
 		{
 			transferWorkers(amt, CityJob.IDLE, CityJob.HUNT);
 		}
+	}
+
+	double getProduction(CityJob job)
+	{
+		Double dd = production.get(job);
+		return dd != null ? dd.doubleValue() : 0.0;
 	}
 }

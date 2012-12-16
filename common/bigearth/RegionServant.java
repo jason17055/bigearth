@@ -75,7 +75,7 @@ class RegionServant
 
 	public void adjustWildlife(int delta)
 	{
-		wildlife.adjust(delta);
+		wildlife.adjustWildlife(CommodityType.WILDLIFE, delta);
 		dirty = true;
 	}
 
@@ -151,10 +151,10 @@ class RegionServant
 	}
 
 	//implements ShadowRegion
-	public void importWildlife(int newWildlife)
+	public void importWildlife(CommodityType type, int newWildlife)
 	{
 		assert newWildlife >= 0;
-		wildlife.wildlifeImmigrants += newWildlife;
+		wildlife.adjustWildlife(type, newWildlife);
 	}
 
 	void setLake(Geometry.VertexId cornerVtx, RegionCornerDetail.PointFeature lakeType)
@@ -217,7 +217,8 @@ class RegionServant
 					JsonEncoding.UTF8);
 		out.writeStartObject();
 		out.writeStringField("biome", biome.name());
-		out.writeNumberField("wildlife", wildlife.wildlife);
+		out.writeFieldName("wildlife");
+		wildlife.write(out);
 		out.writeNumberField("waterLevel", waterLevel);
 		out.writeNumberField("elevation", elevation);
 		out.writeNumberField("temperature", temperature);
@@ -296,10 +297,7 @@ class RegionServant
 		{
 			String s = in.getCurrentName();
 			if (s.equals("wildlife"))
-			{
-				in.nextToken();
-				wildlife.wildlife = in.getIntValue();
-			}
+				wildlife.parse(in);
 			else if (s.equals("waterLevel"))
 				waterLevel = in.nextIntValue(waterLevel);
 			else if (s.equals("elevation"))
@@ -349,8 +347,6 @@ class RegionServant
 				System.err.println("unrecognized property: "+s);
 			}
 		}
-
-		wildlife.initPigsAndSheep();
 	}
 
 	private void loadMobs(JsonParser in)
@@ -560,12 +556,12 @@ class RegionServant
 
 	public int getWildlifeCount()
 	{
-		return wildlife.wildlife;
+		return wildlife.getTotalWildlife();
 	}
 
 	void resetWildlife()
 	{
-		wildlife.wildlife = 0;
+		wildlife.wildlifeByType.clear();
 	}
 
 	public void addCommodity(CommodityType ct, long amount)

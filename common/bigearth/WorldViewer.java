@@ -884,7 +884,7 @@ assert(x >= 1);
 
 		RegionServant region = world.world.regions[regionId-1];
 		biomeLbl.setText(region.getBiome().name());
-		wildlifeLbl.setText(String.format("%d", region.wildlife.wildlife));
+		wildlifeLbl.setText(String.format("%d", region.getWildlifeCount()));
 		nativesLbl.setText("0");
 		elevationLbl.setText(String.format("%d", region.elevation));
 		temperatureLbl.setText(String.format("%.1f", region.temperature/10.0));

@@ -7,6 +7,6 @@ package bigearth;
 interface ShadowRegion
 {
 	BiomeType getBiome();
-	void importWildlife(int newWildlife);
+	void importWildlife(CommodityType type, int newWildlife);
 	void mobSight(String mobName, String owner, RegionSight sight);
 }

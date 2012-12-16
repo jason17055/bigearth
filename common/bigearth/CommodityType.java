@@ -5,7 +5,8 @@ public enum CommodityType
 	WOOD(500.0, 0, false),
 	MEAT(50.0, 800, false),
 	SHEEP(80.0, 0, true),
-	PIG(60.0, 0, true);
+	PIG(60.0, 0, true),
+	WILDLIFE(50.0, 0, true); //cannot be captured, only killed for meat
 
 	public double mass;
 	public int nutrition;

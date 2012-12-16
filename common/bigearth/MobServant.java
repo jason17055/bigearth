@@ -470,18 +470,23 @@ public class MobServant
 		activityRequiredTime = amt * TIME_PER_UNIT_TOOK;
 	}
 
+	private void startHunting()
+	{
+		// animals per year, given the size of this mob
+		double huntingRate = parentRegion.wildlife.calculateHuntingRate(this.population);
+
+		// time required to harvest one animal
+		final double ONE_YEAR = getWorldMaster().config.ticksPerYear;
+		activityRequiredTime = (long) Math.ceil(
+			ONE_YEAR / huntingRate
+			);
+	}
+
 	void onActivityStarted()
 	{
 		if (activity.isActivity("hunt"))
 		{
-			// animals per year, given the size of this mob
-			double huntingRate = parentRegion.wildlife.calculateHuntingRate(this.population);
-
-			// time required to harvest one animal
-			final double ONE_YEAR = getWorldMaster().config.ticksPerYear;
-			activityRequiredTime = (long) Math.ceil(
-				ONE_YEAR / huntingRate
-				);
+			startHunting();
 		}
 		else if (activity.isActivity("gather-wood"))
 		{
@@ -536,20 +541,35 @@ public class MobServant
 	private void completedHunting()
 	{
 		WildlifeServant wildlife = parentRegion.wildlife;
-		if (Math.random() < wildlife.chanceOfCatchingSheep())
+
+		int numSheep = wildlife.getWildlife(CommodityType.SHEEP);
+		int numPigs = wildlife.getWildlife(CommodityType.PIG);
+		int numTotal = wildlife.getTotalWildlife();
+
+		assert numTotal >= numSheep + numPigs;
+
+		double r = Math.random();
+		if (r < ((double)numSheep / (double)numTotal))
 		{
-			this.addCommodity(CommodityType.SHEEP, 1);
-			wildlife.wildSheepCount--;
+			// hunted a sheep
+			wildlife.wildlifeByType.get(CommodityType.SHEEP).hunted++;
+
+			boolean capturedAlive = (Math.random() < wildlife.chanceOfCatchingSheep());
+			this.addCommodity(capturedAlive ? CommodityType.SHEEP : CommodityType.MEAT, 1);
 		}
-		else if (Math.random() < wildlife.chanceOfCatchingPig())
+		else if (r < ((double)(numSheep+numPigs) / (double)numTotal))
 		{
-			this.addCommodity(CommodityType.PIG, 1);
-			wildlife.wildPigCount--;
+			// hunted a pig
+			wildlife.wildlifeByType.get(CommodityType.PIG).hunted++;
+			boolean capturedAlive = (Math.random() < wildlife.chanceOfCatchingPig());
+			this.addCommodity(capturedAlive ? CommodityType.PIG : CommodityType.MEAT, 1);
 		}
 		else
 		{
+			// hunted game
+			assert wildlife.wildlifeByType.containsKey(CommodityType.WILDLIFE);
+			wildlife.wildlifeByType.get(CommodityType.WILDLIFE).hunted++;
 			this.addCommodity(CommodityType.MEAT, 1);
-			wildlife.wildlifeHunted++;
 		}
 	}
 
