@@ -500,6 +500,16 @@ public class MobServant
 		}
 	}
 
+	void discoverMob(String user)
+	{
+		assert user != null;
+
+		MobInfo data = user.equals(owner) ? makeProfileForOwner() :
+				makeProfileForObserver();
+		MobChangeNotification n = new MobChangeNotification(name, data);
+		getWorldMaster().notifyLeader(user, n);
+	}
+
 	void updateVisibility()
 	{
 		assert canSee != null;

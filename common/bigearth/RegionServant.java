@@ -678,6 +678,8 @@ class RegionServant
 
 	void userSight(String user, int internalAdj, int externalAdj)
 	{
+		assert user != null;
+
 		UserSight usOld = seenByUser.get(user);
 		if (usOld == null)
 			usOld = UserSight.DEF;
@@ -707,6 +709,15 @@ class RegionServant
 		{
 			// user can now see "external" properties of region
 			world.discoverTerrain(user, new SimpleLocation(regionId), false);
+		}
+
+		if (usOld.externalCount == 0 && usNew.externalCount != 0)
+		{
+			// tell user about any mobs present in this region
+			for (MobServant mob : presentMobs.values())
+			{
+				mob.discoverMob(user);
+			}
 		}
 	}
 
