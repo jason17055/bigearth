@@ -268,6 +268,19 @@ public class MainWindow extends JFrame
 		{
 			MobInfo mob = mobs[0];
 			view.panTo(mob.location);
+			return;
+		}
+
+		// no units, look for a city
+		assert map != null;
+		for (Location loc : map.regions.keySet())
+		{
+			RegionProfile region = map.getRegion(loc);
+			if (region.hasCitySize())
+			{
+				view.panTo(loc);
+				return;
+			}
 		}
 	}
 
