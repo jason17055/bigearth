@@ -105,6 +105,41 @@ public class Client
 		return world.geometry;
 	}
 
+	void interpretError(HttpURLConnection conn)
+		throws IOException
+	{
+		int status = conn.getResponseCode();
+		JsonParser in = new JsonFactory().createJsonParser(
+					conn.getErrorStream()
+				);
+
+		String errorMessage = null;
+
+		in.nextToken();
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("error"))
+				errorMessage = in.nextTextValue();
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+			}
+		}
+
+		in.close();
+
+		if (errorMessage != null)
+			throw new IOException(errorMessage);
+
+		if (status == 403)
+		{
+			throw new IOException("Forbidden");
+		}
+		throw new IOException("Unknown status code: " + status);
+	}
+
 	void setCityName(Location cityLocation, String newName)
 		throws IOException
 	{
@@ -122,9 +157,11 @@ public class Client
 		out.write(xx);
 		out.close();
 
-
 		int status = conn.getResponseCode();
-		assert status == 204;
+		if (status != 204)
+		{
+			interpretError(conn);
+		}
 	}
 
 	CityInfo getCity(Location cityLocation)
@@ -364,7 +401,8 @@ public class Client
 		out.close();
 
 		int status = conn.getResponseCode();
-		assert status == 204;
+		if (status != 204)
+			interpretError(conn);
 	}
 
 	public void setMobActivity(String mobName, String activityName)
@@ -385,7 +423,8 @@ public class Client
 		out.close();
 
 		int status = conn.getResponseCode();
-		assert status == 204;
+		if (status != 204)
+			interpretError(conn);
 	}
 
 	public void takeCommodity(String mobName, CommodityType ct, long amt)
@@ -408,7 +447,8 @@ public class Client
 		out.close();
 
 		int status = conn.getResponseCode();
-		assert status == 204;
+		if (status != 204)
+			interpretError(conn);
 	}
 
 	public void dropCommodity(String mobName, CommodityType ct, long amt)
@@ -431,7 +471,8 @@ public class Client
 		out.close();
 
 		int status = conn.getResponseCode();
-		assert status == 204;
+		if (status != 204)
+			interpretError(conn);
 	}
 
 	void startListenerThread()
