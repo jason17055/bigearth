@@ -15,6 +15,8 @@ public class WorldConfig implements WorldConfigIfc
 	Properties properties;
 	Geometry geometry;
 	long ticksPerYear;
+	int childYears;
+	int humanLifeExpectancy;
 
 	private WorldConfig(File path)
 	{
@@ -43,6 +45,12 @@ public class WorldConfig implements WorldConfigIfc
 				);
 		this.ticksPerYear = Long.parseLong(
 				properties.getProperty("ticksPerYear", "60000")
+				);
+		this.childYears = Integer.parseInt(
+				properties.getProperty("childYears", "10")
+				);
+		this.humanLifeExpectancy = Integer.parseInt(
+				properties.getProperty("humanLifeExpectancy", "50")
 				);
 	}
 

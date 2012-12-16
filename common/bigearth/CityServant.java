@@ -13,13 +13,50 @@ public class CityServant
 	String owner;
 	Location location;
 	Map<CommodityType, Long> stock;
-	int population;
+	Map<CityJob, Integer> workers;
+	Map<CityJob, Double> workerRates;
+	int [] children;
 
 	CityServant(RegionServant parentRegion)
 	{
 		this.parentRegion = parentRegion;
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
-		this.population = 0;
+		this.workers = new HashMap<CityJob, Integer>();
+		this.workerRates = new HashMap<CityJob, Double>();
+		this.children = new int[getWorldMaster().config.childYears];
+	}
+
+	public void addWorkers(int amount)
+	{
+		addWorkers(amount, CityJob.IDLE);
+	}
+
+	public void addWorkers(int amount, CityJob toJob)
+	{
+		assert amount >= 0;
+		if (amount > 0)
+		{
+			int cur = getWorkersInJob(toJob);
+			cur += amount;
+			workers.put(toJob, cur);
+			newWorkerRate(toJob);
+		}
+	}
+
+	static double nextRandomWorkerRate()
+	{
+		double t = Math.random();
+		if (t == 0)
+			return 0;
+		return Math.exp( -Math.log((1/t)-1) / 15 );
+	}
+
+	private void newWorkerRate(CityJob job)
+	{
+		double d = (double) getWorkersInJob(job);
+		d *= nextRandomWorkerRate();
+
+		workerRates.put(job, d);
 	}
 
 	// called when server is starting up
@@ -38,7 +75,7 @@ public class CityServant
 
 	public void addPopulation(int population)
 	{
-		this.population += population;
+		addWorkers(population);
 		cityChanged();
 	}
 
@@ -50,6 +87,29 @@ public class CityServant
 			CityUpdateNotification n = new CityUpdateNotification(owner, data);
 			notifyLeader(owner, n);
 		}
+	}
+
+	int getPopulation()
+	{
+		int sum = 0;
+		for (int i = 0; i < children.length; i++)
+		{
+			sum += children[i];
+		}
+		for (Integer i : workers.values())
+		{
+			sum += i.intValue();
+		}
+		return sum;
+	}
+
+	int getWorkersInJob(CityJob job)
+	{
+		Integer i = workers.get(job);
+		if (i != null)
+			return i.intValue();
+		else
+			return 0;
 	}
 
 	private WorldConfigIfc getWorldConfig()
@@ -79,7 +139,7 @@ public class CityServant
 		CityInfo ci = new CityInfo();
 		ci.displayName = displayName;
 		ci.location = location;
-		ci.setPopulation(population);
+		ci.setPopulation(getPopulation());
 		return ci;
 	}
 
@@ -108,8 +168,13 @@ public class CityServant
 			else if (s.equals("population"))
 			{
 				in.nextToken();
-				population = in.getIntValue();
+				int population = in.getIntValue();
+				addWorkers(population);
 			}
+			else if (s.equals("workers"))
+				parseWorkers(in);
+			else if (s.equals("children"))
+				parseChildren(in);
 			else
 			{
 				in.nextToken();
@@ -121,6 +186,48 @@ public class CityServant
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
+	private void parseChildren(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_ARRAY)
+			throw new InputMismatchException();
+
+		int i = 0;
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			int n = in.getIntValue();
+			if (i < children.length)
+			{
+				children[i] = n;
+			}
+			else
+			{
+				addWorkers(n);
+			}
+		}
+	}
+
+	private void parseWorkers(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+			throw new InputMismatchException();
+
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			CityJob job = CityJob.valueOf(in.getCurrentName());
+			in.nextToken();
+			int amt = in.getIntValue();
+
+			addWorkers(amt, job);
+		}
+
+		if (in.getCurrentToken() != JsonToken.END_OBJECT)
+			throw new InputMismatchException();
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{
@@ -130,13 +237,43 @@ public class CityServant
 		out.writeStringField("location", location.toString());
 		out.writeFieldName("stock");
 		CommoditiesHelper.writeCommodities(stock, out);
-		out.writeNumberField("population", population);
+		out.writeFieldName("workers");
+		writeWorkers(out);
+		out.writeFieldName("children");
+		writeChildren(out);
 		out.writeEndObject();
+	}
+
+	private void writeWorkers(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		for (CityJob job : workers.keySet())
+		{
+			out.writeFieldName(job.name());
+			int amt = workers.get(job);
+			out.writeNumber(amt);
+		}
+		out.writeEndObject();
+	}
+
+	private void writeChildren(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartArray();
+		for (int i = 0; i < children.length; i++)
+		{
+			out.writeNumber(children[i]);
+		}
+		out.writeEndArray();
 	}
 
 	//implements EndOfYear
 	public void endOfYear_stage1()
 	{
+		// TODO- check child care
+
+		
 	}
 
 	//implements EndOfYear
