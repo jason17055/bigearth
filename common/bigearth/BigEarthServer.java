@@ -153,7 +153,7 @@ public class BigEarthServer
 		context.addServlet(new ServletHolder(new GetCityServlet(this)), "/city");
 		context.addServlet(new ServletHolder(new GetEventsServlet(this)), "/events");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
-		context.addServlet(new ServletHolder(new GetMyMobsServlet(this)), "/my/mobs");
+		context.addServlet(new ServletHolder(new GetMobsServlet(this)), "/mobs");
 		context.addServlet(new ServletHolder(new SetActivityServlet(this)), "/orders");
 
 		httpServer.start();
@@ -248,9 +248,9 @@ abstract class BigEarthServlet extends HttpServlet
 	}
 }
 
-class GetMyMobsServlet extends BigEarthServlet
+class GetMobsServlet extends BigEarthServlet
 {
-	GetMyMobsServlet(BigEarthServer server)
+	GetMobsServlet(BigEarthServer server)
 	{
 		super(server);
 	}
@@ -282,6 +282,12 @@ class GetMyMobsServlet extends BigEarthServlet
 			if (mob.owner != null && mob.owner.equals(s.user))
 			{
 				MobInfo mobProfile = mob.makeProfileForOwner();
+				out.writeFieldName(mobName);
+				mobProfile.write(out);
+			}
+			else if (mob.isSeenBy(s.user))
+			{
+				MobInfo mobProfile = mob.makeProfileForObserver();
 				out.writeFieldName(mobName);
 				mobProfile.write(out);
 			}

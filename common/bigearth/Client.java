@@ -168,7 +168,7 @@ public class Client
 	MobListModel getMyMobs()
 		throws IOException
 	{
-		HttpURLConnection conn = makeRequest("GET", "/my/mobs");
+		HttpURLConnection conn = makeRequest("GET", "/mobs");
 		conn.setDoOutput(false);
 		conn.setDoInput(true);
 		conn.connect();

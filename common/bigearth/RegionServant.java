@@ -757,4 +757,9 @@ class RegionServant
 
 		return p;
 	}
+
+	public boolean isSeenBy(String user)
+	{
+		return seenByUser.containsKey(user);
+	}
 }

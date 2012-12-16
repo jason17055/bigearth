@@ -554,4 +554,9 @@ public class MobServant
 		ShadowRegion otherRegion = getWorldMaster().getShadowRegion(loc.regionId);
 		otherRegion.mobSight(name, owner, sight);
 	}
+
+	public boolean isSeenBy(String user)
+	{
+		return parentRegion.isSeenBy(user);
+	}
 }
