@@ -444,6 +444,7 @@ class RegionServant
 		}
 
 		mob.scheduleWakeUp();
+		mob.mobChanged();
 	}
 
 	void mobSetActivity(String mobName, Command command)
@@ -462,7 +463,6 @@ class RegionServant
 		mob.activityStarted = currentTime();
 		mob.activityError = false;
 		mobActivity(mobName);
-		mob.mobChanged();
 	}
 
 	boolean mobCanMoveTo(String mobName, Location dest)
