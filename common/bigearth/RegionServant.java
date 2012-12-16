@@ -697,6 +697,17 @@ class RegionServant
 		{
 			seenByUser.put(user, usNew);
 		}
+
+		if (usOld.internalCount == 0 && usNew.internalCount != 0)
+		{
+			// user can now see "internal" properties of region
+			world.discoverTerrain(user, new SimpleLocation(regionId), true);
+		}
+		else if (usOld.externalCount == 0 && usNew.externalCount != 0)
+		{
+			// user can now see "external" properties of region
+			world.discoverTerrain(user, new SimpleLocation(regionId), false);
+		}
 	}
 
 	/**

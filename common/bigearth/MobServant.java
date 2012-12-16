@@ -369,8 +369,6 @@ public class MobServant
 
 		toRegion.mobMovedIn(this.name, this, dest, delay);
 		world.mobMoved(this.name, oldLoc, dest);
-		world.discoverTerrain(this.owner, dest, true);
-		world.discoverTerrainBorder(this.owner, dest);
 	}
 
 	void startTaking()

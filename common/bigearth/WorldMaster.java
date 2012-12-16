@@ -337,15 +337,6 @@ public class WorldMaster
 		}
 	}
 
-	void discoverTerrainBorder(String user, Location loc)
-	{
-		int regionId = getRegionIdForLocation(loc);
-		for (int nid : getGeometry().getNeighbors(regionId))
-		{
-			discoverTerrain(user, new SimpleLocation(nid), false);
-		}
-	}
-
 	void fireMapUpdate(String user, int regionId, RegionProfile p)
 	{
 		MapUpdateNotification n = new MapUpdateNotification(regionId, p);
