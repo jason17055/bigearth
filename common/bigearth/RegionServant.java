@@ -437,6 +437,12 @@ class RegionServant
 		if (mob.parentRegion != this)
 			return;
 
+		if (mob.activityError)
+		{
+			mob.activity = null;
+			return;
+		}
+
 		mob.scheduleWakeUp();
 	}
 
@@ -454,6 +460,7 @@ class RegionServant
 
 		mob.activity = command;
 		mob.activityStarted = currentTime();
+		mob.activityError = false;
 		mobActivity(mobName);
 		mob.mobChanged();
 	}

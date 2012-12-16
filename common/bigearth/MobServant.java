@@ -16,6 +16,7 @@ public class MobServant
 	Command activity;
 	long activityStarted;
 	long activityRequiredTime;
+	boolean activityError;
 	Map<CommodityType, Long> stock;
 	int nutrition;
 	int population;
@@ -306,6 +307,7 @@ public class MobServant
 
 	void activityFailed(String message)
 	{
+		activityError = true;
 		MobMessageNotification n = new MobMessageNotification(name, message);
 		notifyLeader(owner, n);
 	}
@@ -536,7 +538,10 @@ public class MobServant
 		mobChanged();
 	}
 
-	void notifyLeader(String user, Notification n)
+	/**
+	 * Convenience method.
+	 */
+	private void notifyLeader(String user, Notification n)
 	{
 		getWorldMaster().notifyLeader(user, n);
 	}
@@ -561,6 +566,9 @@ public class MobServant
 		}
 	}
 
+	/**
+	 * Called when another user has newly observed this mob.
+	 */
 	void discoverMob(String user)
 	{
 		assert user != null;
@@ -571,6 +579,9 @@ public class MobServant
 		notifyLeader(user, n);
 	}
 
+	/**
+	 * Called when another user has lost sight to the region that this mob is in.
+	 */
 	void lostSightOfMob(String user)
 	{
 		assert user != null;
@@ -580,6 +591,10 @@ public class MobServant
 		notifyLeader(user, n);
 	}
 
+	/**
+	 * Called when movement of this mob has caused another user to lose sight
+	 * of this mob.
+	 */
 	void movedAwayFrom(String user)
 	{
 		assert user != null;
