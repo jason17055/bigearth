@@ -300,23 +300,6 @@ public class WorldMaster
 		return svt.presentMobs.get(mobName);
 	}
 
-	void mobMoved(String mobName, Location oldLoc, Location newLoc)
-	{
-		MobServant mob = getMob(mobName);
-		if (mob.owner != null)
-		{
-			MobInfo data = new MobInfo();
-			data.location = newLoc;
-			MobChangeNotification n = new MobChangeNotification(mobName, data);
-			notifyLeader(mob.owner, n);
-		}
-
-		//TODO- inform everyone else who can see this mob
-
-		// update visibility
-		mob.updateVisibility();
-	}
-
 	/**
 	 * @param isOccupant true if the leader has a unit in this region,
 	 *     false if the leader is simply observing the region from a

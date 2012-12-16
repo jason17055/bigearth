@@ -301,13 +301,13 @@ public class MobServant
 	{
 		// only the owner needs to be notified
 		MobChangeNotification n = new MobChangeNotification(name, makeProfileForOwner());
-		getWorldMaster().notifyLeader(owner, n);
+		notifyLeader(owner, n);
 	}
 
 	void activityFailed(String message)
 	{
 		MobMessageNotification n = new MobMessageNotification(name, message);
-		getWorldMaster().notifyLeader(owner, n);
+		notifyLeader(owner, n);
 	}
 
 	void startBuildingCity()
@@ -367,8 +367,64 @@ public class MobServant
 		Location oldLoc = this.location;
 		parentRegion.removeMob(this.name);
 
+		// after this line, the mob may no longer be running on this host
 		toRegion.mobMovedIn(this.name, this, dest, delay);
-		world.mobMoved(this.name, oldLoc, dest);
+	}
+
+	/**
+	 * Called by the destination region servant, after the mob has been inserted
+	 * into the new region, but before the movement cooldown period has begun.
+	 */
+	void mobMoved(Location oldLoc)
+	{
+		// first, inform the owner of the movement
+		if (owner != null)
+		{
+			MobInfo data = new MobInfo();
+			data.location = location;
+			MobChangeNotification n = new MobChangeNotification(name, data);
+			notifyLeader(owner, n);
+		}
+
+		// inform everyone else who can see this mob
+		Set<String> oldObservers = getWorldMaster().getRegionForLocation(oldLoc).usersWhoCanSeeThisRegion();
+		Set<String> newObservers = parentRegion.usersWhoCanSeeThisRegion();
+
+		for (String user : oldObservers)
+		{
+			if (user.equals(owner)) continue;
+
+			if (!newObservers.contains(user))
+			{
+				movedAwayFrom(user);
+			}
+		}
+		for (String user : newObservers)
+		{
+			if (user.equals(owner)) continue;
+
+			if (oldObservers.contains(user))
+			{
+				MobInfo data = new MobInfo();
+				data.location = location;
+				MobChangeNotification n = new MobChangeNotification(name, data);
+				notifyLeader(user, n);
+			}
+			else
+			{
+				//TODO- this is to inform a new observer, who doesn't know
+				// where the mob came from... The notification should include
+				// where the mob came from.
+
+				MobInfo data = new MobInfo();
+				data.location = location;
+				MobChangeNotification n = new MobChangeNotification(name, data);
+				notifyLeader(user, n);
+			}
+		}
+
+		// update our owner's visibility based on the mob's new position
+		updateVisibility();
 	}
 
 	void startTaking()
@@ -480,13 +536,18 @@ public class MobServant
 		mobChanged();
 	}
 
+	void notifyLeader(String user, Notification n)
+	{
+		getWorldMaster().notifyLeader(user, n);
+	}
+
 	void mobChanged()
 	{
 		if (owner != null)
 		{
 			MobInfo data = makeProfileForOwner();
 			MobChangeNotification n = new MobChangeNotification(name, data);
-			getWorldMaster().notifyLeader(owner, n);
+			notifyLeader(owner, n);
 		}
 
 		for (String user : parentRegion.usersWhoCanSeeThisRegion())
@@ -496,7 +557,7 @@ public class MobServant
 
 			MobInfo data = makeProfileForObserver();
 			MobChangeNotification n = new MobChangeNotification(name, data);
-			getWorldMaster().notifyLeader(user, n);
+			notifyLeader(user, n);
 		}
 	}
 
@@ -507,7 +568,7 @@ public class MobServant
 		MobInfo data = user.equals(owner) ? makeProfileForOwner() :
 				makeProfileForObserver();
 		MobChangeNotification n = new MobChangeNotification(name, data);
-		getWorldMaster().notifyLeader(user, n);
+		notifyLeader(user, n);
 	}
 
 	void lostSightOfMob(String user)
@@ -516,7 +577,16 @@ public class MobServant
 
 		MobRemoveNotification n = new MobRemoveNotification(name,
 			MobInfo.RemovalDisposition.LOST_SIGHT);
-		getWorldMaster().notifyLeader(user, n);
+		notifyLeader(user, n);
+	}
+
+	void movedAwayFrom(String user)
+	{
+		assert user != null;
+
+		MobRemoveNotification n = new MobRemoveNotification(name,
+			MobInfo.RemovalDisposition.MOVED_AWAY);
+		notifyLeader(user, n);
 	}
 
 	void updateVisibility()

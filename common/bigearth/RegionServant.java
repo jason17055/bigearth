@@ -498,6 +498,8 @@ class RegionServant
 		mob.activityStarted = currentTime();
 		mob.nutrition -= MobServant.NUTRITION_COST_FOR_MOVEMENT;
 
+		mob.mobMoved(oldLoc);
+
 		assert mob.wakeUp == null;
 
 		long wakeUp = mob.activityStarted + delay;
