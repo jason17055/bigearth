@@ -19,10 +19,10 @@ class RegionServant
 	CityServant city; //may be null
 
 	/// Indexed by <mobname,owner>.
-	Set<SeenBy> seenByMob;
+	Map<SeenByKey,RegionSight> seenByMob;
 
 	/// Indexed by username. Values are the number of mobs contributing to the sight.
-	Map<String,Integer> seenByUser;
+	Map<String,UserSight> seenByUser;
 
 	/// Elevation as generated randomly by MakeWorld.
 	int elevation;
@@ -49,8 +49,8 @@ class RegionServant
 		this.presentMobs = new HashMap<String, MobServant>();
 		this.wildlife = new WildlifeServant(this);
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
-		this.seenByMob = new HashSet<SeenBy>();
-		this.seenByUser = new HashMap<String, Integer>();
+		this.seenByMob = new HashMap<SeenByKey, RegionSight>();
+		this.seenByUser = new HashMap<String, UserSight>();
 	}
 
 	private void init()
@@ -598,16 +598,14 @@ class RegionServant
 		return city != null;
 	}
 
-	static final class SeenBy
+	static final class SeenByKey
 	{
-		int regionId;
 		String objectName;
 		String owner;
 
-		public SeenBy(int regionId, String objectName, String owner)
+		public SeenByKey(String objectName, String owner)
 		{
 			assert objectName != null;
-			this.regionId = regionId;
 			this.objectName = objectName;
 			this.owner = owner;
 		}
@@ -624,12 +622,11 @@ class RegionServant
 
 		public boolean equals(Object obj)
 		{
-			if (obj instanceof SeenBy)
+			if (obj instanceof SeenByKey)
 			{
-				SeenBy rhs = (SeenBy) obj;
-				return this.regionId == rhs.regionId &&
-					this.objectName.equals(rhs.objectName) &&
-					isEqual(this.owner, rhs.owner);
+				SeenByKey rhs = (SeenByKey) obj;
+				return isEqual(this.objectName, rhs.objectName)
+					&& isEqual(this.owner, rhs.owner);
 			}
 			return false;
 		}
@@ -640,53 +637,71 @@ class RegionServant
 		}
 	}
 
+	static final class UserSight
+	{
+		int internalCount;
+		int externalCount;
+
+		static final UserSight DEF = new UserSight();
+		boolean isDefault()
+		{
+			return internalCount == 0 && externalCount == 0;
+		}
+	}
+
 	//implements ShadowRegion
-	public void mobSight(int regionId, String mobName, String owner, boolean canSee)
+	public void mobSight(String mobName, String owner, RegionSight sight)
 	{
-		SeenBy sb = new SeenBy(regionId, mobName, owner);
-		if (canSee)
+		SeenByKey sb = new SeenByKey(mobName, owner);
+
+		RegionSight sOld = seenByMob.get(sb);
+		if (sOld == null)
+			sOld = RegionSight.NONE;
+
+		if (!sight.isNone())
 		{
-			if (!seenByMob.contains(sb))
-			{
-				seenByMob.add(sb);
-				if (owner != null)
-				{
-					userSight(owner, 1);
-				}
-			}
+			seenByMob.put(sb, sight);
 		}
 		else
 		{
-			if (seenByMob.contains(sb))
-			{
-				seenByMob.remove(sb);
-				if (owner != null)
-				{
-					userSight(owner, -1);
-				}
-			}
+			seenByMob.remove(sb);
+		}
+
+		if (owner != null)
+		{
+			userSight(owner,
+				(sight.seeInternal ? 1 : 0) - (sOld.seeInternal ? 1 : 0),
+				(sight.seeExternal ? 1 : 0) - (sOld.seeExternal ? 1 : 0)
+				);
 		}
 	}
 
-	void userSight(String user, int adjustment)
+	void userSight(String user, int internalAdj, int externalAdj)
 	{
-		int cur;
-		if (seenByUser.containsKey(user))
-		{
-			cur = seenByUser.get(user);
-		}
-		else
-		{
-			cur = 0;
-		}
+		UserSight usOld = seenByUser.get(user);
+		if (usOld == null)
+			usOld = UserSight.DEF;
 
-		cur += adjustment;
-		if (cur == 0)
+		UserSight usNew = new UserSight();
+		usNew.internalCount = usOld.internalCount + internalAdj;
+		usNew.externalCount = usOld.externalCount + externalAdj;
+
+		assert usNew.internalCount >= 0;
+		assert usNew.externalCount >= 0;
+
+		if (usNew.isDefault())
+		{
 			seenByUser.remove(user);
+		}
 		else
-			seenByUser.put(user, cur);
+		{
+			seenByUser.put(user, usNew);
+		}
 	}
 
+	/**
+	 * The set of users who can see this region at any level.
+	 */
 	Set<String> usersWhoCanSeeThisRegion()
 	{
 		return seenByUser.keySet();

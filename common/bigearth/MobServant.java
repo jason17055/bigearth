@@ -19,7 +19,7 @@ public class MobServant
 	Map<CommodityType, Long> stock;
 	int nutrition;
 	int population;
-	Set<SimpleLocation> canSee;
+	Map<SimpleLocation, RegionSight> canSee;
 
 	transient Scheduler.Event wakeUp;
 	transient double totalMass;
@@ -33,7 +33,7 @@ public class MobServant
 		this.displayName = name;
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
 		this.population = 100; //default population
-		this.canSee = new HashSet<SimpleLocation>();
+		this.canSee = new HashMap<SimpleLocation, RegionSight>();
 	}
 
 	//implements BigEarthServant
@@ -508,28 +508,29 @@ public class MobServant
 		assert this.location instanceof SimpleLocation;
 		SimpleLocation newLoc = (SimpleLocation) this.location;
 
-		Set<SimpleLocation> newCanSee = new HashSet<SimpleLocation>();
-		newCanSee.add(newLoc);
+		Map<SimpleLocation, RegionSight> newCanSee = new HashMap<SimpleLocation, RegionSight>();
+		newCanSee.put(newLoc, RegionSight.INTERNAL);
 		for (int nid : getGeometry().getNeighbors(newLoc.regionId))
 		{
-			newCanSee.add(new SimpleLocation(nid));
+			newCanSee.put(new SimpleLocation(nid), RegionSight.EXTERNAL);
 		}
 
-		for (Iterator<SimpleLocation> it = canSee.iterator(); it.hasNext(); )
+		for (Iterator<Map.Entry<SimpleLocation,RegionSight> > it = canSee.entrySet().iterator(); it.hasNext(); )
 		{
-			SimpleLocation sl = it.next();
-			if (!newCanSee.contains(sl))
+			Map.Entry<SimpleLocation, RegionSight> entry = it.next();
+			SimpleLocation sl = entry.getKey();
+			if (!newCanSee.containsKey(sl))
 			{
 				it.remove();
 				lostSightOf(sl);
 			}
 		}
-		for (SimpleLocation sl : newCanSee)
+		for (SimpleLocation sl : newCanSee.keySet())
 		{
-			if (!canSee.contains(sl))
+			if (!canSee.containsKey(sl) || !canSee.get(sl).equals(newCanSee.get(sl)))
 			{
-				canSee.add(sl);
-				gainedSightOf(sl);
+				canSee.put(sl, newCanSee.get(sl));
+				gainedSightOf(sl, newCanSee.get(sl));
 			}
 		}
 	}
@@ -537,12 +538,12 @@ public class MobServant
 	void lostSightOf(SimpleLocation loc)
 	{
 		ShadowRegion otherRegion = getWorldMaster().getShadowRegion(loc.regionId);
-		otherRegion.mobSight(parentRegion.regionId, name, owner, false);
+		otherRegion.mobSight(name, owner, RegionSight.NONE);
 	}
 
-	void gainedSightOf(SimpleLocation loc)
+	void gainedSightOf(SimpleLocation loc, RegionSight sight)
 	{
 		ShadowRegion otherRegion = getWorldMaster().getShadowRegion(loc.regionId);
-		otherRegion.mobSight(parentRegion.regionId, name, owner, true);
+		otherRegion.mobSight(name, owner, sight);
 	}
 }
