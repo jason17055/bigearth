@@ -190,7 +190,7 @@ public class MakeWorld
 
 	void doOneStep()
 	{
-		world.doOneStep();
+		throw new Error("Not implemented");
 	}
 
 	void status(String message)

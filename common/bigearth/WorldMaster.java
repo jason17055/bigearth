@@ -13,7 +13,14 @@ public class WorldMaster
 	Map<String, RegionServant> mobs;
 	Scheduler scheduler;
 
+	/// Time when the current year started
+	long yearStarted;
+
+	/// The current year number.
 	int year;
+
+	Scheduler.Event endOfYearWakeup;
+
 	int lastSeqId;
 
 	public WorldMaster(WorldConfig config)
@@ -39,6 +46,11 @@ public class WorldMaster
 			String s = in.getCurrentName();
 			if (s.equals("year"))
 				year = in.nextIntValue(year);
+			else if (s.equals("yearStarted"))
+			{
+				in.nextToken();
+				yearStarted = in.getLongValue();
+			}
 			else if (s.equals("lastMobId") || s.equals("lastSeqId"))
 				lastSeqId = in.nextIntValue(0);
 			else if (s.equals("leaders"))
@@ -159,6 +171,7 @@ public class WorldMaster
 		JsonGenerator out = new JsonFactory().createJsonGenerator(f2, JsonEncoding.UTF8);
 		out.writeStartObject();
 		out.writeNumberField("year", year);
+		out.writeNumberField("yearStarted", yearStarted);
 		out.writeNumberField("gameTime", scheduler.currentTime());
 		out.writeNumberField("lastSeqId", lastSeqId);
 		out.writeFieldName("leaders");
@@ -184,9 +197,11 @@ public class WorldMaster
 		}
 	}
 
-	void doOneStep()
+	void doEndOfYear()
 	{
 		year++;
+		yearStarted = eventDispatchThread.currentTime();
+
 		for (RegionServant r : regions)
 		{
 			r.endOfYear_stage1();
@@ -335,6 +350,24 @@ public class WorldMaster
 		leader.sendNotification(n);
 	}
 
+	class EndOfYear implements Runnable
+	{
+		public void run()
+		{
+			endOfYearWakeup = null;
+			doEndOfYear();
+			scheduleEndOfYear();
+		}
+	}
+
+	void scheduleEndOfYear()
+	{
+		assert endOfYearWakeup == null;
+
+		long time = yearStarted + config.ticksPerYear;
+		endOfYearWakeup = scheduler.scheduleAt(new EndOfYear(), time);
+	}
+
 	EventDispatchThread eventDispatchThread;
 	public void start()
 	{
@@ -344,6 +377,8 @@ public class WorldMaster
 		{
 			regions[i].start();
 		}
+
+		scheduleEndOfYear();
 
 		eventDispatchThread = new EventDispatchThread(scheduler);
 		eventDispatchThread.start();
