@@ -339,12 +339,12 @@ public class Client
 	public void moveMobTo(String mobName, Location dest)
 		throws IOException
 	{
-		HttpURLConnection conn = makeRequest("POST", "/move");
+		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
+		HttpURLConnection conn = makeRequest("POST", "/move?" + qs);
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 
-		String x = "mob=" + URLEncoder.encode(mobName, "UTF-8")
-			+ "&dest=" + URLEncoder.encode(dest.toString(), "UTF-8");
+		String x = "dest=" + URLEncoder.encode(dest.toString(), "UTF-8");
 		byte [] xx = x.getBytes("UTF-8");
 
 		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -360,12 +360,12 @@ public class Client
 	public void setMobActivity(String mobName, String activityName)
 		throws IOException
 	{
-		HttpURLConnection conn = makeRequest("POST", "/orders");
+		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
+		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 
-		String x = "mob=" + URLEncoder.encode(mobName, "UTF-8")
-			+ "&activity=" + URLEncoder.encode(activityName, "UTF-8");
+		String x = "activity=" + URLEncoder.encode(activityName, "UTF-8");
 		byte [] xx = x.getBytes("UTF-8");
 
 		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -381,12 +381,12 @@ public class Client
 	public void takeCommodity(String mobName, CommodityType ct, long amt)
 		throws IOException
 	{
-		HttpURLConnection conn = makeRequest("POST", "/orders");
+		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
+		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 
-		String x = "mob=" + URLEncoder.encode(mobName, "UTF-8")
-			+ "&activity=take"
+		String x = "activity=take"
 			+ "&commodity=" + URLEncoder.encode(ct.name(), "UTF-8")
 			+ "&amount=" + amt;
 		byte [] xx = x.getBytes("UTF-8");
@@ -404,12 +404,12 @@ public class Client
 	public void dropCommodity(String mobName, CommodityType ct, long amt)
 		throws IOException
 	{
-		HttpURLConnection conn = makeRequest("POST", "/orders");
+		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
+		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 
-		String x = "mob=" + URLEncoder.encode(mobName, "UTF-8")
-			+ "&activity=drop"
+		String x = "activity=drop"
 			+ "&commodity=" + URLEncoder.encode(ct.name(), "UTF-8")
 			+ "&amount=" + amt;
 		byte [] xx = x.getBytes("UTF-8");
