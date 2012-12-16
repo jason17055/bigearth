@@ -17,6 +17,7 @@ class RegionServant
 	int waterLevel;
 	Map<String, MobServant> presentMobs;
 	CityServant city; //may be null
+	Set<SeenBy> seenBy;
 
 	/// Elevation as generated randomly by MakeWorld.
 	int elevation;
@@ -43,6 +44,7 @@ class RegionServant
 		this.presentMobs = new HashMap<String, MobServant>();
 		this.wildlife = new WildlifeServant(this);
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		this.seenBy = new HashSet<SeenBy>();
 	}
 
 	private void init()
@@ -588,5 +590,48 @@ class RegionServant
 	boolean hasCity()
 	{
 		return city != null;
+	}
+
+	static final class SeenBy
+	{
+		int regionId;
+		String objectName;
+
+		public SeenBy(int regionId, String objectName)
+		{
+			assert objectName != null;
+			this.regionId = regionId;
+			this.objectName = objectName;
+		}
+
+		public boolean equals(Object obj)
+		{
+			if (obj instanceof SeenBy)
+			{
+				SeenBy rhs = (SeenBy) obj;
+				return this.regionId == rhs.regionId &&
+					this.objectName.equals(rhs.objectName);
+			}
+			return false;
+		}
+
+		public int hashCode()
+		{
+			return objectName.hashCode();
+		}
+	}
+
+	//implements ShadowRegion
+	public void mobSight(int regionId, String mobName, boolean canSee)
+	{
+		SeenBy sb = new SeenBy(regionId, mobName);
+		if (canSee)
+		{
+			seenBy.add(sb);
+		}
+		else
+		{
+			seenBy.remove(sb);
+		}
 	}
 }

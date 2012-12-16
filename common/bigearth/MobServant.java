@@ -19,6 +19,7 @@ public class MobServant
 	Map<CommodityType, Long> stock;
 	int nutrition;
 	int population;
+	Set<SimpleLocation> canSee;
 
 	transient Scheduler.Event wakeUp;
 	transient double totalMass;
@@ -32,6 +33,7 @@ public class MobServant
 		this.displayName = name;
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
 		this.population = 100; //default population
+		this.canSee = new HashSet<SimpleLocation>();
 	}
 
 	//implements BigEarthServant
@@ -270,6 +272,11 @@ public class MobServant
 		}
 	}
 
+	private Geometry getGeometry()
+	{
+		return getWorldMaster().getGeometry();
+	}
+
 	private WorldMaster getWorldMaster()
 	{
 		return parentRegion.world;
@@ -470,5 +477,49 @@ public class MobServant
 		}
 
 		//TODO- inform everyone else who can see this mob
+	}
+
+	void updateVisibility()
+	{
+		assert canSee != null;
+		assert this.location instanceof SimpleLocation;
+		SimpleLocation newLoc = (SimpleLocation) this.location;
+
+		Set<SimpleLocation> newCanSee = new HashSet<SimpleLocation>();
+		newCanSee.add(newLoc);
+		for (int nid : getGeometry().getNeighbors(newLoc.regionId))
+		{
+			newCanSee.add(new SimpleLocation(nid));
+		}
+
+		for (Iterator<SimpleLocation> it = canSee.iterator(); it.hasNext(); )
+		{
+			SimpleLocation sl = it.next();
+			if (!newCanSee.contains(sl))
+			{
+				it.remove();
+				lostSightOf(sl);
+			}
+		}
+		for (SimpleLocation sl : newCanSee)
+		{
+			if (!canSee.contains(sl))
+			{
+				canSee.add(sl);
+				gainedSightOf(sl);
+			}
+		}
+	}
+
+	void lostSightOf(SimpleLocation loc)
+	{
+		ShadowRegion otherRegion = getWorldMaster().getShadowRegion(loc.regionId);
+		otherRegion.mobSight(parentRegion.regionId, name, false);
+	}
+
+	void gainedSightOf(SimpleLocation loc)
+	{
+		ShadowRegion otherRegion = getWorldMaster().getShadowRegion(loc.regionId);
+		otherRegion.mobSight(parentRegion.regionId, name, true);
 	}
 }

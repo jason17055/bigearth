@@ -342,6 +342,9 @@ public class WorldMaster
 		}
 
 		//TODO- inform everyone else who can see this mob
+
+		// update visibility
+		mob.updateVisibility();
 	}
 
 	/**
