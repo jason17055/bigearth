@@ -71,6 +71,10 @@ public class MobListModel
 		{
 			oldMobInfo.encumbrance = newMobInfo.encumbrance;
 		}
+		if (newMobInfo.hasFlag())
+		{
+			oldMobInfo.flag = newMobInfo.flag;
+		}
 		if (newMobInfo.hasHunger())
 		{
 			oldMobInfo.hunger = newMobInfo.hunger;

@@ -1092,6 +1092,7 @@ System.err.println(e);
 	}
 
 	static final int ACTIVITY_IND_SIZE = 16;
+	static final Dimension FLAG_IND_SIZE = new Dimension(16, 10);
 
 	void drawCity(Graphics2D gr, Point p, CityInfo city)
 	{
@@ -1132,6 +1133,15 @@ System.err.println(e);
 		}
 	}
 
+	void drawFlag(Graphics2D gr, Rectangle rect, Flag flag)
+	{
+		gr.setColor(flag == Flag.RED ? Color.RED :
+			flag == Flag.BLUE ? Color.BLUE : Color.WHITE);
+		gr.fill(rect);
+		gr.setColor(Color.BLACK);
+		gr.draw(rect);
+	}
+
 	void drawMob(Graphics2D gr, Point p, MobInfo mob)
 	{
 		assert gr != null;
@@ -1151,6 +1161,16 @@ System.err.println(e);
 			int width = img.getWidth(null);
 			int height = img.getHeight(null);
 			gr.drawImage(img, p.x - width/2, p.y - height/2, null);
+
+		Rectangle flagRect = new Rectangle(
+			p.x - width/2,
+			p.y - height/2,
+			FLAG_IND_SIZE.width,
+			FLAG_IND_SIZE.height);
+		if (mob.hasFlag() && mob.flag != Flag.NONE)
+		{
+			drawFlag(gr, flagRect, mob.flag);
+		}
 
 		Rectangle indRect = new Rectangle(
 			p.x + width/2 - ACTIVITY_IND_SIZE,

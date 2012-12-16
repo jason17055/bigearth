@@ -21,6 +21,7 @@ public class MobServant
 	int nutrition;
 	int population;
 	Map<SimpleLocation, RegionSight> canSee;
+	Flag flag;
 
 	transient Scheduler.Event wakeUp;
 	transient double totalMass;
@@ -35,6 +36,7 @@ public class MobServant
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
 		this.population = 100; //default population
 		this.canSee = new HashMap<SimpleLocation, RegionSight>();
+		this.flag = Flag.NONE;
 	}
 
 	//implements BigEarthServant
@@ -167,6 +169,8 @@ public class MobServant
 				in.nextToken();
 				m.population = in.getIntValue();
 			}
+			else if (s.equals("flag"))
+				m.flag = Flag.valueOf(in.nextTextValue());
 			else
 			{
 				in.nextToken();
@@ -207,6 +211,7 @@ public class MobServant
 		CommoditiesHelper.writeCommodities(stock, out);
 		out.writeNumberField("nutrition", nutrition);
 		out.writeNumberField("population", population);
+		out.writeStringField("flag", flag.name());
 		out.writeEndObject();
 	}
 
@@ -226,6 +231,7 @@ public class MobServant
 			m.activity = this.activity.activity;
 		else
 			m.activity = "";
+		m.flag = this.flag;
 		return m;
 	}
 
@@ -241,6 +247,7 @@ public class MobServant
 		else
 			m.activity = "";
 		m.activityStarted = this.activityStarted;
+		m.flag = this.flag;
 
 		double level = getEncumbranceFactor();
 		m.encumbrance = (
@@ -429,6 +436,12 @@ public class MobServant
 		updateVisibility();
 	}
 
+	void startSettingFlag()
+	{
+		if (activity.flag != null)
+			this.flag = activity.flag;
+	}
+
 	void startTaking()
 	{
 	final long TIME_PER_UNIT_TOOK = 50;
@@ -474,6 +487,10 @@ public class MobServant
 		else if (activity.activity.equals("build-city"))
 		{
 			startBuildingCity();
+		}
+		else if (activity.activity.equals("set-flag"))
+		{
+			startSettingFlag();
 		}
 		else
 		{

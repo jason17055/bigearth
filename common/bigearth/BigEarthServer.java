@@ -537,6 +537,7 @@ class SetActivityServlet extends BigEarthServlet
 		String commodityName = request.getParameter("commodity");
 		String amountStr = request.getParameter("amount");
 		String destStr = request.getParameter("destination");
+		String flagStr = request.getParameter("flag");
 
 		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
 		try
@@ -565,6 +566,8 @@ class SetActivityServlet extends BigEarthServlet
 			c.setAmount(Long.parseLong(amountStr));
 		if (destStr != null)
 			c.setDestination(LocationHelper.parse(destStr, server.world.config));
+		if (flagStr != null)
+			c.setFlag(Flag.valueOf(flagStr));
 
 		// make the actual change
 		RegionServant svt = server.world.getRegionForMob(mobName);

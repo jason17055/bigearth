@@ -211,10 +211,17 @@ public class MainWindow extends JFrame
 			}});
 		ordersMenu.add(menuItem);
 
-		menuItem = new JMenuItem("Inventory");
+		menuItem = new JMenuItem("Inventory...");
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
 				onInventoryClicked();
+			}});
+		ordersMenu.add(menuItem);
+
+		menuItem = new JMenuItem("Flag...");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onFlagClicked();
 			}});
 		ordersMenu.add(menuItem);
 
@@ -348,6 +355,44 @@ public class MainWindow extends JFrame
 	{
 		JOptionPane.showMessageDialog(this, message,
 			mobName, JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	void onFlagClicked()
+	{
+		if (!view.selection.isMob())
+			return;
+
+		Flag [] flagList = new Flag[] {
+			Flag.NONE, Flag.RED, Flag.BLUE
+			};
+		JComboBox flagSelect = new JComboBox(flagList);
+		flagSelect.setSelectedIndex(0);
+
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Flag"),
+			flagSelect
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Flag",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		try
+		{
+			Flag flag = flagList[flagSelect.getSelectedIndex()];
+			client.setMobFlag(view.selection.getMob(), flag);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	void onInventoryClicked()

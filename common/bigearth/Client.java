@@ -405,6 +405,29 @@ public class Client
 			interpretError(conn);
 	}
 
+	public void setMobFlag(String mobName, Flag flag)
+		throws IOException
+	{
+		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
+		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+
+		String x = "activity=set-flag"
+			+ "&flag=" + URLEncoder.encode(flag.name(), "UTF-8");
+		byte [] xx = x.getBytes("UTF-8");
+
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
+		OutputStream out = conn.getOutputStream();
+		out.write(xx);
+		out.close();
+
+		int status = conn.getResponseCode();
+		if (status != 204)
+			interpretError(conn);
+	}
+
 	public void setMobActivity(String mobName, String activityName)
 		throws IOException
 	{

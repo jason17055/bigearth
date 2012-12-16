@@ -15,6 +15,7 @@ public class MobInfo
 	Map<CommodityType, Long> stock;
 	EncumbranceLevel encumbrance;
 	HungerStatus hunger;
+	Flag flag;
 
 	MobInfo()
 	{
@@ -38,6 +39,11 @@ public class MobInfo
 	public boolean hasEncumbrance()
 	{
 		return encumbrance != null;
+	}
+
+	public boolean hasFlag()
+	{
+		return flag != null;
 	}
 
 	public boolean hasHunger()
@@ -92,6 +98,8 @@ public class MobInfo
 			}
 			else if (s.equals("stock"))
 				m.stock = CommoditiesHelper.parseCommodities(in);
+			else if (s.equals("flag"))
+				m.flag = Flag.valueOf(in.nextTextValue());
 			else
 			{
 				in.nextToken();
@@ -130,6 +138,8 @@ public class MobInfo
 			out.writeStringField("encumbrance", encumbrance.name());
 		if (hunger != null)
 			out.writeStringField("hunger", hunger.name());
+		if (flag != null)
+			out.writeStringField("flag", flag.name());
 		out.writeEndObject();
 	}
 

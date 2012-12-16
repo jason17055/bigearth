@@ -10,6 +10,7 @@ public class Command
 	CommodityType commodity;
 	long amount;
 	boolean amountIsSpecified;
+	Flag flag;
 
 	private Command()
 	{
@@ -41,6 +42,11 @@ public class Command
 		this.destination = destination;
 	}
 
+	public void setFlag(Flag flag)
+	{
+		this.flag = flag;
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{
@@ -52,6 +58,8 @@ public class Command
 			out.writeNumberField("amount", amount);
 		if (destination != null)
 			out.writeStringField("destination", destination.toString());
+		if (flag != null)
+			out.writeStringField("flag", flag.name());
 		out.writeEndObject();
 	}
 
@@ -88,6 +96,8 @@ public class Command
 			}
 			else if (s.equals("destination"))
 				c.destination = LocationHelper.parse(in.nextTextValue(), world);
+			else if (s.equals("flag"))
+				c.flag = Flag.valueOf(in.nextTextValue());
 			else
 			{
 				in.nextToken();
