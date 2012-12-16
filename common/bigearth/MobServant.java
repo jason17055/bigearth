@@ -45,6 +45,8 @@ public class MobServant
 			// an activity has been started; figure out when it should end
 			scheduleWakeUp();
 		}
+
+		updateVisibility();
 	}
 
 	void scheduleWakeUp()
