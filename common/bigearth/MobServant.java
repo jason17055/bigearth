@@ -457,7 +457,7 @@ public class MobServant
 
 	void onActivityStarted()
 	{
-		if (activity.activity.equals("hunt"))
+		if (activity.isActivity("hunt"))
 		{
 			// animals per year, given the size of this mob
 			double huntingRate = parentRegion.wildlife.calculateHuntingRate(this.population);
@@ -468,27 +468,27 @@ public class MobServant
 				ONE_YEAR / huntingRate
 				);
 		}
-		else if (activity.activity.equals("gather-wood"))
+		else if (activity.isActivity("gather-wood"))
 		{
 			activityRequiredTime = 5000;
 		}
-		else if (activity.activity.equals("drop"))
+		else if (activity.isActivity("drop"))
 		{
 			startDropping();
 		}
-		else if (activity.activity.equals("move"))
+		else if (activity.isActivity("move"))
 		{
 			startMoving();
 		}
-		else if (activity.activity.equals("take"))
+		else if (activity.isActivity("take"))
 		{
 			startTaking();
 		}
-		else if (activity.activity.equals("build-city"))
+		else if (activity.isActivity("build-city"))
 		{
 			startBuildingCity();
 		}
-		else if (activity.activity.equals("set-flag"))
+		else if (activity.isActivity("set-flag"))
 		{
 			startSettingFlag();
 		}
@@ -500,15 +500,15 @@ public class MobServant
 
 	void onActivityFinished()
 	{
-		if (activity.activity.equals("hunt"))
+		if (activity.isActivity("hunt"))
 		{
 			completedHunting();
 		}
-		else if (activity.activity.equals("gather-wood"))
+		else if (activity.isActivity("gather-wood"))
 		{
 			completedGatheringWood();
 		}
-		else if (activity.activity.equals("build-city"))
+		else if (activity.isActivity("build-city"))
 		{
 			completedBuildingCity();
 		}

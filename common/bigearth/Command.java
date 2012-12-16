@@ -21,6 +21,11 @@ public class Command
 		this.activity = activity;
 	}
 
+	public boolean isActivity(String activity)
+	{
+		return this.activity.equals(activity);
+	}
+
 	public static Command newInstance(String activityName)
 	{
 		return new Command(activityName);
