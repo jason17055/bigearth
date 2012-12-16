@@ -79,7 +79,8 @@ public class MobServant
 
 	public long getStock(CommodityType ct)
 	{
-		return stock.get(ct);
+		Long x = stock.get(ct);
+		return x != null ? x.longValue() : 0;
 	}
 
 	public boolean hasActivity()
