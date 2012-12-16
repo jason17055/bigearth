@@ -15,7 +15,9 @@ public class CityServant
 	Map<CommodityType, Long> stock;
 	Map<CityJob, Integer> workers;
 	Map<CityJob, Double> workerRates;
+	Map<CityJob, Double> production;
 	int [] children;
+	long productionLastUpdated; //timestamp
 
 	CityServant(RegionServant parentRegion)
 	{
@@ -23,6 +25,7 @@ public class CityServant
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
 		this.workers = new HashMap<CityJob, Integer>();
 		this.workerRates = new HashMap<CityJob, Double>();
+		this.production = new HashMap<CityJob, Double>();
 		this.children = new int[getWorldMaster().config.childYears];
 	}
 
@@ -215,6 +218,13 @@ public class CityServant
 				parseWorkers(in);
 			else if (s.equals("children"))
 				parseChildren(in);
+			else if (s.equals("production"))
+				parseProduction(in);
+			else if (s.equals("productionLastUpdated"))
+			{
+				in.nextToken();
+				productionLastUpdated = in.getLongValue();
+			}
 			else
 			{
 				in.nextToken();
@@ -248,6 +258,26 @@ public class CityServant
 		}
 	}
 
+	private void parseProduction(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+			throw new InputMismatchException();
+
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			CityJob job = CityJob.valueOf(in.getCurrentName());
+			in.nextToken();
+			double amt = in.getDoubleValue();
+
+			production.put(job, amt);
+		}
+
+		if (in.getCurrentToken() != JsonToken.END_OBJECT)
+			throw new InputMismatchException();
+	}
+
 	private void parseWorkers(JsonParser in)
 		throws IOException
 	{
@@ -268,6 +298,28 @@ public class CityServant
 			throw new InputMismatchException();
 	}
 
+	private void updateProduction()
+	{
+		long curTime = EventDispatchThread.currentTime();
+		long elapsed = curTime - productionLastUpdated;
+
+		if (elapsed <= 0)
+			return;
+
+		double elapsedYears = ((double)elapsed) / ((double)parentRegion.world.config.getTicksPerYear());
+		for (CityJob job : workers.keySet())
+		{
+			double rate = workerRates.get(job);
+			double productionIncrease = rate * elapsedYears;
+
+			Double oldProduction = production.get(job);
+			double newProduction = (oldProduction != null ? oldProduction.doubleValue() : 0.0)
+				+ productionIncrease;
+			production.put(job, newProduction);
+		}
+		productionLastUpdated = curTime;
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{
@@ -279,6 +331,9 @@ public class CityServant
 		CommoditiesHelper.writeCommodities(stock, out);
 		out.writeFieldName("workers");
 		writeWorkers(out);
+		out.writeFieldName("production");
+		writeProduction(out);
+		out.writeNumberField("productionLastUpdated", productionLastUpdated);
 		out.writeFieldName("children");
 		writeChildren(out);
 		out.writeEndObject();
@@ -292,6 +347,19 @@ public class CityServant
 		{
 			out.writeFieldName(job.name());
 			int amt = workers.get(job);
+			out.writeNumber(amt);
+		}
+		out.writeEndObject();
+	}
+
+	private void writeProduction(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		for (CityJob job : production.keySet())
+		{
+			out.writeFieldName(job.name());
+			double amt = production.get(job);
 			out.writeNumber(amt);
 		}
 		out.writeEndObject();
@@ -311,6 +379,8 @@ public class CityServant
 	//implements EndOfYear
 	public void endOfYear_stage1()
 	{
+		updateProduction();
+
 		// TODO- check child care
 
 		
