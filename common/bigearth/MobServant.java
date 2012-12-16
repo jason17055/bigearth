@@ -537,12 +537,12 @@ public class MobServant
 	void lostSightOf(SimpleLocation loc)
 	{
 		ShadowRegion otherRegion = getWorldMaster().getShadowRegion(loc.regionId);
-		otherRegion.mobSight(parentRegion.regionId, name, false);
+		otherRegion.mobSight(parentRegion.regionId, name, owner, false);
 	}
 
 	void gainedSightOf(SimpleLocation loc)
 	{
 		ShadowRegion otherRegion = getWorldMaster().getShadowRegion(loc.regionId);
-		otherRegion.mobSight(parentRegion.regionId, name, true);
+		otherRegion.mobSight(parentRegion.regionId, name, owner, true);
 	}
 }

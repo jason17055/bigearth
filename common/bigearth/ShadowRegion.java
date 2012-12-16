@@ -8,5 +8,5 @@ interface ShadowRegion
 {
 	BiomeType getBiome();
 	void importWildlife(int newWildlife);
-	void mobSight(int regionId, String mobName, boolean canSee);
+	void mobSight(int regionId, String mobName, String owner, boolean canSee);
 }

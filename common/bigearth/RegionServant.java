@@ -17,7 +17,12 @@ class RegionServant
 	int waterLevel;
 	Map<String, MobServant> presentMobs;
 	CityServant city; //may be null
-	Set<SeenBy> seenBy;
+
+	/// Indexed by <mobname,owner>.
+	Set<SeenBy> seenByMob;
+
+	/// Indexed by username. Values are the number of mobs contributing to the sight.
+	Map<String,Integer> seenByUser;
 
 	/// Elevation as generated randomly by MakeWorld.
 	int elevation;
@@ -44,7 +49,8 @@ class RegionServant
 		this.presentMobs = new HashMap<String, MobServant>();
 		this.wildlife = new WildlifeServant(this);
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
-		this.seenBy = new HashSet<SeenBy>();
+		this.seenByMob = new HashSet<SeenBy>();
+		this.seenByUser = new HashMap<String, Integer>();
 	}
 
 	private void init()
@@ -596,12 +602,24 @@ class RegionServant
 	{
 		int regionId;
 		String objectName;
+		String owner;
 
-		public SeenBy(int regionId, String objectName)
+		public SeenBy(int regionId, String objectName, String owner)
 		{
 			assert objectName != null;
 			this.regionId = regionId;
 			this.objectName = objectName;
+			this.owner = owner;
+		}
+
+		static boolean isEqual(String s1, String s2)
+		{
+			if (s1 == s2)
+				return true;
+			else if (s1 == null || s2 == null)
+				return false;
+			else	
+				return s1.equals(s2);
 		}
 
 		public boolean equals(Object obj)
@@ -610,7 +628,8 @@ class RegionServant
 			{
 				SeenBy rhs = (SeenBy) obj;
 				return this.regionId == rhs.regionId &&
-					this.objectName.equals(rhs.objectName);
+					this.objectName.equals(rhs.objectName) &&
+					isEqual(this.owner, rhs.owner);
 			}
 			return false;
 		}
@@ -622,30 +641,54 @@ class RegionServant
 	}
 
 	//implements ShadowRegion
-	public void mobSight(int regionId, String mobName, boolean canSee)
+	public void mobSight(int regionId, String mobName, String owner, boolean canSee)
 	{
-		SeenBy sb = new SeenBy(regionId, mobName);
+		SeenBy sb = new SeenBy(regionId, mobName, owner);
 		if (canSee)
 		{
-			seenBy.add(sb);
+			if (!seenByMob.contains(sb))
+			{
+				seenByMob.add(sb);
+				if (owner != null)
+				{
+					userSight(owner, 1);
+				}
+			}
 		}
 		else
 		{
-			seenBy.remove(sb);
+			if (seenByMob.contains(sb))
+			{
+				seenByMob.remove(sb);
+				if (owner != null)
+				{
+					userSight(owner, -1);
+				}
+			}
 		}
+	}
+
+	void userSight(String user, int adjustment)
+	{
+		int cur;
+		if (seenByUser.containsKey(user))
+		{
+			cur = seenByUser.get(user);
+		}
+		else
+		{
+			cur = 0;
+		}
+
+		cur += adjustment;
+		if (cur == 0)
+			seenByUser.remove(user);
+		else
+			seenByUser.put(user, cur);
 	}
 
 	Set<String> usersWhoCanSeeThisRegion()
 	{
-		HashSet<String> users = new HashSet<String>();
-
-		for (SeenBy sb : seenBy)
-		{
-			String mobName = sb.objectName;
-			
-			//TODO
-		}
-
-		return users;
+		return seenByUser.keySet();
 	}
 }
