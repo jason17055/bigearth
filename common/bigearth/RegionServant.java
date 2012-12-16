@@ -6,7 +6,7 @@ import javax.vecmath.*;
 import com.fasterxml.jackson.core.*;
 
 class RegionServant
-	implements ShadowRegion, Saveable
+	implements ShadowRegion, Saveable, EndOfYear
 {
 	WorldMaster world;
 	int regionId;
@@ -79,14 +79,20 @@ class RegionServant
 		dirty = true;
 	}
 
-	void endOfYear_stage1()
+	//implements EndOfYear
+	public void endOfYear_stage1()
 	{
-		wildlife.doWildlifeMaintenance_stage1();
+		wildlife.endOfYear_stage1();
+		if (city != null)
+			city.endOfYear_stage1();
 	}
 
-	void endOfYear_cleanup()
+	//implements EndOfYear
+	public void endOfYear_cleanup()
 	{
-		wildlife.doWildlifeMaintenance_cleanup();
+		wildlife.endOfYear_cleanup();
+		if (city != null)
+			city.endOfYear_cleanup();
 	}
 
 	int findNeighbor(Geometry.VertexId cornerVtx)

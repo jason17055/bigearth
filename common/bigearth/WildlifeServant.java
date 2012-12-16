@@ -1,6 +1,7 @@
 package bigearth;
 
 class WildlifeServant
+	implements EndOfYear
 {
 	transient RegionServant parentRegion;
 	transient WorldMaster world;
@@ -60,7 +61,8 @@ class WildlifeServant
 		return v > 0 ? v : 0;
 	}
 
-	void doWildlifeMaintenance_stage1()
+	//implements EndOfYear
+	public void endOfYear_stage1()
 	{
 		final double wildlifeQuota = parentRegion.getBiome().getWildlifeQuota();
 		double biomeTolerance = 1.0 - Math.pow((WILDLIFE_PREFERRED_TEMPERATURE - parentRegion.temperature) / WILDLIFE_TEMPERATURE_TOLERANCE, 2.0);
@@ -107,7 +109,8 @@ class WildlifeServant
 		}
 	}
 
-	void doWildlifeMaintenance_cleanup()
+	//implements EndOfYear
+	public void endOfYear_cleanup()
 	{
 if (false)
 {

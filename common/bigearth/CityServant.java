@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 
 public class CityServant
+	implements EndOfYear
 {
 	transient RegionServant parentRegion;
 
@@ -131,5 +132,15 @@ public class CityServant
 		CommoditiesHelper.writeCommodities(stock, out);
 		out.writeNumberField("population", population);
 		out.writeEndObject();
+	}
+
+	//implements EndOfYear
+	public void endOfYear_stage1()
+	{
+	}
+
+	//implements EndOfYear
+	public void endOfYear_cleanup()
+	{
 	}
 }
