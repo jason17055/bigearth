@@ -154,7 +154,6 @@ public class BigEarthServer
 		context.addServlet(new ServletHolder(new GetEventsServlet(this)), "/events");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
 		context.addServlet(new ServletHolder(new GetMyMobsServlet(this)), "/my/mobs");
-		context.addServlet(new ServletHolder(new MoveMobServlet(this)), "/move");
 		context.addServlet(new ServletHolder(new SetActivityServlet(this)), "/orders");
 
 		httpServer.start();
@@ -512,63 +511,6 @@ class GetMapServlet extends BigEarthServlet
 	}
 }
 
-class MoveMobServlet extends BigEarthServlet
-{
-	MoveMobServlet(BigEarthServer server)
-	{
-		super(server);
-	}
-
-	@Override
-	public void doPost(HttpServletRequest request, HttpServletResponse response)
-		throws IOException, ServletException
-	{
-		Session s = checkSession(request, response);
-		if (s == null)
-			return;
-
-		String mobName = request.getParameter("mob");
-		String destStr = request.getParameter("dest");
-		Location dest = LocationHelper.parse(destStr, server.world.config);
-
-		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
-		try
-		{
-
-		// check that the user is authorized to control the specified mob
-
-		MobServant mob = server.world.getMob(mobName);
-		if (mob == null)
-		{
-			doFailure(response, HttpServletResponse.SC_NOT_FOUND, "Invalid mob");
-			return;
-		}
-
-		if (mob.owner == null || !mob.owner.equals(s.user))
-		{
-			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-			return;
-		}
-
-		// construct a command object
-		Command c = Command.newInstance("move");
-		c.setDestination(dest);
-
-		// dispatch to the mob
-		RegionServant svt = server.world.getRegionForMob(mobName);
-		svt.mobSetActivity(mobName, c);
-
-		// report success
-		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-
-		}
-		finally
-		{
-			lock.release();
-		}
-	}
-}
-
 class SetActivityServlet extends BigEarthServlet
 {
 	SetActivityServlet(BigEarthServer server)
@@ -588,6 +530,7 @@ class SetActivityServlet extends BigEarthServlet
 		String activityName = request.getParameter("activity");
 		String commodityName = request.getParameter("commodity");
 		String amountStr = request.getParameter("amount");
+		String destStr = request.getParameter("destination");
 
 		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
 		try
@@ -614,6 +557,8 @@ class SetActivityServlet extends BigEarthServlet
 			c.setCommodityType(CommodityType.valueOf(commodityName));
 		if (amountStr != null)
 			c.setAmount(Long.parseLong(amountStr));
+		if (destStr != null)
+			c.setDestination(LocationHelper.parse(destStr, server.world.config));
 
 		// make the actual change
 		RegionServant svt = server.world.getRegionForMob(mobName);

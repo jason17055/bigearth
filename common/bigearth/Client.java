@@ -340,11 +340,12 @@ public class Client
 		throws IOException
 	{
 		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
-		HttpURLConnection conn = makeRequest("POST", "/move?" + qs);
+		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 
-		String x = "dest=" + URLEncoder.encode(dest.toString(), "UTF-8");
+		String x = "activity=move"
+			+ "&destination=" + URLEncoder.encode(dest.toString(), "UTF-8");
 		byte [] xx = x.getBytes("UTF-8");
 
 		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
