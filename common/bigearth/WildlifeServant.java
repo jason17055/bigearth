@@ -224,16 +224,70 @@ class WildlifeServant
 		}
 	}
 
-	double chanceOfCatchingSheep()
+	public double getChanceOfDomestication(CommodityType type)
 	{
-		// sheep are easy to catch
-		return 0.85;
+		switch(type)
+		{
+		case SHEEP: return 0.85; //sheep are easy to catch
+		case PIG: return 0.2;    //pigs are harder
+		default:
+			return 0.0;
+		}
 	}
 
-	double chanceOfCatchingPig()
+	CommodityType pickOneRandomAnimal()
 	{
-		// pigs are hard to catch
-		return 0.2;
+		RouletteWheel<CommodityType> r = new RouletteWheel<CommodityType>();
+		for (CommodityType type : wildlifeByType.keySet())
+		{
+			double fitness = getWildlife(type);
+			r.add(type, fitness);
+		}
+		return r.next();
+	}
+
+	Map<CommodityType, Integer> takeHuntingYield(int numAnimals)
+	{
+		final int BATCHES = 17;
+
+		Map<CommodityType, Integer> rv = new HashMap<CommodityType, Integer>();
+		int divisor = BATCHES;
+		while (numAnimals > 0)
+		{
+			CommodityType animal = pickOneRandomAnimal();
+			if (animal == null)
+			{
+				// no animals left!
+				return rv;
+			}
+
+			int avail = getWildlife(animal);
+			int wanted = (numAnimals + divisor - 1) / divisor;
+			if (wanted > numAnimals)
+				wanted = numAnimals;
+			if (wanted > avail)
+				wanted = avail;
+
+			numAnimals -= wanted;
+			wildlifeByType.get(animal).hunted += wanted;
+			Integer x = rv.get(animal);
+			rv.put(animal, x != null ? (x.intValue()+wanted) : wanted);
+
+			divisor = (divisor > 1 ? divisor-1 : 0);
+		}
+
+		return rv;
+	}
+
+	long meatPerHead(CommodityType type)
+	{
+		switch(type)
+		{
+		case SHEEP: return 2;
+		case PIG: return 3;
+		default:
+			return 1;
+		}
 	}
 
 	void parse(JsonParser in)

@@ -29,6 +29,27 @@ public class CityServant
 		this.children = new int[getWorldMaster().config.childYears];
 	}
 
+	public void addCommodity(CommodityType ct, long amount)
+	{
+		assert stock != null;
+
+		if (amount == 0)
+			return;
+
+		assert amount > 0;
+
+		if (stock.containsKey(ct))
+		{
+			long amt = stock.get(ct);
+			amt += amount;
+			stock.put(ct, amt);
+		}
+		else
+		{
+			stock.put(ct, amount);
+		}
+	}
+
 	public void addWorkers(int amount)
 	{
 		addWorkers(amount, CityJob.IDLE);
@@ -388,12 +409,26 @@ public class CityServant
 
 	private void endOfYear_hunting()
 	{
+		final WildlifeServant wildlife = parentRegion.wildlife;
+
 		double manYears = getProduction(CityJob.HUNT);
 		double huntingYield = parentRegion.wildlife.calculateHuntingRate(manYears);
 		int numAnimals = (int) Math.floor(huntingYield);
 		assert numAnimals >= 0;
 
-		//TODO- add meat (and maybe some live animals) to the city's stock
+		Map<CommodityType, Integer> yield = wildlife.takeHuntingYield(numAnimals);
+		for (CommodityType type : yield.keySet())
+		{
+			int num = yield.get(type);
+			double p = wildlife.getChanceOfDomestication(type);
+
+			PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(num, p);
+			int numCaptured = d.nextVariate();
+			int numKilled = num - numCaptured;
+
+			addCommodity(type, numCaptured);
+			addCommodity(CommodityType.MEAT, wildlife.meatPerHead(type) * numKilled);
+		}
 
 		production.remove(CityJob.HUNT);
 	}

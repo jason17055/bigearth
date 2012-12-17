@@ -542,35 +542,11 @@ public class MobServant
 	{
 		WildlifeServant wildlife = parentRegion.wildlife;
 
-		int numSheep = wildlife.getWildlife(CommodityType.SHEEP);
-		int numPigs = wildlife.getWildlife(CommodityType.PIG);
-		int numTotal = wildlife.getTotalWildlife();
+		CommodityType typeHunted = wildlife.pickOneRandomAnimal();
+		wildlife.wildlifeByType.get(typeHunted).hunted++;
 
-		assert numTotal >= numSheep + numPigs;
-
-		double r = Math.random();
-		if (r < ((double)numSheep / (double)numTotal))
-		{
-			// hunted a sheep
-			wildlife.wildlifeByType.get(CommodityType.SHEEP).hunted++;
-
-			boolean capturedAlive = (Math.random() < wildlife.chanceOfCatchingSheep());
-			this.addCommodity(capturedAlive ? CommodityType.SHEEP : CommodityType.MEAT, 1);
-		}
-		else if (r < ((double)(numSheep+numPigs) / (double)numTotal))
-		{
-			// hunted a pig
-			wildlife.wildlifeByType.get(CommodityType.PIG).hunted++;
-			boolean capturedAlive = (Math.random() < wildlife.chanceOfCatchingPig());
-			this.addCommodity(capturedAlive ? CommodityType.PIG : CommodityType.MEAT, 1);
-		}
-		else
-		{
-			// hunted game
-			assert wildlife.wildlifeByType.containsKey(CommodityType.WILDLIFE);
-			wildlife.wildlifeByType.get(CommodityType.WILDLIFE).hunted++;
-			this.addCommodity(CommodityType.MEAT, 1);
-		}
+		boolean capturedAlive = (Math.random() < wildlife.getChanceOfDomestication(typeHunted));
+		this.addCommodity(capturedAlive ? typeHunted : CommodityType.MEAT, 1);
 	}
 
 	private void completedGatheringWood()
