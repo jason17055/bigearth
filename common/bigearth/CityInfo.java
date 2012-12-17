@@ -12,6 +12,8 @@ public class CityInfo
 	Map<CommodityType, Long> stock;
 	int population;
 	boolean populationIsKnown;
+	int children;
+	boolean childrenIsKnown;
 
 	CityInfo()
 	{
@@ -23,6 +25,11 @@ public class CityInfo
 
 		Long x = stock.get(ct);
 		return x != null ? x.longValue() : 0;
+	}
+
+	public boolean hasChildren()
+	{
+		return childrenIsKnown;
 	}
 
 	public boolean hasDisplayName()
@@ -50,6 +57,12 @@ public class CityInfo
 		return stock != null;
 	}
 
+	public void setChildren(int children)
+	{
+		this.children = children;
+		this.childrenIsKnown = true;
+	}
+
 	public void setPopulation(int population)
 	{
 		this.population = population;
@@ -73,7 +86,12 @@ public class CityInfo
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			if (s.equals("displayName"))
+			if (s.equals("children"))
+			{
+				in.nextToken();
+				setChildren(in.getIntValue());
+			}
+			else if (s.equals("displayName"))
 				displayName = in.nextTextValue();
 			else if (s.equals("owner"))
 				owner = in.nextTextValue();
@@ -102,6 +120,8 @@ public class CityInfo
 		throws IOException
 	{
 		out.writeStartObject();
+		if (hasChildren())
+			out.writeNumberField("children", children);
 		if (hasDisplayName())
 			out.writeStringField("displayName", displayName);
 		if (hasLocation())

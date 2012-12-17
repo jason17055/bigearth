@@ -153,18 +153,29 @@ public class CityServant
 		}
 	}
 
-	int getPopulation()
+	int getAdults()
+	{
+		int sum = 0;
+		for (Integer i : workers.values())
+		{
+			sum += i.intValue();
+		}
+		return sum;
+	}
+
+	int getChildren()
 	{
 		int sum = 0;
 		for (int i = 0; i < children.length; i++)
 		{
 			sum += children[i];
 		}
-		for (Integer i : workers.values())
-		{
-			sum += i.intValue();
-		}
 		return sum;
+	}
+
+	int getPopulation()
+	{
+		return getChildren() + getAdults();
 	}
 
 	int getWorkersInJob(CityJob job)
@@ -203,6 +214,7 @@ public class CityServant
 		CityInfo ci = new CityInfo();
 		ci.displayName = displayName;
 		ci.location = location;
+		ci.setChildren(getChildren());
 		ci.setPopulation(getPopulation());
 		ci.stock = CommoditiesHelper.makeClone(this.stock);
 		return ci;
@@ -398,14 +410,45 @@ public class CityServant
 		out.writeEndArray();
 	}
 
+	int getPopulationCapacity()
+	{
+		//FIXME- make this based on housing
+		return 200;
+	}
+
 	//implements EndOfYear
 	public void endOfYear_stage1()
 	{
 		updateProduction();
 
-		// TODO- check child care
-
+		endOfYear_children();
 		endOfYear_hunting();
+	}
+
+	private void endOfYear_children()
+	{
+		// TODO- check child care supply
+
+		//
+		// bring forward growing children
+		//
+		int newAdults = children[children.length-1];
+		for (int i = children.length - 1; i > 0; i--)
+		{
+			children[i] = children[i-1];
+		}
+		children[0] = 0;
+		addWorkers(newAdults);
+
+		//
+		// calculate new births
+		//
+		int capacity = getPopulationCapacity();
+		double housingUsage = (double)getPopulation() / (double)(capacity > 0 ? capacity : 1);
+		double coreBirthRate = 0.125 + 0.04 * (Math.random() * 2 - 1);
+		double birthRate = coreBirthRate / (1 + Math.exp(-(0.85 - housingUsage) * 12.0));
+		int births = (int) Math.floor(getAdults() * birthRate);
+		children[0] = births;
 	}
 
 	private void endOfYear_hunting()

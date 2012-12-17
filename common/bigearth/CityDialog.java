@@ -14,6 +14,7 @@ public class CityDialog extends JDialog
 
 	JLabel nameLbl;
 	JLabel populationLbl;
+	JLabel childrenLbl;;
 	JLabel meatLbl;
 	JLabel sheepLbl;
 	JLabel pigLbl;
@@ -45,22 +46,27 @@ public class CityDialog extends JDialog
 		nameLbl = new JLabel();
 		mainPane.add(nameLbl, c2);
 
-		c1.gridy = c2.gridy = 1;
+		c1.gridy = ++c2.gridy;
 		mainPane.add(new JLabel("Population"), c1);
 		populationLbl = new JLabel();
 		mainPane.add(populationLbl, c2);
 
-		c1.gridy = c2.gridy = 2;
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Children"), c1);
+		childrenLbl = new JLabel();
+		mainPane.add(childrenLbl, c2);
+
+		c1.gridy = ++c2.gridy;
 		mainPane.add(new JLabel("Meat"), c1);
 		meatLbl = new JLabel();
 		mainPane.add(meatLbl, c2);
 
-		c1.gridy = c2.gridy = 3;
+		c1.gridy = ++c2.gridy;
 		mainPane.add(new JLabel("Sheep"), c1);
 		sheepLbl = new JLabel();
 		mainPane.add(sheepLbl, c2);
 
-		c1.gridy = c2.gridy = 4;
+		c1.gridy = ++c2.gridy;
 		mainPane.add(new JLabel("Pig"), c1);
 		pigLbl = new JLabel();
 		mainPane.add(pigLbl, c2);
@@ -102,6 +108,8 @@ public class CityDialog extends JDialog
 			nameLbl.setText(city.displayName);
 			populationLbl.setText(city.hasPopulation() ?
 				Integer.toString(city.population) : null);
+			childrenLbl.setText(city.hasChildren() ?
+				Integer.toString(city.children) : null);
 
 			meatLbl.setText(city.hasStock() ?
 				Long.toString(city.getStock(CommodityType.MEAT)) : null);
