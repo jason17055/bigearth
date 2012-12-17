@@ -78,9 +78,59 @@ class WildlifeServant
 		}
 	}
 
+	private double getWildlifeQuota(CommodityType type, BiomeType biome)
+	{
+		if (type == CommodityType.SHEEP)
+		{
+			switch (biome)
+			{
+			case GRASSLAND: return 1000;
+			case FOREST: return 100;
+			case SWAMP: return 50;
+			case JUNGLE: return 100;
+			case MOUNTAIN: return 200;
+			case HILLS: return 500;
+			case PLAINS: return 1000;
+			default: return 0;
+			}
+		}
+		else if (type == CommodityType.PIG)
+		{
+			switch (biome)
+			{
+			case GRASSLAND: return 750;
+			case FOREST: return 1000;
+			case SWAMP: return 200;
+			case JUNGLE: return 800;
+			case MOUNTAIN: return 50;
+			case HILLS: return 500;
+			case PLAINS: return 500;
+			default: return 0;
+			}
+		}
+		else
+		{
+			switch (biome)
+			{
+			case GLACIER: return 100;
+			case DESERT: return 200;
+			case TUNDRA: return 150;
+			case MOUNTAIN: return 300;
+			case PLAINS: return 500;
+			case HILLS: return 500;
+			case GRASSLAND: return 750;
+			case FOREST: return 1000;
+			case SWAMP: return 1000;
+			case JUNGLE: return 1000;
+			case OCEAN: return 1000;
+			default: return 100;
+			}
+		}
+	}
+
 	private void endOfYear_oneSpecies(CommodityType type, Wildlife w)
 	{
-		final double wildlifeQuota = parentRegion.getBiome().getWildlifeQuota();
+		double wildlifeQuota = getWildlifeQuota(type, parentRegion.getBiome());
 		double biomeTolerance = 1.0 - Math.pow((WILDLIFE_PREFERRED_TEMPERATURE - parentRegion.temperature) / WILDLIFE_TEMPERATURE_TOLERANCE, 2.0);
 		assert biomeTolerance <= 1.0;
 
@@ -240,6 +290,10 @@ class WildlifeServant
 		RouletteWheel<CommodityType> r = new RouletteWheel<CommodityType>();
 		for (CommodityType type : wildlifeByType.keySet())
 		{
+			int wildlifeCount = getWildlife(type);
+			if (wildlifeCount <= 0)
+				continue;
+
 			double fitness = getWildlife(type);
 			r.add(type, fitness);
 		}
