@@ -210,6 +210,16 @@ public class WorldMaster
 		{
 			r.endOfYear_cleanup();
 		}
+
+		try
+		{
+		saveAll();
+		}
+		catch(IOException e)
+		{
+			//FIXME
+			e.printStackTrace(System.err);
+		}
 	}
 
 	LeaderInfo getLeaderByUsername(String user)
