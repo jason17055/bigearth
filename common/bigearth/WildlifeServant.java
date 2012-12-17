@@ -304,6 +304,8 @@ class WildlifeServant
 			if (in.getCurrentToken() == JsonToken.START_ARRAY)
 			{
 				Wildlife w = new Wildlife();
+				wildlifeByType.put(type, w);
+
 				w.quantity = in.nextIntValue(0);
 				w.hunted = in.nextIntValue(0);
 				w.immigrants = in.nextIntValue(0);
