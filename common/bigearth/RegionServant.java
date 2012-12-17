@@ -82,9 +82,9 @@ class RegionServant
 	//implements EndOfYear
 	public void endOfYear_stage1()
 	{
-		wildlife.endOfYear_stage1();
 		if (city != null)
 			city.endOfYear_stage1();
+		wildlife.endOfYear_stage1();
 	}
 
 	//implements EndOfYear
