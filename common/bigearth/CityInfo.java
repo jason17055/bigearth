@@ -17,6 +17,14 @@ public class CityInfo
 	{
 	}
 
+	public long getStock(CommodityType ct)
+	{
+		assert hasStock();
+
+		Long x = stock.get(ct);
+		return x != null ? x.longValue() : 0;
+	}
+
 	public boolean hasDisplayName()
 	{
 		return displayName != null;

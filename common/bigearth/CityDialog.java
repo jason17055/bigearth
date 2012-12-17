@@ -14,6 +14,9 @@ public class CityDialog extends JDialog
 
 	JLabel nameLbl;
 	JLabel populationLbl;
+	JLabel meatLbl;
+	JLabel sheepLbl;
+	JLabel pigLbl;
 
 	CityDialog(Window owner, Client client, Location cityLocation)
 	{
@@ -46,6 +49,21 @@ public class CityDialog extends JDialog
 		mainPane.add(new JLabel("Population"), c1);
 		populationLbl = new JLabel();
 		mainPane.add(populationLbl, c2);
+
+		c1.gridy = c2.gridy = 2;
+		mainPane.add(new JLabel("Meat"), c1);
+		meatLbl = new JLabel();
+		mainPane.add(meatLbl, c2);
+
+		c1.gridy = c2.gridy = 3;
+		mainPane.add(new JLabel("Sheep"), c1);
+		sheepLbl = new JLabel();
+		mainPane.add(sheepLbl, c2);
+
+		c1.gridy = c2.gridy = 4;
+		mainPane.add(new JLabel("Pig"), c1);
+		pigLbl = new JLabel();
+		mainPane.add(pigLbl, c2);
 
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -84,6 +102,13 @@ public class CityDialog extends JDialog
 			nameLbl.setText(city.displayName);
 			populationLbl.setText(city.hasPopulation() ?
 				Integer.toString(city.population) : null);
+
+			meatLbl.setText(city.hasStock() ?
+				Long.toString(city.getStock(CommodityType.MEAT)) : null);
+			sheepLbl.setText(city.hasStock() ?
+				Long.toString(city.getStock(CommodityType.SHEEP)) : null);
+			pigLbl.setText(city.hasStock() ?
+				Long.toString(city.getStock(CommodityType.PIG)) : null);
 		}
 		catch (IOException e)
 		{

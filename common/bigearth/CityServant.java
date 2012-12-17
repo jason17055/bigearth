@@ -204,6 +204,7 @@ public class CityServant
 		ci.displayName = displayName;
 		ci.location = location;
 		ci.setPopulation(getPopulation());
+		ci.stock = CommoditiesHelper.makeClone(this.stock);
 		return ci;
 	}
 
