@@ -17,6 +17,10 @@ public class WorldConfig implements WorldConfigIfc
 	long ticksPerYear;
 	int childYears;
 	int humanLifeExpectancy;
+	long foodPerFarmer;
+	long foodPerAnimal;
+	int hungerPerAdult;
+	int hungerPerChild;
 
 	private WorldConfig(File path)
 	{
@@ -51,6 +55,18 @@ public class WorldConfig implements WorldConfigIfc
 				);
 		this.humanLifeExpectancy = Integer.parseInt(
 				properties.getProperty("humanLifeExpectancy", "50")
+				);
+		this.foodPerAnimal = Long.parseLong(
+				properties.getProperty("foodPerAnimal", "1")
+				);
+		this.foodPerFarmer = Long.parseLong(
+				properties.getProperty("foodPerFarmer", "1")
+				);
+		this.hungerPerAdult = Integer.parseInt(
+				properties.getProperty("hungerPerAdult", "1")
+				);
+		this.hungerPerChild = Integer.parseInt(
+				properties.getProperty("hungerPerChild", "1")
 				);
 	}
 

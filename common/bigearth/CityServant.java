@@ -173,9 +173,25 @@ public class CityServant
 		return sum;
 	}
 
+	int getFarmCount()
+	{
+		return parentRegion.getFarmCount();
+	}
+
 	int getPopulation()
 	{
 		return getChildren() + getAdults();
+	}
+
+	long getTotalFood()
+	{
+		long sum = 0;
+		for (Map.Entry<CommodityType,Long> e : stock.entrySet())
+		{
+			int nutritionPerUnit = e.getKey().nutrition;
+			sum += e.getValue().intValue() * nutritionPerUnit;
+		}
+		return sum;
 	}
 
 	int getWorkersInJob(CityJob job)
@@ -187,9 +203,9 @@ public class CityServant
 			return 0;
 	}
 
-	private WorldConfigIfc getWorldConfig()
+	private WorldConfig getWorldConfig()
 	{
-		return parentRegion.getWorldConfig();
+		return parentRegion.world.config;
 	}
 
 	private WorldMaster getWorldMaster()
@@ -486,10 +502,193 @@ public class CityServant
 
 	private void governor_endOfYear()
 	{
-		int amt = getWorkersInJob(CityJob.IDLE);
-		if (amt != 0)
+		JobLevel [] jobLevels = governor_determineJobLevels();
+		governor_dispatchJobAssignments(jobLevels);
+	}
+
+	private void governor_dispatchJobAssignments(JobLevel [] jobLevels)
+	{
+		// sort job requests by priority (highest priority first)
+		Arrays.sort(jobLevels, new Comparator<JobLevel>() {
+			public int compare(JobLevel a, JobLevel b) {
+				return -(a.priority - b.priority);
+			}});
+
+		//
+		// compute minimum assignments
+		//
+
+		int workersLeft = getAdults();
+		Map<CityJob, Integer> assignments = new HashMap<CityJob, Integer>();
+
+		int i = 0;
+		while (i < jobLevels.length)
 		{
-			transferWorkers(amt, CityJob.IDLE, CityJob.HUNT);
+			int curPriority = jobLevels[i].priority;
+			int totalDemand = jobLevels[i].quantity;
+
+			int j = i+1;
+			while (j < jobLevels.length && jobLevels[j].priority == curPriority)
+			{
+				totalDemand += jobLevels[j].quantity;
+				j++;
+			}
+
+			if (totalDemand > 0 && workersLeft > 0)
+			{
+				double rations = totalDemand > workersLeft ? (double)workersLeft / (double)totalDemand : 1.0;
+				for (int k = i; k < j; k++)
+				{
+					JobLevel req = jobLevels[k];
+					int toAssign = (int) Math.round(req.quantity * rations);
+					if (toAssign > workersLeft)
+						toAssign = workersLeft;
+					assignments.put(req.job,
+						(assignments.containsKey(req.job) ? assignments.get(req.job).intValue() : 0) + toAssign);
+					workersLeft -= toAssign;
+
+					assert workersLeft >= 0;
+				}
+			}
+
+			i = j;
+		}
+
+		//
+		// look for jobs with extra workers
+		//
+
+		List<CityJob> jobsWithExtra = new ArrayList<CityJob>();
+		if (getWorkersInJob(CityJob.IDLE) > 0)
+		{
+			jobsWithExtra.add(CityJob.IDLE);
+		}
+
+		for (CityJob job : workers.keySet())
+		{
+			if (job == CityJob.IDLE)
+				continue; // idle workers were already handled
+
+			int wanted = assignments.containsKey(job) ? assignments.get(job).intValue() : 0;
+			if (getWorkersInJob(job) > wanted)
+			{
+				jobsWithExtra.add(job);
+			}
+		}
+
+		for (CityJob job : assignments.keySet())
+		{
+			int actual = getWorkersInJob(job);
+			int wanted = assignments.get(job);
+			if (actual < wanted)
+			{
+				int amountShort = wanted - actual;
+				while (amountShort > 0 && !jobsWithExtra.isEmpty())
+				{
+					// each iteration will result in a deduction of amountShort
+					// or a removal of an item from jobsWithExtra[].
+
+					CityJob fromJob = jobsWithExtra.get(0);
+					int wantedThere = assignments.containsKey(fromJob) ? assignments.get(fromJob).intValue() : 0;
+					int extraThere = getWorkersInJob(fromJob) - wantedThere;
+					if (extraThere >= amountShort)
+					{
+						int x = transferWorkers(amountShort, fromJob, job);
+						assert x > 0;
+						amountShort -= x;
+					}
+					else if (extraThere > 0)
+					{
+						int x = transferWorkers(extraThere, fromJob, job);
+						amountShort -= x;
+						jobsWithExtra.remove(0);
+					}
+					else
+					{
+						jobsWithExtra.remove(0);
+					}
+				}
+			}
+		}
+	}
+
+	private JobLevel [] governor_determineJobLevels()
+	{
+		List<JobLevel> jobLevels = new ArrayList<JobLevel>();
+
+		long foodInStorage = getTotalFood();
+		long oneYearFood = getWorldConfig().hungerPerAdult * getAdults()
+			+ getWorldConfig().hungerPerChild * getChildren();
+
+		final double DESIRED_STOCK = 1.5;
+		final double MAX_ASSIGN = 4.0/3.0;
+
+		long desiredFoodNextYear = (long)
+			Math.round(oneYearFood * (MAX_ASSIGN + (1-MAX_ASSIGN) * ((double)foodInStorage / (double)oneYearFood) / DESIRED_STOCK));
+		if (desiredFoodNextYear < 0)
+			desiredFoodNextYear = 0;
+
+		// first consider farms
+		int mandatoryFarmers = (int)Math.ceil(desiredFoodNextYear / getWorldConfig().foodPerFarmer);
+		int numFarms = getFarmCount();
+		if (mandatoryFarmers > numFarms * 15)
+			mandatoryFarmers = numFarms * 15;
+		int optionalFarmers = numFarms * 10;
+		desiredFoodNextYear -= mandatoryFarmers * getWorldConfig().foodPerFarmer;
+
+		jobLevels.add(new JobLevel(CityJob.FARM, mandatoryFarmers).priority(100));
+		jobLevels.add(new JobLevel(CityJob.FARM, optionalFarmers).priority(10));
+
+		// remaining food must come from hunting
+		int mandatoryHunters = (int) Math.ceil(desiredFoodNextYear / getWorldConfig().foodPerAnimal);
+		int optionalHunters = mandatoryHunters < 20 ? 20 - mandatoryHunters : 0;
+
+		jobLevels.add(new JobLevel(CityJob.HUNT, mandatoryHunters).priority(100));
+		jobLevels.add(new JobLevel(CityJob.HUNT, optionalHunters).priority(5));
+
+		// consider child care
+		int mandatoryChildCaretakers = (int)Math.ceil(getChildren() / 2.0);
+		jobLevels.add(new JobLevel(CityJob.CHILDCARE, mandatoryChildCaretakers).priority(90));
+
+		// consider livestock care
+		long numSheep = getStock(CommodityType.SHEEP);
+		long numPigs = getStock(CommodityType.PIG);
+		int mandatoryShepherds = (int)Math.ceil((numSheep + numPigs) / 8.0);
+		jobLevels.add(new JobLevel(CityJob.SHEPHERD, mandatoryShepherds).priority(85));
+
+		// TODO- does the city have tasks to perform?
+
+		// some other jobs that people like to do...
+		jobLevels.add(new JobLevel(CityJob.RESEARCH, (int)Math.floor(getAdults()/10.0)).priority(10));
+
+		// ensure that no one is idle
+		jobLevels.add(new JobLevel(CityJob.HUNT, getAdults()).priority(1));
+
+		return jobLevels.toArray(new JobLevel[0]);
+	}
+
+	public long getStock(CommodityType ct)
+	{
+		Long x = stock.get(ct);
+		return x != null ? x.longValue() : 0;
+	}
+
+	static class JobLevel
+	{
+		CityJob job;
+		int quantity;
+		int priority;
+
+		JobLevel(CityJob job, int quantity)
+		{
+			this.job = job;
+			this.quantity = quantity;
+		}
+
+		JobLevel priority(int newPriority)
+		{
+			this.priority = newPriority;
+			return this;
 		}
 	}
 

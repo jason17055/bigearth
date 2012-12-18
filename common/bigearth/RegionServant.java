@@ -35,6 +35,7 @@ class RegionServant
 
 	WildlifeServant wildlife;
 	Map<CommodityType, Long> stock;
+	Map<ZoneType, Integer> zones;
 
 	boolean dirty;
 
@@ -51,6 +52,7 @@ class RegionServant
 		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
 		this.seenByMob = new HashMap<SeenByKey, RegionSight>();
 		this.seenByUser = new HashMap<String, UserSight>();
+		this.zones = new EnumMap<ZoneType, Integer>(ZoneType.class);
 	}
 
 	private void init()
@@ -136,6 +138,12 @@ class RegionServant
 	{
 		int dep = this.waterLevel - this.elevation;
 		return dep > 0 ? dep : 0;
+	}
+
+	public int getFarmCount()
+	{
+		Integer i = zones.get(ZoneType.FARM);
+		return i != null ? i.intValue() : 0;
 	}
 
 	public RegionSideDetail.SideFeature getSideFeature(int sideIndex)
@@ -226,6 +234,8 @@ class RegionServant
 		out.writeNumberField("floods", floods);
 		out.writeFieldName("stock");
 		CommoditiesHelper.writeCommodities(stock, out);
+		out.writeFieldName("zones");
+		writeZones(out);
 
 		if (hasCity())
 		{
@@ -264,6 +274,38 @@ class RegionServant
 
 		out.writeEndObject();
 		out.close();
+	}
+
+	private void writeZones(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		for (Map.Entry<ZoneType,Integer> e : zones.entrySet())
+		{
+			ZoneType zone = e.getKey();
+			int quantity = e.getValue();
+			assert quantity > 0;
+
+			out.writeNumberField(zone.name(), quantity);
+		}
+		out.writeEndObject();
+	}
+
+	private void parseZones(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+			throw new InputMismatchException();
+
+		while (in.nextToken() != JsonToken.END_OBJECT)
+		{
+			String s = in.getCurrentName();
+			in.nextToken();
+			int num = in.getIntValue();
+
+			zones.put(ZoneType.valueOf(s), num);
+		}
 	}
 
 	static RegionServant create(WorldMaster world, int regionId)
@@ -338,6 +380,8 @@ class RegionServant
 				loadMobs(in);
 			else if (s.equals("stock"))
 				stock = CommoditiesHelper.parseCommodities(in);
+			else if (s.equals("zones"))
+				parseZones(in);
 			else if (s.equals("city"))
 				city = CityServant.parse(in, this);
 			else
