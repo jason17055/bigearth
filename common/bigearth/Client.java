@@ -187,9 +187,7 @@ public class Client
 
 		int status = conn.getResponseCode();
 		if (status != 204)
-		{
 			interpretError(conn);
-		}
 	}
 
 	CityInfo getCity(Location cityLocation)
@@ -424,7 +422,7 @@ public class Client
 		n.dispatch(this);
 	}
 
-	public void moveMobTo(String mobName, Location dest)
+	void sendMobOrders(String mobName, Command orders)
 		throws IOException
 	{
 		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
@@ -432,112 +430,63 @@ public class Client
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 
-		String x = "activity=move"
-			+ "&destination=" + URLEncoder.encode(dest.toString(), "UTF-8");
-		byte [] xx = x.getBytes("UTF-8");
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		{
+		JsonGenerator out = new JsonFactory().createJsonGenerator(bytes, JsonEncoding.UTF8);
+		orders.write(out);
+		out.close();
+		}
 
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Content-Length", Integer.toString(bytes.size()));
 		OutputStream out = conn.getOutputStream();
-		out.write(xx);
+		out.write(bytes.toByteArray());
 		out.close();
 
 		int status = conn.getResponseCode();
 		if (status != 204)
 			interpretError(conn);
+	}
+
+	public void moveMobTo(String mobName, Location dest)
+		throws IOException
+	{
+		SimpleCommand orders = new SimpleCommand("move");
+		orders.setDestination(dest);
+		sendMobOrders(mobName, orders);
 	}
 
 	public void setMobFlag(String mobName, Flag flag)
 		throws IOException
 	{
-		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
-		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
-		conn.setDoOutput(true);
-		conn.setDoInput(true);
-
-		String x = "activity=set-flag"
-			+ "&flag=" + URLEncoder.encode(flag.name(), "UTF-8");
-		byte [] xx = x.getBytes("UTF-8");
-
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
-		OutputStream out = conn.getOutputStream();
-		out.write(xx);
-		out.close();
-
-		int status = conn.getResponseCode();
-		if (status != 204)
-			interpretError(conn);
+		SimpleCommand orders = new SimpleCommand("set-flag");
+		orders.flag = flag;
+		sendMobOrders(mobName, orders);
 	}
 
 	public void setMobActivity(String mobName, String activityName)
 		throws IOException
 	{
-		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
-		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
-		conn.setDoOutput(true);
-		conn.setDoInput(true);
-
-		String x = "activity=" + URLEncoder.encode(activityName, "UTF-8");
-		byte [] xx = x.getBytes("UTF-8");
-
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
-		OutputStream out = conn.getOutputStream();
-		out.write(xx);
-		out.close();
-
-		int status = conn.getResponseCode();
-		if (status != 204)
-			interpretError(conn);
+		SimpleCommand orders = new SimpleCommand(activityName);
+		sendMobOrders(mobName, orders);
 	}
 
 	public void takeCommodity(String mobName, CommodityType ct, long amt)
 		throws IOException
 	{
-		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
-		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
-		conn.setDoOutput(true);
-		conn.setDoInput(true);
-
-		String x = "activity=take"
-			+ "&commodity=" + URLEncoder.encode(ct.name(), "UTF-8")
-			+ "&amount=" + amt;
-		byte [] xx = x.getBytes("UTF-8");
-
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
-		OutputStream out = conn.getOutputStream();
-		out.write(xx);
-		out.close();
-
-		int status = conn.getResponseCode();
-		if (status != 204)
-			interpretError(conn);
+		SimpleCommand orders = new SimpleCommand("take");
+		orders.commodity = ct;
+		orders.amount = amt;
+		sendMobOrders(mobName, orders);
 	}
 
 	public void dropCommodity(String mobName, CommodityType ct, long amt)
 		throws IOException
 	{
-		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
-		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
-		conn.setDoOutput(true);
-		conn.setDoInput(true);
-
-		String x = "activity=drop"
-			+ "&commodity=" + URLEncoder.encode(ct.name(), "UTF-8")
-			+ "&amount=" + amt;
-		byte [] xx = x.getBytes("UTF-8");
-
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
-		OutputStream out = conn.getOutputStream();
-		out.write(xx);
-		out.close();
-
-		int status = conn.getResponseCode();
-		if (status != 204)
-			interpretError(conn);
+		SimpleCommand orders = new SimpleCommand("drop");
+		orders.commodity = ct;
+		orders.amount = amt;
+		sendMobOrders(mobName, orders);
 	}
 
 	void startListenerThread()

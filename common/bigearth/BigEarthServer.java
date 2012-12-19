@@ -533,11 +533,12 @@ class SetActivityServlet extends BigEarthServlet
 			return;
 
 		String mobName = request.getParameter("mob");
-		String activityName = request.getParameter("activity");
-		String commodityName = request.getParameter("commodity");
-		String amountStr = request.getParameter("amount");
-		String destStr = request.getParameter("destination");
-		String flagStr = request.getParameter("flag");
+		Command orders;
+		{
+			JsonParser in = new JsonFactory().createJsonParser(request.getInputStream());
+			orders = Command.parse(in, server.world.config);
+			in.close();
+		}
 
 		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
 		try
@@ -558,20 +559,9 @@ class SetActivityServlet extends BigEarthServlet
 			return;
 		}
 
-		// construct the command structure
-		SimpleCommand c = new SimpleCommand(activityName);
-		if (commodityName != null)
-			c.setCommodityType(CommodityType.valueOf(commodityName));
-		if (amountStr != null)
-			c.setAmount(Long.parseLong(amountStr));
-		if (destStr != null)
-			c.setDestination(LocationHelper.parse(destStr, server.world.config));
-		if (flagStr != null)
-			c.setFlag(Flag.valueOf(flagStr));
-
 		// make the actual change
 		RegionServant svt = server.world.getRegionForMob(mobName);
-		svt.mobSetActivity(mobName, c);
+		svt.mobSetActivity(mobName, orders);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
