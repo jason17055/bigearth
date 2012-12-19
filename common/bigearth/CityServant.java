@@ -439,11 +439,34 @@ public class CityServant
 
 		endOfYear_children();
 		endOfYear_hunting();
+		endOfYear_deaths();
 	}
 
 	private void endOfYear_children()
 	{
-		// TODO- check child care supply
+		//
+		// check child care supply
+		//
+		double childCareDemand = 0.5 * getChildren();
+		double childCareSupply = getProduction(CityJob.CHILDCARE);
+		production.remove(CityJob.CHILDCARE);
+
+		if (childCareSupply < childCareDemand)
+		{
+			assert childCareSupply >= 0.0;
+			assert childCareDemand > 0.0;
+
+			double caredForPortion = childCareSupply / childCareDemand;
+			double survivalRate = 0.60 + 0.40 * Math.pow(caredForPortion, 2.0);
+			if (survivalRate > 1.0)
+				survivalRate = 1.0; //could only occur through rounding error
+
+			for (int i = 0; i < children.length; i++)
+			{
+				PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(children[i], survivalRate);
+				children[i] = d.nextVariate();
+			}
+		}
 
 		//
 		// bring forward growing children
@@ -465,6 +488,29 @@ public class CityServant
 		double birthRate = coreBirthRate / (1 + Math.exp(-(0.85 - housingUsage) * 12.0));
 		int births = (int) Math.floor(getAdults() * birthRate);
 		children[0] = births;
+	}
+
+	private int getLifeExpectancy()
+	{
+		return getWorldConfig().humanLifeExpectancy;
+	}
+
+	private void endOfYear_deaths()
+	{
+		double sustainRate = 1.0 - 1.0/getLifeExpectancy();
+
+		//TODO- consider effect of sickness and malnutrition
+
+		double deathRate = 1.0 - sustainRate;
+		for (Map.Entry<CityJob,Integer> e : workers.entrySet())
+		{
+			CityJob job = e.getKey();
+			int qty = e.getValue();
+
+			PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(qty, deathRate);
+			int deaths = d.nextVariate();
+			subtractWorkers(deaths, job);
+		}
 	}
 
 	private void endOfYear_hunting()
