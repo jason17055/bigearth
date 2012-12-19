@@ -51,6 +51,31 @@ public class CityServant
 		}
 	}
 
+	public long subtractCommodity(CommodityType ct, long amount)
+	{
+		if (amount == 0)
+			return 0;
+
+		assert amount > 0;
+
+		Long xx = stock.get(ct);
+		if (xx == null)
+			return 0;
+
+		long amt = xx.longValue();
+		if (amount < amt)
+		{
+			amt -= amount;
+			stock.put(ct, amt);
+			return amount;
+		}
+		else
+		{
+			stock.remove(ct);
+			return amt;
+		}
+	}
+
 	public void addWorkers(int amount)
 	{
 		addWorkers(amount, CityJob.IDLE);
@@ -506,8 +531,37 @@ public class CityServant
 
 	private void endOfYear_eating()
 	{
-		System.out.println("demand "+hunger+" nutrition for population");
-		hunger = 0.0;
+		if (hunger <= 0.0)
+			return;
+
+		System.out.println("city["+location+"] demand "+hunger+" nutrition for population");
+
+		CommodityType [] foodPriority = new CommodityType[] {
+				CommodityType.MEAT, CommodityType.GRAIN,
+				CommodityType.PIG, CommodityType.SHEEP
+				};
+		consumeFood(foodPriority);
+	}
+
+	private void consumeFood(CommodityType [] foodPriority)
+	{
+		for (int i = 0; i < foodPriority.length; i++)
+		{
+			if (hunger <= 0.0)
+				return;
+
+			CommodityType foodType = foodPriority[i];
+			long onHand = getStock(foodType);
+			if (onHand == 0)
+				continue;
+
+			long wanted = (long)Math.ceil(hunger / foodType.nutrition);
+			assert wanted >= 0;
+
+			long consumed = subtractCommodity(foodType, wanted);
+			System.out.println("consuming "+consumed+" units of "+foodType);
+			hunger -= consumed * foodType.nutrition;
+		}
 	}
 
 	private int getLifeExpectancy()
