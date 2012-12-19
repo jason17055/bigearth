@@ -18,6 +18,7 @@ public class CityServant
 	Map<CityJob, Double> production;
 	int [] children;
 	long productionLastUpdated; //timestamp
+	double hunger;
 
 	CityServant(RegionServant parentRegion)
 	{
@@ -357,8 +358,13 @@ public class CityServant
 			return;
 
 		double elapsedYears = ((double)elapsed) / ((double)parentRegion.world.config.getTicksPerYear());
-		for (CityJob job : workers.keySet())
+		for (Map.Entry<CityJob,Integer> e : workers.entrySet())
 		{
+			CityJob job = e.getKey();
+			int qty = e.getValue();
+
+			hunger += elapsedYears * qty * getWorldConfig().hungerPerAdult;
+
 			double rate = workerRates.get(job);
 			double productionIncrease = rate * elapsedYears;
 
@@ -367,6 +373,12 @@ public class CityServant
 				+ productionIncrease;
 			production.put(job, newProduction);
 		}
+
+		for (int i = 0; i < children.length; i++)
+		{
+			hunger += elapsedYears * children[i] * getWorldConfig().hungerPerChild;
+		}
+
 		productionLastUpdated = curTime;
 	}
 
@@ -439,6 +451,8 @@ public class CityServant
 
 		endOfYear_children();
 		endOfYear_hunting();
+		//endOfYear_farming();
+		endOfYear_eating();
 		endOfYear_deaths();
 	}
 
@@ -488,6 +502,12 @@ public class CityServant
 		double birthRate = coreBirthRate / (1 + Math.exp(-(0.85 - housingUsage) * 12.0));
 		int births = (int) Math.floor(getAdults() * birthRate);
 		children[0] = births;
+	}
+
+	private void endOfYear_eating()
+	{
+		System.out.println("demand "+hunger+" nutrition for population");
+		hunger = 0.0;
 	}
 
 	private int getLifeExpectancy()
@@ -663,14 +683,14 @@ public class CityServant
 		List<JobLevel> jobLevels = new ArrayList<JobLevel>();
 
 		long foodInStorage = getTotalFood();
-		long oneYearFood = getWorldConfig().hungerPerAdult * getAdults()
+		double oneYearFood = getWorldConfig().hungerPerAdult * getAdults()
 			+ getWorldConfig().hungerPerChild * getChildren();
 
 		final double DESIRED_STOCK = 1.5;
 		final double MAX_ASSIGN = 4.0/3.0;
 
 		long desiredFoodNextYear = (long)
-			Math.round(oneYearFood * (MAX_ASSIGN + (1-MAX_ASSIGN) * ((double)foodInStorage / (double)oneYearFood) / DESIRED_STOCK));
+			Math.round(oneYearFood * (MAX_ASSIGN + (1-MAX_ASSIGN) * ((double)foodInStorage / oneYearFood) / DESIRED_STOCK));
 		if (desiredFoodNextYear < 0)
 			desiredFoodNextYear = 0;
 

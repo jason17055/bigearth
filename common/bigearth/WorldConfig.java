@@ -19,8 +19,8 @@ public class WorldConfig implements WorldConfigIfc
 	int humanLifeExpectancy;
 	long foodPerFarmer;
 	long foodPerAnimal;
-	int hungerPerAdult;
-	int hungerPerChild;
+	double hungerPerAdult;
+	double hungerPerChild;
 
 	private WorldConfig(File path)
 	{
@@ -62,11 +62,13 @@ public class WorldConfig implements WorldConfigIfc
 		this.foodPerFarmer = Long.parseLong(
 				properties.getProperty("foodPerFarmer", "1")
 				);
-		this.hungerPerAdult = Integer.parseInt(
-				properties.getProperty("hungerPerAdult", "1")
+		// amount of nutrition needed per adult per year
+		this.hungerPerAdult = Double.parseDouble(
+				properties.getProperty("hungerPerAdult", "1.0")
 				);
-		this.hungerPerChild = Integer.parseInt(
-				properties.getProperty("hungerPerChild", "1")
+		// amount of nutrition needed per child per year
+		this.hungerPerChild = Double.parseDouble(
+				properties.getProperty("hungerPerChild", "1.0")
 				);
 	}
 
