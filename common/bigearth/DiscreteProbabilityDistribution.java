@@ -2,5 +2,5 @@ package bigearth;
 
 public interface DiscreteProbabilityDistribution
 {
-	int nextVariate();
+	long nextVariate();
 }

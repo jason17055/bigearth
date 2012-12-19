@@ -503,7 +503,7 @@ public class CityServant
 			for (int i = 0; i < children.length; i++)
 			{
 				PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(children[i], survivalRate);
-				children[i] = d.nextVariate();
+				children[i] = (int)d.nextVariate();
 			}
 		}
 
@@ -582,7 +582,7 @@ public class CityServant
 			int qty = e.getValue();
 
 			PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(qty, deathRate);
-			int deaths = d.nextVariate();
+			int deaths = (int) d.nextVariate();
 			subtractWorkers(deaths, job);
 		}
 	}
@@ -603,7 +603,7 @@ public class CityServant
 			double p = wildlife.getChanceOfDomestication(type);
 
 			PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(num, p);
-			int numCaptured = d.nextVariate();
+			int numCaptured = (int) d.nextVariate();
 			int numKilled = num - numCaptured;
 
 			addCommodity(type, numCaptured);

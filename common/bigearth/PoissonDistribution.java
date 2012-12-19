@@ -15,7 +15,7 @@ public class PoissonDistribution
 	}
 
 	//implements DiscreteProbabilityDistribution
-	public int nextVariate()
+	public long nextVariate()
 	{
 		double L = Math.exp(-lambda);
 		int k = 0;

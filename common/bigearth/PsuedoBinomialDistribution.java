@@ -7,11 +7,14 @@ public abstract class PsuedoBinomialDistribution
 {
 	static Random prng = new Random();
 
-	public static PsuedoBinomialDistribution getInstance(int n, double p)
+	public static PsuedoBinomialDistribution getInstance(long n, double p)
 	{
+		assert n > 0;
+		assert p >= 0.0 && p <= 1.0;
+
 		if (n < 15)
 		{
-			return new RealBinomialDistribution(prng, n, p);
+			return new RealBinomialDistribution(prng, (int) n, p);
 		}
 		else if (p < 0.5 && p * Math.pow(n, 0.31) < 0.47)
 		{
@@ -40,7 +43,7 @@ public abstract class PsuedoBinomialDistribution
 		}
 
 		@Override
-		public int nextVariate()
+		public long nextVariate()
 		{
 			int count = 0;
 			for (int i = 0; i < n; i++)
@@ -54,11 +57,11 @@ public abstract class PsuedoBinomialDistribution
 
 	static class PoissonApproxBinomialDistribution extends PsuedoBinomialDistribution
 	{
-		int n;
+		long n;
 		PoissonDistribution dist;
 		boolean inverted;
 
-		PoissonApproxBinomialDistribution(Random r, int n, double p, boolean inverted)
+		PoissonApproxBinomialDistribution(Random r, long n, double p, boolean inverted)
 		{
 			assert p <= 0.5;
 
@@ -68,9 +71,9 @@ public abstract class PsuedoBinomialDistribution
 		}
 
 		@Override
-		public int nextVariate()
+		public long nextVariate()
 		{
-			int x = dist.nextVariate();
+			long x = dist.nextVariate();
 			assert x >= 0;
 			if (x > n) x = n;
 			return inverted ? (n-x) : x;
@@ -79,10 +82,10 @@ public abstract class PsuedoBinomialDistribution
 
 	static class NormalApproxBinomialDistribution extends PsuedoBinomialDistribution
 	{
-		int n;
+		long n;
 		NormalDistribution dist;
 
-		NormalApproxBinomialDistribution(Random r, int n, double p)
+		NormalApproxBinomialDistribution(Random r, long n, double p)
 		{
 			this.n = n;
 			this.dist = new NormalDistribution(r,
@@ -92,9 +95,9 @@ public abstract class PsuedoBinomialDistribution
 		}
 
 		@Override
-		public int nextVariate()
+		public long nextVariate()
 		{
-			int x = (int) Math.round(dist.nextVariate());
+			long x = (long) Math.round(dist.nextVariate());
 			if (x < 0) x = 0;
 			if (x > n) x = n;
 			return x;
@@ -104,12 +107,12 @@ public abstract class PsuedoBinomialDistribution
 	public static void main(String [] args)
 	{
 		DiscreteProbabilityDistribution d = PsuedoBinomialDistribution.getInstance(
-			Integer.parseInt(args[0]),
+			Long.parseLong(args[0]),
 			Double.parseDouble(args[1])
 			);
 		for (int i = 0; i < 20; i++)
 		{
-			System.out.printf("%8d\n", d.nextVariate());
+			System.out.printf("%8d\n", (int)d.nextVariate());
 		}
 	}
 }
