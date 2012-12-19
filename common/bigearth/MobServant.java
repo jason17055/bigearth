@@ -228,7 +228,7 @@ public class MobServant
 		m.location = this.location;
 		m.avatarName = this.avatarName;
 		if (this.activity != null)
-			m.activity = this.activity.activity;
+			m.activity = this.activity.command;
 		else
 			m.activity = "";
 		m.flag = this.flag;
@@ -243,7 +243,7 @@ public class MobServant
 		m.avatarName = this.avatarName;
 		m.stock = this.stock;
 		if (this.activity != null)
-			m.activity = this.activity.activity;
+			m.activity = this.activity.command;
 		else
 			m.activity = "";
 		m.activityStarted = this.activityStarted;
@@ -352,11 +352,13 @@ public class MobServant
 
 	void startDropping()
 	{
+		SimpleCommand c = (SimpleCommand) activity;
+
 	final long TIME_PER_UNIT_DROPPED = 50;
-		long amt = subtractCommodity(activity.commodity, activity.amount);
+		long amt = subtractCommodity(c.commodity, c.amount);
 		if (amt != 0)
 		{
-			parentRegion.addCommodity(activity.commodity, amt);
+			parentRegion.addCommodity(c.commodity, amt);
 			stockChanged();
 			parentRegion.stockChanged();
 		}
@@ -365,7 +367,9 @@ public class MobServant
 
 	void startMoving()
 	{
-		Location dest = activity.destination;
+		SimpleCommand c = (SimpleCommand) activity;
+
+		Location dest = c.destination;
 		assert dest != null;
 
 		final WorldMaster world = getWorldMaster();
@@ -453,17 +457,21 @@ public class MobServant
 
 	void startSettingFlag()
 	{
-		if (activity.flag != null)
-			this.flag = activity.flag;
+		SimpleCommand c = (SimpleCommand) activity;
+
+		if (c.flag != null)
+			this.flag = c.flag;
 	}
 
 	void startTaking()
 	{
 	final long TIME_PER_UNIT_TOOK = 50;
-		long amt = parentRegion.subtractCommodity(activity.commodity, activity.amount);
+		SimpleCommand c = (SimpleCommand) activity;
+
+		long amt = parentRegion.subtractCommodity(c.commodity, c.amount);
 		if (amt != 0)
 		{
-			addCommodity(activity.commodity, amt);
+			addCommodity(c.commodity, amt);
 			parentRegion.stockChanged();
 			stockChanged();
 		}
@@ -518,7 +526,7 @@ public class MobServant
 		}
 		else
 		{
-			System.err.println("Warning: unrecognized activity: "+activity.activity);
+			System.err.println("Warning: unrecognized activity: "+activity.command);
 		}
 	}
 

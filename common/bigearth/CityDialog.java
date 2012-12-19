@@ -82,6 +82,14 @@ public class CityDialog extends JDialog
 			}});
 		buttonPane.add(renameBtn);
 
+		JButton developHousingBtn = new JButton("Develop Housing");
+		developHousingBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onDevelopHousingClicked();
+			}});
+		buttonPane.add(developHousingBtn);
+
 		JButton closeBtn = new JButton("Close");
 		closeBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
@@ -150,6 +158,25 @@ public class CityDialog extends JDialog
 			throw new Exception("You must enter a name.");
 
 		client.setCityName(cityLocation, nameField.getText());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void onDevelopHousingClicked()
+	{
+		try {
+
+		DevelopCommand c = new DevelopCommand();
+		c.fromZoneType = ZoneType.NATURAL;
+		c.toZoneType = ZoneType.MUD_COTTAGES;
+		client.sendCityOrders(cityLocation, c);
+
 		}
 		catch (Exception e)
 		{

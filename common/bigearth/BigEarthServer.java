@@ -559,7 +559,7 @@ class SetActivityServlet extends BigEarthServlet
 		}
 
 		// construct the command structure
-		Command c = Command.newInstance(activityName);
+		SimpleCommand c = new SimpleCommand(activityName);
 		if (commodityName != null)
 			c.setCommodityType(CommodityType.valueOf(commodityName));
 		if (amountStr != null)

@@ -590,7 +590,8 @@ class RegionServant
 		Location oldLoc = mob.location;
 		mob.parentRegion = this;
 		mob.location = dest;
-		mob.activity = Command.newInstance("move");
+		mob.activity = new SimpleCommand("move");
+		((SimpleCommand) mob.activity).setDestination(dest);
 		mob.activityStarted = currentTime();
 		mob.nutrition -= MobServant.NUTRITION_COST_FOR_MOVEMENT;
 
@@ -619,10 +620,10 @@ class RegionServant
 		MobServant mob = getMob(mobName);
 		assert mob != null;
 
-		if (mob.activity == null || mob.activity.equals(""))
+		if (mob.activity == null)
 			return false;
 
-		if (mob.activity.activity.equals("move"))
+		if (mob.activity.isActivity("move"))
 			return true;
 
 		return false;

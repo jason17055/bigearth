@@ -2,33 +2,81 @@ package bigearth;
 
 import com.fasterxml.jackson.core.*;
 import java.io.*;
+import java.util.*;
 
-public class Command
+public abstract class Command
 {
-	String activity;
+	String command;
+
+	protected Command(String activity)
+	{
+		this.command = activity;
+	}
+
+	public boolean isActivity(String activity)
+	{
+		return this.command.equals(activity);
+	}
+
+	public abstract void write(JsonGenerator out)
+		throws IOException;
+
+	public static Command parse(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		in.nextToken();
+		return parse_1(in, world);
+	}
+
+	public static Command parse_1(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+		{
+			// backwards-compat: at one time, the mob's current
+			// activity was just a string
+			String s = in.getText();
+			if (s.equals(""))
+				return null;
+			return new SimpleCommand(s);
+		}
+
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+			throw new InputMismatchException();
+
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.FIELD_NAME)
+			throw new InputMismatchException();
+		if (!in.getCurrentName().equals("command"))
+			throw new InputMismatchException();
+
+		String commandName = in.nextTextValue();
+		if (commandName.equals(DevelopCommand.COMMAND_NAME))
+		{
+			DevelopCommand n = new DevelopCommand();
+			n.parse_cont(in, world);
+			return n;
+		}
+		else
+		{
+			SimpleCommand n = new SimpleCommand(commandName);
+			n.parse_cont(in, world);
+			return n;
+		}
+	}
+}
+
+class SimpleCommand extends Command
+{
 	Location destination;
 	CommodityType commodity;
 	long amount;
 	boolean amountIsSpecified;
 	Flag flag;
 
-	private Command()
+	public SimpleCommand(String activity)
 	{
-	}
-
-	private Command(String activity)
-	{
-		this.activity = activity;
-	}
-
-	public boolean isActivity(String activity)
-	{
-		return this.activity.equals(activity);
-	}
-
-	public static Command newInstance(String activityName)
-	{
-		return new Command(activityName);
+		super(activity);
 	}
 
 	public void setCommodityType(CommodityType commodity)
@@ -56,7 +104,7 @@ public class Command
 		throws IOException
 	{
 		out.writeStartObject();
-		out.writeStringField("activity", activity);
+		out.writeStringField("command", command);
 		if (commodity != null)
 			out.writeStringField("commodity", commodity.name());
 		if (amountIsSpecified)
@@ -68,41 +116,23 @@ public class Command
 		out.writeEndObject();
 	}
 
-	public static Command parse(JsonParser in, WorldConfigIfc world)
+	void parse_cont(JsonParser in, WorldConfigIfc world)
 		throws IOException
 	{
-		Command c = new Command();
-
-		in.nextToken();
-		if (in.getCurrentToken() != JsonToken.START_OBJECT)
-		{
-			// backwards-compat: at one time, the mob's current
-			// activity was just a string
-			String s = in.getText();
-			if (s.equals(""))
-				return null;
-			c.activity = s;
-			return c;
-		}
-
-		assert in.getCurrentToken() == JsonToken.START_OBJECT;
-
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			if (s.equals("activity"))
-				c.activity = in.nextTextValue();
-			else if (s.equals("commodity"))
-				c.commodity = CommodityType.valueOf(in.nextTextValue());
+			if (s.equals("commodity"))
+				this.commodity = CommodityType.valueOf(in.nextTextValue());
 			else if (s.equals("amount"))
 			{
 				in.nextToken();
-				c.setAmount(in.getLongValue());
+				this.setAmount(in.getLongValue());
 			}
 			else if (s.equals("destination"))
-				c.destination = LocationHelper.parse(in.nextTextValue(), world);
+				this.destination = LocationHelper.parse(in.nextTextValue(), world);
 			else if (s.equals("flag"))
-				c.flag = Flag.valueOf(in.nextTextValue());
+				this.flag = Flag.valueOf(in.nextTextValue());
 			else
 			{
 				in.nextToken();
@@ -112,7 +142,51 @@ public class Command
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+}
 
-		return c;
+class DevelopCommand extends Command
+{
+	static final String COMMAND_NAME = "develop";
+	ZoneType fromZoneType;
+	ZoneType toZoneType;
+
+	public DevelopCommand()
+	{
+		super(COMMAND_NAME);
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("command", COMMAND_NAME);
+		if (fromZoneType != null)
+			out.writeStringField("fromZoneType", fromZoneType.name());
+		if (toZoneType != null)
+			out.writeStringField("toZoneType", toZoneType.name());
+		out.writeEndObject();
+	}
+
+	void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("fromZoneType"))
+				fromZoneType = ZoneType.valueOf(in.nextTextValue());
+			else if (s.equals("toZoneType"))
+				toZoneType = ZoneType.valueOf(in.nextTextValue());
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+				System.err.println("unrecognized command property: " + s);
+			}
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 }
