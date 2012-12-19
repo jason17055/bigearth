@@ -284,6 +284,40 @@ public class CityServant
 		//TODO cancel wakeup
 	}
 
+	private void activityFailed(String message)
+	{
+		cityMessage(message);
+		this.currentOrders = null;
+		cityChanged();
+	}
+
+	private void beginDeveloping()
+	{
+		DevelopCommand c = (DevelopCommand) currentOrders;
+
+		// designate zone for development
+		Integer numZonesI = parentRegion.zones.get(c.fromZoneType);
+		if (numZonesI == null)
+		{
+			activityFailed("No space left to develop.");
+			return;
+		}
+
+		int newFromZones = numZonesI.intValue() - 1;
+		if (newFromZones > 0)
+			parentRegion.zones.put(c.fromZoneType, newFromZones);
+		else
+			parentRegion.zones.remove(c.fromZoneType);
+
+		// make the new zone
+		Integer numZonesII = parentRegion.zones.get(c.toZoneType);
+		int newToZones = 1 + (numZonesII != null ? numZonesII.intValue() : 0);
+		parentRegion.zones.put(c.toZoneType, newToZones);
+
+		currentOrders = null;
+		cityChanged();
+	}
+
 	void cityActivity()
 	{
 		if (currentOrders instanceof RenameSelfCommand)
@@ -291,6 +325,11 @@ public class CityServant
 			this.displayName = ((RenameSelfCommand)currentOrders).newName;
 			currentOrders = null;
 			cityChanged();
+			return;
+		}
+		else if (currentOrders instanceof DevelopCommand)
+		{
+			beginDeveloping();
 			return;
 		}
 
