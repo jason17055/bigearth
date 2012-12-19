@@ -22,6 +22,7 @@ public class WorldConfig implements WorldConfigIfc
 	double hungerPerAdult;
 	double hungerPerChild;
 	int zonesPerRegion;
+	int maxAnimalsPerPasture;
 
 	private WorldConfig(File path)
 	{
@@ -73,6 +74,9 @@ public class WorldConfig implements WorldConfigIfc
 				);
 		this.zonesPerRegion = Integer.parseInt(
 				properties.getProperty("zonesPerRegion", "64")
+				);
+		this.maxAnimalsPerPasture = Integer.parseInt(
+				properties.getProperty("maxAnimalsPerPasture", "200")
 				);
 	}
 

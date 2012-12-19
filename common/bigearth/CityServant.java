@@ -479,6 +479,78 @@ public class CityServant
 		//endOfYear_farming();
 		endOfYear_eating();
 		endOfYear_deaths();
+		endOfYear_livestock();
+	}
+
+	private void cityMessage(String message)
+	{
+		CityMessageNotification n = new CityMessageNotification(location, message);
+		notifyLeader(owner, n);
+	}
+
+	private void processLivestock(CommodityType animalType, double shepherdPoints, double pastures)
+	{
+		long numAnimals = getStock(animalType);
+		if (numAnimals == 0)
+			return;
+
+		double numShepherds = shepherdPoints;
+		double protectedAnimals = 8 * numShepherds;
+		if (protectedAnimals < numAnimals)
+		{
+			long unprotected = numAnimals - (long)Math.floor(protectedAnimals);
+			double chanceOfEscaping = 0.25;
+			PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(unprotected, chanceOfEscaping);
+			long lost = d.nextVariate();
+			lost = subtractCommodity(animalType, lost);
+			cityMessage(lost + " " + animalType + " have run away.");
+		}
+
+		// check grazing ground
+		double animalsFed = pastures * getWorldConfig().maxAnimalsPerPasture;
+		animalsFed = Math.min(animalsFed, getStock(animalType));
+
+		// the ones that can't be fed get converted to meat
+		long starvedAnimals = getStock(animalType) - (long)Math.floor(animalsFed);
+		if (starvedAnimals > 0)
+		{
+		//TODO- convert to meat
+			subtractCommodity(animalType, starvedAnimals);
+			cityMessage(starvedAnimals + " " + animalType + " starved.");
+		}
+
+		// TODO- sheep breeding
+	}
+
+	private void endOfYear_livestock()
+	{
+		CommodityType [] livestockTypes = new CommodityType[] {
+			CommodityType.SHEEP, CommodityType.PIG
+			};
+
+		long totalLivestockCount = 0;
+		for (CommodityType type : livestockTypes)
+		{
+			totalLivestockCount += getStock(type);
+		}
+
+		int numRealPastures = parentRegion.getZoneCount(ZoneType.PASTURE);
+		double pastures = Math.max(
+				numRealPastures,
+				0.5 + 0.9 * numRealPastures
+				);
+
+		double shepherdPoints = getProduction(CityJob.SHEPHERD);
+		for (CommodityType type : livestockTypes)
+		{
+			double portion = (double)getStock(type) / (double)totalLivestockCount;
+			processLivestock(type,
+				portion * shepherdPoints,
+				portion * pastures
+				);
+		}
+
+		production.remove(CityJob.SHEPHERD);
 	}
 
 	private void endOfYear_children()

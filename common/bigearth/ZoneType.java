@@ -6,5 +6,6 @@ public enum ZoneType
 	MUD_COTTAGES,
 	WOOD_COTTAGES,
 	STONE_COTTAGES,
-	FARM;
+	FARM,
+	PASTURE;
 }

@@ -344,6 +344,14 @@ public class Client
 	}
 
 	//implements Notification.Receiver
+	public void handleCityMessageNotification(CityMessageNotification n)
+	{
+		//TODO
+		System.out.println("city message!");
+		System.out.println("["+n.cityLocation+"] "+n.message);
+	}
+
+	//implements Notification.Receiver
 	public void handleCityUpdateNotification(CityUpdateNotification n)
 	{
 		//TODO
