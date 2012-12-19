@@ -143,25 +143,9 @@ public class Client
 	void setCityName(Location cityLocation, String newName)
 		throws IOException
 	{
-		String qs = "location="+URLEncoder.encode(cityLocation.toString(), "UTF-8");
-		HttpURLConnection conn = makeRequest("POST", "/city?" + qs);
-		conn.setDoOutput(true);
-		conn.setDoInput(true);
-
-		String x = "name=" + URLEncoder.encode(newName, "UTF-8");
-		byte [] xx = x.getBytes("UTF-8");
-
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
-		OutputStream out = conn.getOutputStream();
-		out.write(xx);
-		out.close();
-
-		int status = conn.getResponseCode();
-		if (status != 204)
-		{
-			interpretError(conn);
-		}
+		RenameSelfCommand c = new RenameSelfCommand();
+		c.newName = newName;
+		sendCityOrders(cityLocation, c);
 	}
 
 	void sendCityOrders(Location cityLocation, Command orders)
@@ -426,7 +410,7 @@ public class Client
 		throws IOException
 	{
 		String qs = "mob=" + URLEncoder.encode(mobName, "UTF-8");
-		HttpURLConnection conn = makeRequest("POST", "/orders?" + qs);
+		HttpURLConnection conn = makeRequest("POST", "/mob/orders?" + qs);
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 

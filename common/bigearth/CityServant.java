@@ -19,6 +19,7 @@ public class CityServant
 	int [] children;
 	long productionLastUpdated; //timestamp
 	double hunger;
+	Command currentOrders;
 
 	CityServant(RegionServant parentRegion)
 	{
@@ -262,9 +263,40 @@ public class CityServant
 		return ci;
 	}
 
-	boolean canUserRename(String user)
+	public boolean canUserCommand(String user)
 	{
-		return (owner != null && owner.equals(user));
+		assert user != null;
+
+		return owner != null && owner.equals(user);
+	}
+
+	public void setOrders(Command c)
+	{
+		if (this.currentOrders != null)
+			cancelOrders();
+
+		this.currentOrders = c;
+		cityActivity();
+	}
+
+	void cancelOrders()
+	{
+		//TODO cancel wakeup
+	}
+
+	void cityActivity()
+	{
+		if (currentOrders instanceof RenameSelfCommand)
+		{
+			this.displayName = ((RenameSelfCommand)currentOrders).newName;
+			currentOrders = null;
+			cityChanged();
+			return;
+		}
+
+		// unrecognized command
+		currentOrders = null;
+		cityChanged();
 	}
 
 	private void parse(JsonParser in)
@@ -296,6 +328,8 @@ public class CityServant
 				parseChildren(in);
 			else if (s.equals("production"))
 				parseProduction(in);
+			else if (s.equals("currentOrders"))
+				currentOrders = Command.parse(in, getWorldConfig());
 			else if (s.equals("productionLastUpdated"))
 			{
 				in.nextToken();
@@ -423,6 +457,11 @@ public class CityServant
 		out.writeNumberField("productionLastUpdated", productionLastUpdated);
 		out.writeFieldName("children");
 		writeChildren(out);
+		if (currentOrders != null)
+		{
+			out.writeFieldName("currentOrders");
+			currentOrders.write(out);
+		}
 		out.writeEndObject();
 	}
 

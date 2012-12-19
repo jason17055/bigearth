@@ -154,7 +154,7 @@ public class BigEarthServer
 		context.addServlet(new ServletHolder(new GetEventsServlet(this)), "/events");
 		context.addServlet(new ServletHolder(new GetMapServlet(this)), "/my/map");
 		context.addServlet(new ServletHolder(new GetMobsServlet(this)), "/mobs");
-		context.addServlet(new ServletHolder(new SetActivityServlet(this)), "/orders");
+		context.addServlet(new ServletHolder(new MobOrdersServlet(this)), "/mob/orders");
 
 		httpServer.start();
 		world.start();
@@ -440,7 +440,12 @@ class GetCityServlet extends BigEarthServlet
 		String locStr = request.getParameter("location");
 		Location cityLocation = LocationHelper.parse(locStr, server.world.config);
 
-		String newName = request.getParameter("name");
+		Command orders;
+		{
+			JsonParser in = new JsonFactory().createJsonParser(request.getInputStream());
+			orders = Command.parse(in, server.world.config);
+			in.close();
+		}
 
 		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
 		try
@@ -455,14 +460,15 @@ class GetCityServlet extends BigEarthServlet
 			return;
 		}
 
-		if (!city.canUserRename(s.user))
+		if (!city.canUserCommand(s.user))
 		{
 			// permission denied
 			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
 		}
 
-		city.displayName = newName;
+		// make the actual change
+		city.setOrders(orders);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -517,9 +523,9 @@ class GetMapServlet extends BigEarthServlet
 	}
 }
 
-class SetActivityServlet extends BigEarthServlet
+class MobOrdersServlet extends BigEarthServlet
 {
-	SetActivityServlet(BigEarthServer server)
+	MobOrdersServlet(BigEarthServer server)
 	{
 		super(server);
 	}
@@ -553,15 +559,14 @@ class SetActivityServlet extends BigEarthServlet
 			return;
 		}
 
-		if (mob.owner == null || !mob.owner.equals(s.user))
+		if (!mob.canUserCommand(s.user))
 		{
 			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
 		}
 
 		// make the actual change
-		RegionServant svt = server.world.getRegionForMob(mobName);
-		svt.mobSetActivity(mobName, orders);
+		mob.setOrders(orders);
 
 		// report success
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);

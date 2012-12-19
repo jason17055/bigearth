@@ -718,4 +718,16 @@ public class MobServant
 	{
 		return parentRegion.isSeenBy(user);
 	}
+
+	public boolean canUserCommand(String user)
+	{
+		assert user != null;
+
+		return owner != null && owner.equals(user);
+	}
+
+	void setOrders(Command c)
+	{
+		parentRegion.mobSetActivity(name, c);
+	}
 }
