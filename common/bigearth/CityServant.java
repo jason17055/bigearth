@@ -574,8 +574,11 @@ public class CityServant
 
 			for (int i = 0; i < children.length; i++)
 			{
-				PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(children[i], survivalRate);
-				children[i] = (int)d.nextVariate();
+				if (children[i] > 0)
+				{
+					PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(children[i], survivalRate);
+					children[i] = (int)d.nextVariate();
+				}
 			}
 		}
 
