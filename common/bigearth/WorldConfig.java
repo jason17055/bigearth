@@ -21,6 +21,7 @@ public class WorldConfig implements WorldConfigIfc
 	long foodPerAnimal;
 	double hungerPerAdult;
 	double hungerPerChild;
+	int zonesPerRegion;
 
 	private WorldConfig(File path)
 	{
@@ -69,6 +70,9 @@ public class WorldConfig implements WorldConfigIfc
 		// amount of nutrition needed per child per year
 		this.hungerPerChild = Double.parseDouble(
 				properties.getProperty("hungerPerChild", "1.0")
+				);
+		this.zonesPerRegion = Integer.parseInt(
+				properties.getProperty("zonesPerRegion", "64")
 				);
 	}
 

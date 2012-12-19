@@ -60,9 +60,47 @@ class RegionServant
 		int numSides = world.getGeometry().getNeighborCount(regionId);
 	}
 
+	private void checkZones()
+	{
+		int zoneCount = 0;
+		for (Map.Entry<ZoneType, Integer> e : zones.entrySet())
+		{
+			zoneCount += e.getValue();
+		}
+
+		final int ZONES_PER_REGION = getWorldConfig().zonesPerRegion;
+		if (zoneCount < ZONES_PER_REGION)
+		{
+			// add more natural zones
+			int deficit = ZONES_PER_REGION - zoneCount;
+			int naturalZoneCount = getZoneCount(ZoneType.NATURAL);
+			zones.put(ZoneType.NATURAL, naturalZoneCount + deficit);
+		}
+		else if (zoneCount > ZONES_PER_REGION)
+		{
+			// remove some natural zones
+			int overage = zoneCount - ZONES_PER_REGION;
+			int naturalZoneCount = getZoneCount(ZoneType.NATURAL);
+			if (overage < naturalZoneCount)
+			{
+				zones.put(ZoneType.NATURAL, naturalZoneCount - overage);
+			}
+			else
+			{
+				zones.remove(ZoneType.NATURAL);
+				if (overage > naturalZoneCount)
+				{
+					System.err.println("Warning: too many zones in region "+regionId);
+				}
+			}
+		}
+	}
+
 	//implements BigEarthServant
 	public void start()
 	{
+		checkZones();
+
 		assert wildlife != null;
 		wildlife.start();
 
@@ -142,7 +180,12 @@ class RegionServant
 
 	public int getFarmCount()
 	{
-		Integer i = zones.get(ZoneType.FARM);
+		return getZoneCount(ZoneType.FARM);
+	}
+
+	public int getZoneCount(ZoneType zone)
+	{
+		Integer i = zones.get(zone);
 		return i != null ? i.intValue() : 0;
 	}
 
@@ -643,7 +686,7 @@ class RegionServant
 		return 0;
 	}
 
-	public WorldConfigIfc getWorldConfig()
+	public WorldConfig getWorldConfig()
 	{
 		return world.config;
 	}
