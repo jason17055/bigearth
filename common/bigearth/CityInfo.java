@@ -14,6 +14,8 @@ public class CityInfo
 	boolean populationIsKnown;
 	int children;
 	boolean childrenIsKnown;
+	int houses;
+	boolean housesIsKnown;
 
 	CityInfo()
 	{
@@ -35,6 +37,11 @@ public class CityInfo
 	public boolean hasDisplayName()
 	{
 		return displayName != null;
+	}
+
+	public boolean hasHouses()
+	{
+		return housesIsKnown;
 	}
 
 	public boolean hasOwner()
@@ -61,6 +68,12 @@ public class CityInfo
 	{
 		this.children = children;
 		this.childrenIsKnown = true;
+	}
+
+	public void setHouses(int houses)
+	{
+		this.houses = houses;
+		this.housesIsKnown = true;
 	}
 
 	public void setPopulation(int population)
@@ -93,6 +106,11 @@ public class CityInfo
 			}
 			else if (s.equals("displayName"))
 				displayName = in.nextTextValue();
+			else if (s.equals("houses"))
+			{
+				in.nextToken();
+				setHouses(in.getIntValue());
+			}
 			else if (s.equals("owner"))
 				owner = in.nextTextValue();
 			else if (s.equals("location"))
@@ -124,6 +142,8 @@ public class CityInfo
 			out.writeNumberField("children", children);
 		if (hasDisplayName())
 			out.writeStringField("displayName", displayName);
+		if (hasHouses())
+			out.writeNumberField("houses", houses);
 		if (hasLocation())
 			out.writeStringField("location", location.toString());
 		if (hasOwner())

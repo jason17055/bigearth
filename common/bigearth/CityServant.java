@@ -258,6 +258,11 @@ public class CityServant
 		ci.displayName = displayName;
 		ci.location = location;
 		ci.setChildren(getChildren());
+		ci.setHouses(
+			parentRegion.getZoneCount(ZoneType.MUD_COTTAGES)
+			+ parentRegion.getZoneCount(ZoneType.WOOD_COTTAGES)
+			+ parentRegion.getZoneCount(ZoneType.STONE_COTTAGES)
+			);
 		ci.setPopulation(getPopulation());
 		ci.stock = CommoditiesHelper.makeClone(this.stock);
 		return ci;
@@ -543,8 +548,12 @@ public class CityServant
 
 	int getPopulationCapacity()
 	{
-		//FIXME- make this based on housing
-		return 200;
+		int housing = 200 * parentRegion.getZoneCount(ZoneType.MUD_COTTAGES)
+			+ 200 * parentRegion.getZoneCount(ZoneType.WOOD_COTTAGES)
+			+ 200 * parentRegion.getZoneCount(ZoneType.STONE_COTTAGES);
+		int townCenter = Math.max(0, 50 - housing / 20);
+
+		return townCenter + housing;
 	}
 
 	//implements EndOfYear
