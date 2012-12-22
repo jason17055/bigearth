@@ -473,14 +473,14 @@ class RegionServant
 		world.regionChanged(regionId);
 	}
 
-	void spawnCharacter(Location loc, String characterName, String avatarName)
+	void spawnCharacter(Location loc, String characterName, MobType mobType)
 	{
 		assert world.getRegionIdForLocation(loc) == this.regionId;
 
 		String mobName = world.nextUniqueName("mob");
 		MobServant mob = new MobServant(this, mobName);
 		mob.displayName = characterName;
-		mob.avatarName = avatarName;
+		mob.mobType = mobType;
 		mob.location = loc;
 		presentMobs.put(mob.name, mob);
 

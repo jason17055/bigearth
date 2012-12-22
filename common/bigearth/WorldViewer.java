@@ -483,23 +483,17 @@ public class WorldViewer extends JFrame
 			throw new Exception("Please select a location first.");
 		}
 
-		final String [] avatarList = new String[] {
-			"explorer",
-			"settler",
-			"lion",
-			"trieme",
-			"warrior"
-			};
+		MobType [] mobTypeList = MobType.values();
 
 		JTextField nameField = new JTextField();
-		JComboBox avatarSelect = new JComboBox(avatarList);
-		avatarSelect.setSelectedIndex(0);
+		JComboBox mobTypeSelect = new JComboBox(mobTypeList);
+		mobTypeSelect.setSelectedIndex(0);
 
-		final JComponent[] inputs = new JComponent[] {
+		JComponent[] inputs = new JComponent[] {
 			new JLabel("Name"),
 			nameField,
-			new JLabel("Avatar"),
-			avatarSelect
+			new JLabel("Type"),
+			mobTypeSelect
 			};
 
 		int rv = JOptionPane.showOptionDialog(this, inputs,
@@ -515,7 +509,7 @@ public class WorldViewer extends JFrame
 		RegionServant region = world.world.getRegionForLocation(loc);
 		region.spawnCharacter(loc,
 			nameField.getText(),
-			avatarList[avatarSelect.getSelectedIndex()]
+			mobTypeList[mobTypeSelect.getSelectedIndex()]
 			);
 
 		}
@@ -550,22 +544,20 @@ public class WorldViewer extends JFrame
 		if (mob == null)
 			throw new Exception("Please select a mob first.");
 
-		String [] avatars = new String[] {
-			"explorer", "lion", "settler", "trieme", "warrior"
-			};
+		MobType [] mobTypeList = MobType.values();
 		int toSelect = 0;
-		for (int i = 0; i < avatars.length; i++)
+		for (int i = 0; i < mobTypeList.length; i++)
 		{
-			if (avatars[i].equals(mob.avatarName))
+			if (mobTypeList[i].equals(mob.mobType))
 				toSelect=i;
 		}
 
-		JComboBox avatarSelect = new JComboBox(avatars);
-		avatarSelect.setSelectedIndex(toSelect);
+		JComboBox mobTypeSelect = new JComboBox(mobTypeList);
+		mobTypeSelect.setSelectedIndex(toSelect);
 
 		JComponent [] inputs = new JComponent[] {
 			new JLabel("Type"),
-			avatarSelect
+			mobTypeSelect
 			};
 
 		int rv = JOptionPane.showOptionDialog(this, inputs,
@@ -575,8 +567,8 @@ public class WorldViewer extends JFrame
 		if (rv != JOptionPane.OK_OPTION)
 			return;
 
-		int sel = avatarSelect.getSelectedIndex();
-		mob.avatarName = avatars[sel];
+		int sel = mobTypeSelect.getSelectedIndex();
+		mob.mobType = mobTypeList[sel];
 
 		}
 		catch (Exception e)
@@ -921,9 +913,9 @@ assert(x >= 1);
 
 		MobInfo mob = getSelectedMob();
 
-		mobTypeLbl.setText(mob.avatarName!=null ?
-			mob.avatarName : "");
-		mobOwnerLbl.setText(mob.owner != null ?
+		mobTypeLbl.setText(mob.hasMobType() ?
+			mob.mobType.name().toLowerCase() : "");
+		mobOwnerLbl.setText(mob.hasOwner() ?
 			mob.owner : "");
 
 		mobPane.setVisible(true);

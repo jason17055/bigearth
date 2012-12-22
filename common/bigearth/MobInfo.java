@@ -7,7 +7,7 @@ import java.util.*;
 public class MobInfo
 {
 	String displayName;
-	String avatarName;
+	MobType mobType;
 	String owner;
 	Location location;
 	String activity;
@@ -31,9 +31,9 @@ public class MobInfo
 		return activity != null;
 	}
 
-	public boolean hasAvatarName()
+	public boolean hasMobType()
 	{
-		return avatarName != null;
+		return mobType != null;
 	}
 
 	public boolean hasEncumbrance()
@@ -79,8 +79,8 @@ public class MobInfo
 			String s = in.getCurrentName();
 			if (s.equals("displayName"))
 				m.displayName = in.nextTextValue();
-			else if (s.equals("avatarName"))
-				m.avatarName = in.nextTextValue();
+			else if (s.equals("mobType"))
+				m.mobType = MobType.valueOf(in.nextTextValue());
 			else if (s.equals("encumbrance"))
 				m.encumbrance = EncumbranceLevel.valueOf(in.nextTextValue());
 			else if (s.equals("hunger"))
@@ -118,8 +118,8 @@ public class MobInfo
 	{
 		out.writeStartObject();
 		out.writeStringField("displayName", displayName);
-		if (avatarName != null)
-			out.writeStringField("avatarName", avatarName);
+		if (hasMobType())
+			out.writeStringField("mobType", mobType.name());
 		if (location != null)
 			out.writeStringField("location", location.toString());
 		if (owner != null)

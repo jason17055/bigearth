@@ -57,6 +57,12 @@ public abstract class Command
 			n.parse_cont(in, world);
 			return n;
 		}
+		else if (commandName.equals(EquipCommand.COMMAND_NAME))
+		{
+			EquipCommand n = new EquipCommand();
+			n.parse_cont(in, world);
+			return n;
+		}
 		else if (commandName.equals(RenameSelfCommand.COMMAND_NAME))
 		{
 			RenameSelfCommand n = new RenameSelfCommand();
@@ -190,6 +196,47 @@ class DevelopCommand extends Command
 				in.nextToken();
 				in.skipChildren();
 				System.err.println("unrecognized command property: " + s);
+			}
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+}
+
+class EquipCommand extends Command
+{
+	static final String COMMAND_NAME = "equip";
+	MobType mobType;
+
+	public EquipCommand()
+	{
+		super(COMMAND_NAME);
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("command", COMMAND_NAME);
+		if (mobType != null)
+			out.writeStringField("mobType", mobType.name());
+		out.writeEndObject();
+	}
+
+	void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("mobType"))
+				mobType = MobType.valueOf(in.nextTextValue());
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+				System.err.println("unrecognized equip command property: " + s);
 			}
 		}
 

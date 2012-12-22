@@ -46,9 +46,11 @@ public class MobListModel
 			return;
 		}
 
-		if (newMobInfo.hasAvatarName())
+	// TODO- move this functionality into MobInfo class itself
+
+		if (newMobInfo.hasMobType())
 		{
-			oldMobInfo.avatarName = newMobInfo.avatarName;
+			oldMobInfo.mobType = newMobInfo.mobType;
 		}
 		if (newMobInfo.hasOwner())
 		{

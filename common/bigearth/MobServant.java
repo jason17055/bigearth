@@ -10,7 +10,6 @@ public class MobServant
 	transient String name;
 
 	String displayName;
-	String avatarName;
 	String owner;
 	Location location;
 	Command activity;
@@ -22,6 +21,7 @@ public class MobServant
 	int population;
 	Map<SimpleLocation, RegionSight> canSee;
 	Flag flag;
+	MobType mobType;
 
 	transient Scheduler.Event wakeUp;
 	transient double totalMass;
@@ -37,6 +37,7 @@ public class MobServant
 		this.population = 100; //default population
 		this.canSee = new HashMap<SimpleLocation, RegionSight>();
 		this.flag = Flag.NONE;
+		this.mobType = MobType.SETTLER;
 	}
 
 	//implements BigEarthServant
@@ -121,11 +122,6 @@ public class MobServant
 		return activity != null;
 	}
 
-	public boolean hasAvatarName()
-	{
-		return avatarName != null;
-	}
-
 	public boolean hasOwner()
 	{
 		return owner != null;
@@ -144,8 +140,8 @@ public class MobServant
 			String s = in.getCurrentName();
 			if (s.equals("displayName"))
 				m.displayName = in.nextTextValue();
-			else if (s.equals("avatarName"))
-				m.avatarName = in.nextTextValue();
+			else if (s.equals("mobType"))
+				m.mobType = MobType.valueOf(in.nextTextValue());
 			else if (s.equals("location"))
 				m.location = LocationHelper.parse(in.nextTextValue(), parentRegion.getWorldConfig());
 			else if (s.equals("nutrition"))
@@ -196,8 +192,7 @@ public class MobServant
 	{
 		out.writeStartObject();
 		out.writeStringField("displayName", displayName);
-		if (avatarName != null)
-			out.writeStringField("avatarName", avatarName);
+		out.writeStringField("mobType", mobType.name());
 		out.writeStringField("location", location.toString());
 		if (owner != null)
 			out.writeStringField("owner", owner);
@@ -226,7 +221,7 @@ public class MobServant
 		MobInfo m = new MobInfo();
 		m.displayName = this.displayName;
 		m.location = this.location;
-		m.avatarName = this.avatarName;
+		m.mobType = this.mobType;
 		if (this.activity != null)
 			m.activity = this.activity.command;
 		else
@@ -240,7 +235,7 @@ public class MobServant
 		MobInfo m = new MobInfo();
 		m.displayName = this.displayName;
 		m.location = this.location;
-		m.avatarName = this.avatarName;
+		m.mobType = this.mobType;
 		m.stock = this.stock;
 		if (this.activity != null)
 			m.activity = this.activity.command;

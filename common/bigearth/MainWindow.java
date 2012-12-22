@@ -292,8 +292,8 @@ public class MainWindow extends JFrame
 	private void loadMobInfo(String mobName)
 	{
 		MobInfo mob = mobList.mobs.get(mobName);
-		mobTypeLbl.setText(mob.avatarName != null ?
-			mob.avatarName : "");
+		mobTypeLbl.setText(mob.hasMobType() ?
+			mob.mobType.name().toLowerCase() : "");
 
 		mobEncumbranceLbl.setText(mob.hasEncumbrance() ?
 			mob.encumbrance.name().toLowerCase() : "");

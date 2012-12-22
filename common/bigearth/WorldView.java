@@ -818,15 +818,16 @@ public class WorldView extends JPanel
 		}
 	}
 
-	static Map<String, BufferedImage> mobImages = new HashMap<String, BufferedImage>();
-	static BufferedImage loadMobImage(String avatarName)
+	static Map<MobType, BufferedImage> mobImages = new HashMap<MobType, BufferedImage>();
+	static BufferedImage loadMobImage(MobType mobType)
 	{
-		if (!mobImages.containsKey(avatarName))
+		if (!mobImages.containsKey(mobType))
 		{
+			String avatarName = mobType.name().toLowerCase();
 			try
 			{
 				BufferedImage img = ImageIO.read(new File(IMAGES_DIR, "unit_images/"+avatarName+".png"));
-				mobImages.put(avatarName, img);
+				mobImages.put(mobType, img);
 			}
 			catch (IOException e)
 			{
@@ -834,7 +835,7 @@ public class WorldView extends JPanel
 				return null;
 			}
 		}
-		return mobImages.get(avatarName);
+		return mobImages.get(mobType);
 	}
 
 	static BufferedImage loadCityImage()
@@ -1155,7 +1156,8 @@ System.err.println(e);
 		//	else
 		//		drawMobPin(gr, p, regionId);
 
-			BufferedImage img = loadMobImage(mob.avatarName);
+		assert mob.hasMobType();
+		BufferedImage img = loadMobImage(mob.mobType);
 		assert img != null;
 
 			int width = img.getWidth(null);

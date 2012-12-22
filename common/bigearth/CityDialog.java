@@ -96,6 +96,14 @@ public class CityDialog extends JDialog
 			}});
 		buttonPane.add(developHousingBtn);
 
+		JButton equipSettlerBtn = new JButton("Equip Settler");
+		equipSettlerBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onEquipSettlerClicked();
+			}});
+		buttonPane.add(equipSettlerBtn);
+
 		JButton closeBtn = new JButton("Close");
 		closeBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
@@ -166,6 +174,24 @@ public class CityDialog extends JDialog
 			throw new Exception("You must enter a name.");
 
 		client.setCityName(cityLocation, nameField.getText());
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void onEquipSettlerClicked()
+	{
+		try {
+
+		EquipCommand c = new EquipCommand();
+		c.mobType = MobType.SETTLER;
+		client.sendCityOrders(cityLocation, c);
+
 		}
 		catch (Exception e)
 		{
