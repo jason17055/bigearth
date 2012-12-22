@@ -383,10 +383,15 @@ public class MainWindow extends JFrame
 	}
 
 	//implements Client.Listener
-	public void mobMessage(String mobName, String message)
+	public void mobMessage(final String mobName, final String message)
 	{
-		JOptionPane.showMessageDialog(this, message,
-			mobName, JOptionPane.INFORMATION_MESSAGE);
+		SwingUtilities.invokeLater(new Runnable() {
+		public void run()
+		{
+			JOptionPane.showMessageDialog(MainWindow.this, message,
+				mobName, JOptionPane.INFORMATION_MESSAGE);
+		}
+		});
 	}
 
 	void onFlagClicked()
@@ -443,13 +448,18 @@ public class MainWindow extends JFrame
 	}
 
 	// implements MobListModel.Listener
-	public void mobUpdated(String mobName)
+	public void mobUpdated(final String mobName)
 	{
-		if (view.selection.isMob()
-		&& view.selection.getMob().equals(mobName))
+		SwingUtilities.invokeLater(new Runnable() {
+		public void run()
 		{
-			loadMobInfo(mobName);
+			if (view.selection.isMob()
+			&& view.selection.getMob().equals(mobName))
+			{
+				loadMobInfo(mobName);
+			}
 		}
+		});
 	}
 
 }
