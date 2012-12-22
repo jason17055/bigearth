@@ -459,27 +459,23 @@ class RegionServant
 
 	void continueDeveloping(double productionPoints)
 	{
-		double totalAvailable = 0.0;
-		for (ZoneDevelopment zd : zoneDevelopments)
-		{
-			totalAvailable += zd.getRemaining();
-		}
-
-		for (ZoneDevelopment zd : zoneDevelopments)
-		{
-			double pts = zd.getRemaining() * productionPoints / totalAvailable;
-			System.out.println("developing "+zd.targetType+" : "+pts);
-			zd.productionPoints += pts;
-		}
-
 		for (Iterator<ZoneDevelopment> it = zoneDevelopments.iterator();
 				it.hasNext(); )
 		{
 			ZoneDevelopment zd = it.next();
-			if (zd.isFinished())
+
+			double remaining = zd.getRemaining();
+			if (productionPoints >= remaining)
 			{
 				endDeveloping(zd.targetType);
 				it.remove();
+				productionPoints -= remaining;
+			}
+			else
+			{
+				zd.productionPoints += productionPoints;
+				productionPoints = 0.0;
+				break;
 			}
 		}
 	}
