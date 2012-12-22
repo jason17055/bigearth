@@ -750,7 +750,6 @@ class RegionServant
 		mob.activity = new SimpleCommand("move");
 		((SimpleCommand) mob.activity).setDestination(dest);
 		mob.activityStarted = currentTime();
-		mob.nutrition -= MobServant.NUTRITION_COST_FOR_MOVEMENT;
 
 		mob.mobMoved(oldLoc);
 

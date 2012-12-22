@@ -17,7 +17,7 @@ public class MobServant
 	long activityRequiredTime;
 	boolean activityError;
 	Map<CommodityType, Long> stock;
-	int nutrition;
+	double hunger;
 	int population;
 	Map<SimpleLocation, RegionSight> canSee;
 	Flag flag;
@@ -25,8 +25,6 @@ public class MobServant
 
 	transient Scheduler.Event wakeUp;
 	transient double totalMass;
-
-	static final int NUTRITION_COST_FOR_MOVEMENT = 100;
 
 	MobServant(RegionServant parentRegion, String name)
 	{
@@ -144,10 +142,10 @@ public class MobServant
 				m.mobType = MobType.valueOf(in.nextTextValue());
 			else if (s.equals("location"))
 				m.location = LocationHelper.parse(in.nextTextValue(), parentRegion.getWorldConfig());
-			else if (s.equals("nutrition"))
+			else if (s.equals("hunger"))
 			{
 				in.nextToken();
-				m.nutrition = in.getIntValue();
+				m.hunger = in.getDoubleValue();
 			}
 			else if (s.equals("owner"))
 				m.owner = in.nextTextValue();
@@ -204,7 +202,7 @@ public class MobServant
 		}
 		out.writeFieldName("stock");
 		CommoditiesHelper.writeCommodities(stock, out);
-		out.writeNumberField("nutrition", nutrition);
+		out.writeNumberField("hunger", hunger);
 		out.writeNumberField("population", population);
 		out.writeStringField("flag", flag.name());
 		out.writeEndObject();
@@ -254,13 +252,14 @@ public class MobServant
 			EncumbranceLevel.OVERLOADED
 			);
 
+		double hr = hunger / population;
 		m.hunger = (
-			nutrition < 0 ? HungerStatus.FAINTING :
-			nutrition < 50 ? HungerStatus.WEAK :
-			nutrition < 150 ? HungerStatus.HUNGRY :
-			nutrition < 1000 ? HungerStatus.NOT_HUNGRY :
-			nutrition < 2000 ? HungerStatus.SATIATED :
-			HungerStatus.OVERSATIATED
+			hr < -2 ? HungerStatus.OVERSATIATED :
+			hr < 0 ? HungerStatus.SATIATED :
+			hr < 1.7 ? HungerStatus.NOT_HUNGRY :
+			hr < 1.9 ? HungerStatus.HUNGRY :
+			hr < 2.0 ? HungerStatus.WEAK :
+			HungerStatus.FAINTING
 			);
 
 		return m;
@@ -271,12 +270,11 @@ public class MobServant
 		if (!stock.containsKey(CommodityType.MEAT))
 			return false;
 
-		int requiredNutrition = 150 - nutrition;
-		long desired = (long)Math.ceil((double)requiredNutrition / (double)CommodityType.MEAT.nutrition);
+		long desired = (long)Math.ceil(hunger / (double)CommodityType.MEAT.nutrition);
 
 		long actual = subtractCommodity(CommodityType.MEAT, desired);
-		nutrition += actual * CommodityType.MEAT.nutrition;
-	System.out.println("ate "+actual+ " MEAT; nutrition is now "+nutrition);
+		hunger -= actual * CommodityType.MEAT.nutrition;
+	System.out.println("ate "+actual+ " MEAT; hunger is now "+hunger);
 
 		return true;
 	}
@@ -284,8 +282,9 @@ public class MobServant
 	void checkpoint()
 	{
 		assert EventDispatchThread.isActive();
+		assert population > 0;
 
-		if (nutrition < 150)
+		if (hunger / population > 1.7)
 		{
 			eatSomething();
 		}
@@ -538,8 +537,22 @@ public class MobServant
 		}
 	}
 
+	long currentTime()
+	{
+		return parentRegion.world.eventDispatchThread.lastEventTime;
+	}
+
+	WorldConfig getWorldConfig()
+	{
+		return parentRegion.getWorldConfig();
+	}
+
 	void onActivityFinished()
 	{
+		long elapsedTicks = currentTime() - activityStarted;
+		double elapsedYears = (double)elapsedTicks / (double)getWorldConfig().ticksPerYear;
+		hunger += elapsedYears * getWorldConfig().hungerPerAdult;
+
 		if (activity.isActivity("hunt"))
 		{
 			completedHunting();
