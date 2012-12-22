@@ -637,7 +637,10 @@ public class CityServant
 			PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(unprotected, chanceOfEscaping);
 			long lost = d.nextVariate();
 			lost = subtractCommodity(animalType, lost);
-			cityMessage(lost + " " + animalType + " have run away.");
+			if (lost > 0)
+			{
+				cityMessage(lost + " " + animalType + " have run away.");
+			}
 		}
 
 		// check grazing ground
