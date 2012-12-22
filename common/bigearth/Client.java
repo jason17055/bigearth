@@ -527,11 +527,52 @@ System.out.println("in stopListenerThread()");
 		}
 	}
 
+	static String [] getServersFromMetaServer()
+	{
+		ArrayList<String> rv = new ArrayList<String>();
+
+		try
+		{
+			URL url = new URL("http://jason.long.name/bigearth/server-api/world.php");
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			JsonParser in = new JsonFactory().createJsonParser(conn.getInputStream());
+			in.nextToken();
+			while (in.nextToken() != JsonToken.END_ARRAY)
+			{
+				String gameUrl = null;
+
+				while (in.nextToken() != JsonToken.END_OBJECT)
+				{
+					String s = in.getCurrentName();
+					if (s.equals("url"))
+						gameUrl = in.nextTextValue();
+					else
+					{
+						in.nextToken();
+						in.skipChildren();
+					}
+				}
+
+				if (gameUrl != null)
+				{
+					rv.add(gameUrl);
+				}
+			}
+			in.close();
+
+			return rv.toArray(new String[0]);
+		}
+		catch (IOException e)
+		{
+			return new String[0];
+		}
+	}
+
 	public static void main(String [] args)
 		throws Exception
 	{
-		JTextField hostField = new JTextField();
-		hostField.setText("localhost");
+		JComboBox hostField = new JComboBox(getServersFromMetaServer());
+		hostField.setEditable(true);
 
 		JTextField userField = new JTextField();
 		JPasswordField passField = new JPasswordField();
@@ -551,9 +592,10 @@ System.out.println("in stopListenerThread()");
 		if (rv != JOptionPane.OK_OPTION)
 			return;
 
+		String hostName = (String) hostField.getSelectedItem();
 		try
 		{
-		Client me = new Client(hostField.getText(),
+		Client me = new Client(hostName,
 				userField.getText(),
 				passField.getPassword());
 		me.login();

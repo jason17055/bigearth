@@ -2,6 +2,7 @@ package bigearth;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.net.*;
 import java.security.*;
 import java.util.*;
 import javax.servlet.*;
@@ -18,6 +19,8 @@ public class BigEarthServer
 	WorldConfig worldConfig;
 	WorldMaster world;
 	Properties hostConfig;
+
+	AdvertiserThread advertiser;
 
 	SecureRandom random;
 
@@ -158,11 +161,16 @@ public class BigEarthServer
 
 		httpServer.start();
 		world.start();
+
+		advertiser = new AdvertiserThread();
+		advertiser.start();
 	}
 
 	void stop()
 		throws Exception
 	{
+		advertiser.requestStop();
+		advertiser.join();
 		httpServer.stop();
 		world.stop();
 	}
@@ -188,6 +196,90 @@ public class BigEarthServer
 			}
 		}
 		return null;
+	}
+
+	private void doAdvertisement()
+	{
+		try
+		{
+
+		URL url = new URL("http://jason.long.name/bigearth/server-api/world.php");
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("POST");
+		conn.setDoOutput(true);
+
+		String x = "url="+URLEncoder.encode(System.getenv("HOSTNAME"),"UTF-8")
+			+"&secret=x"
+			+"&size="+world.getGeometry().getCellCount()
+			+"&population=0"
+			+"&year="+world.year
+			+"&year_real_world_duration="+world.config.ticksPerYear
+			;
+		byte [] xx = x.getBytes("UTF-8");
+
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		conn.setRequestProperty("Content-Length", Integer.toString(xx.length));
+
+		OutputStream out = conn.getOutputStream();
+		out.write(xx);
+		out.close();
+
+		conn.connect();
+		if (conn.getResponseCode() != 200)
+		{
+
+		System.out.println("ADVERTISEMENT- got "+conn.getResponseCode());
+
+		InputStream in = conn.getInputStream();
+		for (;;)
+		{
+			byte [] buf = new byte[100];
+			int nread = in.read(buf);
+			if (nread <= 0) break;
+
+			System.out.write(buf, 0, nread);
+		}
+
+		}
+
+		} catch (IOException e)
+		{
+			System.err.println("Warning: Unable to advertise");
+			e.printStackTrace(System.err);
+		}
+	}
+
+	class AdvertiserThread extends Thread
+		implements Stoppable
+	{
+		boolean stopRequested = false;
+		final static long INTERVAL = 5*60*1000; //five minutes
+
+		synchronized boolean isStopRequested()
+		{
+			return stopRequested;
+		}
+
+		public void run()
+		{
+			while (!isStopRequested())
+			{
+				doAdvertisement();
+				try
+				{
+				Thread.sleep(INTERVAL);
+				}
+				catch (InterruptedException e)
+				{
+				}
+			}
+		}
+
+		//implements Stoppable
+		public synchronized void requestStop()
+		{
+			stopRequested = true;
+		}
 	}
 }
 
