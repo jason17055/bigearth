@@ -23,6 +23,9 @@ public class CityDialog extends JDialog
 	JLabel meatLbl;
 	JLabel sheepLbl;
 	JLabel pigLbl;
+	JLabel woodLbl;
+	JLabel clayLbl;
+	JLabel stoneLbl;
 	JComboBox developSelect;
 	JComboBox equipSelect;
 	DefaultListModel messagesListModel;
@@ -113,6 +116,21 @@ public class CityDialog extends JDialog
 		mainPane.add(new JLabel("Pig"), c1);
 		pigLbl = new JLabel();
 		mainPane.add(pigLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Wood"), c1);
+		woodLbl = new JLabel();
+		mainPane.add(woodLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Clay"), c1);
+		clayLbl = new JLabel();
+		mainPane.add(clayLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Stone"), c1);
+		stoneLbl = new JLabel();
+		mainPane.add(stoneLbl, c2);
 
 		messagesListModel = new DefaultListModel();
 
@@ -232,6 +250,12 @@ public class CityDialog extends JDialog
 			Long.toString(city.getStock(CommodityType.SHEEP)) : null);
 		pigLbl.setText(city.hasStock() ?
 			Long.toString(city.getStock(CommodityType.PIG)) : null);
+		woodLbl.setText(city.hasStock() ?
+			Long.toString(city.getStock(CommodityType.WOOD)) : null);
+		clayLbl.setText(city.hasStock() ?
+			Long.toString(city.getStock(CommodityType.CLAY)) : null);
+		stoneLbl.setText(city.hasStock() ?
+			Long.toString(city.getStock(CommodityType.STONE)) : null);
 	}
 
 	private void onCloseClicked()

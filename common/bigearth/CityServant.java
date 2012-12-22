@@ -605,6 +605,7 @@ public class CityServant
 		endOfYear_children();
 		endOfYear_hunting();
 		endOfYear_farming();
+		endOfYear_gathering();
 		endOfYear_eating();
 		endOfYear_deaths();
 		endOfYear_livestock();
@@ -696,6 +697,81 @@ public class CityServant
 		double asGrain = foodYield / CommodityType.GRAIN.nutrition;
 
 		addCommodity(CommodityType.GRAIN, (long)Math.floor(asGrain));
+	}
+
+	private void endOfYear_gathering()
+	{
+		double gatheringPoints = getProduction(CityJob.GATHER_RESOURCES);
+		production.remove(CityJob.GATHER_RESOURCES);
+
+		int numNatural = parentRegion.getZoneCount(ZoneType.NATURAL);
+		if (numNatural == 0)
+			return;
+
+		double maxYield = numNatural * 5.0;
+		double z = maxYield - maxYield * Math.exp(-1 * gatheringPoints / maxYield);
+
+		double woodRatio;
+		double clayRatio;
+		double stoneRatio;
+
+		switch (parentRegion.getBiome())
+		{
+		case PLAINS:
+		case GRASSLAND:
+			woodRatio = 0.20;
+			clayRatio = 0.20;
+			stoneRatio = 0.20;
+			break;
+		case FOREST:
+		case JUNGLE:
+			woodRatio = 0.75;
+			clayRatio = 0.10;
+			stoneRatio = 0.10;
+			break;
+		case SWAMP:
+			woodRatio = 0.65;
+			clayRatio = 0.25;
+			stoneRatio = 0;
+			break;
+		case DESERT:
+			woodRatio = 0.05;
+			clayRatio = 0.10;
+			stoneRatio = 0.25;
+			break;
+		case TUNDRA:
+			woodRatio = 0.10;
+			clayRatio = 0.15;
+			stoneRatio = 0.25;
+			break;
+		case MOUNTAIN:
+			woodRatio = 0.20;
+			clayRatio = 0.25;
+			stoneRatio = 0.40;
+			break;
+		case HILLS:
+			woodRatio = 0.25;
+			clayRatio = 0.35;
+			stoneRatio = 0.35;
+			break;
+		default:
+			woodRatio = 0.0;
+			clayRatio = 0.0;
+			stoneRatio = 0.0;
+		}
+
+		processResourceGathering(CommodityType.WOOD, woodRatio * z);
+		processResourceGathering(CommodityType.CLAY, clayRatio * z);
+		processResourceGathering(CommodityType.STONE, stoneRatio * z);
+	}
+
+	private void processResourceGathering(CommodityType ct, double pts)
+	{
+		long yield = (long) Math.round(pts);
+		if (yield == 0)
+			return;
+
+		addCommodity(ct, yield);
 	}
 
 	private void endOfYear_livestock()
@@ -1042,7 +1118,7 @@ public class CityServant
 		jobLevels.add(new JobLevel(CityJob.RESEARCH, (int)Math.floor(getAdults()/10.0)).priority(10));
 
 		// ensure that no one is idle
-		jobLevels.add(new JobLevel(CityJob.HUNT, getAdults()).priority(1));
+		jobLevels.add(new JobLevel(CityJob.GATHER_RESOURCES, getAdults()).priority(1));
 
 		return jobLevels.toArray(new JobLevel[0]);
 	}

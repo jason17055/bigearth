@@ -8,5 +8,6 @@ public enum CityJob
 	SHEPHERD,
 	RESEARCH,
 	DEVELOP_LAND,
+	GATHER_RESOURCES,
 	IDLE;
 }
