@@ -18,6 +18,10 @@ public class CityInfo
 	boolean housesIsKnown;
 	int underConstruction;
 	boolean underConstructionIsKnown;
+	int farms;
+	boolean farmsIsKnown;
+	int pastures;
+	boolean pasturesIsKnown;
 
 	CityInfo()
 	{
@@ -41,6 +45,11 @@ public class CityInfo
 		return displayName != null;
 	}
 
+	public boolean hasFarms()
+	{
+		return farmsIsKnown;
+	}
+
 	public boolean hasHouses()
 	{
 		return housesIsKnown;
@@ -54,6 +63,11 @@ public class CityInfo
 	public boolean hasLocation()
 	{
 		return location != null;
+	}
+
+	public boolean hasPastures()
+	{
+		return pasturesIsKnown;
 	}
 
 	public boolean hasPopulation()
@@ -77,10 +91,22 @@ public class CityInfo
 		this.childrenIsKnown = true;
 	}
 
+	public void setFarms(int farms)
+	{
+		this.farms = farms;
+		this.farmsIsKnown = true;
+	}
+
 	public void setHouses(int houses)
 	{
 		this.houses = houses;
 		this.housesIsKnown = true;
+	}
+
+	public void setPastures(int pastures)
+	{
+		this.pastures = pastures;
+		this.pasturesIsKnown = true;
 	}
 
 	public void setPopulation(int population)
@@ -119,6 +145,11 @@ public class CityInfo
 			}
 			else if (s.equals("displayName"))
 				displayName = in.nextTextValue();
+			else if (s.equals("farms"))
+			{
+				in.nextToken();
+				setFarms(in.getIntValue());
+			}
 			else if (s.equals("houses"))
 			{
 				in.nextToken();
@@ -128,6 +159,11 @@ public class CityInfo
 				owner = in.nextTextValue();
 			else if (s.equals("location"))
 				location = LocationHelper.parse(in.nextTextValue(), world);
+			else if (s.equals("pastures"))
+			{
+				in.nextToken();
+				setPastures(in.getIntValue());
+			}
 			else if (s.equals("stock"))
 				stock = CommoditiesHelper.parseCommodities(in);
 			else if (s.equals("population"))
@@ -160,12 +196,16 @@ public class CityInfo
 			out.writeNumberField("children", children);
 		if (hasDisplayName())
 			out.writeStringField("displayName", displayName);
+		if (hasFarms())
+			out.writeNumberField("farms", farms);
 		if (hasHouses())
 			out.writeNumberField("houses", houses);
 		if (hasLocation())
 			out.writeStringField("location", location.toString());
 		if (hasOwner())
 			out.writeStringField("owner", owner);
+		if (hasPastures())
+			out.writeNumberField("pastures", pastures);
 		if (hasPopulation())
 			out.writeNumberField("population", population);
 		if (hasStock())
