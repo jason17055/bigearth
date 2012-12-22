@@ -7,5 +7,6 @@ public enum CityJob
 	CHILDCARE,
 	SHEPHERD,
 	RESEARCH,
+	DEVELOP_LAND,
 	IDLE;
 }

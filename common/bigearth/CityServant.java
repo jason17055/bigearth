@@ -605,6 +605,7 @@ public class CityServant
 		endOfYear_eating();
 		endOfYear_deaths();
 		endOfYear_livestock();
+		endOfYear_developLand();
 	}
 
 	private void cityMessage(String message)
@@ -648,6 +649,16 @@ public class CityServant
 		}
 
 		// TODO- sheep breeding
+	}
+
+	private void endOfYear_developLand()
+	{
+		double pts = getProduction(CityJob.DEVELOP_LAND);
+		if (pts != 0.0)
+		{
+			parentRegion.continueDeveloping(pts);
+			production.remove(CityJob.DEVELOP_LAND);
+		}
 	}
 
 	private void endOfYear_livestock()
@@ -984,7 +995,11 @@ public class CityServant
 		int mandatoryShepherds = (int)Math.ceil((numSheep + numPigs) / 8.0);
 		jobLevels.add(new JobLevel(CityJob.SHEPHERD, mandatoryShepherds).priority(85));
 
-		// TODO- does the city have tasks to perform?
+		// does the city have any land development?
+		int numZonesDeveloping = parentRegion.getZoneCount(ZoneType.UNDER_CONSTRUCTION);
+		jobLevels.add(new JobLevel(CityJob.DEVELOP_LAND, 100).priority(30));
+
+		// TODO- does the city have any other tasks to perform?
 
 		// some other jobs that people like to do...
 		jobLevels.add(new JobLevel(CityJob.RESEARCH, (int)Math.floor(getAdults()/10.0)).priority(10));

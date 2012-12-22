@@ -43,6 +43,17 @@ class RegionServant
 	{
 		double productionPoints;
 		ZoneType targetType;
+
+		static final double REQUIRED_POINTS = 100.0;
+		public boolean isFinished()
+		{
+			return productionPoints >= REQUIRED_POINTS;
+		}
+
+		public double getRemaining()
+		{
+			return REQUIRED_POINTS - productionPoints;
+		}
 	}
 
 	boolean dirty;
@@ -419,6 +430,11 @@ class RegionServant
 	void beginDeveloping(ZoneType fromZoneType, ZoneType toZoneType)
 		throws ZoneTypeNotFound
 	{
+		assert fromZoneType != null;
+		assert fromZoneType != ZoneType.UNDER_CONSTRUCTION;
+		assert toZoneType != null;
+		assert toZoneType != ZoneType.UNDER_CONSTRUCTION;
+
 		// designate zone for development
 		Integer numZonesI = zones.get(fromZoneType);
 		if (numZonesI == null)
@@ -438,6 +454,53 @@ class RegionServant
 		// make a new development
 		ZoneDevelopment zd = new ZoneDevelopment();
 		zd.targetType = toZoneType;
+		zoneDevelopments.add(zd);
+	}
+
+	void continueDeveloping(double productionPoints)
+	{
+		double totalAvailable = 0.0;
+		for (ZoneDevelopment zd : zoneDevelopments)
+		{
+			totalAvailable += zd.getRemaining();
+		}
+
+		for (ZoneDevelopment zd : zoneDevelopments)
+		{
+			double pts = zd.getRemaining() * productionPoints / totalAvailable;
+			System.out.println("developing "+zd.targetType+" : "+pts);
+			zd.productionPoints += pts;
+		}
+
+		for (Iterator<ZoneDevelopment> it = zoneDevelopments.iterator();
+				it.hasNext(); )
+		{
+			ZoneDevelopment zd = it.next();
+			if (zd.isFinished())
+			{
+				endDeveloping(zd.targetType);
+				it.remove();
+			}
+		}
+	}
+
+	void endDeveloping(ZoneType newZoneType)
+	{
+		assert newZoneType != null;
+		assert newZoneType != ZoneType.UNDER_CONSTRUCTION;
+
+		int numUnderConstruction = getZoneCount(ZoneType.UNDER_CONSTRUCTION);
+		if (numUnderConstruction - 1 > 0)
+		{
+			zones.put(ZoneType.UNDER_CONSTRUCTION, numUnderConstruction-1);
+		}
+		else
+		{
+			zones.remove(ZoneType.UNDER_CONSTRUCTION);
+		}
+
+		zones.put(newZoneType, getZoneCount(newZoneType)+1);
+		world.regionChanged(regionId);
 	}
 
 	static RegionServant create(WorldMaster world, int regionId)
