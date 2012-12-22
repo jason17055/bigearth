@@ -284,6 +284,7 @@ public class CityServant
 			+ parentRegion.getZoneCount(ZoneType.WOOD_COTTAGES)
 			+ parentRegion.getZoneCount(ZoneType.STONE_COTTAGES)
 			);
+		ci.setUnderConstruction(parentRegion.getZoneCount(ZoneType.UNDER_CONSTRUCTION));
 		ci.setPopulation(getPopulation());
 		ci.stock = CommoditiesHelper.makeClone(this.stock);
 		return ci;

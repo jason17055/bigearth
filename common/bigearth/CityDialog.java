@@ -16,6 +16,7 @@ public class CityDialog extends JDialog
 	JLabel populationLbl;
 	JLabel childrenLbl;;
 	JLabel housesLbl;
+	JLabel underConstructionLbl;
 	JLabel meatLbl;
 	JLabel sheepLbl;
 	JLabel pigLbl;
@@ -64,6 +65,11 @@ public class CityDialog extends JDialog
 		mainPane.add(new JLabel("Houses"), c1);
 		housesLbl = new JLabel();
 		mainPane.add(housesLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Under Construction"), c1);
+		underConstructionLbl = new JLabel();
+		mainPane.add(underConstructionLbl, c2);
 
 		c1.gridy = ++c2.gridy;
 		mainPane.add(new JLabel("Meat"), c1);
@@ -177,6 +183,8 @@ public class CityDialog extends JDialog
 			Integer.toString(city.children) : null);
 		housesLbl.setText(city.hasHouses() ?
 			Integer.toString(city.houses) : null);
+		underConstructionLbl.setText(city.hasUnderConstruction() ?
+			Integer.toString(city.underConstruction) : null);
 
 		meatLbl.setText(city.hasStock() ?
 			Long.toString(city.getStock(CommodityType.MEAT)) : null);
@@ -267,7 +275,12 @@ public class CityDialog extends JDialog
 			if (!loc.equals(cityLocation))
 				return; //not interested
 
-			// do something
+			SwingUtilities.invokeLater(new Runnable() {
+			public void run()
+			{
+				reloadCityInfo();
+			}
+			});
 		}
 
 		//implements Client.Listener

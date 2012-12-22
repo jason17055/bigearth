@@ -16,6 +16,8 @@ public class CityInfo
 	boolean childrenIsKnown;
 	int houses;
 	boolean housesIsKnown;
+	int underConstruction;
+	boolean underConstructionIsKnown;
 
 	CityInfo()
 	{
@@ -64,6 +66,11 @@ public class CityInfo
 		return stock != null;
 	}
 
+	public boolean hasUnderConstruction()
+	{
+		return underConstructionIsKnown;
+	}
+
 	public void setChildren(int children)
 	{
 		this.children = children;
@@ -80,6 +87,12 @@ public class CityInfo
 	{
 		this.population = population;
 		this.populationIsKnown = true;
+	}
+
+	public void setUnderConstruction(int underConstruction)
+	{
+		this.underConstruction = underConstruction;
+		this.underConstructionIsKnown = true;
 	}
 
 	public static CityInfo parse(JsonParser in, WorldConfigIfc world)
@@ -123,6 +136,11 @@ public class CityInfo
 				population = in.getIntValue();
 				populationIsKnown = true;
 			}
+			else if (s.equals("underConstruction"))
+			{
+				in.nextToken();
+				setUnderConstruction(in.getIntValue());
+			}
 			else
 			{
 				in.nextToken();
@@ -155,6 +173,8 @@ public class CityInfo
 			out.writeFieldName("stock");
 			CommoditiesHelper.writeCommodities(stock, out);
 		}
+		if (hasUnderConstruction())
+			out.writeNumberField("underConstruction", underConstruction);
 		out.writeEndObject();
 	}
 }
