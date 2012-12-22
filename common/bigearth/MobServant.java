@@ -618,6 +618,7 @@ public class MobServant
 		// will be garbaged-disposed. Also, this lets our caller know that a
 		// wake-up event should not be scheduled.
 		parentRegion.removeMob(this.name);
+		getWorldMaster().mobs.remove(this.name);
 		this.parentRegion = null;
 	}
 
