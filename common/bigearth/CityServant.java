@@ -648,10 +648,20 @@ public class CityServant
 		{
 		//TODO- convert to meat
 			subtractCommodity(animalType, starvedAnimals);
-			cityMessage(starvedAnimals + " " + animalType + " starved.");
+			cityMessage(starvedAnimals + " " + animalType + " starved. (Build more pastures.)");
 		}
 
-		// TODO- sheep breeding
+		// check breeding
+		numAnimals = getStock(animalType);
+		if (numAnimals >= 2)
+		{
+			long births = (numAnimals/5) + (long)Math.round((numAnimals + 7.0*Math.random()) / 11.0);
+			if (births > 0)
+			{
+				addCommodity(animalType, births);
+				cityMessage("Bred "+births +" new "+animalType+".");
+			}
+		}
 	}
 
 	private void endOfYear_developLand()
