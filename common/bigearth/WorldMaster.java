@@ -197,6 +197,7 @@ public class WorldMaster
 		}
 	}
 
+	long lastSaveRealTime = 0;
 	void doEndOfYear()
 	{
 		year++;
@@ -211,14 +212,18 @@ public class WorldMaster
 			r.endOfYear_cleanup();
 		}
 
-		try
+		if (System.currentTimeMillis() - lastSaveRealTime > 20000)
 		{
-		saveAll();
-		}
-		catch(IOException e)
-		{
-			//FIXME
-			e.printStackTrace(System.err);
+			try
+			{
+			lastSaveRealTime = System.currentTimeMillis();
+			saveAll();
+			}
+			catch(IOException e)
+			{
+				//FIXME
+				e.printStackTrace(System.err);
+			}
 		}
 	}
 
