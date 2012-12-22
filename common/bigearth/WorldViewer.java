@@ -485,13 +485,13 @@ public class WorldViewer extends JFrame
 
 		MobType [] mobTypeList = MobType.values();
 
-		JTextField nameField = new JTextField();
+		JTextField ownerField = new JTextField();
 		JComboBox mobTypeSelect = new JComboBox(mobTypeList);
 		mobTypeSelect.setSelectedIndex(0);
 
 		JComponent[] inputs = new JComponent[] {
-			new JLabel("Name"),
-			nameField,
+			new JLabel("Owner"),
+			ownerField,
 			new JLabel("Type"),
 			mobTypeSelect
 			};
@@ -503,13 +503,13 @@ public class WorldViewer extends JFrame
 		if (rv != JOptionPane.OK_OPTION)
 			return;
 
-		if (nameField.getText().length() == 0)
-			throw new Exception("You must enter a name.");
+		if (ownerField.getText().length() == 0)
+			throw new Exception("You must enter an owner.");
 
 		RegionServant region = world.world.getRegionForLocation(loc);
 		region.spawnCharacter(loc,
-			nameField.getText(),
-			mobTypeList[mobTypeSelect.getSelectedIndex()]
+			mobTypeList[mobTypeSelect.getSelectedIndex()],
+			ownerField.getText()
 			);
 
 		}

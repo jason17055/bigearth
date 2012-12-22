@@ -94,6 +94,27 @@ public class CityServant
 		}
 	}
 
+	/**
+	 * Take workers from anywhere. (It is assumed the caller will take care of
+	 * giving the governor a chance to rebalance jobs afterwards.)
+	 */
+	int subtractWorkers(int amount)
+	{
+		int totalFound = 0;
+
+		CityJob [] allJobs = workers.keySet().toArray(new CityJob[0]);
+		for (CityJob job : allJobs)
+		{
+			int n = getWorkersInJob(job);
+			if (totalFound < amount)
+			{
+				totalFound += subtractWorkers(amount-totalFound, job);
+			}
+		}
+
+		return totalFound;
+	}
+
 	int subtractWorkers(int amount, CityJob fromJob)
 	{
 		assert amount >= 0;
@@ -323,6 +344,26 @@ public class CityServant
 		cityChanged();
 	}
 
+	private void beginEquipping()
+	{
+		EquipCommand c = (EquipCommand) currentOrders;
+
+		int numAdults = getAdults();
+		if (numAdults < 150)
+		{
+			activityFailed("Not enough people in town.");
+			return;
+		}
+
+		MobServant mob = parentRegion.spawnCharacter(location, c.mobType, owner);
+		int actualPop = subtractWorkers(100);
+		mob.population = actualPop;
+
+		currentOrders = null;
+		governor_checkJobs();
+		cityChanged();
+	}
+
 	void cityActivity()
 	{
 		if (currentOrders instanceof RenameSelfCommand)
@@ -335,6 +376,11 @@ public class CityServant
 		else if (currentOrders instanceof DevelopCommand)
 		{
 			beginDeveloping();
+			return;
+		}
+		else if (currentOrders instanceof EquipCommand)
+		{
+			beginEquipping();
 			return;
 		}
 
@@ -783,6 +829,11 @@ public class CityServant
 	}
 
 	private void governor_endOfYear()
+	{
+		governor_checkJobs();
+	}
+
+	private void governor_checkJobs()
 	{
 		JobLevel [] jobLevels = governor_determineJobLevels();
 		governor_dispatchJobAssignments(jobLevels);
