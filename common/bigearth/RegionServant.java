@@ -473,6 +473,11 @@ class RegionServant
 		world.regionChanged(regionId);
 	}
 
+	/**
+	 * The caller is given a reference to the mob servant for setting additional
+	 * options, like population count and starting equipment.
+	 * The caller should call mob.mobChanged() after the mob has been configured.
+	 */
 	MobServant spawnCharacter(Location loc, MobType mobType, String owner)
 	{
 		assert world.getRegionIdForLocation(loc) == this.regionId;

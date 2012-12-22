@@ -358,6 +358,7 @@ public class CityServant
 		MobServant mob = parentRegion.spawnCharacter(location, c.mobType, owner);
 		int actualPop = subtractWorkers(100);
 		mob.population = actualPop;
+		mob.mobChanged();
 
 		currentOrders = null;
 		governor_checkJobs();
