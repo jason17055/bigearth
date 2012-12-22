@@ -37,6 +37,14 @@ class RegionServant
 	Map<CommodityType, Long> stock;
 	Map<ZoneType, Integer> zones;
 
+	List<ZoneDevelopment> zoneDevelopments;
+
+	static class ZoneDevelopment
+	{
+		double productionPoints;
+		ZoneType targetType;
+	}
+
 	boolean dirty;
 
 	RegionServant(WorldMaster world, int regionId)
@@ -53,6 +61,7 @@ class RegionServant
 		this.seenByMob = new HashMap<SeenByKey, RegionSight>();
 		this.seenByUser = new HashMap<String, UserSight>();
 		this.zones = new EnumMap<ZoneType, Integer>(ZoneType.class);
+		this.zoneDevelopments = new ArrayList<ZoneDevelopment>();
 	}
 
 	private void init()
@@ -280,6 +289,12 @@ class RegionServant
 		out.writeFieldName("zones");
 		writeZones(out);
 
+		if (!zoneDevelopments.isEmpty())
+		{
+			out.writeFieldName("zoneDevelopments");
+			writeZoneDevelopments(out);
+		}
+
 		if (hasCity())
 		{
 			out.writeFieldName("city");
@@ -319,6 +334,20 @@ class RegionServant
 		out.close();
 	}
 
+	private void writeZoneDevelopments(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartArray();
+		for (ZoneDevelopment zd : zoneDevelopments)
+		{
+			out.writeStartObject();
+			out.writeNumberField("productionPoints", zd.productionPoints);
+			out.writeStringField("targetType", zd.targetType.name());
+			out.writeEndObject();
+		}
+		out.writeEndArray();
+	}
+
 	private void writeZones(JsonGenerator out)
 		throws IOException
 	{
@@ -332,6 +361,42 @@ class RegionServant
 			out.writeNumberField(zone.name(), quantity);
 		}
 		out.writeEndObject();
+	}
+
+	private void parseZoneDevelopments(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_ARRAY)
+			throw new InputMismatchException();
+
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			if (in.getCurrentToken() != JsonToken.START_OBJECT)
+				throw new InputMismatchException();
+
+			ZoneDevelopment zd = new ZoneDevelopment();
+			while (in.nextToken() == JsonToken.FIELD_NAME)
+			{
+				String s = in.getCurrentName();
+				if (s.equals("productionPoints"))
+				{
+					in.nextToken();
+					zd.productionPoints = in.getDoubleValue();
+				}
+				else if (s.equals("targetType"))
+					zd.targetType = ZoneType.valueOf(in.nextTextValue());
+				else
+				{
+					System.err.println("warning: unrecognized zone development property: "+s);
+					in.nextToken();
+					in.skipChildren();
+				}
+			}
+
+			if (in.getCurrentToken() != JsonToken.END_OBJECT)
+				throw new InputMismatchException();
+		}
 	}
 
 	private void parseZones(JsonParser in)
@@ -349,6 +414,30 @@ class RegionServant
 
 			zones.put(ZoneType.valueOf(s), num);
 		}
+	}
+
+	void beginDeveloping(ZoneType fromZoneType, ZoneType toZoneType)
+		throws ZoneTypeNotFound
+	{
+		// designate zone for development
+		Integer numZonesI = zones.get(fromZoneType);
+		if (numZonesI == null)
+			throw new ZoneTypeNotFound();
+
+		int newFromZones = numZonesI.intValue() - 1;
+		if (newFromZones > 0)
+			zones.put(fromZoneType, newFromZones);
+		else
+			zones.remove(fromZoneType);
+
+		// make a new zone (of type- under construction)
+		zones.put(ZoneType.UNDER_CONSTRUCTION,
+			1 + getZoneCount(ZoneType.UNDER_CONSTRUCTION)
+			);
+
+		// make a new development
+		ZoneDevelopment zd = new ZoneDevelopment();
+		zd.targetType = toZoneType;
 	}
 
 	static RegionServant create(WorldMaster world, int regionId)
@@ -425,6 +514,8 @@ class RegionServant
 				stock = CommoditiesHelper.parseCommodities(in);
 			else if (s.equals("zones"))
 				parseZones(in);
+			else if (s.equals("zoneDevelopments"))
+				parseZoneDevelopments(in);
 			else if (s.equals("city"))
 				city = CityServant.parse(in, this);
 			else
@@ -875,5 +966,9 @@ class RegionServant
 	public boolean isSeenBy(String user)
 	{
 		return seenByUser.containsKey(user);
+	}
+
+	static class ZoneTypeNotFound extends Exception
+	{
 	}
 }

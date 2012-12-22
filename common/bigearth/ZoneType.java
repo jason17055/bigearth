@@ -3,6 +3,7 @@ package bigearth;
 public enum ZoneType
 {
 	NATURAL,
+	UNDER_CONSTRUCTION,
 	MUD_COTTAGES,
 	WOOD_COTTAGES,
 	STONE_COTTAGES,

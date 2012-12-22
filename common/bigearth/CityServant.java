@@ -321,24 +321,15 @@ public class CityServant
 	{
 		DevelopCommand c = (DevelopCommand) currentOrders;
 
-		// designate zone for development
-		Integer numZonesI = parentRegion.zones.get(c.fromZoneType);
-		if (numZonesI == null)
+		try
+		{
+			parentRegion.beginDeveloping(c.fromZoneType, c.toZoneType);
+		}
+		catch (RegionServant.ZoneTypeNotFound e)
 		{
 			activityFailed("No space left to develop.");
 			return;
 		}
-
-		int newFromZones = numZonesI.intValue() - 1;
-		if (newFromZones > 0)
-			parentRegion.zones.put(c.fromZoneType, newFromZones);
-		else
-			parentRegion.zones.remove(c.fromZoneType);
-
-		// make the new zone
-		Integer numZonesII = parentRegion.zones.get(c.toZoneType);
-		int newToZones = 1 + (numZonesII != null ? numZonesII.intValue() : 0);
-		parentRegion.zones.put(c.toZoneType, newToZones);
 
 		currentOrders = null;
 		cityChanged();
