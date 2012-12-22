@@ -148,7 +148,7 @@ public class CityDialog extends JDialog
 
 	void addCityMessage(String message)
 	{
-		messagesListModel.addElement(message);
+		messagesListModel.add(0, message);
 	}
 
 	private void reloadCityInfo()
