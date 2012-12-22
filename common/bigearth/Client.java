@@ -347,6 +347,18 @@ public class Client
 		assert in.getCurrentToken() == JsonToken.END_ARRAY;
 	}
 
+	private void fireCityMessage(Location cityLocation, String message)
+	{
+		for (Listener l : listeners)
+			l.cityMessage(cityLocation, message);
+	}
+
+	private void fireCityUpdate(Location cityLocation, CityInfo cityData)
+	{
+		for (Listener l : listeners)
+			l.cityUpdated(cityLocation, cityData);
+	}
+
 	private void fireMobMessage(String mobName, String message)
 	{
 		for (Listener l : listeners)
@@ -356,15 +368,13 @@ public class Client
 	//implements Notification.Receiver
 	public void handleCityMessageNotification(CityMessageNotification n)
 	{
-		//TODO
-		System.out.println("city message!");
-		System.out.println("["+n.cityLocation+"] "+n.message);
+		fireCityMessage(n.cityLocation, n.message);
 	}
 
 	//implements Notification.Receiver
 	public void handleCityUpdateNotification(CityUpdateNotification n)
 	{
-		//TODO
+		fireCityUpdate(n.cityLocation, n.cityData);
 	}
 
 	//implements Notification.Receiver
@@ -568,6 +578,8 @@ System.out.println("in stopListenerThread()");
 
 	interface Listener
 	{
+		void cityMessage(Location cityLocation, String message);
+		void cityUpdated(Location cityLocation, CityInfo cityData);
 		void mobMessage(String mobName, String message);
 	}
 }

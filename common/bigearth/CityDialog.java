@@ -22,15 +22,16 @@ public class CityDialog extends JDialog
 	DefaultListModel messagesListModel;
 	JList messagesList;
 
+	void onWindowClosed()
+	{
+		this.client.removeListener(this.listner);
+	}
+
 	CityDialog(Window owner, Client client, Location cityLocation)
 	{
 		super(owner, "City", Dialog.ModalityType.APPLICATION_MODAL);
 		this.client = client;
 		this.cityLocation = cityLocation;
-		this.listner = new MyListener();
-
-		//this.client.map.addListener(listner);
-		//this.client.mobs.addListener(listner);
 
 		JPanel mainPane = new JPanel(new GridBagLayout());
 		getContentPane().add(mainPane, BorderLayout.CENTER);
@@ -80,8 +81,6 @@ public class CityDialog extends JDialog
 		mainPane.add(pigLbl, c2);
 
 		messagesListModel = new DefaultListModel();
-		messagesListModel.addElement("Hello world!");
-		messagesListModel.addElement("A catastrophe has occurred.");
 
 		messagesList = new JList(messagesListModel);
 		JScrollPane messagesListScroll = new JScrollPane(messagesList);
@@ -134,6 +133,22 @@ public class CityDialog extends JDialog
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(owner);
+
+		addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent ev)
+			{
+				onWindowClosed();
+			}
+		});
+
+		this.listner = new MyListener();
+		this.client.addListener(listner);
+		//this.client.mobs.addListener(listner);
+	}
+
+	void addCityMessage(String message)
+	{
+		messagesListModel.addElement(message);
 	}
 
 	private void reloadCityInfo()
@@ -144,26 +159,31 @@ public class CityDialog extends JDialog
 			if (city == null)
 				return;
 
-			nameLbl.setText(city.displayName);
-			populationLbl.setText(city.hasPopulation() ?
-				Integer.toString(city.population) : null);
-			childrenLbl.setText(city.hasChildren() ?
-				Integer.toString(city.children) : null);
-			housesLbl.setText(city.hasHouses() ?
-				Integer.toString(city.houses) : null);
-
-			meatLbl.setText(city.hasStock() ?
-				Long.toString(city.getStock(CommodityType.MEAT)) : null);
-			sheepLbl.setText(city.hasStock() ?
-				Long.toString(city.getStock(CommodityType.SHEEP)) : null);
-			pigLbl.setText(city.hasStock() ?
-				Long.toString(city.getStock(CommodityType.PIG)) : null);
+			loadCityInfo(city);
 		}
 		catch (IOException e)
 		{
 			//FIXME
 			e.printStackTrace(System.err);
 		}
+	}
+
+	private void loadCityInfo(CityInfo city)
+	{
+		nameLbl.setText(city.displayName);
+		populationLbl.setText(city.hasPopulation() ?
+			Integer.toString(city.population) : null);
+		childrenLbl.setText(city.hasChildren() ?
+			Integer.toString(city.children) : null);
+		housesLbl.setText(city.hasHouses() ?
+			Integer.toString(city.houses) : null);
+
+		meatLbl.setText(city.hasStock() ?
+			Long.toString(city.getStock(CommodityType.MEAT)) : null);
+		sheepLbl.setText(city.hasStock() ?
+			Long.toString(city.getStock(CommodityType.SHEEP)) : null);
+		pigLbl.setText(city.hasStock() ?
+			Long.toString(city.getStock(CommodityType.PIG)) : null);
 	}
 
 	private void onCloseClicked()
@@ -239,7 +259,7 @@ public class CityDialog extends JDialog
 	}
 
 	private class MyListener
-		implements MapModel.Listener
+		implements MapModel.Listener, Client.Listener
 	{
 		//implements MapModel.Listener
 		public void regionUpdated(Location loc)
@@ -248,6 +268,40 @@ public class CityDialog extends JDialog
 				return; //not interested
 
 			// do something
+		}
+
+		//implements Client.Listener
+		public void cityMessage(Location loc, final String message)
+		{
+			if (!loc.equals(cityLocation))
+				return; //not interested
+
+			SwingUtilities.invokeLater(new Runnable() {
+			public void run()
+			{
+				addCityMessage(message);
+			}
+			});
+		}
+
+		//implements Client.Listener
+		public void cityUpdated(Location loc, final CityInfo cityData)
+		{
+			if (!loc.equals(cityLocation))
+				return; //not interested
+
+			SwingUtilities.invokeLater(new Runnable() {
+			public void run()
+			{
+				loadCityInfo(cityData);
+			}
+			});
+		}
+
+		//implements Client.Listener
+		public void mobMessage(String mobName, String message)
+		{
+			//not interested
 		}
 	}
 }

@@ -371,6 +371,18 @@ public class MainWindow extends JFrame
 	}
 
 	//implements Client.Listener
+	public void cityUpdated(Location cityLocation, CityInfo cityData)
+	{
+		//TODO
+	}
+
+	//implements Client.Listener
+	public void cityMessage(Location cityLocation, String message)
+	{
+		//TODO
+	}
+
+	//implements Client.Listener
 	public void mobMessage(String mobName, String message)
 	{
 		JOptionPane.showMessageDialog(this, message,

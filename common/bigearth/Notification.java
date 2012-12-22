@@ -169,7 +169,7 @@ class CityMessageNotification extends Notification
 
 class CityUpdateNotification extends Notification
 {
-	String cityName;
+	Location cityLocation;
 	CityInfo cityData;
 
 	static final String EVENT_NAME = "city-update";
@@ -178,9 +178,9 @@ class CityUpdateNotification extends Notification
 	{
 	}
 
-	public CityUpdateNotification(String cityName, CityInfo cityData)
+	public CityUpdateNotification(Location cityLocation, CityInfo cityData)
 	{
-		this.cityName = cityName;
+		this.cityLocation = cityLocation;
 		this.cityData = cityData;
 	}
 
@@ -196,7 +196,7 @@ class CityUpdateNotification extends Notification
 	{
 		out.writeStartObject();
 		out.writeStringField("event", EVENT_NAME);
-		out.writeStringField("city", cityName);
+		out.writeStringField("city", cityLocation.toString());
 		out.writeFieldName("data");
 		cityData.write(out);
 		out.writeEndObject();
@@ -209,7 +209,7 @@ class CityUpdateNotification extends Notification
 		{
 			String s = in.getCurrentName();
 			if (s.equals("city"))
-				cityName = in.nextTextValue();
+				cityLocation = LocationHelper.parse(in.nextTextValue(), world);
 			else if (s.equals("data"))
 				cityData = CityInfo.parse(in, world);
 			else

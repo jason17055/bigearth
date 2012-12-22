@@ -196,7 +196,7 @@ public class CityServant
 		if (owner != null)
 		{
 			CityInfo data = makeProfile(true);
-			CityUpdateNotification n = new CityUpdateNotification(owner, data);
+			CityUpdateNotification n = new CityUpdateNotification(location, data);
 			notifyLeader(owner, n);
 		}
 	}
