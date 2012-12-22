@@ -227,7 +227,12 @@ public class InventoryDialog extends JDialog
 			if (!loc.equals(mobLocation))
 				return; //not interested
 
-			reloadRegionStock();
+			SwingUtilities.invokeLater(new Runnable() {
+			public void run()
+			{
+				reloadRegionStock();
+			}
+			});
 		}
 
 		//implements MobListModel.Listener
@@ -236,7 +241,12 @@ public class InventoryDialog extends JDialog
 			if (!mobName.equals(InventoryDialog.this.mobName))
 				return; //not interested
 
-			dispose();
+			SwingUtilities.invokeLater(new Runnable() {
+			public void run()
+			{
+				dispose();
+			}
+			});
 		}
 
 		//implements MobListModel.Listener
@@ -245,7 +255,12 @@ public class InventoryDialog extends JDialog
 			if (!mobName.equals(InventoryDialog.this.mobName))
 				return; //not interested
 
-			reloadMobInventory();
+			SwingUtilities.invokeLater(new Runnable() {
+			public void run()
+			{
+				reloadMobInventory();
+			}
+			});
 		}
 	}
 }
