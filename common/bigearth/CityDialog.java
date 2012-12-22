@@ -19,6 +19,8 @@ public class CityDialog extends JDialog
 	JLabel meatLbl;
 	JLabel sheepLbl;
 	JLabel pigLbl;
+	DefaultListModel messagesListModel;
+	JList messagesList;
 
 	CityDialog(Window owner, Client client, Location cityLocation)
 	{
@@ -76,6 +78,21 @@ public class CityDialog extends JDialog
 		mainPane.add(new JLabel("Pig"), c1);
 		pigLbl = new JLabel();
 		mainPane.add(pigLbl, c2);
+
+		messagesListModel = new DefaultListModel();
+		messagesListModel.addElement("Hello world!");
+		messagesListModel.addElement("A catastrophe has occurred.");
+
+		messagesList = new JList(messagesListModel);
+		JScrollPane messagesListScroll = new JScrollPane(messagesList);
+		messagesListScroll.setPreferredSize(new Dimension(250, 50));
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridy = c1.gridy = ++c2.gridy;
+		c3.gridx = 0;
+		c3.gridwidth = 2;
+		c3.weighty = c3.weightx = 1.0;
+		c3.fill = GridBagConstraints.BOTH;
+		mainPane.add(messagesListScroll, c3);
 
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
