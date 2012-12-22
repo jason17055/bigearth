@@ -330,12 +330,24 @@ public class MobServant
 		activityRequiredTime = 30000;
 	}
 
+	private void dropAllCommoditiesToCity(CityServant city)
+	{
+		for (Map.Entry<CommodityType, Long> e : stock.entrySet())
+		{
+			city.addCommodity(e.getKey(), e.getValue());
+		}
+		stock.clear();
+		totalMass = 0.0;
+	}
+
 	void startDisbanding()
 	{
 		if (parentRegion.city != null)
 		{
 			parentRegion.city.addPopulation(this.population);
 			this.population = 0;
+
+			dropAllCommoditiesToCity(parentRegion.city);
 			disband();
 		}
 		else
