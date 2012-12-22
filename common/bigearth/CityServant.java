@@ -604,7 +604,7 @@ public class CityServant
 
 		endOfYear_children();
 		endOfYear_hunting();
-		//endOfYear_farming();
+		endOfYear_farming();
 		endOfYear_eating();
 		endOfYear_deaths();
 		endOfYear_livestock();
@@ -662,6 +662,23 @@ public class CityServant
 			parentRegion.continueDeveloping(pts);
 			production.remove(CityJob.DEVELOP_LAND);
 		}
+	}
+
+	private void endOfYear_farming()
+	{
+		double farmerPoints = getProduction(CityJob.FARM);
+		production.remove(CityJob.FARM);
+
+		int numFarms = parentRegion.getZoneCount(ZoneType.FARM);
+		if (numFarms == 0)
+			return;
+
+		double maxYield = numFarms * 30.0;
+		double z = maxYield - maxYield * Math.exp(-1 * farmerPoints / maxYield);
+		double foodYield = z * getWorldConfig().foodPerFarmer;
+		assert foodYield >= 0.0;
+
+		addCommodity(CommodityType.GRAIN, (long)Math.floor(foodYield));
 	}
 
 	private void endOfYear_livestock()
