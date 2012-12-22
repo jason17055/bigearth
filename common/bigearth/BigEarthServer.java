@@ -279,6 +279,7 @@ public class BigEarthServer
 		public synchronized void requestStop()
 		{
 			stopRequested = true;
+			interrupt();
 		}
 	}
 }
