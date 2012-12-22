@@ -3,10 +3,11 @@ package bigearth;
 public enum CommodityType
 {
 	WOOD(500.0, 0, false),
-	MEAT(50.0, 800, false),
-	GRAIN(100.0, 1000, false),
-	SHEEP(80.0, 0, true),
-	PIG(60.0, 0, true),
+	MEAT(1.0, 1, false),
+	GRAIN(1.0, 1, false),
+	SHEEP(80.0, 0, true),   // TODO 80kg sheep gives 20kg meat
+	PIG(70.0, 0, true),     // TODO 70kg pig gives 35kg meat
+	CATTLE(750.0, 0, true), // TODO 750kg cow gives 250kg meat
 	WILDLIFE(50.0, 0, true); //cannot be captured, only killed for meat
 
 	public double mass;

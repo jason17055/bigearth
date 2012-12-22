@@ -611,6 +611,11 @@ public class CityServant
 		endOfYear_developLand();
 	}
 
+	private void cityDebug(String message)
+	{
+		System.out.println("city["+location+"] "+message);
+	}
+
 	private void cityMessage(String message)
 	{
 		CityMessageNotification n = new CityMessageNotification(location, message);
@@ -688,7 +693,9 @@ public class CityServant
 		double foodYield = z * getWorldConfig().foodPerFarmer;
 		assert foodYield >= 0.0;
 
-		addCommodity(CommodityType.GRAIN, (long)Math.floor(foodYield));
+		double asGrain = foodYield / CommodityType.GRAIN.nutrition;
+
+		addCommodity(CommodityType.GRAIN, (long)Math.floor(asGrain));
 	}
 
 	private void endOfYear_livestock()

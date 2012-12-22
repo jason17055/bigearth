@@ -59,10 +59,10 @@ public class WorldConfig implements WorldConfigIfc
 				properties.getProperty("humanLifeExpectancy", "50")
 				);
 		this.foodPerAnimal = Long.parseLong(
-				properties.getProperty("foodPerAnimal", "1")
+				properties.getProperty("foodPerAnimal", "2")
 				);
 		this.foodPerFarmer = Long.parseLong(
-				properties.getProperty("foodPerFarmer", "1")
+				properties.getProperty("foodPerFarmer", "5")
 				);
 		// amount of nutrition needed per adult per year
 		this.hungerPerAdult = Double.parseDouble(

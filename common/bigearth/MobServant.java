@@ -271,11 +271,12 @@ public class MobServant
 		if (!stock.containsKey(CommodityType.MEAT))
 			return false;
 
-	System.out.println("eating one unit of MEAT");
+		int requiredNutrition = 150 - nutrition;
+		long desired = (long)Math.ceil((double)requiredNutrition / (double)CommodityType.MEAT.nutrition);
 
-		subtractCommodity(CommodityType.MEAT, 1);
-		nutrition += CommodityType.MEAT.nutrition;
-	System.out.println("nutrition level is now "+nutrition);
+		long actual = subtractCommodity(CommodityType.MEAT, desired);
+		nutrition += actual * CommodityType.MEAT.nutrition;
+	System.out.println("ate "+actual+ " MEAT; nutrition is now "+nutrition);
 
 		return true;
 	}
@@ -561,7 +562,14 @@ public class MobServant
 		wildlife.wildlifeByType.get(typeHunted).hunted++;
 
 		boolean capturedAlive = (Math.random() < wildlife.getChanceOfDomestication(typeHunted));
-		this.addCommodity(capturedAlive ? typeHunted : CommodityType.MEAT, 1);
+		if (capturedAlive)
+		{
+			this.addCommodity(typeHunted, 1);
+		}
+		else
+		{
+			this.addCommodity(CommodityType.MEAT, wildlife.meatPerHead(typeHunted));
+		}
 	}
 
 	private void completedGatheringWood()

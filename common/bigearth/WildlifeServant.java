@@ -337,10 +337,10 @@ class WildlifeServant
 	{
 		switch(type)
 		{
-		case SHEEP: return 2;
-		case PIG: return 3;
-		default:
-			return 1;
+		case PIG: return 35;
+		case CATTLE: return 250;
+		case SHEEP: return 20;
+		default: return 25;
 		}
 	}
 
