@@ -20,8 +20,18 @@ public class CityDialog extends JDialog
 	JLabel meatLbl;
 	JLabel sheepLbl;
 	JLabel pigLbl;
+	JComboBox developSelect;
+	JComboBox equipSelect;
 	DefaultListModel messagesListModel;
 	JList messagesList;
+
+	static ZoneType [] developChoices = new ZoneType[] {
+		ZoneType.MUD_COTTAGES,
+		ZoneType.FARM,
+		ZoneType.PASTURE };
+	static MobType [] equipChoices = new MobType[] {
+		MobType.SETTLER
+		};
 
 	void onWindowClosed()
 	{
@@ -110,21 +120,27 @@ public class CityDialog extends JDialog
 			}});
 		buttonPane.add(renameBtn);
 
-		JButton developHousingBtn = new JButton("Develop Housing");
-		developHousingBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ev)
-			{
-				onDevelopHousingClicked();
-			}});
-		buttonPane.add(developHousingBtn);
+		developSelect = new JComboBox(developChoices);
+		buttonPane.add(developSelect);
 
-		JButton equipSettlerBtn = new JButton("Equip Settler");
-		equipSettlerBtn.addActionListener(new ActionListener() {
+		JButton developBtn = new JButton("Develop");
+		developBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
 			{
-				onEquipSettlerClicked();
+				onDevelopClicked();
 			}});
-		buttonPane.add(equipSettlerBtn);
+		buttonPane.add(developBtn);
+
+		equipSelect = new JComboBox(equipChoices);
+		buttonPane.add(equipSelect);
+
+		JButton equipBtn = new JButton("Equip");
+		equipBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onEquipClicked();
+			}});
+		buttonPane.add(equipBtn);
 
 		JButton closeBtn = new JButton("Close");
 		closeBtn.addActionListener(new ActionListener() {
@@ -229,12 +245,15 @@ public class CityDialog extends JDialog
 		}
 	}
 
-	private void onEquipSettlerClicked()
+	private void onEquipClicked()
 	{
+		MobType type = (MobType) equipSelect.getSelectedItem();
+		assert type != null;
+
 		try {
 
 		EquipCommand c = new EquipCommand();
-		c.mobType = MobType.SETTLER;
+		c.mobType = type;
 		client.sendCityOrders(cityLocation, c);
 
 		}
@@ -247,13 +266,16 @@ public class CityDialog extends JDialog
 		}
 	}
 
-	private void onDevelopHousingClicked()
+	private void onDevelopClicked()
 	{
+		ZoneType type = (ZoneType) developSelect.getSelectedItem();
+		assert type != null;
+
 		try {
 
 		DevelopCommand c = new DevelopCommand();
 		c.fromZoneType = ZoneType.NATURAL;
-		c.toZoneType = ZoneType.MUD_COTTAGES;
+		c.toZoneType = type;
 		client.sendCityOrders(cityLocation, c);
 
 		}
