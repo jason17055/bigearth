@@ -1,4 +1,4 @@
-<project name="bigearth" default="compile">
+<project name="bigearth" default="all">
 
 <property name="srcdir" location="common" />
 <property name="builddir" location="target/build" />
@@ -10,8 +10,17 @@
   </fileset>
 </path>
 
-<target name="compile">
+<target name="init-builddir">
 <mkdir dir="${builddir}" />
+</target>
+
+<target name="copy-resources" depends="init-builddir">
+<copy todir="${builddir}">
+	<fileset dir="resources" />
+</copy>
+</target>
+
+<target name="compile" depends="init-builddir">
 <javac srcdir="${srcdir}"
        destdir="${builddir}"
        classpathref="build-classpath"
@@ -21,6 +30,9 @@
 	<compilerarg value="-Xlint:unchecked" />
 	<compilerarg value="-Xlint:deprecation" />
 </javac>
+</target>
+
+<target name="all" depends="copy-resources,compile">
 </target>
 
 <target name="clean">

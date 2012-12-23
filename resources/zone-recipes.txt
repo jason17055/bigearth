@@ -1,0 +1,17 @@
+[
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"MUD_COTTAGES",
+"workRequired":100
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"FARM",
+"workRequired":100
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"PASTURE",
+"workRequired":100
+}
+]
