@@ -33,6 +33,8 @@ public class CityDialog extends JDialog
 
 	static ZoneType [] developChoices = new ZoneType[] {
 		ZoneType.MUD_COTTAGES,
+		ZoneType.WOOD_COTTAGES,
+		ZoneType.STONE_COTTAGES,
 		ZoneType.FARM,
 		ZoneType.PASTURE };
 	static MobType [] equipChoices = new MobType[] {

@@ -489,6 +489,8 @@ class RegionServant
 				it.hasNext(); )
 		{
 			ZoneDevelopment zd = it.next();
+			if (!zd.requiredCommodities.isEmpty())
+				continue;
 
 			double remaining = Math.max(0, zd.getRemaining());
 			if (productionPoints >= remaining)

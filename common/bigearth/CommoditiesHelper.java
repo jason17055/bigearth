@@ -6,6 +6,11 @@ import java.util.*;
 
 class CommoditiesHelper
 {
+	static Map<CommodityType, Long> createEmpty()
+	{
+		return new EnumMap<CommodityType, Long>(CommodityType.class);
+	}
+
 	static Map<CommodityType, Long> parseCommodities(JsonParser in)
 		throws IOException
 	{
@@ -44,6 +49,8 @@ class CommoditiesHelper
 
 	static Map<CommodityType, Long> makeClone(Map<CommodityType, Long> stock)
 	{
+		assert stock != null;
+
 		Map<CommodityType, Long> rv = new EnumMap<CommodityType, Long>(CommodityType.class);
 		rv.putAll(stock);
 		return rv;

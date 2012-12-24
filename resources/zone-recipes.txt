@@ -13,5 +13,11 @@
 "fromZoneType":"NATURAL",
 "toZoneType":"PASTURE",
 "workRequired":100
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"WOOD_COTTAGES",
+"workRequired":100,
+"required":{"WOOD":100}
 }
 ]

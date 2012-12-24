@@ -51,5 +51,10 @@ public class ZoneRecipe
 
 		if (in.getCurrentToken() != JsonToken.END_OBJECT)
 			throw new InputMismatchException();
+
+		if (consumed == null)
+			consumed = CommoditiesHelper.createEmpty();
+		if (generated == null)
+			generated = CommoditiesHelper.createEmpty();
 	}
 }

@@ -677,8 +677,39 @@ public class CityServant
 		}
 	}
 
+	private void payDevelopmentCost(RegionServant.ZoneDevelopment zd)
+	{
+		for (Iterator< Map.Entry<CommodityType, Long> > it = zd.requiredCommodities.entrySet().iterator();
+			it.hasNext(); )
+		{
+			Map.Entry<CommodityType, Long> e = it.next();
+			CommodityType ct = e.getKey();
+
+			long amtWanted = e.getValue();
+			long amtGiven = subtractCommodity(ct, amtWanted);
+			amtWanted -= amtGiven;
+			if (amtWanted > 0)
+			{
+				e.setValue(amtWanted);
+			}
+			else
+			{
+				it.remove();
+			}
+		}
+	}
+
 	private void endOfYear_developLand()
 	{
+		for (RegionServant.ZoneDevelopment zd : parentRegion.zoneDevelopments)
+		{
+			if (!zd.requiredCommodities.isEmpty())
+			{
+				// this development requires some commodity
+				payDevelopmentCost(zd);
+			}
+		}
+
 		double pts = getProduction(CityJob.DEVELOP_LAND);
 		if (pts != 0.0)
 		{
