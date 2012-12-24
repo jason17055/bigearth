@@ -41,18 +41,15 @@ class RegionServant
 
 	static class ZoneDevelopment
 	{
-		double productionPoints;
 		ZoneType targetType;
+		double workRemaining;
+		Map<CommodityType, Long> requiredCommodities;
+		Map<CommodityType, Long> generatedCommodities;
 
 		static final double REQUIRED_POINTS = 100.0;
-		public boolean isFinished()
-		{
-			return productionPoints >= REQUIRED_POINTS;
-		}
-
 		public double getRemaining()
 		{
-			return REQUIRED_POINTS - productionPoints;
+			return workRemaining;
 		}
 	}
 
@@ -352,8 +349,18 @@ class RegionServant
 		for (ZoneDevelopment zd : zoneDevelopments)
 		{
 			out.writeStartObject();
-			out.writeNumberField("productionPoints", zd.productionPoints);
 			out.writeStringField("targetType", zd.targetType.name());
+			out.writeNumberField("workRemaining", zd.workRemaining);
+			if (!zd.requiredCommodities.isEmpty())
+			{
+				out.writeFieldName("requiredCommodities");
+				CommoditiesHelper.writeCommodities(zd.requiredCommodities, out);
+			}
+			if (!zd.generatedCommodities.isEmpty())
+			{
+				out.writeFieldName("generatedCommodities");
+				CommoditiesHelper.writeCommodities(zd.generatedCommodities, out);
+			}
 			out.writeEndObject();
 		}
 		out.writeEndArray();
@@ -390,13 +397,17 @@ class RegionServant
 			while (in.nextToken() == JsonToken.FIELD_NAME)
 			{
 				String s = in.getCurrentName();
-				if (s.equals("productionPoints"))
+				if (s.equals("targetType"))
+					zd.targetType = ZoneType.valueOf(in.nextTextValue());
+				else if (s.equals("workRemaining"))
 				{
 					in.nextToken();
-					zd.productionPoints = in.getDoubleValue();
+					zd.workRemaining = in.getDoubleValue();
 				}
-				else if (s.equals("targetType"))
-					zd.targetType = ZoneType.valueOf(in.nextTextValue());
+				else if (s.equals("requiredCommodities"))
+					zd.requiredCommodities = CommoditiesHelper.parseCommodities(in);
+				else if (s.equals("generatedCommodities"))
+					zd.generatedCommodities = CommoditiesHelper.parseCommodities(in);
 				else
 				{
 					System.err.println("warning: unrecognized zone development property: "+s);
@@ -407,6 +418,13 @@ class RegionServant
 
 			if (in.getCurrentToken() != JsonToken.END_OBJECT)
 				throw new InputMismatchException();
+
+			if (zd.requiredCommodities == null)
+				zd.requiredCommodities = new HashMap<CommodityType, Long>();
+			if (zd.generatedCommodities == null)
+				zd.generatedCommodities = new HashMap<CommodityType, Long>();
+
+			zoneDevelopments.add(zd);
 		}
 	}
 
@@ -428,7 +446,7 @@ class RegionServant
 	}
 
 	void beginDeveloping(ZoneType fromZoneType, ZoneType toZoneType)
-		throws ZoneTypeNotFound
+		throws ZoneTypeNotFound, InvalidZoneTransition
 	{
 		assert fromZoneType != null;
 		assert fromZoneType != ZoneType.UNDER_CONSTRUCTION;
@@ -439,6 +457,11 @@ class RegionServant
 		Integer numZonesI = zones.get(fromZoneType);
 		if (numZonesI == null)
 			throw new ZoneTypeNotFound();
+
+		// check whether recipe exists
+		ZoneRecipe recipe = getWorldMaster().zoneRecipes.get(fromZoneType, toZoneType);
+		if (recipe == null)
+			throw new InvalidZoneTransition();
 
 		int newFromZones = numZonesI.intValue() - 1;
 		if (newFromZones > 0)
@@ -454,6 +477,9 @@ class RegionServant
 		// make a new development
 		ZoneDevelopment zd = new ZoneDevelopment();
 		zd.targetType = toZoneType;
+		zd.workRemaining = recipe.workRequired;
+		zd.requiredCommodities = CommoditiesHelper.makeClone(recipe.consumed);
+		zd.generatedCommodities = CommoditiesHelper.makeClone(recipe.generated);
 		zoneDevelopments.add(zd);
 	}
 
@@ -464,7 +490,7 @@ class RegionServant
 		{
 			ZoneDevelopment zd = it.next();
 
-			double remaining = zd.getRemaining();
+			double remaining = Math.max(0, zd.getRemaining());
 			if (productionPoints >= remaining)
 			{
 				endDeveloping(zd.targetType);
@@ -473,7 +499,8 @@ class RegionServant
 			}
 			else
 			{
-				zd.productionPoints += productionPoints;
+				assert productionPoints < zd.workRemaining;
+				zd.workRemaining -= productionPoints;
 				productionPoints = 0.0;
 				break;
 			}
@@ -653,6 +680,11 @@ class RegionServant
 	long currentTime()
 	{
 		return world.eventDispatchThread.lastEventTime;
+	}
+
+	WorldMaster getWorldMaster()
+	{
+		return world;
 	}
 
 	void notifyLeader(String user, Notification n)
@@ -1024,6 +1056,10 @@ class RegionServant
 	public boolean isSeenBy(String user)
 	{
 		return seenByUser.containsKey(user);
+	}
+
+	static class InvalidZoneTransition extends Exception
+	{
 	}
 
 	static class ZoneTypeNotFound extends Exception

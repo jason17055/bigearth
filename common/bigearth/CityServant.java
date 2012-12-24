@@ -326,11 +326,18 @@ public class CityServant
 
 		try
 		{
+			// TODO- deduct required resources, if any
+
 			parentRegion.beginDeveloping(c.fromZoneType, c.toZoneType);
 		}
 		catch (RegionServant.ZoneTypeNotFound e)
 		{
 			activityFailed("No space left to develop.");
+			return;
+		}
+		catch (RegionServant.InvalidZoneTransition e)
+		{
+			activityFailed("Cannot develop "+c.toZoneType+" from "+c.fromZoneType+".");
 			return;
 		}
 

@@ -12,6 +12,7 @@ public class WorldMaster
 	Map<String, LeaderInfo> leaders;
 	Map<String, RegionServant> mobs;
 	Scheduler scheduler;
+	ZoneRecipeCollection zoneRecipes;
 
 	/// Time when the current year started
 	long yearStarted;
@@ -35,6 +36,8 @@ public class WorldMaster
 	public void load()
 		throws IOException
 	{
+		this.zoneRecipes = ZoneRecipeCollection.load(config);
+
 		File inFile = new File(config.path, "world.txt");
 		JsonParser in = new JsonFactory().createJsonParser(inFile);
 
