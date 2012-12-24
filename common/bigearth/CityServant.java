@@ -941,10 +941,13 @@ public class CityServant
 		//TODO- consider effect of sickness and malnutrition
 
 		double deathRate = 1.0 - sustainRate;
-		for (Map.Entry<CityJob,Integer> e : workers.entrySet())
+
+		// must avoid iterating workers directly because
+		// we invoke subtractWorkers() which may modify the hash
+		CityJob [] allJobs = workers.keySet().toArray(new CityJob[0]);
+		for (CityJob job : allJobs)
 		{
-			CityJob job = e.getKey();
-			int qty = e.getValue();
+			int qty = workers.get(job);
 
 			PsuedoBinomialDistribution d = PsuedoBinomialDistribution.getInstance(qty, deathRate);
 			int deaths = (int) d.nextVariate();
