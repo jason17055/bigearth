@@ -111,6 +111,15 @@ class RegionServant
 				}
 			}
 		}
+
+		//check under construction zones
+		while (getZoneCount(ZoneType.UNDER_CONSTRUCTION)
+			> zoneDevelopments.size())
+		{
+			// got an extra zone under construction
+			decrementZoneCount(ZoneType.UNDER_CONSTRUCTION);
+			incrementZoneCount(ZoneType.NATURAL);
+		}
 	}
 
 	//implements BigEarthServant
@@ -453,26 +462,17 @@ class RegionServant
 		assert toZoneType != null;
 		assert toZoneType != ZoneType.UNDER_CONSTRUCTION;
 
-		// designate zone for development
-		Integer numZonesI = zones.get(fromZoneType);
-		if (numZonesI == null)
-			throw new ZoneTypeNotFound();
-
 		// check whether recipe exists
 		ZoneRecipe recipe = getWorldMaster().zoneRecipes.get(fromZoneType, toZoneType);
 		if (recipe == null)
 			throw new InvalidZoneTransition();
 
-		int newFromZones = numZonesI.intValue() - 1;
-		if (newFromZones > 0)
-			zones.put(fromZoneType, newFromZones);
-		else
-			zones.remove(fromZoneType);
+		if (getZoneCount(fromZoneType) == 0)
+			throw new ZoneTypeNotFound();
 
-		// make a new zone (of type- under construction)
-		zones.put(ZoneType.UNDER_CONSTRUCTION,
-			1 + getZoneCount(ZoneType.UNDER_CONSTRUCTION)
-			);
+		// designate zone for development
+		decrementZoneCount(fromZoneType);
+		incrementZoneCount(ZoneType.UNDER_CONSTRUCTION);
 
 		// make a new development
 		ZoneDevelopment zd = new ZoneDevelopment();
@@ -481,6 +481,24 @@ class RegionServant
 		zd.requiredCommodities = CommoditiesHelper.makeClone(recipe.consumed);
 		zd.generatedCommodities = CommoditiesHelper.makeClone(recipe.generated);
 		zoneDevelopments.add(zd);
+	}
+
+	private void decrementZoneCount(ZoneType zoneType)
+	{
+		Integer numZonesI = zones.get(zoneType);
+		if (numZonesI == null)
+			throw new Error("cannot decrement a non-existent zone");
+
+		int newZones = numZonesI.intValue() - 1;
+		if (newZones > 0)
+			zones.put(zoneType, newZones);
+		else
+			zones.remove(zoneType);
+	}
+
+	private void incrementZoneCount(ZoneType zoneType)
+	{
+		zones.put(zoneType, 1 + getZoneCount(zoneType));
 	}
 
 	void continueDeveloping(double productionPoints)
@@ -514,17 +532,9 @@ class RegionServant
 		assert newZoneType != null;
 		assert newZoneType != ZoneType.UNDER_CONSTRUCTION;
 
-		int numUnderConstruction = getZoneCount(ZoneType.UNDER_CONSTRUCTION);
-		if (numUnderConstruction - 1 > 0)
-		{
-			zones.put(ZoneType.UNDER_CONSTRUCTION, numUnderConstruction-1);
-		}
-		else
-		{
-			zones.remove(ZoneType.UNDER_CONSTRUCTION);
-		}
+		decrementZoneCount(ZoneType.UNDER_CONSTRUCTION);
+		incrementZoneCount(newZoneType);
 
-		zones.put(newZoneType, getZoneCount(newZoneType)+1);
 		world.regionChanged(regionId);
 	}
 
@@ -613,6 +623,8 @@ class RegionServant
 				System.err.println("unrecognized property: "+s);
 			}
 		}
+
+		in.close();
 	}
 
 	private void loadMobs(JsonParser in)
