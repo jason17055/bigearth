@@ -535,6 +535,8 @@ System.out.println("in stopListenerThread()");
 		{
 			URL url = new URL("http://jason.long.name/bigearth/server-api/world.php");
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setConnectTimeout(5000);
+			conn.setReadTimeout(10000);
 			JsonParser in = new JsonFactory().createJsonParser(conn.getInputStream());
 			in.nextToken();
 			while (in.nextToken() != JsonToken.END_ARRAY)
@@ -564,6 +566,7 @@ System.out.println("in stopListenerThread()");
 		}
 		catch (IOException e)
 		{
+			System.err.println("Warning: " + e);
 			return new String[0];
 		}
 	}
@@ -571,8 +574,36 @@ System.out.println("in stopListenerThread()");
 	public static void main(String [] args)
 		throws Exception
 	{
-		JComboBox hostField = new JComboBox(getServersFromMetaServer());
+		final DefaultComboBoxModel hostChoices = new DefaultComboBoxModel();
+		JComboBox hostField = new JComboBox(hostChoices);
 		hostField.setEditable(true);
+
+		SwingWorker worker = new SwingWorker<String[], Void>() {
+		@Override
+		public String[] doInBackground()
+		{
+			return getServersFromMetaServer();
+		}
+
+		@Override
+		public void done()
+		{
+			try
+			{
+				String [] choices = get();
+				for (String s : choices)
+				{
+					hostChoices.addElement(s);
+				}
+			}
+			catch (Exception e)
+			{
+				//ignore
+				System.err.println(e);
+			}
+		}
+		};
+		worker.execute();
 
 		JTextField userField = new JTextField();
 		JPasswordField passField = new JPasswordField();
