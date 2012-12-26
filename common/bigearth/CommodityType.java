@@ -5,6 +5,8 @@ public enum CommodityType
 	WOOD(500.0, 0, false),
 	CLAY(25.0, 0, false),
 	STONE(25.0, 0, false),
+	COPPER_ORE(25.0, 0, false),
+	STONE_WEAPON(2.5, 0, false),
 	MEAT(1.0, 1, false),
 	GRAIN(1.0, 1, false),
 	SHEEP(80.0, 0, true),   // TODO 80kg sheep gives 20kg meat
