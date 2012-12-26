@@ -12,7 +12,6 @@ public class CityDialog extends JDialog
 	Location cityLocation;
 	MyListener listner;
 
-	JLabel nameLbl;
 	JLabel populationLbl;
 	JLabel childrenLbl;;
 	JLabel farmsLbl;
@@ -65,11 +64,6 @@ public class CityDialog extends JDialog
 		c2.anchor = GridBagConstraints.FIRST_LINE_END;
 
 		c1.gridy = c2.gridy = 0;
-		mainPane.add(new JLabel("Name"), c1);
-		nameLbl = new JLabel();
-		mainPane.add(nameLbl, c2);
-
-		c1.gridy = ++c2.gridy;
 		mainPane.add(new JLabel("Population"), c1);
 		populationLbl = new JLabel();
 		mainPane.add(populationLbl, c2);
@@ -230,7 +224,7 @@ public class CityDialog extends JDialog
 
 	private void loadCityInfo(CityInfo city)
 	{
-		nameLbl.setText(city.displayName);
+		setTitle("City: "+city.displayName);
 		populationLbl.setText(city.hasPopulation() ?
 			Integer.toString(city.population) : null);
 		childrenLbl.setText(city.hasChildren() ?
