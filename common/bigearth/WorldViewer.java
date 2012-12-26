@@ -316,6 +316,13 @@ public class WorldViewer extends JFrame
 			}});
 		fileMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Generate Minerals");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onGenerateMineralsClicked();
+			}});
+		fileMenu.add(menuItem);
+
 		menuItem = new JMenuItem("Leaders...");
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
@@ -448,6 +455,12 @@ public class WorldViewer extends JFrame
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	void onGenerateMineralsClicked()
+	{
+		world.generateMinerals();
+		reloadImage();
 	}
 
 	void onGenerateBiomesClicked()

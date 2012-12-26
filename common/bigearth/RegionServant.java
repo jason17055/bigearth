@@ -34,7 +34,16 @@ class RegionServant
 	int floods;
 
 	WildlifeServant wildlife;
+
+	/// Goods that are stockpiled.
 	CommoditiesBag stock;
+
+	/// Raw materials that are on the surface, easily gathered.
+	CommoditiesBag surfaceMinerals;
+
+	/// Raw materials that are deep underground.
+	CommoditiesBag undergroundMinerals;
+
 	Map<ZoneType, Integer> zones;
 
 	List<ZoneDevelopment> zoneDevelopments;
@@ -66,6 +75,8 @@ class RegionServant
 		this.presentMobs = new HashMap<String, MobServant>();
 		this.wildlife = new WildlifeServant(this);
 		this.stock = new CommoditiesBag();
+		this.surfaceMinerals = new CommoditiesBag();
+		this.undergroundMinerals = new CommoditiesBag();
 		this.seenByMob = new HashMap<SeenByKey, RegionSight>();
 		this.seenByUser = new HashMap<String, UserSight>();
 		this.zones = new EnumMap<ZoneType, Integer>(ZoneType.class);
@@ -301,8 +312,21 @@ class RegionServant
 		out.writeNumberField("temperature", temperature);
 		out.writeNumberField("annualRains", annualRains);
 		out.writeNumberField("floods", floods);
-		out.writeFieldName("stock");
-		stock.write(out);
+		if (!stock.isEmpty())
+		{
+			out.writeFieldName("stock");
+			stock.write(out);
+		}
+		if (!surfaceMinerals.isEmpty())
+		{
+			out.writeFieldName("surfaceMinerals");
+			surfaceMinerals.write(out);
+		}
+		if (!undergroundMinerals.isEmpty())
+		{
+			out.writeFieldName("undergroundMinerals");
+			undergroundMinerals.write(out);
+		}
 		out.writeFieldName("zones");
 		writeZones(out);
 
@@ -616,6 +640,10 @@ class RegionServant
 				parseZoneDevelopments(in);
 			else if (s.equals("city"))
 				city = CityServant.parse(in, this);
+			else if (s.equals("surfaceMinerals"))
+				surfaceMinerals = CommoditiesBag.parse(in);
+			else if (s.equals("undergroundMinerals"))
+				undergroundMinerals = CommoditiesBag.parse(in);
 			else
 			{
 				in.nextToken();

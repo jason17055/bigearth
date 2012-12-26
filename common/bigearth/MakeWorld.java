@@ -487,4 +487,68 @@ public class MakeWorld
 	{
 		world.saveAll();
 	}
+
+	public void generateMinerals()
+	{
+		int numCells = g.getCellCount();
+		for (int i = 0; i < numCells; i++)
+		{
+			RegionServant region = world.regions[i];
+			initMinerals(region);
+		}
+	}
+
+	private static int mineralsHelper(double mean, double sigma)
+	{
+		Random prng = PsuedoBinomialDistribution.prng;
+		double x = new NormalDistribution(prng, mean, sigma).nextVariate();
+		if (x > 0)
+		{
+			return (int)Math.round(x);
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
+	private void initMinerals(RegionServant region)
+	{
+		BiomeType biome = region.getBiome();
+
+		region.surfaceMinerals = new CommoditiesBag();
+
+		if (!biome.isWater())
+		{
+		region.surfaceMinerals.add(CommodityType.CLAY,
+			mineralsHelper(1200, 300)
+			);
+		region.surfaceMinerals.add(CommodityType.STONE,
+			mineralsHelper(1500, 600)
+			);
+		region.surfaceMinerals.add(CommodityType.COPPER_ORE,
+			mineralsHelper(200, 150)
+			);
+		if (biome == BiomeType.FOREST || biome == BiomeType.JUNGLE)
+		{
+			region.surfaceMinerals.add(CommodityType.WOOD,
+				mineralsHelper(3000, 800)
+				);
+		}
+		else
+		{
+			region.surfaceMinerals.add(CommodityType.WOOD,
+				mineralsHelper(100, 50)
+				);
+		}
+		}//end if not water
+
+		region.undergroundMinerals = new CommoditiesBag();
+		region.undergroundMinerals.add(CommodityType.STONE,
+			mineralsHelper(1000000, 500000)
+			);
+		region.undergroundMinerals.add(CommodityType.COPPER_ORE,
+			mineralsHelper(40000, 60000)
+			);
+	}
 }
