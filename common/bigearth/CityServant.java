@@ -703,67 +703,26 @@ public class CityServant
 		double maxYield = numNatural * 5.0;
 		double z = maxYield - maxYield * Math.exp(-1 * gatheringPoints / maxYield);
 
-		double woodRatio;
-		double clayRatio;
-		double stoneRatio;
+		long numGathered = (long)Math.round(z * 0.25);
+		System.out.printf("%.1f workers gathered %d units\n",
+				gatheringPoints,
+				(int) numGathered
+				);
 
-		switch (parentRegion.getBiome())
+		ProbabilityUrn<CommodityType> urn = new ProbabilityUrn<CommodityType>();
+		for (CommodityType ct : parentRegion.surfaceMinerals.getCommodityTypesArray())
 		{
-		case PLAINS:
-		case GRASSLAND:
-			woodRatio = 0.20;
-			clayRatio = 0.20;
-			stoneRatio = 0.20;
-			break;
-		case FOREST:
-		case JUNGLE:
-			woodRatio = 0.75;
-			clayRatio = 0.10;
-			stoneRatio = 0.10;
-			break;
-		case SWAMP:
-			woodRatio = 0.65;
-			clayRatio = 0.25;
-			stoneRatio = 0;
-			break;
-		case DESERT:
-			woodRatio = 0.05;
-			clayRatio = 0.10;
-			stoneRatio = 0.25;
-			break;
-		case TUNDRA:
-			woodRatio = 0.10;
-			clayRatio = 0.15;
-			stoneRatio = 0.25;
-			break;
-		case MOUNTAIN:
-			woodRatio = 0.20;
-			clayRatio = 0.25;
-			stoneRatio = 0.40;
-			break;
-		case HILLS:
-			woodRatio = 0.25;
-			clayRatio = 0.35;
-			stoneRatio = 0.35;
-			break;
-		default:
-			woodRatio = 0.0;
-			clayRatio = 0.0;
-			stoneRatio = 0.0;
+			urn.add(ct, parentRegion.surfaceMinerals.getQuantity(ct));
 		}
 
-		processResourceGathering(CommodityType.WOOD, woodRatio * z);
-		processResourceGathering(CommodityType.CLAY, clayRatio * z);
-		processResourceGathering(CommodityType.STONE, stoneRatio * z);
-	}
-
-	private void processResourceGathering(CommodityType ct, double pts)
-	{
-		long yield = (long) Math.round(pts);
-		if (yield == 0)
-			return;
-
-		addCommodity(ct, yield);
+		Map<CommodityType, Long> picked = urn.pickMany(numGathered);
+		for (CommodityType ct : picked.keySet())
+		{
+			long amt = picked.get(ct);
+			long taken = parentRegion.surfaceMinerals.subtract(ct, amt);
+			stock.add(ct, taken);
+			System.out.println("  "+taken+" " + ct);
+		}
 	}
 
 	private void endOfYear_livestock()
