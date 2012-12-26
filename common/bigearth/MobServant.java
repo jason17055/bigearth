@@ -16,7 +16,7 @@ public class MobServant
 	long activityStarted;
 	long activityRequiredTime;
 	boolean activityError;
-	Map<CommodityType, Long> stock;
+	CommoditiesBag stock;
 	double hunger;
 	int population;
 	Map<SimpleLocation, RegionSight> canSee;
@@ -24,14 +24,13 @@ public class MobServant
 	MobType mobType;
 
 	transient Scheduler.Event wakeUp;
-	transient double totalMass;
 
 	MobServant(RegionServant parentRegion, String name)
 	{
 		this.parentRegion = parentRegion;
 		this.name = name;
 		this.displayName = name;
-		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		this.stock = new CommoditiesBag();
 		this.population = 100; //default population
 		this.canSee = new HashMap<SimpleLocation, RegionSight>();
 		this.flag = Flag.NONE;
@@ -68,19 +67,7 @@ public class MobServant
 
 	public void addCommodity(CommodityType ct, long amount)
 	{
-		assert stock != null;
-
-		if (stock.containsKey(ct))
-		{
-			long amt = stock.get(ct);
-			amt += amount;
-			stock.put(ct, amt);
-		}
-		else
-		{
-			stock.put(ct, amount);
-		}
-		totalMass += ct.mass * amount;
+		stock.add(ct, amount);
 	}
 
 	/**
@@ -88,31 +75,12 @@ public class MobServant
 	 */
 	public long subtractCommodity(CommodityType ct, long amount)
 	{
-		assert stock != null;
-
-		if (stock.containsKey(ct))
-		{
-			long curBal = stock.get(ct);
-			if (amount < curBal)
-			{
-				stock.put(ct, curBal - amount);
-				totalMass -= ct.mass * amount;
-				return amount;
-			}
-			else
-			{
-				stock.remove(ct);
-				totalMass -= ct.mass * curBal;
-				return curBal;
-			}
-		}
-		return 0;
+		return stock.subtract(ct, amount);
 	}
 
 	public long getStock(CommodityType ct)
 	{
-		Long x = stock.get(ct);
-		return x != null ? x.longValue() : 0;
+		return stock.getQuantity(ct);
 	}
 
 	public boolean hasActivity()
@@ -157,7 +125,7 @@ public class MobServant
 				m.activityStarted = in.getLongValue();
 			}
 			else if (s.equals("stock"))
-				m.stock = CommoditiesHelper.parseCommodities(in);
+				m.stock = CommoditiesBag.parse(in);
 			else if (s.equals("population"))
 			{
 				in.nextToken();
@@ -174,13 +142,6 @@ public class MobServant
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
-
-		m.totalMass = 0;
-		for (CommodityType ct : m.stock.keySet())
-		{
-			long amt = m.stock.get(ct);
-			m.totalMass += ct.mass * amt;
-		}
 
 		return m;
 	}
@@ -201,7 +162,7 @@ public class MobServant
 			out.writeNumberField("activityStarted", activityStarted);
 		}
 		out.writeFieldName("stock");
-		CommoditiesHelper.writeCommodities(stock, out);
+		stock.write(out);
 		out.writeNumberField("hunger", hunger);
 		out.writeNumberField("population", population);
 		out.writeStringField("flag", flag.name());
@@ -211,7 +172,7 @@ public class MobServant
 	double getEncumbranceFactor()
 	{
 		double capacity = 100 * 20;
-		return totalMass / capacity;
+		return stock.getTotalMass() / capacity;
 	}
 
 	MobInfo makeProfileForObserver()
@@ -267,7 +228,8 @@ public class MobServant
 
 	boolean eatSomething()
 	{
-		if (!stock.containsKey(CommodityType.MEAT))
+		long onHand = stock.getQuantity(CommodityType.MEAT);
+		if (onHand == 0)
 			return false;
 
 		long desired = (long)Math.ceil(hunger / (double)CommodityType.MEAT.nutrition);
@@ -332,12 +294,12 @@ public class MobServant
 
 	private void dropAllCommoditiesToCity(CityServant city)
 	{
-		for (Map.Entry<CommodityType, Long> e : stock.entrySet())
+		for (CommodityType ct : stock.getCommodityTypesArray())
 		{
-			city.addCommodity(e.getKey(), e.getValue());
+			long qty = stock.getQuantity(ct);
+			city.addCommodity(ct, qty);
 		}
 		stock.clear();
-		totalMass = 0.0;
 	}
 
 	void startDisbanding()

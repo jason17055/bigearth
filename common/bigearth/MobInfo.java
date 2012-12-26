@@ -12,7 +12,7 @@ public class MobInfo
 	Location location;
 	String activity;
 	long activityStarted;
-	Map<CommodityType, Long> stock;
+	CommoditiesBag stock;
 	EncumbranceLevel encumbrance;
 	HungerStatus hunger;
 	Flag flag;
@@ -23,7 +23,9 @@ public class MobInfo
 
 	public long getStock(CommodityType ct)
 	{
-		return stock.containsKey(ct) ? stock.get(ct) : 0;
+		assert hasStock();
+
+		return stock.getQuantity(ct);
 	}
 
 	public boolean hasActivity()
@@ -97,7 +99,7 @@ public class MobInfo
 				m.activityStarted = in.getLongValue();
 			}
 			else if (s.equals("stock"))
-				m.stock = CommoditiesHelper.parseCommodities(in);
+				m.stock = CommoditiesBag.parse(in);
 			else if (s.equals("flag"))
 				m.flag = Flag.valueOf(in.nextTextValue());
 			else
@@ -132,7 +134,7 @@ public class MobInfo
 		if (stock != null)
 		{
 			out.writeFieldName("stock");
-			CommoditiesHelper.writeCommodities(stock, out);
+			stock.write(out);
 		}
 		if (encumbrance != null)
 			out.writeStringField("encumbrance", encumbrance.name());

@@ -9,7 +9,7 @@ public class CityInfo
 	String displayName;
 	String owner;
 	Location location;
-	Map<CommodityType, Long> stock;
+	CommoditiesBag stock;
 	int population;
 	boolean populationIsKnown;
 	int children;
@@ -31,8 +31,7 @@ public class CityInfo
 	{
 		assert hasStock();
 
-		Long x = stock.get(ct);
-		return x != null ? x.longValue() : 0;
+		return stock.getQuantity(ct);
 	}
 
 	public boolean hasChildren()
@@ -165,7 +164,7 @@ public class CityInfo
 				setPastures(in.getIntValue());
 			}
 			else if (s.equals("stock"))
-				stock = CommoditiesHelper.parseCommodities(in);
+				stock = CommoditiesBag.parse(in);
 			else if (s.equals("population"))
 			{
 				in.nextToken();
@@ -211,7 +210,7 @@ public class CityInfo
 		if (hasStock())
 		{
 			out.writeFieldName("stock");
-			CommoditiesHelper.writeCommodities(stock, out);
+			stock.write(out);
 		}
 		if (hasUnderConstruction())
 			out.writeNumberField("underConstruction", underConstruction);

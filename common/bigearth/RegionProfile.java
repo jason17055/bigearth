@@ -12,7 +12,7 @@ class RegionProfile
 	String cityName;
 	RegionSideDetail.SideFeature [] sides;
 	RegionCornerDetail.PointFeature [] corners;
-	Map<CommodityType, Long> stock;
+	CommoditiesBag stock;
 
 	public RegionProfile()
 	{
@@ -67,7 +67,7 @@ class RegionProfile
 			{
 				if (rhs.stock == null)
 					return false;
-				if (!CommoditiesHelper.contentsEqual(this.stock, rhs.stock))
+				if (!this.stock.equals(rhs.stock))
 					return false;
 			}
 			else if (rhs.stock != null)
@@ -147,7 +147,7 @@ class RegionProfile
 		if (hasStock())
 		{
 			out.writeFieldName("stock");
-			CommoditiesHelper.writeCommodities(stock, out);
+			stock.write(out);
 		}
 		for (int i = 0; i < sides.length; i++)
 		{
@@ -193,7 +193,7 @@ class RegionProfile
 			else if (s.equals("cityName"))
 				cityName = in.nextTextValue();
 			else if (s.equals("stock"))
-				stock = CommoditiesHelper.parseCommodities(in);
+				stock = CommoditiesBag.parse(in);
 			else if (s.equals("side0"))
 				sides[0] = RegionSideDetail.SideFeature.valueOf(in.nextTextValue());
 			else if (s.equals("side1"))

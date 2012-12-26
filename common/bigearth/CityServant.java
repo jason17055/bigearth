@@ -12,7 +12,7 @@ public class CityServant
 	String displayName;
 	String owner;
 	Location location;
-	Map<CommodityType, Long> stock;
+	CommoditiesBag stock;
 	Map<CityJob, Integer> workers;
 	Map<CityJob, Double> workerRates;
 	Map<CityJob, Double> production;
@@ -24,7 +24,7 @@ public class CityServant
 	CityServant(RegionServant parentRegion)
 	{
 		this.parentRegion = parentRegion;
-		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		this.stock = new CommoditiesBag();
 		this.workers = new HashMap<CityJob, Integer>();
 		this.workerRates = new HashMap<CityJob, Double>();
 		this.production = new HashMap<CityJob, Double>();
@@ -33,48 +33,12 @@ public class CityServant
 
 	public void addCommodity(CommodityType ct, long amount)
 	{
-		assert stock != null;
-
-		if (amount == 0)
-			return;
-
-		assert amount > 0;
-
-		if (stock.containsKey(ct))
-		{
-			long amt = stock.get(ct);
-			amt += amount;
-			stock.put(ct, amt);
-		}
-		else
-		{
-			stock.put(ct, amount);
-		}
+		stock.add(ct, amount);
 	}
 
 	public long subtractCommodity(CommodityType ct, long amount)
 	{
-		if (amount == 0)
-			return 0;
-
-		assert amount > 0;
-
-		Long xx = stock.get(ct);
-		if (xx == null)
-			return 0;
-
-		long amt = xx.longValue();
-		if (amount < amt)
-		{
-			amt -= amount;
-			stock.put(ct, amt);
-			return amount;
-		}
-		else
-		{
-			stock.remove(ct);
-			return amt;
-		}
+		return stock.subtract(ct, amount);
 	}
 
 	public void addWorkers(int amount)
@@ -234,10 +198,10 @@ public class CityServant
 	long getTotalFood()
 	{
 		long sum = 0;
-		for (Map.Entry<CommodityType,Long> e : stock.entrySet())
+		for (CommodityType ct : stock.getCommodityTypesArray())
 		{
-			int nutritionPerUnit = e.getKey().nutrition;
-			sum += e.getValue().intValue() * nutritionPerUnit;
+			int nutritionPerUnit = ct.nutrition;
+			sum += stock.getQuantity(ct) * nutritionPerUnit;
 		}
 		return sum;
 	}
@@ -288,7 +252,7 @@ public class CityServant
 			);
 		ci.setUnderConstruction(parentRegion.getZoneCount(ZoneType.UNDER_CONSTRUCTION));
 		ci.setPopulation(getPopulation());
-		ci.stock = CommoditiesHelper.makeClone(this.stock);
+		ci.stock = this.stock.clone();
 		return ci;
 	}
 
@@ -406,7 +370,7 @@ public class CityServant
 			else if (s.equals("location"))
 				location = LocationHelper.parse(in.nextTextValue(), getWorldConfig());
 			else if (s.equals("stock"))
-				stock = CommoditiesHelper.parseCommodities(in);
+				stock = CommoditiesBag.parse(in);
 			else if (s.equals("population"))
 			{
 				in.nextToken();
@@ -540,7 +504,7 @@ public class CityServant
 		out.writeStringField("owner", owner);
 		out.writeStringField("location", location.toString());
 		out.writeFieldName("stock");
-		CommoditiesHelper.writeCommodities(stock, out);
+		stock.write(out);
 		out.writeFieldName("workers");
 		writeWorkers(out);
 		out.writeFieldName("production");
@@ -678,23 +642,11 @@ public class CityServant
 
 	private void payDevelopmentCost(RegionServant.ZoneDevelopment zd)
 	{
-		for (Iterator< Map.Entry<CommodityType, Long> > it = zd.requiredCommodities.entrySet().iterator();
-			it.hasNext(); )
+		for (CommodityType ct : zd.requiredCommodities.getCommodityTypesArray())
 		{
-			Map.Entry<CommodityType, Long> e = it.next();
-			CommodityType ct = e.getKey();
-
-			long amtWanted = e.getValue();
+			long amtWanted = zd.requiredCommodities.getQuantity(ct);
 			long amtGiven = subtractCommodity(ct, amtWanted);
-			amtWanted -= amtGiven;
-			if (amtWanted > 0)
-			{
-				e.setValue(amtWanted);
-			}
-			else
-			{
-				it.remove();
-			}
+			zd.requiredCommodities.subtract(ct, amtGiven);
 		}
 	}
 
@@ -1168,8 +1120,7 @@ public class CityServant
 
 	public long getStock(CommodityType ct)
 	{
-		Long x = stock.get(ct);
-		return x != null ? x.longValue() : 0;
+		return stock.getQuantity(ct);
 	}
 
 	static class JobLevel

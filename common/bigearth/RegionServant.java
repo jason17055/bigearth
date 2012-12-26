@@ -34,7 +34,7 @@ class RegionServant
 	int floods;
 
 	WildlifeServant wildlife;
-	Map<CommodityType, Long> stock;
+	CommoditiesBag stock;
 	Map<ZoneType, Integer> zones;
 
 	List<ZoneDevelopment> zoneDevelopments;
@@ -43,8 +43,8 @@ class RegionServant
 	{
 		ZoneType targetType;
 		double workRemaining;
-		Map<CommodityType, Long> requiredCommodities;
-		Map<CommodityType, Long> generatedCommodities;
+		CommoditiesBag requiredCommodities;
+		CommoditiesBag generatedCommodities;
 
 		static final double REQUIRED_POINTS = 100.0;
 		public double getRemaining()
@@ -65,7 +65,7 @@ class RegionServant
 		this.waterLevel = Integer.MIN_VALUE;
 		this.presentMobs = new HashMap<String, MobServant>();
 		this.wildlife = new WildlifeServant(this);
-		this.stock = new EnumMap<CommodityType, Long>(CommodityType.class);
+		this.stock = new CommoditiesBag();
 		this.seenByMob = new HashMap<SeenByKey, RegionSight>();
 		this.seenByUser = new HashMap<String, UserSight>();
 		this.zones = new EnumMap<ZoneType, Integer>(ZoneType.class);
@@ -302,7 +302,7 @@ class RegionServant
 		out.writeNumberField("annualRains", annualRains);
 		out.writeNumberField("floods", floods);
 		out.writeFieldName("stock");
-		CommoditiesHelper.writeCommodities(stock, out);
+		stock.write(out);
 		out.writeFieldName("zones");
 		writeZones(out);
 
@@ -363,12 +363,12 @@ class RegionServant
 			if (!zd.requiredCommodities.isEmpty())
 			{
 				out.writeFieldName("requiredCommodities");
-				CommoditiesHelper.writeCommodities(zd.requiredCommodities, out);
+				zd.requiredCommodities.write(out);
 			}
 			if (!zd.generatedCommodities.isEmpty())
 			{
 				out.writeFieldName("generatedCommodities");
-				CommoditiesHelper.writeCommodities(zd.generatedCommodities, out);
+				zd.generatedCommodities.write(out);
 			}
 			out.writeEndObject();
 		}
@@ -414,9 +414,9 @@ class RegionServant
 					zd.workRemaining = in.getDoubleValue();
 				}
 				else if (s.equals("requiredCommodities"))
-					zd.requiredCommodities = CommoditiesHelper.parseCommodities(in);
+					zd.requiredCommodities = CommoditiesBag.parse(in);
 				else if (s.equals("generatedCommodities"))
-					zd.generatedCommodities = CommoditiesHelper.parseCommodities(in);
+					zd.generatedCommodities = CommoditiesBag.parse(in);
 				else
 				{
 					System.err.println("warning: unrecognized zone development property: "+s);
@@ -429,9 +429,9 @@ class RegionServant
 				throw new InputMismatchException();
 
 			if (zd.requiredCommodities == null)
-				zd.requiredCommodities = new HashMap<CommodityType, Long>();
+				zd.requiredCommodities = new CommoditiesBag();
 			if (zd.generatedCommodities == null)
-				zd.generatedCommodities = new HashMap<CommodityType, Long>();
+				zd.generatedCommodities = new CommoditiesBag();
 
 			zoneDevelopments.add(zd);
 		}
@@ -478,8 +478,8 @@ class RegionServant
 		ZoneDevelopment zd = new ZoneDevelopment();
 		zd.targetType = toZoneType;
 		zd.workRemaining = recipe.workRequired;
-		zd.requiredCommodities = CommoditiesHelper.makeClone(recipe.required);
-		zd.generatedCommodities = CommoditiesHelper.makeClone(recipe.generated);
+		zd.requiredCommodities = recipe.required.clone();
+		zd.generatedCommodities = recipe.generated.clone();
 		zoneDevelopments.add(zd);
 	}
 
@@ -609,7 +609,7 @@ class RegionServant
 			else if (s.equals("mobs"))
 				loadMobs(in);
 			else if (s.equals("stock"))
-				stock = CommoditiesHelper.parseCommodities(in);
+				stock = CommoditiesBag.parse(in);
 			else if (s.equals("zones"))
 				parseZones(in);
 			else if (s.equals("zoneDevelopments"))
@@ -856,37 +856,12 @@ class RegionServant
 
 	public void addCommodity(CommodityType ct, long amount)
 	{
-		assert stock != null;
-
-		if (stock.containsKey(ct))
-		{
-			long amt = stock.get(ct);
-			amt += amount;
-			stock.put(ct, amt);
-		}
-		else
-		{
-			stock.put(ct, amount);
-		}
+		stock.add(ct, amount);
 	}
 
 	public long subtractCommodity(CommodityType ct, long amount)
 	{
-		if (stock.containsKey(ct))
-		{
-			long bal = stock.get(ct);
-			if (amount < bal)
-			{
-				stock.put(ct, bal-amount);
-				return amount;
-			}
-			else
-			{
-				stock.remove(ct);
-				return bal;
-			}
-		}
-		return 0;
+		return stock.subtract(ct, amount);
 	}
 
 	public WorldConfig getWorldConfig()
@@ -1061,7 +1036,7 @@ class RegionServant
 
 		if (sight.seeInternal)
 		{
-			p.stock = CommoditiesHelper.makeClone(this.stock);
+			p.stock = this.stock.clone();
 		}
 
 		return p;

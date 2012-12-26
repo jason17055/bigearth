@@ -8,8 +8,8 @@ public class ZoneRecipe
 {
 	ZoneType fromZoneType;
 	ZoneType toZoneType;
-	Map<CommodityType, Long> required;
-	Map<CommodityType, Long> generated;
+	CommoditiesBag required;
+	CommoditiesBag generated;
 	double workRequired;
 
 	public static ZoneRecipe parse1(JsonParser in, WorldConfigIfc world)
@@ -34,9 +34,9 @@ public class ZoneRecipe
 			else if (s.equals("toZoneType"))
 				toZoneType = ZoneType.valueOf(in.nextTextValue());
 			else if (s.equals("required"))
-				required = CommoditiesHelper.parseCommodities(in);
+				required = CommoditiesBag.parse(in);
 			else if (s.equals("generated"))
-				generated = CommoditiesHelper.parseCommodities(in);
+				generated = CommoditiesBag.parse(in);
 			else if (s.equals("workRequired"))
 			{
 				in.nextToken();
@@ -53,8 +53,8 @@ public class ZoneRecipe
 			throw new InputMismatchException();
 
 		if (required == null)
-			required = CommoditiesHelper.createEmpty();
+			required = new CommoditiesBag();
 		if (generated == null)
-			generated = CommoditiesHelper.createEmpty();
+			generated = new CommoditiesBag();
 	}
 }

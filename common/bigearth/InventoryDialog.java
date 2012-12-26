@@ -119,7 +119,7 @@ public class InventoryDialog extends JDialog
 		MobInfo mob = mobList.mobs.get(mobName);
 		mobLocation = mob.location;
 
-		CommodityType [] commodities = mob.stock.keySet().toArray(new CommodityType[0]);
+		CommodityType [] commodities = mob.stock.getCommodityTypesArray();
 		Object [][] data = new Object[commodities.length][2];
 		for (int i = 0; i < commodities.length; i++)
 		{
@@ -149,14 +149,14 @@ public class InventoryDialog extends JDialog
 		}
 	}
 
-	private void loadTableFromStock(JTable jtable, Map<CommodityType, Long> stock)
+	private void loadTableFromStock(JTable jtable, CommoditiesBag stock)
 	{
-		CommodityType [] commodities = stock.keySet().toArray(new CommodityType[0]);
+		CommodityType [] commodities = stock.getCommodityTypesArray();
 		Object [][] data = new Object[commodities.length][2];
 		for (int i = 0; i < commodities.length; i++)
 		{
 			data[i][0] = commodities[i];
-			data[i][1] = stock.get(commodities[i]);
+			data[i][1] = new Long(stock.getQuantity(commodities[i]));
 		}
 
 		DefaultTableModel model = new DefaultTableModel(data, COLUMN_NAMES);
