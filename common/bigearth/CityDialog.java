@@ -51,95 +51,20 @@ public class CityDialog extends JDialog
 		this.client = client;
 		this.cityLocation = cityLocation;
 
-		JPanel mainPane = new JPanel(new GridBagLayout());
-		getContentPane().add(mainPane, BorderLayout.CENTER);
+		JTabbedPane tabbedPane = new JTabbedPane();
+		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
-		GridBagConstraints c1 = new GridBagConstraints();
-		c1.gridx = 0;
-		c1.anchor = GridBagConstraints.FIRST_LINE_START;
-		c1.weightx = 1.0;
+		JComponent landPane = initLandPane();
+		tabbedPane.addTab("Land", landPane);
 
-		GridBagConstraints c2 = new GridBagConstraints();
-		c2.gridx = 1;
-		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+		JComponent peoplePane = initPeoplePane();
+		tabbedPane.addTab("People", peoplePane);
 
-		c1.gridy = c2.gridy = 0;
-		mainPane.add(new JLabel("Population"), c1);
-		populationLbl = new JLabel();
-		mainPane.add(populationLbl, c2);
+		JComponent stockPane = initStockPane();
+		tabbedPane.addTab("Stock", stockPane);
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Children"), c1);
-		childrenLbl = new JLabel();
-		mainPane.add(childrenLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Houses"), c1);
-		housesLbl = new JLabel();
-		mainPane.add(housesLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Pastures"), c1);
-		pasturesLbl = new JLabel();
-		mainPane.add(pasturesLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Farms"), c1);
-		farmsLbl = new JLabel();
-		mainPane.add(farmsLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Under Construction"), c1);
-		underConstructionLbl = new JLabel();
-		mainPane.add(underConstructionLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Grain"), c1);
-		grainLbl = new JLabel();
-		mainPane.add(grainLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Meat"), c1);
-		meatLbl = new JLabel();
-		mainPane.add(meatLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Sheep"), c1);
-		sheepLbl = new JLabel();
-		mainPane.add(sheepLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Pig"), c1);
-		pigLbl = new JLabel();
-		mainPane.add(pigLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Wood"), c1);
-		woodLbl = new JLabel();
-		mainPane.add(woodLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Clay"), c1);
-		clayLbl = new JLabel();
-		mainPane.add(clayLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Stone"), c1);
-		stoneLbl = new JLabel();
-		mainPane.add(stoneLbl, c2);
-
-		messagesListModel = new DefaultListModel();
-
-		messagesList = new JList(messagesListModel);
-		JScrollPane messagesListScroll = new JScrollPane(messagesList);
-		messagesListScroll.setPreferredSize(new Dimension(250, 50));
-		GridBagConstraints c3 = new GridBagConstraints();
-		c3.gridy = c1.gridy = ++c2.gridy;
-		c3.gridx = 0;
-		c3.gridwidth = 2;
-		c3.weighty = c3.weightx = 1.0;
-		c3.fill = GridBagConstraints.BOTH;
-		mainPane.add(messagesListScroll, c3);
+		JComponent messagesPane = initMessagesPane();
+		tabbedPane.addTab("Messages", messagesPane);
 
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -198,6 +123,139 @@ public class CityDialog extends JDialog
 		this.listner = new MyListener();
 		this.client.addListener(listner);
 		//this.client.mobs.addListener(listner);
+	}
+
+	private JComponent initMessagesPane()
+	{
+		JPanel mainPane = new JPanel(new GridBagLayout());
+
+		messagesListModel = new DefaultListModel();
+
+		messagesList = new JList(messagesListModel);
+		JScrollPane messagesListScroll = new JScrollPane(messagesList);
+		messagesListScroll.setPreferredSize(new Dimension(250, 50));
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridy = 0;
+		c3.gridx = 0;
+		c3.gridwidth = 2;
+		c3.weighty = c3.weightx = 1.0;
+		c3.fill = GridBagConstraints.BOTH;
+		mainPane.add(messagesListScroll, c3);
+
+		return mainPane;
+	}
+
+	private JComponent initStockPane()
+	{
+		JPanel mainPane = new JPanel(new GridBagLayout());
+
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridx = 0;
+		c1.anchor = GridBagConstraints.FIRST_LINE_START;
+		c1.weightx = 1.0;
+
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.gridx = 1;
+		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		c1.gridy = c2.gridy = 0;
+		mainPane.add(new JLabel("Grain"), c1);
+		grainLbl = new JLabel();
+		mainPane.add(grainLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Meat"), c1);
+		meatLbl = new JLabel();
+		mainPane.add(meatLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Sheep"), c1);
+		sheepLbl = new JLabel();
+		mainPane.add(sheepLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Pig"), c1);
+		pigLbl = new JLabel();
+		mainPane.add(pigLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Wood"), c1);
+		woodLbl = new JLabel();
+		mainPane.add(woodLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Clay"), c1);
+		clayLbl = new JLabel();
+		mainPane.add(clayLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Stone"), c1);
+		stoneLbl = new JLabel();
+		mainPane.add(stoneLbl, c2);
+
+		return mainPane;
+	}
+
+	private JComponent initPeoplePane()
+	{
+		JPanel mainPane = new JPanel(new GridBagLayout());
+
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridx = 0;
+		c1.anchor = GridBagConstraints.FIRST_LINE_START;
+		c1.weightx = 1.0;
+
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.gridx = 1;
+		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		c1.gridy = c2.gridy = 0;
+		mainPane.add(new JLabel("Population"), c1);
+		populationLbl = new JLabel();
+		mainPane.add(populationLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Children"), c1);
+		childrenLbl = new JLabel();
+		mainPane.add(childrenLbl, c2);
+
+		return mainPane;
+	}
+
+	private JComponent initLandPane()
+	{
+		JPanel mainPane = new JPanel(new GridBagLayout());
+
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridx = 0;
+		c1.anchor = GridBagConstraints.FIRST_LINE_START;
+		c1.weightx = 1.0;
+
+		GridBagConstraints c2 = new GridBagConstraints();
+		c2.gridx = 1;
+		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		c1.gridy = c2.gridy = 0;
+		mainPane.add(new JLabel("Houses"), c1);
+		housesLbl = new JLabel();
+		mainPane.add(housesLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Pastures"), c1);
+		pasturesLbl = new JLabel();
+		mainPane.add(pasturesLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Farms"), c1);
+		farmsLbl = new JLabel();
+		mainPane.add(farmsLbl, c2);
+
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Under Construction"), c1);
+		underConstructionLbl = new JLabel();
+		mainPane.add(underConstructionLbl, c2);
+
+		return mainPane;
 	}
 
 	void addCityMessage(String message)
