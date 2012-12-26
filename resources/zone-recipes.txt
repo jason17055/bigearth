@@ -19,5 +19,11 @@
 "toZoneType":"WOOD_COTTAGES",
 "workRequired":100,
 "required":{"WOOD":100}
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"STONE_COTTAGES",
+"workRequired":150,
+"required":{"STONE":100}
 }
 ]

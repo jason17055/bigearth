@@ -478,7 +478,7 @@ class RegionServant
 		ZoneDevelopment zd = new ZoneDevelopment();
 		zd.targetType = toZoneType;
 		zd.workRemaining = recipe.workRequired;
-		zd.requiredCommodities = CommoditiesHelper.makeClone(recipe.consumed);
+		zd.requiredCommodities = CommoditiesHelper.makeClone(recipe.required);
 		zd.generatedCommodities = CommoditiesHelper.makeClone(recipe.generated);
 		zoneDevelopments.add(zd);
 	}

@@ -8,7 +8,7 @@ public class ZoneRecipe
 {
 	ZoneType fromZoneType;
 	ZoneType toZoneType;
-	Map<CommodityType, Long> consumed;
+	Map<CommodityType, Long> required;
 	Map<CommodityType, Long> generated;
 	double workRequired;
 
@@ -33,8 +33,8 @@ public class ZoneRecipe
 				fromZoneType = ZoneType.valueOf(in.nextTextValue());
 			else if (s.equals("toZoneType"))
 				toZoneType = ZoneType.valueOf(in.nextTextValue());
-			else if (s.equals("consumed"))
-				consumed = CommoditiesHelper.parseCommodities(in);
+			else if (s.equals("required"))
+				required = CommoditiesHelper.parseCommodities(in);
 			else if (s.equals("generated"))
 				generated = CommoditiesHelper.parseCommodities(in);
 			else if (s.equals("workRequired"))
@@ -52,8 +52,8 @@ public class ZoneRecipe
 		if (in.getCurrentToken() != JsonToken.END_OBJECT)
 			throw new InputMismatchException();
 
-		if (consumed == null)
-			consumed = CommoditiesHelper.createEmpty();
+		if (required == null)
+			required = CommoditiesHelper.createEmpty();
 		if (generated == null)
 			generated = CommoditiesHelper.createEmpty();
 	}
