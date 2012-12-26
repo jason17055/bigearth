@@ -326,9 +326,8 @@ public class CityServant
 
 		try
 		{
-			// TODO- deduct required resources, if any
-
 			parentRegion.beginDeveloping(c.fromZoneType, c.toZoneType);
+			checkDevelopmentCosts();
 		}
 		catch (RegionServant.ZoneTypeNotFound e)
 		{
@@ -699,7 +698,7 @@ public class CityServant
 		}
 	}
 
-	private void endOfYear_developLand()
+	private void checkDevelopmentCosts()
 	{
 		for (RegionServant.ZoneDevelopment zd : parentRegion.zoneDevelopments)
 		{
@@ -709,7 +708,10 @@ public class CityServant
 				payDevelopmentCost(zd);
 			}
 		}
+	}
 
+	private void endOfYear_developLand()
+	{
 		double pts = getProduction(CityJob.DEVELOP_LAND);
 		if (pts != 0.0)
 		{
