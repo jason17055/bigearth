@@ -399,9 +399,9 @@ public class CityServant
 				productionLastUpdated = in.getLongValue();
 			}
 			else if (s.equals("science"))
-				science = parseTechnologySet(in);
+				science = TechnologyBag.parseTechnologySet(in);
 			else if (s.equals("partialScience"))
-				partialScience = parseTechnologySet(in);
+				partialScience = TechnologyBag.parseTechnologySet(in);
 			else
 			{
 				in.nextToken();
@@ -411,22 +411,6 @@ public class CityServant
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
-	}
-
-	private Set<Technology> parseTechnologySet(JsonParser in)
-		throws IOException
-	{
-		in.nextToken();
-		if (in.getCurrentToken() != JsonToken.START_ARRAY)
-			throw new InputMismatchException();
-
-		HashSet<Technology> techs = new HashSet<Technology>();
-		while (in.nextToken() != JsonToken.END_ARRAY)
-		{
-			Technology t = Technology.valueOf(in.getText());
-			techs.add(t);
-		}
-		return techs;
 	}
 
 	private void parseChildren(JsonParser in)
@@ -548,25 +532,14 @@ public class CityServant
 		if (!science.isEmpty())
 		{
 			out.writeFieldName("science");
-			writeTechnologySet(out, science);
+			TechnologyBag.writeTechnologySet(out, science);
 		}
 		if (!partialScience.isEmpty())
 		{
 			out.writeFieldName("partialScience");
-			writeTechnologySet(out, partialScience);
+			TechnologyBag.writeTechnologySet(out, partialScience);
 		}
 		out.writeEndObject();
-	}
-
-	private void writeTechnologySet(JsonGenerator out, Set<Technology> techs)
-		throws IOException
-	{
-		out.writeStartArray();
-		for (Technology t : techs)
-		{
-			out.writeString(t.name());
-		}
-		out.writeEndArray();
 	}
 
 	private void writeWorkers(JsonGenerator out)
