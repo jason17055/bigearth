@@ -5,8 +5,9 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import javax.imageio.*;
+import java.net.URL;
 import java.util.*;
+import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.vecmath.*;
@@ -856,7 +857,13 @@ public class WorldView extends JPanel
 	{
 		try
 		{
-		biomeTextures.put(biome, ImageIO.read(new File(IMAGES_DIR, "terrain_textures/"+textureName+".png")));
+			String resourceName = "/terrain_textures/"+textureName+".png";
+			URL textureUrl = WorldView.class.getResource(resourceName);
+			if (textureUrl == null)
+				throw new IOException("texture resource not found: "+resourceName);
+
+			BufferedImage img = ImageIO.read(textureUrl);
+			biomeTextures.put(biome, img);
 		}
 		catch (IOException e)
 		{
