@@ -22,6 +22,8 @@ public class CityInfo
 	boolean farmsIsKnown;
 	int pastures;
 	boolean pasturesIsKnown;
+	Set<Technology> science;
+	Set<Technology> partialScience;
 
 	CityInfo()
 	{
@@ -64,6 +66,11 @@ public class CityInfo
 		return location != null;
 	}
 
+	public boolean hasPartialScience()
+	{
+		return partialScience != null;
+	}
+
 	public boolean hasPastures()
 	{
 		return pasturesIsKnown;
@@ -72,6 +79,11 @@ public class CityInfo
 	public boolean hasPopulation()
 	{
 		return populationIsKnown;
+	}
+
+	public boolean hasScience()
+	{
+		return science != null;
 	}
 
 	public boolean hasStock()
@@ -158,11 +170,15 @@ public class CityInfo
 				owner = in.nextTextValue();
 			else if (s.equals("location"))
 				location = LocationHelper.parse(in.nextTextValue(), world);
+			else if (s.equals("partialScience"))
+				partialScience = TechnologyBag.parseTechnologySet(in);
 			else if (s.equals("pastures"))
 			{
 				in.nextToken();
 				setPastures(in.getIntValue());
 			}
+			else if (s.equals("science"))
+				science = TechnologyBag.parseTechnologySet(in);
 			else if (s.equals("stock"))
 				stock = CommoditiesBag.parse(in);
 			else if (s.equals("population"))
@@ -203,10 +219,20 @@ public class CityInfo
 			out.writeStringField("location", location.toString());
 		if (hasOwner())
 			out.writeStringField("owner", owner);
+		if (hasPartialScience())
+		{
+			out.writeFieldName("partialScience");
+			TechnologyBag.writeTechnologySet(out, partialScience);
+		}
 		if (hasPastures())
 			out.writeNumberField("pastures", pastures);
 		if (hasPopulation())
 			out.writeNumberField("population", population);
+		if (hasScience())
+		{
+			out.writeFieldName("science");
+			TechnologyBag.writeTechnologySet(out, science);
+		}
 		if (hasStock())
 		{
 			out.writeFieldName("stock");

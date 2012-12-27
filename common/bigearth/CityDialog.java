@@ -30,6 +30,8 @@ public class CityDialog extends JDialog
 	JComboBox equipSelect;
 	DefaultListModel messagesListModel;
 	JList messagesList;
+	DefaultListModel scienceListModel;
+	JList scienceList;
 
 	static ZoneType [] developChoices = new ZoneType[] {
 		ZoneType.MUD_COTTAGES,
@@ -66,6 +68,9 @@ public class CityDialog extends JDialog
 
 		JComponent messagesPane = initMessagesPane();
 		tabbedPane.addTab("Messages", messagesPane);
+
+		JComponent sciencePane = initSciencePane();
+		tabbedPane.addTab("Science", sciencePane);
 
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -124,6 +129,26 @@ public class CityDialog extends JDialog
 		this.listner = new MyListener();
 		this.client.addListener(listner);
 		//this.client.mobs.addListener(listner);
+	}
+
+	private JComponent initSciencePane()
+	{
+		JPanel mainPane = new JPanel(new GridBagLayout());
+
+		scienceListModel = new DefaultListModel();
+
+		scienceList = new JList(scienceListModel);
+		JScrollPane scienceListScroll = new JScrollPane(scienceList);
+		scienceListScroll.setPreferredSize(new Dimension(250, 50));
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridy = 0;
+		c3.gridx = 0;
+		c3.gridwidth = 2;
+		c3.weighty = c3.weightx = 1.0;
+		c3.fill = GridBagConstraints.BOTH;
+		mainPane.add(scienceListScroll, c3);
+
+		return mainPane;
 	}
 
 	private JComponent initMessagesPane()
@@ -318,6 +343,23 @@ public class CityDialog extends JDialog
 			Long.toString(city.getStock(CommodityType.STONE)) : null);
 		copperLbl.setText(city.hasStock() ?
 			Long.toString(city.getStock(CommodityType.COPPER_ORE)) : null);
+
+		scienceListModel = new DefaultListModel();
+		if (city.hasPartialScience())
+		{
+			for (Technology tech : city.partialScience)
+			{
+				scienceListModel.addElement("Learning "+tech.name());
+			}
+		}
+		if (city.hasScience())
+		{
+			for (Technology tech : city.science)
+			{
+				scienceListModel.addElement("Learned "+tech.name());
+			}
+		}
+		scienceList.setModel(scienceListModel);
 	}
 
 	private void onCloseClicked()
