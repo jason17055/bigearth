@@ -14,21 +14,23 @@ public class CityInfo
 	boolean populationIsKnown;
 	int children;
 	boolean childrenIsKnown;
-	int houses;
-	boolean housesIsKnown;
-	int underConstruction;
-	boolean underConstructionIsKnown;
-	int farms;
-	boolean farmsIsKnown;
-	int pastures;
-	boolean pasturesIsKnown;
 	Set<Technology> science;
 	Set<Technology> partialScience;
 	int scientists;
 	boolean scientistsIsKnown;
+	Map<ZoneType,Integer> zones;
 
 	CityInfo()
 	{
+	}
+
+	public int getHouses()
+	{
+		assert hasZones();
+
+		return getZoneCount(ZoneType.MUD_COTTAGES)
+			+ getZoneCount(ZoneType.WOOD_COTTAGES)
+			+ getZoneCount(ZoneType.STONE_COTTAGES);
 	}
 
 	public long getStock(CommodityType ct)
@@ -36,6 +38,14 @@ public class CityInfo
 		assert hasStock();
 
 		return stock.getQuantity(ct);
+	}
+
+	public int getZoneCount(ZoneType zone)
+	{
+		assert hasZones();
+
+		Integer I = zones.get(zone);
+		return I != null ? I.intValue() : 0;
 	}
 
 	public boolean hasChildren()
@@ -50,12 +60,12 @@ public class CityInfo
 
 	public boolean hasFarms()
 	{
-		return farmsIsKnown;
+		return hasZones();
 	}
 
 	public boolean hasHouses()
 	{
-		return housesIsKnown;
+		return hasZones();
 	}
 
 	public boolean hasOwner()
@@ -75,7 +85,7 @@ public class CityInfo
 
 	public boolean hasPastures()
 	{
-		return pasturesIsKnown;
+		return hasZones();
 	}
 
 	public boolean hasPopulation()
@@ -100,31 +110,18 @@ public class CityInfo
 
 	public boolean hasUnderConstruction()
 	{
-		return underConstructionIsKnown;
+		return hasZones();
+	}
+
+	public boolean hasZones()
+	{
+		return zones != null;
 	}
 
 	public void setChildren(int children)
 	{
 		this.children = children;
 		this.childrenIsKnown = true;
-	}
-
-	public void setFarms(int farms)
-	{
-		this.farms = farms;
-		this.farmsIsKnown = true;
-	}
-
-	public void setHouses(int houses)
-	{
-		this.houses = houses;
-		this.housesIsKnown = true;
-	}
-
-	public void setPastures(int pastures)
-	{
-		this.pastures = pastures;
-		this.pasturesIsKnown = true;
 	}
 
 	public void setPopulation(int population)
@@ -137,12 +134,6 @@ public class CityInfo
 	{
 		this.scientists = scientists;
 		this.scientistsIsKnown = true;
-	}
-
-	public void setUnderConstruction(int underConstruction)
-	{
-		this.underConstruction = underConstruction;
-		this.underConstructionIsKnown = true;
 	}
 
 	public static CityInfo parse(JsonParser in, WorldConfigIfc world)
@@ -169,27 +160,12 @@ public class CityInfo
 			}
 			else if (s.equals("displayName"))
 				displayName = in.nextTextValue();
-			else if (s.equals("farms"))
-			{
-				in.nextToken();
-				setFarms(in.getIntValue());
-			}
-			else if (s.equals("houses"))
-			{
-				in.nextToken();
-				setHouses(in.getIntValue());
-			}
 			else if (s.equals("owner"))
 				owner = in.nextTextValue();
 			else if (s.equals("location"))
 				location = LocationHelper.parse(in.nextTextValue(), world);
 			else if (s.equals("partialScience"))
 				partialScience = TechnologyBag.parseTechnologySet(in);
-			else if (s.equals("pastures"))
-			{
-				in.nextToken();
-				setPastures(in.getIntValue());
-			}
 			else if (s.equals("science"))
 				science = TechnologyBag.parseTechnologySet(in);
 			else if (s.equals("stock"))
@@ -205,10 +181,9 @@ public class CityInfo
 				in.nextToken();
 				setScientists(in.getIntValue());
 			}
-			else if (s.equals("underConstruction"))
+			else if (s.equals("zones"))
 			{
-				in.nextToken();
-				setUnderConstruction(in.getIntValue());
+				parseZones(in);
 			}
 			else
 			{
@@ -221,6 +196,24 @@ public class CityInfo
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
 	}
 
+	private void parseZones(JsonParser in)
+		throws IOException
+	{
+		zones = new HashMap<ZoneType,Integer>();
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
+			throw new InputMismatchException();
+
+		while (in.nextToken() != JsonToken.END_OBJECT)
+		{
+			String s = in.getCurrentName();
+			in.nextToken();
+			int qty = in.getIntValue();
+
+			zones.put(ZoneType.valueOf(s), qty);
+		}
+	}
+
 	public void write(JsonGenerator out)
 		throws IOException
 	{
@@ -229,10 +222,6 @@ public class CityInfo
 			out.writeNumberField("children", children);
 		if (hasDisplayName())
 			out.writeStringField("displayName", displayName);
-		if (hasFarms())
-			out.writeNumberField("farms", farms);
-		if (hasHouses())
-			out.writeNumberField("houses", houses);
 		if (hasLocation())
 			out.writeStringField("location", location.toString());
 		if (hasOwner())
@@ -242,8 +231,6 @@ public class CityInfo
 			out.writeFieldName("partialScience");
 			TechnologyBag.writeTechnologySet(out, partialScience);
 		}
-		if (hasPastures())
-			out.writeNumberField("pastures", pastures);
 		if (hasPopulation())
 			out.writeNumberField("population", population);
 		if (hasScience())
@@ -258,8 +245,26 @@ public class CityInfo
 			out.writeFieldName("stock");
 			stock.write(out);
 		}
-		if (hasUnderConstruction())
-			out.writeNumberField("underConstruction", underConstruction);
+		if (hasZones())
+		{
+			out.writeFieldName("zones");
+			writeZones(out);
+		}
+		out.writeEndObject();
+	}
+
+	private void writeZones(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		for (Map.Entry<ZoneType,Integer> e : zones.entrySet())
+		{
+			ZoneType zone = e.getKey();
+			int qty = e.getValue();
+
+			out.writeFieldName(zone.name());
+			out.writeNumber(qty);
+		}
 		out.writeEndObject();
 	}
 }

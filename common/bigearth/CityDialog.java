@@ -310,13 +310,13 @@ public class CityDialog extends JDialog
 		childrenLbl.setText(city.hasChildren() ?
 			Integer.toString(city.children) : null);
 		housesLbl.setText(city.hasHouses() ?
-			Integer.toString(city.houses) : null);
+			Integer.toString(city.getHouses()) : null);
 		farmsLbl.setText(city.hasFarms() ?
-			Integer.toString(city.farms) : null);
+			Integer.toString(city.getZoneCount(ZoneType.FARM)) : null);
 		pasturesLbl.setText(city.hasPastures() ?
-			Integer.toString(city.pastures) : null);
+			Integer.toString(city.getZoneCount(ZoneType.PASTURE)) : null);
 		underConstructionLbl.setText(city.hasUnderConstruction() ?
-			Integer.toString(city.underConstruction) : null);
+			Integer.toString(city.getZoneCount(ZoneType.UNDER_CONSTRUCTION)) : null);
 
 		for (CommodityType ct : city.stock.getCommodityTypesArray())
 		{

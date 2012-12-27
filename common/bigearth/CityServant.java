@@ -251,19 +251,15 @@ public class CityServant
 		ci.displayName = displayName;
 		ci.location = location;
 		ci.setChildren(getChildren());
-		ci.setFarms(parentRegion.getZoneCount(ZoneType.FARM));
-		ci.setPastures(parentRegion.getZoneCount(ZoneType.PASTURE));
-		ci.setHouses(
-			parentRegion.getZoneCount(ZoneType.MUD_COTTAGES)
-			+ parentRegion.getZoneCount(ZoneType.WOOD_COTTAGES)
-			+ parentRegion.getZoneCount(ZoneType.STONE_COTTAGES)
-			);
-		ci.setUnderConstruction(parentRegion.getZoneCount(ZoneType.UNDER_CONSTRUCTION));
 		ci.setPopulation(getPopulation());
 		ci.setScientists(getWorkersInJob(CityJob.RESEARCH));
 		ci.stock = this.stock.clone();
 		ci.science = this.science;
 		ci.partialScience = this.partialScience;
+
+		//FIXME- should this be cloned?
+		ci.zones = parentRegion.zones;
+
 		return ci;
 	}
 
