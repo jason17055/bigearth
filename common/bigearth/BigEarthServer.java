@@ -200,6 +200,20 @@ public class BigEarthServer
 
 	private void doAdvertisement()
 	{
+		class AdvertisementInfo
+		{
+			long population;
+			int year;
+		}
+		final AdvertisementInfo info = new AdvertisementInfo();
+		world.invokeAndWait(new Runnable() {
+		public void run()
+		{
+			info.year = world.year;
+			info.population = world.getTotalPopulation();
+		}
+		});
+
 		try
 		{
 
@@ -211,8 +225,8 @@ public class BigEarthServer
 		String x = "url="+URLEncoder.encode(System.getenv("HOSTNAME"),"UTF-8")
 			+"&secret=x"
 			+"&size="+world.getGeometry().getCellCount()
-			+"&population=0"
-			+"&year="+world.year
+			+"&population="+info.population
+			+"&year="+info.year
 			+"&year_real_world_duration="+world.config.ticksPerYear
 			;
 		byte [] xx = x.getBytes("UTF-8");

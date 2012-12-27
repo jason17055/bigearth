@@ -1082,4 +1082,16 @@ class RegionServant
 	static class ZoneTypeNotFound extends Exception
 	{
 	}
+
+	public long getPopulation()
+	{
+		long population = 0;
+		if (city != null)
+			population += city.getPopulation();
+		for (MobServant mob : presentMobs.values())
+		{
+			population += mob.getPopulation();
+		}
+		return population;
+	}
 }

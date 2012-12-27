@@ -413,6 +413,51 @@ System.out.println("in world::stop()");
 		eventDispatchThread.join();
 	}
 
+	class RealTimeEvent implements Runnable
+	{
+		Runnable wrapped;
+		boolean completed;
+
+		public RealTimeEvent(Runnable wrapped)
+		{
+			this.wrapped = wrapped;
+		}
+
+		//implements Runnable
+		public void run()
+		{
+			wrapped.run();
+			setCompleted(true);
+		}
+
+		private synchronized void setCompleted(boolean completed)
+		{
+			this.completed = completed;
+		}
+
+		private synchronized boolean isCompleted()
+		{
+			return completed;
+		}
+
+		public void waitForCompletion()
+		{
+			while (!isCompleted())
+			{
+				if (eventDispatchThread.isStopRequested())
+					throw new Error("EDT is stopping");
+
+				try
+				{
+					wait(2000);
+				}
+				catch (InterruptedException e)
+				{
+				}
+			}
+		}
+	}
+
 	class RealTimeLockHack implements Runnable
 	{
 		long time;
@@ -459,6 +504,15 @@ System.out.println("in world::stop()");
 		}
 	}
 
+	public void invokeAndWait(Runnable r)
+	{
+		RealTimeEvent rte = new RealTimeEvent(r);
+		long t = scheduler.convertToGameTime(System.currentTimeMillis());
+		scheduler.scheduleAt(rte, t);
+
+		rte.waitForCompletion();
+	}
+
 	RealTimeLockHack acquireRealTimeLock()
 	{
 		RealTimeLockHack hack = new RealTimeLockHack();
@@ -467,5 +521,15 @@ System.out.println("in world::stop()");
 
 		hack.waitForAcquisition();
 		return hack;
+	}
+
+	public long getTotalPopulation()
+	{
+		long totalPopulation = 0;
+		for (RegionServant region : regions)
+		{
+			totalPopulation += region.getPopulation();
+		}
+		return totalPopulation;
 	}
 }

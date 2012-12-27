@@ -721,4 +721,9 @@ public class MobServant
 	{
 		parentRegion.mobSetActivity(name, c);
 	}
+
+	public int getPopulation()
+	{
+		return population;
+	}
 }
