@@ -40,9 +40,9 @@ public class CityDialog extends JDialog
 	JList scienceList;
 
 	static ZoneType [] developChoices = new ZoneType[] {
-		ZoneType.MUD_COTTAGES,
-		ZoneType.WOOD_COTTAGES,
-		ZoneType.STONE_COTTAGES,
+		ZoneType.MUD_COTTAGE,
+		ZoneType.WOOD_COTTAGE,
+		ZoneType.STONE_COTTAGE,
 		ZoneType.FARM,
 		ZoneType.PASTURE };
 	static MobType [] equipChoices = new MobType[] {

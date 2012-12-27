@@ -1,7 +1,7 @@
 [
 {
 "fromZoneType":"NATURAL",
-"toZoneType":"MUD_COTTAGES",
+"toZoneType":"MUD_COTTAGE",
 "workRequired":100
 },
 {
@@ -16,13 +16,13 @@
 },
 {
 "fromZoneType":"NATURAL",
-"toZoneType":"WOOD_COTTAGES",
+"toZoneType":"WOOD_COTTAGE",
 "workRequired":100,
 "required":{"WOOD":100}
 },
 {
 "fromZoneType":"NATURAL",
-"toZoneType":"STONE_COTTAGES",
+"toZoneType":"STONE_COTTAGE",
 "workRequired":150,
 "required":{"STONE":100}
 }

@@ -580,9 +580,9 @@ public class CityServant
 
 	int getPopulationCapacity()
 	{
-		int housing = 200 * parentRegion.getZoneCount(ZoneType.MUD_COTTAGES)
-			+ 200 * parentRegion.getZoneCount(ZoneType.WOOD_COTTAGES)
-			+ 200 * parentRegion.getZoneCount(ZoneType.STONE_COTTAGES);
+		int housing = 200 * parentRegion.getZoneCount(ZoneType.MUD_COTTAGE)
+			+ 200 * parentRegion.getZoneCount(ZoneType.WOOD_COTTAGE)
+			+ 200 * parentRegion.getZoneCount(ZoneType.STONE_COTTAGE);
 		int townCenter = Math.max(0, 50 - housing / 20);
 
 		return townCenter + housing;

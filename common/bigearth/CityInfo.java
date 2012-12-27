@@ -28,9 +28,9 @@ public class CityInfo
 	{
 		assert hasZones();
 
-		return getZoneCount(ZoneType.MUD_COTTAGES)
-			+ getZoneCount(ZoneType.WOOD_COTTAGES)
-			+ getZoneCount(ZoneType.STONE_COTTAGES);
+		return getZoneCount(ZoneType.MUD_COTTAGE)
+			+ getZoneCount(ZoneType.WOOD_COTTAGE)
+			+ getZoneCount(ZoneType.STONE_COTTAGE);
 	}
 
 	public long getStock(CommodityType ct)
