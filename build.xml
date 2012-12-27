@@ -55,4 +55,20 @@
 <delete file="bigearth.jar" />
 </target>
 
+<target name="dist" depends="build">
+<zip destfile="bigearth-bin.zip">
+	<fileset dir="." includes="bigearth.jar, extlib/*.jar" />
+</zip>
+</target>
+
+<target name="publish" depends="dist">
+<property name="remotehost" value="jlong@sftp.messiah.edu" />
+<input addproperty="scp_password"
+>Please enter password for ${remotehost} (will be displayed)</input>
+<scp file="bigearth-bin.zip" todir="jlong@sftp.messiah.edu:web/bigearth/bigearth.zip"
+	sftp="true"
+	password="${scp_password}"
+	/>
+</target>
+
 </project>
