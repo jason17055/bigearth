@@ -27,6 +27,8 @@ public class ProbabilityUrn<T>
 
 	private T pickOneAndReplace()
 	{
+		assert totalCount > 0;
+
 		long r = (long)Math.floor(Math.random() * totalCount);
 		for (Map.Entry<T,Long> e : entries.entrySet())
 		{
@@ -46,7 +48,7 @@ public class ProbabilityUrn<T>
 	public Map<T, Long> pickMany(long numPicks)
 	{
 		HashMap<T, Long> picked = new HashMap<T, Long>();
-		for (long i = 0; i < numPicks; i++)
+		for (long i = 0; i < numPicks && totalCount > 0; i++)
 		{
 			T key = pickOneAndReplace();
 			long alreadyPicked = picked.containsKey(key) ? picked.get(key) : 0;
