@@ -25,6 +25,7 @@ public class CityDialog extends JDialog
 	JLabel woodLbl;
 	JLabel clayLbl;
 	JLabel stoneLbl;
+	JLabel copperLbl;
 	JComboBox developSelect;
 	JComboBox equipSelect;
 	DefaultListModel messagesListModel;
@@ -193,6 +194,11 @@ public class CityDialog extends JDialog
 		stoneLbl = new JLabel();
 		mainPane.add(stoneLbl, c2);
 
+		c1.gridy = ++c2.gridy;
+		mainPane.add(new JLabel("Copper Ore"), c1);
+		copperLbl = new JLabel();
+		mainPane.add(copperLbl, c2);
+
 		return mainPane;
 	}
 
@@ -310,6 +316,8 @@ public class CityDialog extends JDialog
 			Long.toString(city.getStock(CommodityType.CLAY)) : null);
 		stoneLbl.setText(city.hasStock() ?
 			Long.toString(city.getStock(CommodityType.STONE)) : null);
+		copperLbl.setText(city.hasStock() ?
+			Long.toString(city.getStock(CommodityType.COPPER_ORE)) : null);
 	}
 
 	private void onCloseClicked()
