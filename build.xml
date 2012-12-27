@@ -16,7 +16,9 @@
 
 <target name="copy-resources" depends="init-builddir">
 <copy todir="${builddir}">
-	<fileset dir="resources" />
+	<fileset dir="resources"
+		excludes="**/*.xcf"
+		/>
 </copy>
 </target>
 
