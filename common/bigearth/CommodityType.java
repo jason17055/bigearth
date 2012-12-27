@@ -1,5 +1,7 @@
 package bigearth;
 
+import java.io.File;
+
 public enum CommodityType
 {
 	WOOD(500.0, 0, false),
@@ -23,5 +25,29 @@ public enum CommodityType
 		this.mass = mass;
 		this.nutrition = nutrition;
 		this.isLivestock = isLivestock;
+	}
+
+	public String getDisplayName()
+	{
+		String n = name();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < n.length(); i++)
+		{
+			char c = n.charAt(i);
+			sb.append(
+				i == 0 ? c :
+				c == '_' ? ' ' :
+				Character.toLowerCase(c)
+				);
+		}
+		return sb.toString();
+	}
+
+	public File getIconFilename()
+	{
+		String n = name();
+		n = n.toLowerCase();
+		n = n.replace('_', '-');
+		return new File("html/commodity_images/"+n+".png");
 	}
 }

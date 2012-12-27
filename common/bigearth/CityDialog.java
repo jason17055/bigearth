@@ -18,14 +18,7 @@ public class CityDialog extends JDialog
 	JLabel housesLbl;
 	JLabel pasturesLbl;
 	JLabel underConstructionLbl;
-	JLabel grainLbl;
-	JLabel meatLbl;
-	JLabel sheepLbl;
-	JLabel pigLbl;
-	JLabel woodLbl;
-	JLabel clayLbl;
-	JLabel stoneLbl;
-	JLabel copperLbl;
+	JPanel stockPane;
 	JComboBox developSelect;
 	JComboBox equipSelect;
 	DefaultListModel messagesListModel;
@@ -179,60 +172,50 @@ public class CityDialog extends JDialog
 		return mainPane;
 	}
 
-	private JComponent initStockPane()
-	{
-		JPanel mainPane = new JPanel(new GridBagLayout());
+	int nextStockItemRow = 0;
+	Map<CommodityType, JLabel> stockItemLabels = new HashMap<CommodityType, JLabel>();
 
+	private void addStockItem(CommodityType ct)
+	{
 		GridBagConstraints c1 = new GridBagConstraints();
 		c1.gridx = 0;
-		c1.anchor = GridBagConstraints.FIRST_LINE_START;
-		c1.weightx = 1.0;
+		c1.anchor = GridBagConstraints.WEST;
 
 		GridBagConstraints c2 = new GridBagConstraints();
 		c2.gridx = 1;
-		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+		c2.anchor = GridBagConstraints.WEST;
+		c2.weightx = 1.0;
 
-		c1.gridy = c2.gridy = 0;
-		mainPane.add(new JLabel("Grain"), c1);
-		grainLbl = new JLabel();
-		mainPane.add(grainLbl, c2);
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridx = 2;
+		c3.anchor = GridBagConstraints.EAST;
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Meat"), c1);
-		meatLbl = new JLabel();
-		mainPane.add(meatLbl, c2);
+		c1.gridy = c2.gridy = c2.gridy = nextStockItemRow;
+		nextStockItemRow++;
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Sheep"), c1);
-		sheepLbl = new JLabel();
-		mainPane.add(sheepLbl, c2);
+		ImageIcon stockIcon = new ImageIcon(ct.getIconFilename().toString());
+		stockPane.add(new JLabel(stockIcon), c1);
+		stockPane.add(new JLabel(ct.getDisplayName()), c2);
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Pig"), c1);
-		pigLbl = new JLabel();
-		mainPane.add(pigLbl, c2);
+		JLabel qtyLbl = new JLabel();
+		stockItemLabels.put(ct, qtyLbl);
+		stockPane.add(qtyLbl, c3);
+	}
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Wood"), c1);
-		woodLbl = new JLabel();
-		mainPane.add(woodLbl, c2);
+	private void updateStockItem(CommodityType ct, long qty)
+	{
+		if (!stockItemLabels.containsKey(ct))
+		{
+			addStockItem(ct);
+		}
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Clay"), c1);
-		clayLbl = new JLabel();
-		mainPane.add(clayLbl, c2);
+		stockItemLabels.get(ct).setText(Long.toString(qty));
+	}
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Stone"), c1);
-		stoneLbl = new JLabel();
-		mainPane.add(stoneLbl, c2);
-
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Copper Ore"), c1);
-		copperLbl = new JLabel();
-		mainPane.add(copperLbl, c2);
-
-		return mainPane;
+	private JComponent initStockPane()
+	{
+		stockPane = new JPanel(new GridBagLayout());
+		return stockPane;
 	}
 
 	private JComponent initPeoplePane()
@@ -335,22 +318,10 @@ public class CityDialog extends JDialog
 		underConstructionLbl.setText(city.hasUnderConstruction() ?
 			Integer.toString(city.underConstruction) : null);
 
-		grainLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.GRAIN)) : null);
-		meatLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.MEAT)) : null);
-		sheepLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.SHEEP)) : null);
-		pigLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.PIG)) : null);
-		woodLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.WOOD)) : null);
-		clayLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.CLAY)) : null);
-		stoneLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.STONE)) : null);
-		copperLbl.setText(city.hasStock() ?
-			Long.toString(city.getStock(CommodityType.COPPER_ORE)) : null);
+		for (CommodityType ct : city.stock.getCommodityTypesArray())
+		{
+			updateStockItem(ct, city.stock.getQuantity(ct));
+		}
 
 		scientistsLbl.setText(city.hasScientists() ?
 			"This city has "+city.scientists+" scientists" : null);
