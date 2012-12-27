@@ -1,6 +1,6 @@
 package bigearth;
 
-import java.io.File;
+import java.net.URL;
 
 public enum CommodityType
 {
@@ -43,11 +43,11 @@ public enum CommodityType
 		return sb.toString();
 	}
 
-	public File getIconFilename()
+	public URL getIconResource()
 	{
 		String n = name();
 		n = n.toLowerCase();
 		n = n.replace('_', '-');
-		return new File("html/commodity_images/"+n+".png");
+		return CommodityType.class.getResource("/commodity_images/"+n+".png");
 	}
 }

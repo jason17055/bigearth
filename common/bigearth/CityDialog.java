@@ -195,7 +195,8 @@ public class CityDialog extends JDialog
 		c1.gridy = c2.gridy = c2.gridy = nextStockItemRow;
 		nextStockItemRow++;
 
-		ImageIcon stockIcon = new ImageIcon(ct.getIconFilename().toString());
+		URL stockIconUrl = ct.getIconResource();
+		ImageIcon stockIcon = stockIconUrl != null ? new ImageIcon(stockIconUrl) : null;
 		stockPane.add(new JLabel(stockIcon), c1);
 		stockPane.add(new JLabel(ct.getDisplayName()), c2);
 
