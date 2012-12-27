@@ -24,6 +24,8 @@ public class CityInfo
 	boolean pasturesIsKnown;
 	Set<Technology> science;
 	Set<Technology> partialScience;
+	int scientists;
+	boolean scientistsIsKnown;
 
 	CityInfo()
 	{
@@ -86,6 +88,11 @@ public class CityInfo
 		return science != null;
 	}
 
+	public boolean hasScientists()
+	{
+		return scientistsIsKnown;
+	}
+
 	public boolean hasStock()
 	{
 		return stock != null;
@@ -124,6 +131,12 @@ public class CityInfo
 	{
 		this.population = population;
 		this.populationIsKnown = true;
+	}
+
+	public void setScientists(int scientists)
+	{
+		this.scientists = scientists;
+		this.scientistsIsKnown = true;
 	}
 
 	public void setUnderConstruction(int underConstruction)
@@ -187,6 +200,11 @@ public class CityInfo
 				population = in.getIntValue();
 				populationIsKnown = true;
 			}
+			else if (s.equals("scientists"))
+			{
+				in.nextToken();
+				setScientists(in.getIntValue());
+			}
 			else if (s.equals("underConstruction"))
 			{
 				in.nextToken();
@@ -233,6 +251,8 @@ public class CityInfo
 			out.writeFieldName("science");
 			TechnologyBag.writeTechnologySet(out, science);
 		}
+		if (hasScientists())
+			out.writeNumberField("scientists", scientists);
 		if (hasStock())
 		{
 			out.writeFieldName("stock");

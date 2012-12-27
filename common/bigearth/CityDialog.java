@@ -30,6 +30,7 @@ public class CityDialog extends JDialog
 	JComboBox equipSelect;
 	DefaultListModel messagesListModel;
 	JList messagesList;
+	JLabel scientistsLbl;
 	DefaultListModel scienceListModel;
 	JList scienceList;
 
@@ -135,13 +136,20 @@ public class CityDialog extends JDialog
 	{
 		JPanel mainPane = new JPanel(new GridBagLayout());
 
+		GridBagConstraints c1 = new GridBagConstraints();
+		c1.gridy = 0;
+		c1.gridx = 0;
+		c1.gridwidth = 2;
+		scientistsLbl = new JLabel();
+		mainPane.add(scientistsLbl, c1);
+
 		scienceListModel = new DefaultListModel();
 
 		scienceList = new JList(scienceListModel);
 		JScrollPane scienceListScroll = new JScrollPane(scienceList);
 		scienceListScroll.setPreferredSize(new Dimension(250, 50));
 		GridBagConstraints c3 = new GridBagConstraints();
-		c3.gridy = 0;
+		c3.gridy = 1;
 		c3.gridx = 0;
 		c3.gridwidth = 2;
 		c3.weighty = c3.weightx = 1.0;
@@ -344,6 +352,8 @@ public class CityDialog extends JDialog
 		copperLbl.setText(city.hasStock() ?
 			Long.toString(city.getStock(CommodityType.COPPER_ORE)) : null);
 
+		scientistsLbl.setText(city.hasScientists() ?
+			"This city has "+city.scientists+" scientists" : null);
 		scienceListModel = new DefaultListModel();
 		if (city.hasPartialScience())
 		{

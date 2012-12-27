@@ -260,6 +260,7 @@ public class CityServant
 			);
 		ci.setUnderConstruction(parentRegion.getZoneCount(ZoneType.UNDER_CONSTRUCTION));
 		ci.setPopulation(getPopulation());
+		ci.setScientists(getWorkersInJob(CityJob.RESEARCH));
 		ci.stock = this.stock.clone();
 		ci.science = this.science;
 		ci.partialScience = this.partialScience;
