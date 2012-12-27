@@ -3,8 +3,7 @@ package bigearth;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.*;
 import javax.imageio.*;
@@ -41,8 +40,6 @@ public class WorldView extends JPanel
 	boolean showCities = true;
 
 	Selection selection = new Selection();
-
-	static final File IMAGES_DIR = new File("html");
 
 	class Selection
 	{
@@ -1243,8 +1240,8 @@ System.err.println(e);
 		Iterator readers = ImageIO.getImageReadersByFormatName("gif");
 		ImageReader reader = (ImageReader) readers.next();
 
-		File f = new File(IMAGES_DIR, "ui_images/fleet_selection_circle_front.gif");
-		ImageInputStream iis = ImageIO.createImageInputStream(f);
+		InputStream f1 = WorldView.class.getResourceAsStream("/ui_images/fleet_selection_circle_front.gif");
+		ImageInputStream iis = ImageIO.createImageInputStream(f1);
 
 		reader.setInput(iis, true);
 
@@ -1266,8 +1263,8 @@ System.err.println(e);
 
 		mobSelectionFrontImages = imageArray.toArray(new BufferedImage[0]);
 
-		f = new File(IMAGES_DIR, "ui_images/fleet_selection_circle_back.gif");
-		iis = ImageIO.createImageInputStream(f);
+		InputStream f2 = WorldView.class.getResourceAsStream("/ui_images/fleet_selection_circle_back.gif");
+		iis = ImageIO.createImageInputStream(f2);
 		reader.setInput(iis, true);
 
 		imageArray.clear();
