@@ -8,6 +8,13 @@ class CommoditiesBag
 {
 	private Map<CommodityType, Long> stock;
 
+	/**
+	 * A shared CommoditiesBag object to represent an empty stock or
+	 * cost or reward. This should be treated as an immutable object,
+	 * since the same object is shared by others.
+	 */
+	public static final CommoditiesBag EMPTY = new CommoditiesBag();
+
 	public CommoditiesBag()
 	{
 		stock = new EnumMap<CommodityType, Long>(CommodityType.class);
