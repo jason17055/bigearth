@@ -16,13 +16,20 @@ public class CityDialog extends JDialog
 	JLabel populationLbl;
 	JLabel childrenLbl;;
 
+	static class StockItem
+	{
+		JLabel iconLbl;
+		JLabel typeLbl;
+		JLabel quantityLbl;
+	}
+
 	JPanel landPane;
 	int nextZoneItemRow = 0;
-	Map<ZoneType, JLabel> zoneItemLabels = new HashMap<ZoneType, JLabel>();
+	Map<ZoneType, StockItem> zoneItemLabels = new HashMap<ZoneType, StockItem>();
 
 	JPanel stockPane;
 	int nextStockItemRow = 0;
-	Map<CommodityType, JLabel> stockItemLabels = new HashMap<CommodityType, JLabel>();
+	Map<CommodityType, StockItem> stockItemLabels = new HashMap<CommodityType, StockItem>();
 
 	JComboBox developSelect;
 	JComboBox equipSelect;
@@ -195,14 +202,31 @@ public class CityDialog extends JDialog
 		c1.gridy = c2.gridy = c2.gridy = nextStockItemRow;
 		nextStockItemRow++;
 
+		StockItem item = new StockItem();
+
 		URL stockIconUrl = ct.getIconResource();
 		ImageIcon stockIcon = stockIconUrl != null ? new ImageIcon(stockIconUrl) : null;
-		stockPane.add(new JLabel(stockIcon), c1);
-		stockPane.add(new JLabel(ct.getDisplayName()), c2);
+		item.iconLbl = new JLabel(stockIcon);
+		stockPane.add(item.iconLbl, c1);
 
-		JLabel qtyLbl = new JLabel();
-		stockItemLabels.put(ct, qtyLbl);
-		stockPane.add(qtyLbl, c3);
+		item.typeLbl = new JLabel(ct.getDisplayName());
+		stockPane.add(item.typeLbl, c2);
+
+		item.quantityLbl = new JLabel();
+		stockPane.add(item.quantityLbl, c3);
+
+		stockItemLabels.put(ct, item);
+	}
+
+	private void hideStockItem(CommodityType ct)
+	{
+		StockItem item = stockItemLabels.get(ct);
+		if (item != null)
+		{
+			item.iconLbl.setVisible(false);
+			item.typeLbl.setVisible(false);
+			item.quantityLbl.setVisible(false);
+		}
 	}
 
 	private void updateStockItem(CommodityType ct, long qty)
@@ -212,7 +236,11 @@ public class CityDialog extends JDialog
 			addStockItem(ct);
 		}
 
-		stockItemLabels.get(ct).setText(Long.toString(qty));
+		StockItem item = stockItemLabels.get(ct);
+		item.quantityLbl.setText(Long.toString(qty));
+		item.iconLbl.setVisible(true);
+		item.typeLbl.setVisible(true);
+		item.quantityLbl.setVisible(true);
 	}
 
 	private JComponent initStockPane()
@@ -253,12 +281,28 @@ public class CityDialog extends JDialog
 		return landPane;
 	}
 
+	private void hideZoneItem(ZoneType zone)
+	{
+		StockItem item = zoneItemLabels.get(zone);
+		if (item != null)
+		{
+			item.iconLbl.setVisible(false);
+			item.typeLbl.setVisible(false);
+			item.quantityLbl.setVisible(false);
+		}
+	}
+
 	private void updateZoneItem(ZoneType zone, int quantity)
 	{
 		if (!zoneItemLabels.containsKey(zone))
 			addZoneItem(zone);
 
-		zoneItemLabels.get(zone).setText(Integer.toString(quantity));
+		StockItem item = zoneItemLabels.get(zone);
+		item.quantityLbl.setText(Integer.toString(quantity));
+
+		item.iconLbl.setVisible(true);
+		item.typeLbl.setVisible(true);
+		item.quantityLbl.setVisible(true);
 	}
 
 	private void addZoneItem(ZoneType zone)
@@ -279,14 +323,20 @@ public class CityDialog extends JDialog
 		c1.gridy = c2.gridy = c3.gridy = nextZoneItemRow;
 		nextZoneItemRow++;
 
+		StockItem item = new StockItem();
+
 		URL zoneIconUrl = zone.getIconResource();
 		ImageIcon zoneIcon = zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null;
-		landPane.add(new JLabel(zoneIcon), c1);
-		landPane.add(new JLabel(zone.getDisplayName()), c2);
+		item.iconLbl = new JLabel(zoneIcon);
+		landPane.add(item.iconLbl, c1);
 
-		JLabel qtyLbl = new JLabel();
-		zoneItemLabels.put(zone, qtyLbl);
-		landPane.add(qtyLbl, c3);
+		item.typeLbl = new JLabel(zone.getDisplayName());
+		landPane.add(item.typeLbl, c2);
+
+		item.quantityLbl = new JLabel();
+		landPane.add(item.quantityLbl, c3);
+
+		zoneItemLabels.put(zone, item);
 	}
 
 	void addCityMessage(String message)
@@ -328,11 +378,25 @@ public class CityDialog extends JDialog
 			if (zone != ZoneType.NATURAL)
 				updateZoneItem(zone, quantity);
 		}
+		for (ZoneType zone : zoneItemLabels.keySet())
+		{
+			if (!city.zones.containsKey(zone))
+			{
+				hideZoneItem(zone);
+			}
+		}
 
 		assert city.hasStock();
 		for (CommodityType ct : city.stock.getCommodityTypesArray())
 		{
 			updateStockItem(ct, city.stock.getQuantity(ct));
+		}
+		for (CommodityType ct : stockItemLabels.keySet())
+		{
+			if (city.stock.getQuantity(ct) == 0)
+			{
+				hideStockItem(ct);
+			}
 		}
 
 		scientistsLbl.setText(city.hasScientists() ?
