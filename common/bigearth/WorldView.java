@@ -844,9 +844,10 @@ public class WorldView extends JPanel
 
 	static BufferedImage loadCityImage()
 	{
+		URL cityUrl = WorldView.class.getResource("/city_images/city1.png");
 		try
 		{
-			BufferedImage img = ImageIO.read(new File(IMAGES_DIR, "city_images/city1.png"));
+			BufferedImage img = ImageIO.read(cityUrl);
 			return img;
 		}
 		catch (IOException e)
