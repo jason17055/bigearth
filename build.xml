@@ -34,11 +34,25 @@
 </javac>
 </target>
 
-<target name="all" depends="copy-resources,compile">
+<target name="build" depends="copy-resources,compile">
+<pathconvert property="runtime-classpath" pathsep=" " refid="build-classpath">
+<map from="${basedir}" to="." />
+</pathconvert>
+
+<jar destfile="bigearth.jar" basedir="${builddir}">
+	<manifest>
+		<attribute name="Main-Class" value="bigearth.Client" />
+		<attribute name="Class-Path" value="${runtime-classpath}" />
+	</manifest>
+</jar>
+</target>
+
+<target name="all" depends="build">
 </target>
 
 <target name="clean">
 <delete dir="target" />
+<delete file="bigearth.jar" />
 </target>
 
 </project>
