@@ -824,10 +824,13 @@ public class WorldView extends JPanel
 	{
 		if (!mobImages.containsKey(mobType))
 		{
-			String avatarName = mobType.name().toLowerCase();
+			URL avatarUrl = mobType.getAvatarIconResource();
+			if (avatarUrl == null)
+				return null;
+
 			try
 			{
-				BufferedImage img = ImageIO.read(new File(IMAGES_DIR, "unit_images/"+avatarName+".png"));
+				BufferedImage img = ImageIO.read(avatarUrl);
 				mobImages.put(mobType, img);
 			}
 			catch (IOException e)
