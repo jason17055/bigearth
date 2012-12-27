@@ -71,4 +71,9 @@
 	/>
 </target>
 
+<target name="javadoc">
+<mkdir dir="docs/api" />
+<javadoc sourcepath="common" destdir="docs/api" />
+</target>
+
 </project>
