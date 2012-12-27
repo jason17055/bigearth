@@ -19,10 +19,20 @@ public class WorldConfig implements WorldConfigIfc
 	int humanLifeExpectancy;
 	long foodPerFarmer;
 	long foodPerAnimal;
+	/// Amount of nutrition needed per adult per year.
 	double hungerPerAdult;
+	/// Amount of nutrition needed per child per year.
 	double hungerPerChild;
 	int zonesPerRegion;
 	int maxAnimalsPerPasture;
+
+	/// How much work is required to start learning a new technology. This amount
+	/// is required to start learning, and the same amount is required to finish
+	/// learning it the following year.
+	double newTechnologyWorkCost;
+
+	/// How much work is required EACH YEAR to maintain a technology.
+	double maintainTechnologyWorkCost;
 
 	private WorldConfig(File path)
 	{
@@ -64,11 +74,9 @@ public class WorldConfig implements WorldConfigIfc
 		this.foodPerFarmer = Long.parseLong(
 				properties.getProperty("foodPerFarmer", "5")
 				);
-		// amount of nutrition needed per adult per year
 		this.hungerPerAdult = Double.parseDouble(
 				properties.getProperty("hungerPerAdult", "1.0")
 				);
-		// amount of nutrition needed per child per year
 		this.hungerPerChild = Double.parseDouble(
 				properties.getProperty("hungerPerChild", "1.0")
 				);
@@ -77,6 +85,12 @@ public class WorldConfig implements WorldConfigIfc
 				);
 		this.maxAnimalsPerPasture = Integer.parseInt(
 				properties.getProperty("maxAnimalsPerPasture", "200")
+				);
+		this.newTechnologyWorkCost = Double.parseDouble(
+				properties.getProperty("newTechnologyWorkCost", "10.0")
+				);
+		this.maintainTechnologyWorkCost = Double.parseDouble(
+				properties.getProperty("maintainTechnologyWorkCost", "0.25")
 				);
 	}
 

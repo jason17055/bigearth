@@ -696,12 +696,27 @@ public class CityServant
 	private void endOfYear_research()
 	{
 		double pts = getProduction(CityJob.RESEARCH);
-		if (pts <= 0.0)
-			return;
-
 		production.remove(CityJob.RESEARCH);
 
-		int scienceOutput = (int)Math.floor(pts / 10.0);
+		// subtract off required points for maintaining already known sciences
+		int numSciences = science.size();
+		pts -= numSciences * getWorldConfig().maintainTechnologyWorkCost;
+
+		if (pts < 0.0)
+		{
+			// some sciences may be forgotten
+			int numVulnerable = (int) Math.ceil(-pts / getWorldConfig().maintainTechnologyWorkCost);
+			System.out.println("TODO- "+numVulnerable+" of "+numSciences+" technologies vulnerable to loss");
+
+		}
+
+		if (pts <= 0.0)
+		{
+			partialScience.clear();
+			return;
+		}
+
+		int scienceOutput = (int)Math.floor(pts / getWorldConfig().newTechnologyWorkCost);
 		for (Iterator< Technology> it = partialScience.iterator();
 				it.hasNext(); )
 		{
