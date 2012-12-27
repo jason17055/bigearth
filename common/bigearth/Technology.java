@@ -28,6 +28,11 @@ public final class Technology
 
 	private static Map<String,Technology> allTechnologies = new HashMap<String,Technology>();
 
+	public static Collection<Technology> values()
+	{
+		return allTechnologies.values();
+	}
+
 	public static Technology valueOf(String name)
 	{
 		Technology rv = allTechnologies.get(name);

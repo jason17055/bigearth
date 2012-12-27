@@ -21,6 +21,12 @@ public class CityServant
 	double hunger;
 	Command currentOrders;
 
+	/** Technologies that this city has learned. */
+	Set<Technology> science;
+
+	/** Technologies that this city has started learning but not yet finished learning. */
+	Set<Technology> partialScience;
+
 	CityServant(RegionServant parentRegion)
 	{
 		this.parentRegion = parentRegion;
@@ -29,6 +35,8 @@ public class CityServant
 		this.workerRates = new HashMap<CityJob, Double>();
 		this.production = new HashMap<CityJob, Double>();
 		this.children = new int[getWorldMaster().config.childYears];
+		this.science = new HashSet<Technology>();
+		this.partialScience = new HashSet<Technology>();
 	}
 
 	public void addCommodity(CommodityType ct, long amount)
@@ -390,6 +398,10 @@ public class CityServant
 				in.nextToken();
 				productionLastUpdated = in.getLongValue();
 			}
+			else if (s.equals("science"))
+				science = parseTechnologySet(in);
+			else if (s.equals("partialScience"))
+				partialScience = parseTechnologySet(in);
 			else
 			{
 				in.nextToken();
@@ -399,6 +411,22 @@ public class CityServant
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+
+	private Set<Technology> parseTechnologySet(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_ARRAY)
+			throw new InputMismatchException();
+
+		HashSet<Technology> techs = new HashSet<Technology>();
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			Technology t = Technology.valueOf(in.getText());
+			techs.add(t);
+		}
+		return techs;
 	}
 
 	private void parseChildren(JsonParser in)
@@ -517,7 +545,28 @@ public class CityServant
 			out.writeFieldName("currentOrders");
 			currentOrders.write(out);
 		}
+		if (!science.isEmpty())
+		{
+			out.writeFieldName("science");
+			writeTechnologySet(out, science);
+		}
+		if (!partialScience.isEmpty())
+		{
+			out.writeFieldName("partialScience");
+			writeTechnologySet(out, partialScience);
+		}
 		out.writeEndObject();
+	}
+
+	private void writeTechnologySet(JsonGenerator out, Set<Technology> techs)
+		throws IOException
+	{
+		out.writeStartArray();
+		for (Technology t : techs)
+		{
+			out.writeString(t.name());
+		}
+		out.writeEndArray();
 	}
 
 	private void writeWorkers(JsonGenerator out)
@@ -580,6 +629,7 @@ public class CityServant
 		endOfYear_deaths();
 		endOfYear_livestock();
 		endOfYear_developLand();
+		endOfYear_research();
 	}
 
 	private void cityDebug(String message)
@@ -658,6 +708,86 @@ public class CityServant
 			{
 				// this development requires some commodity
 				payDevelopmentCost(zd);
+			}
+		}
+	}
+
+	private void learnTechnology(Technology tech)
+	{
+		science.add(tech);
+	}
+
+	private void endOfYear_research()
+	{
+		double pts = getProduction(CityJob.RESEARCH);
+		if (pts <= 0.0)
+			return;
+
+		production.remove(CityJob.RESEARCH);
+
+		int scienceOutput = (int)Math.floor(pts / 10.0);
+		for (Iterator< Technology> it = partialScience.iterator();
+				it.hasNext(); )
+		{
+			Technology tech = it.next();
+
+			if (scienceOutput >= 1)
+			{
+				scienceOutput -= 1;
+				it.remove();
+				learnTechnology(tech);
+			}
+			else
+			{
+				assert scienceOutput == 0;
+				break;
+			}
+		}
+
+		if (scienceOutput == 0)
+			return;
+
+		// look for new topics to start research on
+		ArrayList<Technology> candidates = new ArrayList<Technology>();
+		for (Technology tech : Technology.values())
+		{
+			if (science.contains(tech) || partialScience.contains(tech))
+				continue;
+
+			boolean haveAllPrereqs = true;
+			for (Technology t2 : tech.prerequisites)
+			{
+				if (!science.contains(t2))
+					haveAllPrereqs = false;
+			}
+			if (!haveAllPrereqs)
+				continue;
+
+			if (!stock.isSupersetOf(tech.resourceCost))
+				continue;
+
+			candidates.add(tech);
+		}
+
+		// pick random items from candidates list until we run out of
+		// science output or the candidates list is empty
+
+		while (scienceOutput >= 1 && !candidates.isEmpty())
+		{
+			int L = candidates.size();
+			int i = (int)Math.floor(Math.random() * L);
+
+			Technology tech = candidates.remove(i);
+
+			// we have to check the cost again, because it's possible
+			// to have multiple technologies in the candidates list that
+			// individually can be paid for but not both.
+
+			if (stock.isSupersetOf(tech.resourceCost))
+			{
+				stock.subtract(tech.resourceCost);
+				partialScience.add(tech);
+				scienceOutput -= 1;
 			}
 		}
 	}

@@ -100,6 +100,16 @@ class CommoditiesBag
 		}
 	}
 
+	public void subtract(CommoditiesBag rhs)
+	{
+		for (Map.Entry<CommodityType, Long> e : rhs.stock.entrySet())
+		{
+			CommodityType ct = e.getKey();
+			long qty = e.getValue();
+			subtract(ct, qty);
+		}
+	}
+
 	public long subtract(CommodityType ct, long amount)
 	{
 		assert amount >= 0;
@@ -131,6 +141,19 @@ class CommoditiesBag
 	public boolean isEmpty()
 	{
 		return stock.isEmpty();
+	}
+
+	public boolean isSupersetOf(CommoditiesBag rhs)
+	{
+		for (Map.Entry<CommodityType, Long> e : rhs.stock.entrySet())
+		{
+			CommodityType ct = e.getKey();
+			long qty = e.getValue();
+
+			if (getQuantity(ct) < qty)
+				return false;
+		}
+		return true;
 	}
 
 	public CommodityType [] getCommodityTypesArray()
