@@ -1,6 +1,7 @@
 package bigearth;
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
@@ -14,11 +15,15 @@ public class CityDialog extends JDialog
 
 	JLabel populationLbl;
 	JLabel childrenLbl;;
-	JLabel farmsLbl;
-	JLabel housesLbl;
-	JLabel pasturesLbl;
-	JLabel underConstructionLbl;
+
+	JPanel landPane;
+	int nextZoneItemRow = 0;
+	Map<ZoneType, JLabel> zoneItemLabels = new HashMap<ZoneType, JLabel>();
+
 	JPanel stockPane;
+	int nextStockItemRow = 0;
+	Map<CommodityType, JLabel> stockItemLabels = new HashMap<CommodityType, JLabel>();
+
 	JComboBox developSelect;
 	JComboBox equipSelect;
 	DefaultListModel messagesListModel;
@@ -172,9 +177,6 @@ public class CityDialog extends JDialog
 		return mainPane;
 	}
 
-	int nextStockItemRow = 0;
-	Map<CommodityType, JLabel> stockItemLabels = new HashMap<CommodityType, JLabel>();
-
 	private void addStockItem(CommodityType ct)
 	{
 		GridBagConstraints c1 = new GridBagConstraints();
@@ -246,38 +248,44 @@ public class CityDialog extends JDialog
 
 	private JComponent initLandPane()
 	{
-		JPanel mainPane = new JPanel(new GridBagLayout());
+		landPane = new JPanel(new GridBagLayout());
+		return landPane;
+	}
 
+	private void updateZoneItem(ZoneType zone, int quantity)
+	{
+		if (!zoneItemLabels.containsKey(zone))
+			addZoneItem(zone);
+
+		zoneItemLabels.get(zone).setText(Integer.toString(quantity));
+	}
+
+	private void addZoneItem(ZoneType zone)
+	{
 		GridBagConstraints c1 = new GridBagConstraints();
 		c1.gridx = 0;
-		c1.anchor = GridBagConstraints.FIRST_LINE_START;
-		c1.weightx = 1.0;
+		c1.anchor = GridBagConstraints.WEST;
 
 		GridBagConstraints c2 = new GridBagConstraints();
 		c2.gridx = 1;
-		c2.anchor = GridBagConstraints.FIRST_LINE_END;
+		c2.anchor = GridBagConstraints.WEST;
+		c2.weightx = 1.0;
 
-		c1.gridy = c2.gridy = 0;
-		mainPane.add(new JLabel("Houses"), c1);
-		housesLbl = new JLabel();
-		mainPane.add(housesLbl, c2);
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridx = 2;
+		c3.anchor = GridBagConstraints.EAST;
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Pastures"), c1);
-		pasturesLbl = new JLabel();
-		mainPane.add(pasturesLbl, c2);
+		c1.gridy = c2.gridy = c3.gridy = nextZoneItemRow;
+		nextZoneItemRow++;
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Farms"), c1);
-		farmsLbl = new JLabel();
-		mainPane.add(farmsLbl, c2);
+		URL zoneIconUrl = zone.getIconResource();
+		ImageIcon zoneIcon = zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null;
+		landPane.add(new JLabel(zoneIcon), c1);
+		landPane.add(new JLabel(zone.getDisplayName()), c2);
 
-		c1.gridy = ++c2.gridy;
-		mainPane.add(new JLabel("Under Construction"), c1);
-		underConstructionLbl = new JLabel();
-		mainPane.add(underConstructionLbl, c2);
-
-		return mainPane;
+		JLabel qtyLbl = new JLabel();
+		zoneItemLabels.put(zone, qtyLbl);
+		landPane.add(qtyLbl, c3);
 	}
 
 	void addCityMessage(String message)
@@ -309,15 +317,18 @@ public class CityDialog extends JDialog
 			Integer.toString(city.population) : null);
 		childrenLbl.setText(city.hasChildren() ?
 			Integer.toString(city.children) : null);
-		housesLbl.setText(city.hasHouses() ?
-			Integer.toString(city.getHouses()) : null);
-		farmsLbl.setText(city.hasFarms() ?
-			Integer.toString(city.getZoneCount(ZoneType.FARM)) : null);
-		pasturesLbl.setText(city.hasPastures() ?
-			Integer.toString(city.getZoneCount(ZoneType.PASTURE)) : null);
-		underConstructionLbl.setText(city.hasUnderConstruction() ?
-			Integer.toString(city.getZoneCount(ZoneType.UNDER_CONSTRUCTION)) : null);
 
+		assert city.hasZones();
+		for (Map.Entry<ZoneType,Integer> e : city.zones.entrySet())
+		{
+			ZoneType zone = e.getKey();
+			int quantity = e.getValue();
+
+			if (zone != ZoneType.NATURAL)
+				updateZoneItem(zone, quantity);
+		}
+
+		assert city.hasStock();
 		for (CommodityType ct : city.stock.getCommodityTypesArray())
 		{
 			updateStockItem(ct, city.stock.getQuantity(ct));
