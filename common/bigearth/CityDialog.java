@@ -75,8 +75,8 @@ public class CityDialog extends JDialog
 		JTabbedPane tabbedPane = new JTabbedPane();
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
-		JComponent oldLandPane = initLandPane();
-		tabbedPane.addTab("Land", oldLandPane);
+		JComponent landPane = initLandPane();
+		tabbedPane.addTab("Land", landPane);
 
 		JComponent peoplePane = initPeoplePane();
 		tabbedPane.addTab("People", peoplePane);
@@ -100,17 +100,6 @@ public class CityDialog extends JDialog
 				onRenameClicked();
 			}});
 		buttonPane.add(renameBtn);
-
-		developSelect = new JComboBox(developChoices);
-		buttonPane.add(developSelect);
-
-		JButton developBtn = new JButton("Develop");
-		developBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ev)
-			{
-				onDevelopClicked();
-			}});
-		buttonPane.add(developBtn);
 
 		equipSelect = new JComboBox(equipChoices);
 		buttonPane.add(equipSelect);
@@ -289,7 +278,7 @@ public class CityDialog extends JDialog
 
 	private JComponent initLandPane()
 	{
-		JPanel mainPane = new JPanel(new GridBagLayout());
+		JPanel mainPane = new JPanel(new BorderLayout());
 
 		landListModel = new DefaultListModel();
 		landList = new JList(landListModel);
@@ -300,12 +289,21 @@ public class CityDialog extends JDialog
 
 		JScrollPane landListScroll = new JScrollPane(landList);
 		landListScroll.setPreferredSize(new Dimension(550,212));
-		GridBagConstraints c3 = new GridBagConstraints();
-		c3.gridx = c3.gridy = 0;
-		c3.gridwidth = c3.gridheight = 1;
-		c3.weightx = c3.weighty = 1.0;
-		c3.fill = GridBagConstraints.BOTH;
-		mainPane.add(landListScroll, c3);
+		mainPane.add(landListScroll, BorderLayout.CENTER);
+
+		JPanel buttonPane = new JPanel();
+		mainPane.add(buttonPane, BorderLayout.SOUTH);
+
+		developSelect = new JComboBox(developChoices);
+		buttonPane.add(developSelect);
+
+		JButton developBtn = new JButton("Develop");
+		developBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onDevelopClicked();
+			}});
+		buttonPane.add(developBtn);
 
 		return mainPane;
 	}
