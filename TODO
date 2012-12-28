@@ -1,2 +1,16 @@
 Client.java:
 	use an interruptible http client, join the listener thread when last listener removed
+
+CityServant:
+	merge city's commodity store in with parent region's
+	create an "advanced commodity store" that allows the specification of
+		* sources - a continuous stream of incoming commodities
+		* sinks - a continuous consumer of commodities
+		* converters - a continuous converter of commodities
+
+RegionServant:
+	instantiate an object for each zone, rather than just keeping a count of each zone
+	allow developed zones to be further customized, e.g.
+		* whether it's "operating" or not (e.g. for a factory)
+		* what recipe it's using (e.g. for a factory)
+		* what commodity type it holds/raises (e.g. for a field or pasture)
