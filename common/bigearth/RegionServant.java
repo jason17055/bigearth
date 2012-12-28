@@ -36,7 +36,7 @@ class RegionServant
 	WildlifeServant wildlife;
 
 	/// Goods that are stockpiled.
-	CommoditiesBag stock;
+	AdvancedCommodityStore stock;
 
 	/// Raw materials that are on the surface, easily gathered.
 	CommoditiesBag surfaceMinerals;
@@ -75,7 +75,7 @@ class RegionServant
 		this.waterLevel = Integer.MIN_VALUE;
 		this.presentMobs = new HashMap<String, MobServant>();
 		this.wildlife = new WildlifeServant(this);
-		this.stock = new CommoditiesBag();
+		this.stock = new AdvancedCommodityStore();
 		this.surfaceMinerals = new CommoditiesBag();
 		this.undergroundMinerals = new CommoditiesBag();
 		this.seenByMob = new HashMap<SeenByKey, RegionSight>();
@@ -306,11 +306,8 @@ class RegionServant
 		out.writeNumberField("temperature", temperature);
 		out.writeNumberField("annualRains", annualRains);
 		out.writeNumberField("floods", floods);
-		if (!stock.isEmpty())
-		{
-			out.writeFieldName("stock");
-			stock.write(out);
-		}
+		out.writeFieldName("stock");
+		stock.write(out);
 		if (!surfaceMinerals.isEmpty())
 		{
 			out.writeFieldName("surfaceMinerals");
@@ -668,7 +665,7 @@ class RegionServant
 			else if (s.equals("mobs"))
 				loadMobs(in);
 			else if (s.equals("stock"))
-				stock = CommoditiesBag.parse(in);
+				stock.parse(in);
 			else if (s.equals("zones"))
 				parseZones(in);
 			else if (s.equals("zoneDevelopments"))
@@ -1099,7 +1096,7 @@ class RegionServant
 
 		if (sight.seeInternal)
 		{
-			p.stock = this.stock.clone();
+			p.stock = stock.toCommoditiesBag();
 		}
 
 		return p;
