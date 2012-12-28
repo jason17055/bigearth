@@ -593,6 +593,7 @@ class RegionServant
 		assert zone != null;
 
 		zone.type = newZoneType;
+		zone.start();
 		world.regionChanged(regionId);
 	}
 

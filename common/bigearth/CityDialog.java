@@ -56,8 +56,8 @@ public class CityDialog extends JDialog
 		ZoneType.STONE_COTTAGE,
 		ZoneType.FARM,
 		ZoneType.PASTURE,
-		ZoneType.STONE_WEAPON_FACTORY,
-		ZoneType.STONE_BLOCK_FACTORY };
+		ZoneType.STONE_WORKSHOP
+		};
 	static MobType [] equipChoices = new MobType[] {
 		MobType.SETTLER
 		};

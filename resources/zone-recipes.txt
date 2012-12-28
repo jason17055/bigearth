@@ -28,13 +28,7 @@
 },
 {
 "fromZoneType":"NATURAL",
-"toZoneType":"STONE_WEAPON_FACTORY",
-"workRequired":250,
-"required":{"WOOD":50,"STONE":100}
-},
-{
-"fromZoneType":"NATURAL",
-"toZoneType":"STONE_BLOCK_FACTORY",
+"toZoneType":"STONE_WORKSHOP",
 "workRequired":250,
 "required":{"WOOD":50,"STONE":100}
 }

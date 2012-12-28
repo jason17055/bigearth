@@ -82,15 +82,12 @@ public class ZoneServant
 
 	void start()
 	{
-		if (type == ZoneType.STONE_WEAPON_FACTORY)
+		if (type == ZoneType.STONE_WORKSHOP)
 		{
-			type = ZoneType.STONE_WORKSHOP;
-			recipe = CommodityRecipe.STONE_TO_STONE_WEAPON;
-		}
-		else if (type == ZoneType.STONE_BLOCK_FACTORY)
-		{
-			type = ZoneType.STONE_WORKSHOP;
-			recipe = CommodityRecipe.STONE_TO_STONE_BLOCK;
+			if (recipe == null)
+			{
+				recipe = CommodityRecipe.STONE_TO_STONE_BLOCK;
+			}
 		}
 	}
 }
