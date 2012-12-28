@@ -336,8 +336,8 @@ public class CityDialog extends JDialog
 
 	class ZoneItem
 	{
+		String name;
 		ZoneType type;
-		int quantity;
 	}
 
 	static class MyZoneCellRenderer implements ListCellRenderer<ZoneItem>
@@ -357,16 +357,12 @@ public class CityDialog extends JDialog
 		}
 
 		//implements ListCellRenderer
-		public Component getListCellRendererComponent(JList<? extends ZoneItem> list, ZoneItem value, int index, boolean isSelected, boolean cellHasFocus)
+		public Component getListCellRendererComponent(JList<? extends ZoneItem> list, ZoneItem zi, int index, boolean isSelected, boolean cellHasFocus)
 		{
-			ZoneItem zi = (ZoneItem) value;
-
 			URL zoneIconUrl = zi.type.getIconResource();
 			ImageIcon zoneIcon = zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null;
 			jlabel.setIcon(zoneIcon);
-
-			jlabel.setText(zi.type.getDisplayName()
-				+ (zi.quantity != 1 ? " (x"+zi.quantity+")" : ""));
+			jlabel.setText(zi.type.getDisplayName());
 
 			if (isSelected)
 			{
@@ -399,24 +395,17 @@ public class CityDialog extends JDialog
 		static final Border NO_FOCUS_BORDER = new EmptyBorder(1,1,1,1);
 	}
 
-	private void updateZoneItem(ZoneType zone, int quantity)
+	private boolean updateZoneItem(ZoneItem zi, ZoneInfo zone)
 	{
-		for (int i = 0; i < landListModel.size(); i++)
+		boolean anyChange = false;
+
+		if (zi.type != zone.type)
 		{
-			ZoneItem zi = (ZoneItem) landListModel.get(i);
-			if (zi.type == zone)
-			{
-				zi.quantity = quantity;
-				landListModel.set(i, zi);
-				return;
-			}
+			zi.type = zone.type;
+			anyChange = true;
 		}
 
-		ZoneItem zi = new ZoneItem();
-		zi.type = zone;
-		zi.quantity = quantity;
-		landListModel.addElement(zi);
-		return;
+		return anyChange;
 	}
 
 	void addCityMessage(String message)
@@ -452,22 +441,41 @@ public class CityDialog extends JDialog
 	private void loadCityInfo_land(CityInfo city)
 	{
 		assert city.hasZones();
-		for (Map.Entry<ZoneType,Integer> e : city.zones.entrySet())
-		{
-			ZoneType zone = e.getKey();
-			int quantity = e.getValue();
-
-			if (zone != ZoneType.NATURAL)
-				updateZoneItem(zone, quantity);
-		}
 
 		//reverse order so that removing items will not mess up our indexes
+		Set<String> seen = new HashSet<>();
 		for (int i = landListModel.size()-1; i >= 0; i--)
 		{
-			ZoneItem zi = (ZoneItem) landListModel.get(i);
-			if (!city.zones.containsKey(zi.type))
+			ZoneItem zi = landListModel.get(i);
+			if (city.zones.containsKey(zi.name))
+			{
+				// check whether it needs to be updated
+				if (updateZoneItem(zi, city.zones.get(zi.name)))
+				{
+					landListModel.set(i, zi);
+				}
+				seen.add(zi.name);
+			}
+			else
 			{
 				landListModel.removeElementAt(i);
+			}
+		}
+
+		for (Map.Entry<String,ZoneInfo> e : city.zones.entrySet())
+		{
+			String zoneName = e.getKey();
+			ZoneInfo zone = e.getValue();
+
+			if (zone.type == ZoneType.NATURAL)
+				continue;
+
+			if (!seen.contains(zoneName))
+			{
+				ZoneItem zi = new ZoneItem();
+				zi.name = zoneName;
+				updateZoneItem(zi, zone);
+				landListModel.addElement(zi);
 			}
 		}
 	}

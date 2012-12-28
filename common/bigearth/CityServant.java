@@ -263,8 +263,19 @@ public class CityServant
 		ci.science = this.science;
 		ci.partialScience = this.partialScience;
 
-		//FIXME- should this be cloned?
-		ci.zones = parentRegion.zones;
+		// build zones
+		ci.zones = new HashMap<String,ZoneInfo>();
+		for (ZoneType zoneType : parentRegion.zones.keySet())
+		{
+			int count = parentRegion.zones.get(zoneType);
+			for (int i = 1; i <= count; i++)
+			{
+				String n = "/zone/"+location.toString()+"/"+zoneType.name()+"-"+i;
+				ZoneInfo zone = new ZoneInfo();
+				zone.type = zoneType;
+				ci.zones.put(n, zone);
+			}
+		}
 
 		return ci;
 	}

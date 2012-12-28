@@ -18,9 +18,9 @@ public class CityInfo
 	Set<Technology> partialScience;
 	int scientists;
 	boolean scientistsIsKnown;
-	Map<ZoneType,Integer> zones;
+	Map<String,ZoneInfo> zones;
 
-	CityInfo()
+	public CityInfo()
 	{
 	}
 
@@ -40,12 +40,17 @@ public class CityInfo
 		return stock.getQuantity(ct);
 	}
 
-	public int getZoneCount(ZoneType zone)
+	public int getZoneCount(ZoneType zoneType)
 	{
 		assert hasZones();
 
-		Integer I = zones.get(zone);
-		return I != null ? I.intValue() : 0;
+		int count = 0;
+		for (ZoneInfo zone : zones.values())
+		{
+			if (zone.type == zoneType)
+				count++;
+		}
+		return count;
 	}
 
 	public boolean hasChildren()
@@ -199,7 +204,7 @@ public class CityInfo
 	private void parseZones(JsonParser in)
 		throws IOException
 	{
-		zones = new HashMap<ZoneType,Integer>();
+		zones = new HashMap<String,ZoneInfo>();
 		in.nextToken();
 		if (in.getCurrentToken() != JsonToken.START_OBJECT)
 			throw new InputMismatchException();
@@ -207,10 +212,9 @@ public class CityInfo
 		while (in.nextToken() != JsonToken.END_OBJECT)
 		{
 			String s = in.getCurrentName();
-			in.nextToken();
-			int qty = in.getIntValue();
+			ZoneInfo zone = ZoneInfo.parse(in);
 
-			zones.put(ZoneType.valueOf(s), qty);
+			zones.put(s, zone);
 		}
 	}
 
@@ -257,13 +261,13 @@ public class CityInfo
 		throws IOException
 	{
 		out.writeStartObject();
-		for (Map.Entry<ZoneType,Integer> e : zones.entrySet())
+		for (Map.Entry<String,ZoneInfo> e : zones.entrySet())
 		{
-			ZoneType zone = e.getKey();
-			int qty = e.getValue();
+			String name = e.getKey();
+			ZoneInfo zone = e.getValue();
 
-			out.writeFieldName(zone.name());
-			out.writeNumber(qty);
+			out.writeFieldName(name);
+			zone.write(out);
 		}
 		out.writeEndObject();
 	}
