@@ -195,8 +195,7 @@ public class CityServant
 
 	int getFactoryCount()
 	{
-		return parentRegion.getZoneCount(ZoneType.STONE_WEAPON_FACTORY)
-			+ parentRegion.getZoneCount(ZoneType.STONE_BLOCK_FACTORY);
+		return parentRegion.getZoneCount(ZoneType.STONE_WORKSHOP);
 	}
 
 	int getFarmCount()
@@ -804,19 +803,17 @@ public class CityServant
 		}
 	}
 
-	private void processManufacturing(ZoneType zone, double ptsPerInstance)
+	private void processManufacturing(CommodityRecipe recipe, double pts)
 	{
-		int count = parentRegion.getZoneCount(zone);
-		double pts = count * ptsPerInstance;
 		if (pts > 0)
 		{
-			if (zone == ZoneType.STONE_BLOCK_FACTORY)
+			if (recipe == CommodityRecipe.STONE_TO_STONE_BLOCK)
 			{
 				long numProducable = (long)Math.floor(pts / 5.0);
 				long numProduced = stock.subtract(CommodityType.STONE, numProducable);
 				stock.add(CommodityType.STONE_BLOCK, numProduced);
 			}
-			if (zone == ZoneType.STONE_WEAPON_FACTORY)
+			if (recipe == CommodityRecipe.STONE_TO_STONE_WEAPON)
 			{
 				long numProducable = (long)Math.floor(pts / 1.0);
 				long numProduced = 5 * stock.subtract(CommodityType.STONE, numProducable / 5);
@@ -837,8 +834,14 @@ public class CityServant
 		double maxYield = numFactories * 100.0;
 		double z = maxYield - maxYield * Math.exp(-1 * manufacturePoints / maxYield);
 
-		processManufacturing(ZoneType.STONE_BLOCK_FACTORY, z/numFactories);
-		processManufacturing(ZoneType.STONE_WEAPON_FACTORY, z/numFactories);
+		for (ZoneServant zone : parentRegion.zones.values())
+		{
+			if (zone.type == ZoneType.STONE_WORKSHOP)
+			{
+				assert zone.recipe != null;
+				processManufacturing(zone.recipe, z/numFactories);
+			}
+		}
 	}
 
 	private void endOfYear_farming()

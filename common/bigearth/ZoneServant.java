@@ -15,6 +15,7 @@ public class ZoneServant
 	transient RegionServant parentRegion;
 
 	ZoneType type;
+	CommodityRecipe recipe;
 
 	ZoneServant(RegionServant parentRegion)
 	{
@@ -38,16 +39,38 @@ public class ZoneServant
 			type = ZoneType.valueOf(in.getText());
 			return;
 		}
-		else
+		else if (in.getCurrentToken() != JsonToken.START_OBJECT)
 		{
 			throw new InputMismatchException();
+		}
+
+		while (in.nextToken() != JsonToken.END_OBJECT)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("type"))
+				type = ZoneType.valueOf(in.nextTextValue());
+			else if (s.equals("recipe"))
+				recipe = CommodityRecipe.valueOf(in.nextTextValue());
+			else
+			{
+				System.err.println("unrecognized ZoneServant field: "+s);
+				in.nextToken();
+				in.skipChildren();
+			}
 		}
 	}
 
 	public void write(JsonGenerator out)
 		throws IOException
 	{
-		out.writeString(type.name());
+		out.writeStartObject();
+		out.writeStringField("type", type.name());
+		if (recipe != null)
+		{
+			out.writeFieldName("recipe");
+			out.writeString(recipe.name());
+		}
+		out.writeEndObject();
 	}
 
 	public ZoneInfo makeProfile()
@@ -55,5 +78,19 @@ public class ZoneServant
 		ZoneInfo zi = new ZoneInfo();
 		zi.type = type;
 		return zi;
+	}
+
+	void start()
+	{
+		if (type == ZoneType.STONE_WEAPON_FACTORY)
+		{
+			type = ZoneType.STONE_WORKSHOP;
+			recipe = CommodityRecipe.STONE_TO_STONE_WEAPON;
+		}
+		else if (type == ZoneType.STONE_BLOCK_FACTORY)
+		{
+			type = ZoneType.STONE_WORKSHOP;
+			recipe = CommodityRecipe.STONE_TO_STONE_BLOCK;
+		}
 	}
 }

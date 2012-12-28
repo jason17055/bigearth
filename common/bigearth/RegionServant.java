@@ -133,6 +133,10 @@ class RegionServant
 		{
 			mob.start();
 		}
+		for (ZoneServant zone : zones.values())
+		{
+			zone.start();
+		}
 	}
 
 	public void adjustWildlife(int delta)
