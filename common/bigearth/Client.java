@@ -470,7 +470,7 @@ public class Client
 	{
 		SimpleCommand orders = new SimpleCommand("take");
 		orders.commodity = ct;
-		orders.amount = amt;
+		orders.setAmount(amt);
 		sendMobOrders(mobName, orders);
 	}
 
@@ -479,7 +479,7 @@ public class Client
 	{
 		SimpleCommand orders = new SimpleCommand("drop");
 		orders.commodity = ct;
-		orders.amount = amt;
+		orders.setAmount(amt);
 		sendMobOrders(mobName, orders);
 	}
 
