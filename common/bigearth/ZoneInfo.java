@@ -11,9 +11,15 @@ import java.util.*;
 public class ZoneInfo
 {
 	ZoneType type;
+	CommodityRecipe recipe;
 
 	public ZoneInfo()
 	{
+	}
+
+	public boolean hasRecipe()
+	{
+		return recipe != null;
 	}
 
 	public static ZoneInfo parse(JsonParser in)
@@ -28,20 +34,32 @@ public class ZoneInfo
 		throws IOException
 	{
 		in.nextToken();
-		if (in.getCurrentToken() == JsonToken.VALUE_STRING)
-		{
-			type = ZoneType.valueOf(in.getText());
-			return;
-		}
-		else
-		{
+		if (in.getCurrentToken() != JsonToken.START_OBJECT)
 			throw new InputMismatchException();
+
+		while (in.nextToken() != JsonToken.END_OBJECT)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("type"))
+				type = ZoneType.valueOf(in.getText());
+			else if (s.equals("recipe"))
+				recipe = CommodityRecipe.valueOf(in.getText());
+			else
+			{
+				System.out.println("Warning: unrecognized ZoneInfo field: " + s);
+				in.nextToken();
+				in.skipChildren();
+			}
 		}
 	}
 
 	public void write(JsonGenerator out)
 		throws IOException
 	{
-		out.writeString(type.name());
+		out.writeStartObject();
+		out.writeStringField("type", type.name());
+		if (hasRecipe())
+			out.writeStringField("recipe", recipe.name());
+		out.writeEndObject();
 	}
 }

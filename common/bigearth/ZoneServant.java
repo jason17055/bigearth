@@ -77,6 +77,7 @@ public class ZoneServant
 	{
 		ZoneInfo zi = new ZoneInfo();
 		zi.type = type;
+		zi.recipe = recipe;
 		return zi;
 	}
 
