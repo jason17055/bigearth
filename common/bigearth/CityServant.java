@@ -193,6 +193,12 @@ public class CityServant
 		return sum;
 	}
 
+	int getFactoryCount()
+	{
+		return parentRegion.getZoneCount(ZoneType.STONE_WEAPON_FACTORY)
+			+ parentRegion.getZoneCount(ZoneType.STONE_BLOCK_FACTORY);
+	}
+
 	int getFarmCount()
 	{
 		return parentRegion.getFarmCount();
@@ -602,6 +608,7 @@ public class CityServant
 		endOfYear_livestock();
 		endOfYear_developLand();
 		endOfYear_research();
+		endOfYear_manufacturing();
 	}
 
 	private void cityDebug(String message)
@@ -787,6 +794,43 @@ public class CityServant
 			parentRegion.continueDeveloping(pts);
 			production.remove(CityJob.DEVELOP_LAND);
 		}
+	}
+
+	private void processManufacturing(ZoneType zone, double ptsPerInstance)
+	{
+		int count = parentRegion.getZoneCount(zone);
+		double pts = count * ptsPerInstance;
+		if (pts > 0)
+		{
+			if (zone == ZoneType.STONE_BLOCK_FACTORY)
+			{
+				long numProducable = (long)Math.floor(pts / 5.0);
+				long numProduced = stock.subtract(CommodityType.STONE, numProducable);
+				stock.add(CommodityType.STONE_BLOCK, numProduced);
+			}
+			if (zone == ZoneType.STONE_WEAPON_FACTORY)
+			{
+				long numProducable = (long)Math.floor(pts / 1.0);
+				long numProduced = 5 * stock.subtract(CommodityType.STONE, numProducable / 5);
+				stock.add(CommodityType.STONE_WEAPON, numProduced);
+			}
+		}
+	}
+
+	private void endOfYear_manufacturing()
+	{
+		double manufacturePoints = getProduction(CityJob.MANUFACTURE);
+		production.remove(CityJob.MANUFACTURE);
+
+		int numFactories = getFactoryCount();
+		if (numFactories == 0)
+			return;
+
+		double maxYield = numFactories * 100.0;
+		double z = maxYield - maxYield * Math.exp(-1 * manufacturePoints / maxYield);
+
+		processManufacturing(ZoneType.STONE_BLOCK_FACTORY, z/numFactories);
+		processManufacturing(ZoneType.STONE_WEAPON_FACTORY, z/numFactories);
 	}
 
 	private void endOfYear_farming()
@@ -1187,6 +1231,11 @@ public class CityServant
 
 		// some other jobs that people like to do...
 		jobLevels.add(new JobLevel(CityJob.RESEARCH, (int)Math.floor(getAdults()/10.0)).priority(10));
+
+		// check for factories
+		int numFactories = getFactoryCount();
+		int requestedManufacturers = 50 * numFactories;
+		jobLevels.add(new JobLevel(CityJob.MANUFACTURE, requestedManufacturers).priority(10));
 
 		// ensure that no one is idle
 		jobLevels.add(new JobLevel(CityJob.GATHER_RESOURCES, getAdults()).priority(1));

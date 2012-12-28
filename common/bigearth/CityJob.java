@@ -9,5 +9,6 @@ public enum CityJob
 	RESEARCH,
 	DEVELOP_LAND,
 	GATHER_RESOURCES,
+	MANUFACTURE,
 	IDLE;
 }
