@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.URL;
 import java.util.*;
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -315,12 +316,15 @@ public class CityDialog extends JDialog
 		int quantity;
 	}
 
-	class MyZoneCellRenderer implements ListCellRenderer
+	static class MyZoneCellRenderer implements ListCellRenderer
 	{
+		JPanel jpane = new JPanel();
 		JLabel jlabel = new JLabel();
 
 		public MyZoneCellRenderer()
 		{
+			jpane.setLayout(new BorderLayout());
+			jpane.add(jlabel);
 			jlabel.setOpaque(true);
 			jlabel.setVerticalAlignment(JLabel.CENTER);
 			jlabel.setBorder(
@@ -351,8 +355,24 @@ public class CityDialog extends JDialog
 				jlabel.setForeground(list.getForeground());
 			}
 
-			return jlabel;
+			Border b = null;
+			if (cellHasFocus)
+			{
+				if (isSelected)
+					b = UIManager.getBorder("List.focusSelectedCellHighlightBorder");
+				if (b == null)
+					b = UIManager.getBorder("List.focusCellHighlightBorder");
+			}
+			else
+			{
+				b = NO_FOCUS_BORDER;
+			}
+			jpane.setBorder(b);
+
+			return jpane;
 		}
+
+		static final Border NO_FOCUS_BORDER = new EmptyBorder(1,1,1,1);
 	}
 
 	private void updateZoneItem(ZoneType zone, int quantity)
