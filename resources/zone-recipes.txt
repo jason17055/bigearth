@@ -25,5 +25,17 @@
 "toZoneType":"STONE_COTTAGE",
 "workRequired":150,
 "required":{"STONE":100}
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"STONE_WEAPON_FACTORY",
+"workRequired":250,
+"required":{"WOOD":50,"STONE":100}
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"STONE_BLOCK_FACTORY",
+"workRequired":250,
+"required":{"WOOD":50,"STONE":100}
 }
 ]

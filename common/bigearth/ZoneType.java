@@ -10,7 +10,9 @@ public enum ZoneType
 	WOOD_COTTAGE,
 	STONE_COTTAGE,
 	FARM,
-	PASTURE;
+	PASTURE,
+	STONE_BLOCK_FACTORY,
+	STONE_WEAPON_FACTORY;
 
 	public String getDisplayName()
 	{
