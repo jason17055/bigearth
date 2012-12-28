@@ -363,7 +363,9 @@ public class CityDialog extends JDialog
 
 			detailLabel = new JLabel();
 			Font f = detailLabel.getFont();
-			detailLabel.setFont(f.deriveFont(f.getStyle() & ~Font.BOLD));
+			detailLabel.setFont(f.deriveFont(
+					f.getStyle() & ~Font.BOLD,
+					(float)(f.getSize2D() * 0.85)));
 			c.gridx = 1;
 			c.gridy = 1;
 			c.fill = GridBagConstraints.NONE;
@@ -383,7 +385,8 @@ public class CityDialog extends JDialog
 
 			if (zi.recipe != null)
 			{
-				detailLabel.setText(zi.recipe.getOutputCommodity().getDisplayName());
+				// \u2192 is Unicode rightwards arrow
+				detailLabel.setText("\u2192"+zi.recipe.getOutputCommodity().getDisplayName());
 			}
 			else
 			{
