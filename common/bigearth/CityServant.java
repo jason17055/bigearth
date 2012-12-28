@@ -265,13 +265,13 @@ public class CityServant
 
 		// build zones
 		ci.zones = new HashMap<String,ZoneInfo>();
-		for (Map.Entry<Integer,ZoneInfo> e : parentRegion.zones.entrySet())
+		for (Map.Entry<Integer,ZoneServant> e : parentRegion.zones.entrySet())
 		{
 			int zoneNumber = e.getKey();
-			ZoneInfo zone = e.getValue();
+			ZoneServant zone = e.getValue();
 
 			String n = "/zone/"+location.toString()+"/"+zoneNumber;
-			ci.zones.put(n, zone);
+			ci.zones.put(n, zone.makeProfile());
 		}
 
 		return ci;

@@ -44,7 +44,7 @@ class RegionServant
 	/// Raw materials that are deep underground.
 	CommoditiesBag undergroundMinerals;
 
-	Map<Integer, ZoneInfo> zones;
+	Map<Integer, ZoneServant> zones;
 
 	List<ZoneDevelopment> zoneDevelopments;
 
@@ -93,10 +93,10 @@ class RegionServant
 	{
 		final int ZONES_PER_REGION = getWorldConfig().zonesPerRegion;
 
-		for (Iterator< Map.Entry<Integer,ZoneInfo> > it = zones.entrySet().iterator();
+		for (Iterator< Map.Entry<Integer,ZoneServant> > it = zones.entrySet().iterator();
 				it.hasNext(); )
 		{
-			Map.Entry<Integer,ZoneInfo> e = it.next();
+			Map.Entry<Integer,ZoneServant> e = it.next();
 			int zoneNumber = e.getKey();
 
 			if (!(zoneNumber >= 1 && zoneNumber <= ZONES_PER_REGION))
@@ -208,7 +208,7 @@ class RegionServant
 	public int getZoneCount(ZoneType zoneType)
 	{
 		int count = 0;
-		for (ZoneInfo zone : zones.values())
+		for (ZoneServant zone : zones.values())
 		{
 			if (zone.type == zoneType)
 				count++;
@@ -394,10 +394,10 @@ class RegionServant
 		throws IOException
 	{
 		out.writeStartObject();
-		for (Map.Entry<Integer,ZoneInfo> e : zones.entrySet())
+		for (Map.Entry<Integer,ZoneServant> e : zones.entrySet())
 		{
 			int zoneNumber = e.getKey();
-			ZoneInfo zone = e.getValue();
+			ZoneServant zone = e.getValue();
 
 			out.writeFieldName(Integer.toString(zoneNumber));
 			zone.write(out);
@@ -469,9 +469,8 @@ class RegionServant
 			String s = in.getCurrentName();
 			int zoneNumber = Integer.parseInt(s);
 
-			ZoneInfo zone = ZoneInfo.parse(in);
-			if (zone.type == ZoneType.NATURAL)
-				continue;
+			ZoneServant zone = ZoneServant.parse(in, this);
+			assert zone.type != ZoneType.NATURAL;
 
 			zones.put(zoneNumber, zone);
 		}
@@ -494,10 +493,10 @@ class RegionServant
 		if (zoneType == ZoneType.NATURAL)
 			return findUnusedZone();
 
-		for (Map.Entry<Integer,ZoneInfo> e : zones.entrySet())
+		for (Map.Entry<Integer,ZoneServant> e : zones.entrySet())
 		{
 			int zoneNumber = e.getKey();
-			ZoneInfo zone = e.getValue();
+			ZoneServant zone = e.getValue();
 
 			if (zone.type == zoneType)
 				return zoneNumber;
@@ -509,7 +508,7 @@ class RegionServant
 	{
 		assert zoneNumber >= 1 && zoneNumber <= getWorldConfig().zonesPerRegion;
 
-		ZoneInfo zone = zones.get(zoneNumber);
+		ZoneServant zone = zones.get(zoneNumber);
 		return zone != null ? zone.type : ZoneType.NATURAL;
 	}
 
@@ -539,7 +538,7 @@ class RegionServant
 			throw new InvalidZoneTransition();
 
 		// designate zone for development
-		ZoneInfo zone = new ZoneInfo();
+		ZoneServant zone = new ZoneServant(this);
 		zone.type = ZoneType.UNDER_CONSTRUCTION;
 		zones.put(zoneNumber, zone);
 
@@ -586,7 +585,7 @@ class RegionServant
 		assert newZoneType != null;
 		assert newZoneType != ZoneType.UNDER_CONSTRUCTION;
 
-		ZoneInfo zone = zones.get(zoneDevelopment.zoneNumber);
+		ZoneServant zone = zones.get(zoneDevelopment.zoneNumber);
 		assert zone != null;
 
 		zone.type = newZoneType;

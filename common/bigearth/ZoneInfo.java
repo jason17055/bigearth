@@ -4,6 +4,10 @@ import com.fasterxml.jackson.core.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Describes a "zone". This class represents the data packet that is sent
+ * over the network.
+ */
 public class ZoneInfo
 {
 	ZoneType type;
