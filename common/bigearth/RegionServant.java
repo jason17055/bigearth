@@ -44,12 +44,13 @@ class RegionServant
 	/// Raw materials that are deep underground.
 	CommoditiesBag undergroundMinerals;
 
-	Map<ZoneType, Integer> zones;
+	Map<Integer, ZoneInfo> zones;
 
 	List<ZoneDevelopment> zoneDevelopments;
 
 	static class ZoneDevelopment
 	{
+		int zoneNumber;
 		ZoneType targetType;
 		double workRemaining;
 		CommoditiesBag requiredCommodities;
@@ -79,7 +80,7 @@ class RegionServant
 		this.undergroundMinerals = new CommoditiesBag();
 		this.seenByMob = new HashMap<SeenByKey, RegionSight>();
 		this.seenByUser = new HashMap<String, UserSight>();
-		this.zones = new EnumMap<ZoneType, Integer>(ZoneType.class);
+		this.zones = new HashMap<>();
 		this.zoneDevelopments = new ArrayList<ZoneDevelopment>();
 	}
 
@@ -90,46 +91,30 @@ class RegionServant
 
 	private void checkZones()
 	{
-		int zoneCount = 0;
-		for (Map.Entry<ZoneType, Integer> e : zones.entrySet())
-		{
-			zoneCount += e.getValue();
-		}
-
 		final int ZONES_PER_REGION = getWorldConfig().zonesPerRegion;
-		if (zoneCount < ZONES_PER_REGION)
+
+		for (Iterator< Map.Entry<Integer,ZoneInfo> > it = zones.entrySet().iterator();
+				it.hasNext(); )
 		{
-			// add more natural zones
-			int deficit = ZONES_PER_REGION - zoneCount;
-			int naturalZoneCount = getZoneCount(ZoneType.NATURAL);
-			zones.put(ZoneType.NATURAL, naturalZoneCount + deficit);
-		}
-		else if (zoneCount > ZONES_PER_REGION)
-		{
-			// remove some natural zones
-			int overage = zoneCount - ZONES_PER_REGION;
-			int naturalZoneCount = getZoneCount(ZoneType.NATURAL);
-			if (overage < naturalZoneCount)
+			Map.Entry<Integer,ZoneInfo> e = it.next();
+			int zoneNumber = e.getKey();
+
+			if (!(zoneNumber >= 1 && zoneNumber <= ZONES_PER_REGION))
 			{
-				zones.put(ZoneType.NATURAL, naturalZoneCount - overage);
+				it.remove();
 			}
-			else
-			{
-				zones.remove(ZoneType.NATURAL);
-				if (overage > naturalZoneCount)
-				{
-					System.err.println("Warning: too many zones in region "+regionId);
-				}
-			}
+			
 		}
 
 		//check under construction zones
-		while (getZoneCount(ZoneType.UNDER_CONSTRUCTION)
-			> zoneDevelopments.size())
+		for (Iterator<ZoneDevelopment> it = zoneDevelopments.iterator();
+			it.hasNext(); )
 		{
-			// got an extra zone under construction
-			decrementZoneCount(ZoneType.UNDER_CONSTRUCTION);
-			incrementZoneCount(ZoneType.NATURAL);
+			ZoneDevelopment zd = it.next();
+			if (!(zd.zoneNumber >= 1 && zd.zoneNumber <= ZONES_PER_REGION))
+			{
+				it.remove();
+			}
 		}
 	}
 
@@ -220,10 +205,15 @@ class RegionServant
 		return getZoneCount(ZoneType.FARM);
 	}
 
-	public int getZoneCount(ZoneType zone)
+	public int getZoneCount(ZoneType zoneType)
 	{
-		Integer i = zones.get(zone);
-		return i != null ? i.intValue() : 0;
+		int count = 0;
+		for (ZoneInfo zone : zones.values())
+		{
+			if (zone.type == zoneType)
+				count++;
+		}
+		return count;
 	}
 
 	public RegionSideDetail.SideFeature getSideFeature(int sideIndex)
@@ -382,6 +372,7 @@ class RegionServant
 		for (ZoneDevelopment zd : zoneDevelopments)
 		{
 			out.writeStartObject();
+			out.writeNumberField("zoneNumber", zd.zoneNumber);
 			out.writeStringField("targetType", zd.targetType.name());
 			out.writeNumberField("workRemaining", zd.workRemaining);
 			if (!zd.requiredCommodities.isEmpty())
@@ -403,13 +394,13 @@ class RegionServant
 		throws IOException
 	{
 		out.writeStartObject();
-		for (Map.Entry<ZoneType,Integer> e : zones.entrySet())
+		for (Map.Entry<Integer,ZoneInfo> e : zones.entrySet())
 		{
-			ZoneType zone = e.getKey();
-			int quantity = e.getValue();
-			assert quantity > 0;
+			int zoneNumber = e.getKey();
+			ZoneInfo zone = e.getValue();
 
-			out.writeNumberField(zone.name(), quantity);
+			out.writeFieldName(Integer.toString(zoneNumber));
+			zone.write(out);
 		}
 		out.writeEndObject();
 	}
@@ -430,7 +421,12 @@ class RegionServant
 			while (in.nextToken() == JsonToken.FIELD_NAME)
 			{
 				String s = in.getCurrentName();
-				if (s.equals("targetType"))
+				if (s.equals("zoneNumber"))
+				{
+					in.nextToken();
+					zd.zoneNumber = in.getIntValue();
+				}
+				else if (s.equals("targetType"))
 					zd.targetType = ZoneType.valueOf(in.nextTextValue());
 				else if (s.equals("workRemaining"))
 				{
@@ -471,11 +467,50 @@ class RegionServant
 		while (in.nextToken() != JsonToken.END_OBJECT)
 		{
 			String s = in.getCurrentName();
-			in.nextToken();
-			int num = in.getIntValue();
+			int zoneNumber = Integer.parseInt(s);
 
-			zones.put(ZoneType.valueOf(s), num);
+			ZoneInfo zone = ZoneInfo.parse(in);
+			if (zone.type == ZoneType.NATURAL)
+				continue;
+
+			zones.put(zoneNumber, zone);
 		}
+	}
+
+	private int findUnusedZone()
+	{
+		for (int i = 1; i <= getWorldConfig().zonesPerRegion; i++)
+		{
+			if (!zones.containsKey(i))
+				return i;
+		}
+		return -1;
+	}
+
+	private int findZoneOfType(ZoneType zoneType)
+	{
+		assert zoneType != null;
+
+		if (zoneType == ZoneType.NATURAL)
+			return findUnusedZone();
+
+		for (Map.Entry<Integer,ZoneInfo> e : zones.entrySet())
+		{
+			int zoneNumber = e.getKey();
+			ZoneInfo zone = e.getValue();
+
+			if (zone.type == zoneType)
+				return zoneNumber;
+		}
+		return -1;
+	}
+
+	private ZoneType getZoneType(int zoneNumber)
+	{
+		assert zoneNumber >= 1 && zoneNumber <= getWorldConfig().zonesPerRegion;
+
+		ZoneInfo zone = zones.get(zoneNumber);
+		return zone != null ? zone.type : ZoneType.NATURAL;
 	}
 
 	void beginDeveloping(ZoneType fromZoneType, ZoneType toZoneType)
@@ -486,43 +521,36 @@ class RegionServant
 		assert toZoneType != null;
 		assert toZoneType != ZoneType.UNDER_CONSTRUCTION;
 
+		int zoneNumber = findZoneOfType(fromZoneType);
+		if (zoneNumber == -1)
+			throw new ZoneTypeNotFound();
+
+		beginDeveloping(zoneNumber, toZoneType);
+	}
+
+	void beginDeveloping(int zoneNumber, ZoneType toZoneType)
+		throws InvalidZoneTransition
+	{
+		ZoneType fromZoneType = getZoneType(zoneNumber);
+
 		// check whether recipe exists
 		ZoneRecipe recipe = getWorldMaster().zoneRecipes.get(fromZoneType, toZoneType);
 		if (recipe == null)
 			throw new InvalidZoneTransition();
 
-		if (getZoneCount(fromZoneType) == 0)
-			throw new ZoneTypeNotFound();
-
 		// designate zone for development
-		decrementZoneCount(fromZoneType);
-		incrementZoneCount(ZoneType.UNDER_CONSTRUCTION);
+		ZoneInfo zone = new ZoneInfo();
+		zone.type = ZoneType.UNDER_CONSTRUCTION;
+		zones.put(zoneNumber, zone);
 
 		// make a new development
 		ZoneDevelopment zd = new ZoneDevelopment();
+		zd.zoneNumber = zoneNumber;
 		zd.targetType = toZoneType;
 		zd.workRemaining = recipe.workRequired;
 		zd.requiredCommodities = recipe.required.clone();
 		zd.generatedCommodities = recipe.generated.clone();
 		zoneDevelopments.add(zd);
-	}
-
-	private void decrementZoneCount(ZoneType zoneType)
-	{
-		Integer numZonesI = zones.get(zoneType);
-		if (numZonesI == null)
-			throw new Error("cannot decrement a non-existent zone");
-
-		int newZones = numZonesI.intValue() - 1;
-		if (newZones > 0)
-			zones.put(zoneType, newZones);
-		else
-			zones.remove(zoneType);
-	}
-
-	private void incrementZoneCount(ZoneType zoneType)
-	{
-		zones.put(zoneType, 1 + getZoneCount(zoneType));
 	}
 
 	void continueDeveloping(double productionPoints)
@@ -537,7 +565,7 @@ class RegionServant
 			double remaining = Math.max(0, zd.getRemaining());
 			if (productionPoints >= remaining)
 			{
-				endDeveloping(zd.targetType);
+				endDeveloping(zd);
 				it.remove();
 				productionPoints -= remaining;
 			}
@@ -551,14 +579,17 @@ class RegionServant
 		}
 	}
 
-	void endDeveloping(ZoneType newZoneType)
+	void endDeveloping(ZoneDevelopment zoneDevelopment)
 	{
+		ZoneType newZoneType = zoneDevelopment.targetType;
+
 		assert newZoneType != null;
 		assert newZoneType != ZoneType.UNDER_CONSTRUCTION;
 
-		decrementZoneCount(ZoneType.UNDER_CONSTRUCTION);
-		incrementZoneCount(newZoneType);
+		ZoneInfo zone = zones.get(zoneDevelopment.zoneNumber);
+		assert zone != null;
 
+		zone.type = newZoneType;
 		world.regionChanged(regionId);
 	}
 
