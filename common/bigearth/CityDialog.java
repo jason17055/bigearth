@@ -43,7 +43,6 @@ public class CityDialog extends JDialog
 
 	// }}}
 
-	JComboBox<ZoneType> developSelect;
 	JComboBox<MobType> equipSelect;
 	DefaultListModel<String> messagesListModel;
 	JList<String> messagesList;
@@ -278,26 +277,6 @@ public class CityDialog extends JDialog
 		return mainPane;
 	}
 
-	JPopupMenu landListPopup = null;
-	private void onLandListClicked(MouseEvent ev)
-	{
-		ZoneItem zi = landList.getSelectedValue();
-		if (zi == null)
-			return;
-
-		int idx = landList.locationToIndex(ev.getPoint());
-		if (idx != landList.getSelectedIndex())
-			return;
-
-		if (landListPopup != null && landListPopup.isVisible())
-			return;
-
-		landListPopup = new JPopupMenu();
-		JMenuItem menuItem = new JMenuItem("A popup menu item");
-		landListPopup.add(menuItem);
-		landListPopup.show(ev.getComponent(), ev.getX(), ev.getY());
-	}
-
 	private JComponent initLandPane()
 	{
 		JPanel mainPane = new JPanel(new BorderLayout());
@@ -308,10 +287,6 @@ public class CityDialog extends JDialog
 		landList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		landList.setVisibleRowCount(-1);
 		landList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-		landList.addMouseListener(new MouseAdapter() {
-		public void mouseClicked(MouseEvent ev) {
-			onLandListClicked(ev);
-		}});
 
 		JScrollPane landListScroll = new JScrollPane(landList);
 		landListScroll.setPreferredSize(new Dimension(550,212));
@@ -320,16 +295,21 @@ public class CityDialog extends JDialog
 		JPanel buttonPane = new JPanel();
 		mainPane.add(buttonPane, BorderLayout.SOUTH);
 
-		developSelect = new JComboBox<ZoneType>(developChoices);
-		buttonPane.add(developSelect);
-
-		JButton developBtn = new JButton("Develop");
-		developBtn.addActionListener(new ActionListener() {
+		JButton examineLandBtn = new JButton("Examine");
+		examineLandBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
 			{
-				onDevelopClicked();
+				onExamineLandClicked();
 			}});
-		buttonPane.add(developBtn);
+		buttonPane.add(examineLandBtn);
+
+		JButton newBtn = new JButton("New...");
+		newBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onNewLandClicked();
+			}});
+		buttonPane.add(newBtn);
 
 		return mainPane;
 	}
@@ -580,8 +560,33 @@ public class CityDialog extends JDialog
 		}
 	}
 
-	private void onDevelopClicked()
+	private void onExamineLandClicked()
 	{
+		ZoneItem zi = landList.getSelectedValue();
+		if (zi == null)
+			return;
+
+		JOptionPane.showMessageDialog(this,
+			"You selected " + zi.name,
+			"Examine Zone",
+			JOptionPane.PLAIN_MESSAGE);
+	}
+
+	private void onNewLandClicked()
+	{
+		JComboBox<ZoneType> developSelect = new JComboBox<>(developChoices);
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Type of land to develop"),
+			developSelect
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Develop Land",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
 		ZoneType type = (ZoneType) developSelect.getSelectedItem();
 		assert type != null;
 
