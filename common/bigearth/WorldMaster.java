@@ -435,14 +435,9 @@ System.out.println("in world::stop()");
 			this.completed = completed;
 		}
 
-		private synchronized boolean isCompleted()
+		public synchronized void waitForCompletion()
 		{
-			return completed;
-		}
-
-		public void waitForCompletion()
-		{
-			while (!isCompleted())
+			while (!completed)
 			{
 				if (eventDispatchThread.isStopRequested())
 					throw new Error("EDT is stopping");
