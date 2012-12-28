@@ -13,8 +13,21 @@ public class CityDialog extends JDialog
 	Location cityLocation;
 	MyListener listner;
 
+	// {{{ land pane
+
+	JList landList;
+	DefaultListModel landListModel;
+
+	// }}}
+
+	// {{{ people pane
+
 	JLabel populationLbl;
 	JLabel childrenLbl;;
+
+	// }}}
+
+	// {{{ stock pane
 
 	static class StockItem
 	{
@@ -23,13 +36,11 @@ public class CityDialog extends JDialog
 		JLabel quantityLbl;
 	}
 
-	JPanel landPane;
-	int nextZoneItemRow = 0;
-	Map<ZoneType, StockItem> zoneItemLabels = new HashMap<ZoneType, StockItem>();
-
 	JPanel stockPane;
 	int nextStockItemRow = 0;
 	Map<CommodityType, StockItem> stockItemLabels = new HashMap<CommodityType, StockItem>();
+
+	// }}}
 
 	JComboBox developSelect;
 	JComboBox equipSelect;
@@ -63,8 +74,8 @@ public class CityDialog extends JDialog
 		JTabbedPane tabbedPane = new JTabbedPane();
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
-		JComponent landPane = initLandPane();
-		tabbedPane.addTab("Land", landPane);
+		JComponent oldLandPane = initLandPane();
+		tabbedPane.addTab("Land", oldLandPane);
 
 		JComponent peoplePane = initPeoplePane();
 		tabbedPane.addTab("People", peoplePane);
@@ -277,66 +288,91 @@ public class CityDialog extends JDialog
 
 	private JComponent initLandPane()
 	{
-		landPane = new JPanel(new GridBagLayout());
-		return landPane;
+		JPanel mainPane = new JPanel(new GridBagLayout());
+
+		landListModel = new DefaultListModel();
+		landList = new JList(landListModel);
+		landList.setCellRenderer(new MyZoneCellRenderer());
+		landList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		landList.setVisibleRowCount(-1);
+		landList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+
+		JScrollPane landListScroll = new JScrollPane(landList);
+		landListScroll.setPreferredSize(new Dimension(550,212));
+		GridBagConstraints c3 = new GridBagConstraints();
+		c3.gridx = c3.gridy = 0;
+		c3.gridwidth = c3.gridheight = 1;
+		c3.weightx = c3.weighty = 1.0;
+		c3.fill = GridBagConstraints.BOTH;
+		mainPane.add(landListScroll, c3);
+
+		return mainPane;
 	}
 
-	private void hideZoneItem(ZoneType zone)
+	class ZoneItem
 	{
-		StockItem item = zoneItemLabels.get(zone);
-		if (item != null)
+		ZoneType type;
+		int quantity;
+	}
+
+	class MyZoneCellRenderer implements ListCellRenderer
+	{
+		JLabel jlabel = new JLabel();
+
+		public MyZoneCellRenderer()
 		{
-			item.iconLbl.setVisible(false);
-			item.typeLbl.setVisible(false);
-			item.quantityLbl.setVisible(false);
+			jlabel.setOpaque(true);
+			jlabel.setVerticalAlignment(JLabel.CENTER);
+			jlabel.setBorder(
+				BorderFactory.createEmptyBorder(4,4,4,4)
+				);
+		}
+
+		//implements ListCellRenderer
+		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+		{
+			ZoneItem zi = (ZoneItem) value;
+
+			URL zoneIconUrl = zi.type.getIconResource();
+			ImageIcon zoneIcon = zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null;
+			jlabel.setIcon(zoneIcon);
+
+			jlabel.setText(zi.type.getDisplayName()
+				+ (zi.quantity != 1 ? " (x"+zi.quantity+")" : ""));
+
+			if (isSelected)
+			{
+				jlabel.setBackground(list.getSelectionBackground());
+				jlabel.setForeground(list.getSelectionForeground());
+			}
+			else
+			{
+				jlabel.setBackground(list.getBackground());
+				jlabel.setForeground(list.getForeground());
+			}
+
+			return jlabel;
 		}
 	}
 
 	private void updateZoneItem(ZoneType zone, int quantity)
 	{
-		if (!zoneItemLabels.containsKey(zone))
-			addZoneItem(zone);
+		for (int i = 0; i < landListModel.size(); i++)
+		{
+			ZoneItem zi = (ZoneItem) landListModel.get(i);
+			if (zi.type == zone)
+			{
+				zi.quantity = quantity;
+				landListModel.set(i, zi);
+				return;
+			}
+		}
 
-		StockItem item = zoneItemLabels.get(zone);
-		item.quantityLbl.setText(Integer.toString(quantity));
-
-		item.iconLbl.setVisible(true);
-		item.typeLbl.setVisible(true);
-		item.quantityLbl.setVisible(true);
-	}
-
-	private void addZoneItem(ZoneType zone)
-	{
-		GridBagConstraints c1 = new GridBagConstraints();
-		c1.gridx = 0;
-		c1.anchor = GridBagConstraints.WEST;
-
-		GridBagConstraints c2 = new GridBagConstraints();
-		c2.gridx = 1;
-		c2.anchor = GridBagConstraints.WEST;
-		c2.weightx = 1.0;
-
-		GridBagConstraints c3 = new GridBagConstraints();
-		c3.gridx = 2;
-		c3.anchor = GridBagConstraints.EAST;
-
-		c1.gridy = c2.gridy = c3.gridy = nextZoneItemRow;
-		nextZoneItemRow++;
-
-		StockItem item = new StockItem();
-
-		URL zoneIconUrl = zone.getIconResource();
-		ImageIcon zoneIcon = zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null;
-		item.iconLbl = new JLabel(zoneIcon);
-		landPane.add(item.iconLbl, c1);
-
-		item.typeLbl = new JLabel(zone.getDisplayName());
-		landPane.add(item.typeLbl, c2);
-
-		item.quantityLbl = new JLabel();
-		landPane.add(item.quantityLbl, c3);
-
-		zoneItemLabels.put(zone, item);
+		ZoneItem zi = new ZoneItem();
+		zi.type = zone;
+		zi.quantity = quantity;
+		landListModel.addElement(zi);
+		return;
 	}
 
 	void addCityMessage(String message)
@@ -361,14 +397,16 @@ public class CityDialog extends JDialog
 		}
 	}
 
-	private void loadCityInfo(CityInfo city)
+	private void loadCityInfo_people(CityInfo city)
 	{
-		setTitle("City: "+city.displayName);
 		populationLbl.setText(city.hasPopulation() ?
 			Integer.toString(city.population) : null);
 		childrenLbl.setText(city.hasChildren() ?
 			Integer.toString(city.children) : null);
+	}
 
+	private void loadCityInfo_land(CityInfo city)
+	{
 		assert city.hasZones();
 		for (Map.Entry<ZoneType,Integer> e : city.zones.entrySet())
 		{
@@ -378,14 +416,20 @@ public class CityDialog extends JDialog
 			if (zone != ZoneType.NATURAL)
 				updateZoneItem(zone, quantity);
 		}
-		for (ZoneType zone : zoneItemLabels.keySet())
+
+		//reverse order so that removing items will not mess up our indexes
+		for (int i = landListModel.size()-1; i >= 0; i--)
 		{
-			if (!city.zones.containsKey(zone))
+			ZoneItem zi = (ZoneItem) landListModel.get(i);
+			if (!city.zones.containsKey(zi.type))
 			{
-				hideZoneItem(zone);
+				landListModel.removeElementAt(i);
 			}
 		}
+	}
 
+	private void loadCityInfo_stock(CityInfo city)
+	{
 		assert city.hasStock();
 		for (CommodityType ct : city.stock.getCommodityTypesArray())
 		{
@@ -398,6 +442,15 @@ public class CityDialog extends JDialog
 				hideStockItem(ct);
 			}
 		}
+	}
+
+	private void loadCityInfo(CityInfo city)
+	{
+		setTitle("City: "+city.displayName);
+
+		loadCityInfo_land(city);
+		loadCityInfo_people(city);
+		loadCityInfo_stock(city);
 
 		scientistsLbl.setText(city.hasScientists() ?
 			"This city has "+city.scientists+" scientists" : null);
