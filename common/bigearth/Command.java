@@ -69,6 +69,12 @@ public abstract class Command
 			n.parse_cont(in, world);
 			return n;
 		}
+		else if (commandName.equals(SetFactoryRecipeCommand.COMMAND_NAME))
+		{
+			SetFactoryRecipeCommand n = new SetFactoryRecipeCommand();
+			n.parse_cont(in, world);
+			return n;
+		}
 		else
 		{
 			SimpleCommand n = new SimpleCommand(commandName);
@@ -274,6 +280,52 @@ class RenameSelfCommand extends Command
 			String s = in.getCurrentName();
 			if (s.equals("newName"))
 				newName = in.nextTextValue();
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+				System.err.println("unrecognized command property: " + s);
+			}
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+}
+
+class SetFactoryRecipeCommand extends Command
+{
+	static final String COMMAND_NAME = "set-factory-recipe";
+	String zone;
+	CommodityRecipe recipe;
+
+	public SetFactoryRecipeCommand()
+	{
+		super(COMMAND_NAME);
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("command", COMMAND_NAME);
+		if (zone != null)
+			out.writeStringField("zone", zone);
+		if (recipe != null)
+			out.writeStringField("recipe", recipe.name());
+		out.writeEndObject();
+	}
+
+	void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("zone"))
+				zone = in.nextTextValue();
+			else if (s.equals("recipe"))
+				recipe = CommodityRecipe.valueOf(in.nextTextValue());
 			else
 			{
 				in.nextToken();

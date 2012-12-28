@@ -614,11 +614,62 @@ public class CityDialog extends JDialog
 		}
 	}
 
+	private void examineLand_workshop(ZoneItem zi)
+	{
+		String [] choices = new String [] {
+			"--None--",
+			CommodityType.STONE_BLOCK.getDisplayName(),
+			CommodityType.STONE_WEAPON.getDisplayName()
+			};
+		JComboBox<String> select = new JComboBox<>(choices);
+		select.setSelectedIndex(
+			zi.recipe == CommodityRecipe.STONE_TO_STONE_BLOCK ? 1 :
+			zi.recipe == CommodityRecipe.STONE_TO_STONE_WEAPON ? 2 : 0);
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Choose product for this stone workshop"),
+			select
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Examine Zone",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		try
+		{
+
+		int selectIdx = select.getSelectedIndex();
+
+		SetFactoryRecipeCommand c = new SetFactoryRecipeCommand();
+		c.zone = zi.name;
+		c.recipe = selectIdx == 1 ? CommodityRecipe.STONE_TO_STONE_BLOCK :
+			selectIdx == 2 ? CommodityRecipe.STONE_TO_STONE_WEAPON :
+			null;
+		client.sendCityOrders(cityLocation, c);
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
 	private void onExamineLandClicked()
 	{
 		ZoneItem zi = landList.getSelectedValue();
 		if (zi == null)
 			return;
+
+		if (zi.type == ZoneType.STONE_WORKSHOP)
+		{
+			examineLand_workshop(zi);
+			return;
+		}
 
 		JOptionPane.showMessageDialog(this,
 			"You selected " + zi.name,

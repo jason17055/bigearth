@@ -328,6 +328,17 @@ public class CityServant
 		cityChanged();
 	}
 
+	private void setFactoryRecipe(SetFactoryRecipeCommand c)
+	{
+		int i = c.zone.lastIndexOf('/');
+		int zoneNumber = Integer.parseInt(c.zone.substring(i+1));
+		ZoneServant zone = parentRegion.zones.get(zoneNumber);
+		if (zone != null)
+		{
+			zone.recipe = c.recipe;
+		}
+	}
+
 	private void beginEquipping()
 	{
 		EquipCommand c = (EquipCommand) currentOrders;
@@ -366,6 +377,11 @@ public class CityServant
 		else if (currentOrders instanceof EquipCommand)
 		{
 			beginEquipping();
+			return;
+		}
+		else if (currentOrders instanceof SetFactoryRecipeCommand)
+		{
+			setFactoryRecipe((SetFactoryRecipeCommand) currentOrders);
 			return;
 		}
 
