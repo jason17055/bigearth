@@ -574,8 +574,8 @@ System.out.println("in stopListenerThread()");
 	public static void main(String [] args)
 		throws Exception
 	{
-		final DefaultComboBoxModel hostChoices = new DefaultComboBoxModel();
-		JComboBox hostField = new JComboBox(hostChoices);
+		final DefaultComboBoxModel<String> hostChoices = new DefaultComboBoxModel<String>();
+		JComboBox<String> hostField = new JComboBox<String>(hostChoices);
 		hostField.setEditable(true);
 
 		SwingWorker worker = new SwingWorker<String[], Void>() {

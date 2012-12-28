@@ -402,7 +402,7 @@ public class MainWindow extends JFrame
 		Flag [] flagList = new Flag[] {
 			Flag.NONE, Flag.RED, Flag.BLUE
 			};
-		JComboBox flagSelect = new JComboBox(flagList);
+		JComboBox<Flag> flagSelect = new JComboBox<Flag>(flagList);
 		flagSelect.setSelectedIndex(0);
 
 		JComponent [] inputs = new JComponent[] {

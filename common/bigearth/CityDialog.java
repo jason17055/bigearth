@@ -16,8 +16,8 @@ public class CityDialog extends JDialog
 
 	// {{{ land pane
 
-	JList landList;
-	DefaultListModel landListModel;
+	JList<ZoneItem> landList;
+	DefaultListModel<ZoneItem> landListModel;
 
 	// }}}
 
@@ -43,13 +43,13 @@ public class CityDialog extends JDialog
 
 	// }}}
 
-	JComboBox developSelect;
-	JComboBox equipSelect;
-	DefaultListModel messagesListModel;
-	JList messagesList;
+	JComboBox<ZoneType> developSelect;
+	JComboBox<MobType> equipSelect;
+	DefaultListModel<String> messagesListModel;
+	JList<String> messagesList;
 	JLabel scientistsLbl;
-	DefaultListModel scienceListModel;
-	JList scienceList;
+	DefaultListModel<String> scienceListModel;
+	JList<String> scienceList;
 
 	static ZoneType [] developChoices = new ZoneType[] {
 		ZoneType.MUD_COTTAGE,
@@ -103,7 +103,7 @@ public class CityDialog extends JDialog
 			}});
 		buttonPane.add(renameBtn);
 
-		equipSelect = new JComboBox(equipChoices);
+		equipSelect = new JComboBox<MobType>(equipChoices);
 		buttonPane.add(equipSelect);
 
 		JButton equipBtn = new JButton("Equip");
@@ -151,9 +151,9 @@ public class CityDialog extends JDialog
 		scientistsLbl = new JLabel();
 		mainPane.add(scientistsLbl, c1);
 
-		scienceListModel = new DefaultListModel();
+		scienceListModel = new DefaultListModel<String>();
 
-		scienceList = new JList(scienceListModel);
+		scienceList = new JList<String>(scienceListModel);
 		JScrollPane scienceListScroll = new JScrollPane(scienceList);
 		scienceListScroll.setPreferredSize(new Dimension(250, 50));
 		GridBagConstraints c3 = new GridBagConstraints();
@@ -171,9 +171,9 @@ public class CityDialog extends JDialog
 	{
 		JPanel mainPane = new JPanel(new GridBagLayout());
 
-		messagesListModel = new DefaultListModel();
+		messagesListModel = new DefaultListModel<String>();
 
-		messagesList = new JList(messagesListModel);
+		messagesList = new JList<String>(messagesListModel);
 		JScrollPane messagesListScroll = new JScrollPane(messagesList);
 		messagesListScroll.setPreferredSize(new Dimension(250, 50));
 		GridBagConstraints c3 = new GridBagConstraints();
@@ -282,8 +282,8 @@ public class CityDialog extends JDialog
 	{
 		JPanel mainPane = new JPanel(new BorderLayout());
 
-		landListModel = new DefaultListModel();
-		landList = new JList(landListModel);
+		landListModel = new DefaultListModel<ZoneItem>();
+		landList = new JList<ZoneItem>(landListModel);
 		landList.setCellRenderer(new MyZoneCellRenderer());
 		landList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		landList.setVisibleRowCount(-1);
@@ -296,7 +296,7 @@ public class CityDialog extends JDialog
 		JPanel buttonPane = new JPanel();
 		mainPane.add(buttonPane, BorderLayout.SOUTH);
 
-		developSelect = new JComboBox(developChoices);
+		developSelect = new JComboBox<ZoneType>(developChoices);
 		buttonPane.add(developSelect);
 
 		JButton developBtn = new JButton("Develop");
@@ -316,7 +316,7 @@ public class CityDialog extends JDialog
 		int quantity;
 	}
 
-	static class MyZoneCellRenderer implements ListCellRenderer
+	static class MyZoneCellRenderer implements ListCellRenderer<ZoneItem>
 	{
 		JPanel jpane = new JPanel();
 		JLabel jlabel = new JLabel();
@@ -333,7 +333,7 @@ public class CityDialog extends JDialog
 		}
 
 		//implements ListCellRenderer
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+		public Component getListCellRendererComponent(JList<? extends ZoneItem> list, ZoneItem value, int index, boolean isSelected, boolean cellHasFocus)
 		{
 			ZoneItem zi = (ZoneItem) value;
 
@@ -474,7 +474,7 @@ public class CityDialog extends JDialog
 
 		scientistsLbl.setText(city.hasScientists() ?
 			"This city has "+city.scientists+" scientists" : null);
-		scienceListModel = new DefaultListModel();
+		scienceListModel = new DefaultListModel<String>();
 		if (city.hasPartialScience())
 		{
 			for (Technology tech : city.partialScience)

@@ -499,7 +499,7 @@ public class WorldViewer extends JFrame
 		MobType [] mobTypeList = MobType.values();
 
 		JTextField ownerField = new JTextField();
-		JComboBox mobTypeSelect = new JComboBox(mobTypeList);
+		JComboBox<MobType> mobTypeSelect = new JComboBox<MobType>(mobTypeList);
 		mobTypeSelect.setSelectedIndex(0);
 
 		JComponent[] inputs = new JComponent[] {
@@ -565,7 +565,7 @@ public class WorldViewer extends JFrame
 				toSelect=i;
 		}
 
-		JComboBox mobTypeSelect = new JComboBox(mobTypeList);
+		JComboBox<MobType> mobTypeSelect = new JComboBox<MobType>(mobTypeList);
 		mobTypeSelect.setSelectedIndex(toSelect);
 
 		JComponent [] inputs = new JComponent[] {
@@ -613,7 +613,7 @@ public class WorldViewer extends JFrame
 				toSelect = i+1;
 		}
 
-		JComboBox ownerSelect = new JComboBox(leaderDisplayNames);
+		JComboBox<String> ownerSelect = new JComboBox<String>(leaderDisplayNames);
 		ownerSelect.setSelectedIndex(toSelect);
 		
 		JComponent [] inputs = new JComponent[] {
