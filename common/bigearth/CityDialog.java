@@ -278,6 +278,26 @@ public class CityDialog extends JDialog
 		return mainPane;
 	}
 
+	JPopupMenu landListPopup = null;
+	private void onLandListClicked(MouseEvent ev)
+	{
+		ZoneItem zi = landList.getSelectedValue();
+		if (zi == null)
+			return;
+
+		int idx = landList.locationToIndex(ev.getPoint());
+		if (idx != landList.getSelectedIndex())
+			return;
+
+		if (landListPopup != null && landListPopup.isVisible())
+			return;
+
+		landListPopup = new JPopupMenu();
+		JMenuItem menuItem = new JMenuItem("A popup menu item");
+		landListPopup.add(menuItem);
+		landListPopup.show(ev.getComponent(), ev.getX(), ev.getY());
+	}
+
 	private JComponent initLandPane()
 	{
 		JPanel mainPane = new JPanel(new BorderLayout());
@@ -288,6 +308,10 @@ public class CityDialog extends JDialog
 		landList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		landList.setVisibleRowCount(-1);
 		landList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		landList.addMouseListener(new MouseAdapter() {
+		public void mouseClicked(MouseEvent ev) {
+			onLandListClicked(ev);
+		}});
 
 		JScrollPane landListScroll = new JScrollPane(landList);
 		landListScroll.setPreferredSize(new Dimension(550,212));
