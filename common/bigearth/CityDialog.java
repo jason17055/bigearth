@@ -318,22 +318,59 @@ public class CityDialog extends JDialog
 	{
 		String name;
 		ZoneType type;
+		CommodityRecipe recipe;
 	}
 
 	static class MyZoneCellRenderer implements ListCellRenderer<ZoneItem>
 	{
-		JPanel jpane = new JPanel();
-		JLabel jlabel = new JLabel();
+		JPanel mainPane;
+		JLabel iconLabel;
+		JLabel typeLabel;
+		JLabel detailLabel;
 
 		public MyZoneCellRenderer()
 		{
-			jpane.setLayout(new BorderLayout());
-			jpane.add(jlabel);
-			jlabel.setOpaque(true);
-			jlabel.setVerticalAlignment(JLabel.CENTER);
-			jlabel.setBorder(
+			mainPane = new JPanel();
+			mainPane.setLayout(new BorderLayout());
+			mainPane.setOpaque(true);
+
+			JPanel gridPane = new JPanel();
+			gridPane.setLayout(new GridBagLayout());
+			gridPane.setBorder(
 				BorderFactory.createEmptyBorder(4,4,4,4)
 				);
+			gridPane.setOpaque(false);
+
+			GridBagConstraints c = new GridBagConstraints();
+
+			iconLabel = new JLabel();
+			c.gridx = c.gridy = 0;
+			c.gridwidth = 1;
+			c.gridheight = 2;
+			c.fill = GridBagConstraints.BOTH;
+			c.insets = new Insets(0, 0, 0, 6);
+			gridPane.add(iconLabel, c);
+
+			typeLabel = new JLabel();
+			c.gridx = 1;
+			c.gridheight = 1;
+			c.anchor = GridBagConstraints.SOUTHWEST;
+			c.weightx = 1.0;
+			c.weighty = 0.5;
+			c.fill = GridBagConstraints.NONE;
+			c.insets = new Insets(0, 0, 0, 0);
+			gridPane.add(typeLabel, c);
+
+			detailLabel = new JLabel();
+			Font f = detailLabel.getFont();
+			detailLabel.setFont(f.deriveFont(f.getStyle() & ~Font.BOLD));
+			c.gridx = 1;
+			c.gridy = 1;
+			c.fill = GridBagConstraints.NONE;
+			c.anchor = GridBagConstraints.NORTHWEST;
+			gridPane.add(detailLabel, c);
+
+			mainPane.add(gridPane);
 		}
 
 		//implements ListCellRenderer
@@ -341,18 +378,27 @@ public class CityDialog extends JDialog
 		{
 			URL zoneIconUrl = zi.type.getIconResource();
 			ImageIcon zoneIcon = zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null;
-			jlabel.setIcon(zoneIcon);
-			jlabel.setText(zi.type.getDisplayName());
+			iconLabel.setIcon(zoneIcon);
+			typeLabel.setText(zi.type.getDisplayName());
 
-			if (isSelected)
+			if (zi.recipe != null)
 			{
-				jlabel.setBackground(list.getSelectionBackground());
-				jlabel.setForeground(list.getSelectionForeground());
+				detailLabel.setText(zi.recipe.getOutputCommodity().getDisplayName());
 			}
 			else
 			{
-				jlabel.setBackground(list.getBackground());
-				jlabel.setForeground(list.getForeground());
+				detailLabel.setText(null);
+			}
+
+			if (isSelected)
+			{
+				mainPane.setBackground(list.getSelectionBackground());
+				mainPane.setForeground(list.getSelectionForeground());
+			}
+			else
+			{
+				mainPane.setBackground(list.getBackground());
+				mainPane.setForeground(list.getForeground());
 			}
 
 			Border b = null;
@@ -367,9 +413,9 @@ public class CityDialog extends JDialog
 			{
 				b = NO_FOCUS_BORDER;
 			}
-			jpane.setBorder(b);
+			mainPane.setBorder(b);
 
-			return jpane;
+			return mainPane;
 		}
 
 		static final Border NO_FOCUS_BORDER = new EmptyBorder(1,1,1,1);
@@ -382,6 +428,11 @@ public class CityDialog extends JDialog
 		if (zi.type != zone.type)
 		{
 			zi.type = zone.type;
+			anyChange = true;
+		}
+		if (zi.recipe != zone.recipe)
+		{
+			zi.recipe = zone.recipe;
 			anyChange = true;
 		}
 

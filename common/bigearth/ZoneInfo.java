@@ -41,9 +41,9 @@ public class ZoneInfo
 		{
 			String s = in.getCurrentName();
 			if (s.equals("type"))
-				type = ZoneType.valueOf(in.getText());
+				type = ZoneType.valueOf(in.nextTextValue());
 			else if (s.equals("recipe"))
-				recipe = CommodityRecipe.valueOf(in.getText());
+				recipe = CommodityRecipe.valueOf(in.nextTextValue());
 			else
 			{
 				System.out.println("Warning: unrecognized ZoneInfo field: " + s);
