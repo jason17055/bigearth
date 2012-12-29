@@ -338,17 +338,25 @@ public class MainWindow extends JFrame
 			return;
 		}
 
-		Location loc = new SimpleLocation(regionId);
+		final String mobName = view.selection.getMob();
+		final Location loc = new SimpleLocation(regionId);
 
-		System.out.println("want to move "+view.selection.getMob()+" to "+loc);
-		try
-	{
-		client.moveMobTo(view.selection.getMob(), loc);
-		}
-		catch (Exception e)
+		SwingWorker worker = new SwingWorker<Void,Void>() {
+		public Void doInBackground()
 		{
-			System.out.println(e);
+			try
+			{
+				client.moveMobTo(mobName, loc);
+			}
+			catch (Exception e)
+			{
+				//TODO- tell the user
+				e.printStackTrace(System.err);
+			}
+			return null;
 		}
+		};
+		worker.execute();
 	}
 
 	void onSimpleOrderClicked(String orderName)
