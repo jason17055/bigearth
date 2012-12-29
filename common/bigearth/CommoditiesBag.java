@@ -6,7 +6,7 @@ import java.util.*;
 
 class CommoditiesBag
 {
-	private Map<CommodityType, Long> stock;
+	Map<CommodityType, Long> stock;
 
 	/**
 	 * A shared CommoditiesBag object to represent an empty stock or

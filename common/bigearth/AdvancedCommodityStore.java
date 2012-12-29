@@ -18,6 +18,16 @@ public class AdvancedCommodityStore
 		rates = new HashMap<>();
 	}
 
+	public void add(CommoditiesBag rhs)
+	{
+		for (Map.Entry<CommodityType,Long> e : rhs.stock.entrySet())
+		{
+			CommodityType ct = e.getKey();
+			long qty = e.getValue();
+			add(ct, qty);
+		}
+	}
+
 	public void add(CommodityType ct, long amount)
 	{
 		assert amount >= 0;
@@ -34,6 +44,33 @@ public class AdvancedCommodityStore
 		else
 		{
 			quantities.put(ct, amount);
+		}
+	}
+
+	public CommodityType [] getCommodityTypesArray()
+	{
+		return quantities.keySet().toArray(new CommodityType[0]);
+	}
+
+	public long getQuantity(CommodityType ct)
+	{
+		update();
+		Long L = quantities.get(ct);
+		return L != null ? L.longValue() : 0;
+	}
+
+	public boolean isSupersetOf(CommoditiesBag bag)
+	{
+		return toCommoditiesBag().isSupersetOf(bag);
+	}
+
+	public void subtract(CommoditiesBag rhs)
+	{
+		for (Map.Entry<CommodityType,Long> e : rhs.stock.entrySet())
+		{
+			CommodityType ct = e.getKey();
+			long qty = e.getValue();
+			subtract(ct, qty);
 		}
 	}
 

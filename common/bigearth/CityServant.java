@@ -12,7 +12,6 @@ public class CityServant
 	String displayName;
 	String owner;
 	Location location;
-	CommoditiesBag stock;
 	Map<CityJob, Integer> workers;
 	Map<CityJob, Double> workerRates;
 	Map<CityJob, Double> production;
@@ -30,7 +29,6 @@ public class CityServant
 	CityServant(RegionServant parentRegion)
 	{
 		this.parentRegion = parentRegion;
-		this.stock = new CommoditiesBag();
 		this.workers = new HashMap<CityJob, Integer>();
 		this.workerRates = new HashMap<CityJob, Double>();
 		this.production = new HashMap<CityJob, Double>();
@@ -41,12 +39,12 @@ public class CityServant
 
 	public void addCommodity(CommodityType ct, long amount)
 	{
-		stock.add(ct, amount);
+		parentRegion.addCommodity(ct, amount);
 	}
 
 	public long subtractCommodity(CommodityType ct, long amount)
 	{
-		return stock.subtract(ct, amount);
+		return parentRegion.subtractCommodity(ct, amount);
 	}
 
 	public void addWorkers(int amount)
@@ -210,6 +208,7 @@ public class CityServant
 
 	long getTotalFood()
 	{
+		final AdvancedCommodityStore stock = parentRegion.stock;
 		long sum = 0;
 		for (CommodityType ct : stock.getCommodityTypesArray())
 		{
@@ -258,7 +257,7 @@ public class CityServant
 		ci.setChildren(getChildren());
 		ci.setPopulation(getPopulation());
 		ci.setScientists(getWorkersInJob(CityJob.RESEARCH));
-		ci.stock = this.stock.clone();
+		ci.stock = parentRegion.stock.toCommoditiesBag();
 		ci.science = this.science;
 		ci.partialScience = this.partialScience;
 
@@ -406,7 +405,10 @@ public class CityServant
 			else if (s.equals("location"))
 				location = LocationHelper.parse(in.nextTextValue(), getWorldConfig());
 			else if (s.equals("stock"))
-				stock = CommoditiesBag.parse(in);
+			{
+				CommoditiesBag bag = CommoditiesBag.parse(in);
+				parentRegion.stock.add(bag);
+			}
 			else if (s.equals("population"))
 			{
 				in.nextToken();
@@ -543,8 +545,6 @@ public class CityServant
 		out.writeStringField("displayName", displayName);
 		out.writeStringField("owner", owner);
 		out.writeStringField("location", location.toString());
-		out.writeFieldName("stock");
-		stock.write(out);
 		out.writeFieldName("workers");
 		writeWorkers(out);
 		out.writeFieldName("production");
@@ -780,7 +780,7 @@ public class CityServant
 			if (!haveAllPrereqs)
 				continue;
 
-			if (!stock.isSupersetOf(tech.resourceCost))
+			if (!parentRegion.stock.isSupersetOf(tech.resourceCost))
 				continue;
 
 			candidates.add(tech);
@@ -800,9 +800,9 @@ public class CityServant
 			// to have multiple technologies in the candidates list that
 			// individually can be paid for but not both.
 
-			if (stock.isSupersetOf(tech.resourceCost))
+			if (parentRegion.stock.isSupersetOf(tech.resourceCost))
 			{
-				stock.subtract(tech.resourceCost);
+				parentRegion.stock.subtract(tech.resourceCost);
 				partialScience.add(tech);
 				scienceOutput -= 1;
 			}
@@ -826,14 +826,14 @@ public class CityServant
 			if (recipe == CommodityRecipe.STONE_TO_STONE_BLOCK)
 			{
 				long numProducable = (long)Math.floor(pts / 5.0);
-				long numProduced = stock.subtract(CommodityType.STONE, numProducable);
-				stock.add(CommodityType.STONE_BLOCK, numProduced);
+				long numProduced = parentRegion.stock.subtract(CommodityType.STONE, numProducable);
+				parentRegion.stock.add(CommodityType.STONE_BLOCK, numProduced);
 			}
 			if (recipe == CommodityRecipe.STONE_TO_STONE_WEAPON)
 			{
 				long numProducable = (long)Math.floor(pts / 1.0);
-				long numProduced = 5 * stock.subtract(CommodityType.STONE, numProducable / 5);
-				stock.add(CommodityType.STONE_WEAPON, numProduced);
+				long numProduced = 5 * parentRegion.stock.subtract(CommodityType.STONE, numProducable / 5);
+				parentRegion.stock.add(CommodityType.STONE_WEAPON, numProduced);
 			}
 		}
 	}
@@ -908,7 +908,7 @@ public class CityServant
 		{
 			long amt = picked.get(ct);
 			long taken = parentRegion.surfaceMinerals.subtract(ct, amt);
-			stock.add(ct, taken);
+			parentRegion.stock.add(ct, taken);
 			System.out.println("  "+taken+" " + ct);
 		}
 	}
@@ -1272,7 +1272,7 @@ public class CityServant
 
 	public long getStock(CommodityType ct)
 	{
-		return stock.getQuantity(ct);
+		return parentRegion.stock.getQuantity(ct);
 	}
 
 	static class JobLevel
