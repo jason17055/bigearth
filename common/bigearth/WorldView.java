@@ -879,6 +879,9 @@ System.err.println(e);
 		if (!r.hasStock())
 			return;
 
+		if (r.hasCitySize() && r.citySize != 0)
+			return;
+
 		if (r.stock.isEmpty())
 			return;
 
