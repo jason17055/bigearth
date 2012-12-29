@@ -333,6 +333,12 @@ abstract class BigEarthServlet extends HttpServlet
 		out.close();
 	}
 
+	void doSuccessNoContent(HttpServletResponse response)
+		throws IOException
+	{
+		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+	}
+
 	protected Session checkSession(HttpServletRequest request, HttpServletResponse response)
 		throws IOException
 	{
@@ -637,24 +643,36 @@ class MobOrdersServlet extends BigEarthServlet
 		super(server);
 	}
 
+	private Command parseOrders(HttpServletRequest request)
+		throws IOException
+	{
+		JsonParser in = new JsonFactory().createJsonParser(request.getInputStream());
+		Command orders = Command.parse(in, server.world.config);
+		in.close();
+
+		return orders;
+	}
+
 	@Override
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		Session s = checkSession(request, response);
+		final Session s = checkSession(request, response);
 		if (s == null)
 			return;
 
-		String mobName = request.getParameter("mob");
-		Command orders;
-		{
-			JsonParser in = new JsonFactory().createJsonParser(request.getInputStream());
-			orders = Command.parse(in, server.world.config);
-			in.close();
-		}
+		final String mobName = request.getParameter("mob");
+		final Command orders = parseOrders(request);
 
-		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
-		try
+		class ResultInfo
+		{
+			int errorCode = 0;
+			String errorMessage;
+		}
+		final ResultInfo result = new ResultInfo();
+
+		server.world.invokeAndWait(new Runnable() {
+		public void run()
 		{
 
 		// check that the user is authorized to control the specified mob
@@ -662,27 +680,32 @@ class MobOrdersServlet extends BigEarthServlet
 		MobServant mob = server.world.getMob(mobName);
 		if (mob == null)
 		{
-			doFailure(response, HttpServletResponse.SC_NOT_FOUND, "Invalid mob");
+			result.errorCode = HttpServletResponse.SC_NOT_FOUND;
+			result.errorMessage = "Invalid mob";
 			return;
 		}
 
 		if (!mob.canUserCommand(s.user))
 		{
-			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			result.errorCode = HttpServletResponse.SC_FORBIDDEN;
+			result.errorMessage = "No permission to control this mob";
 			return;
 		}
 
 		// make the actual change
 		mob.setOrders(orders);
 
-		// report success
-		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+		}
+		});
 
-		}
-		finally
+		if (result.errorCode != 0)
 		{
-			lock.release();
+			doFailure(response, result.errorCode, result.errorMessage);
+			return;
 		}
+
+		// report success
+		doSuccessNoContent(response);
 	}
 }
 
