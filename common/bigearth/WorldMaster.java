@@ -391,15 +391,20 @@ public class WorldMaster
 	{
 		assert eventDispatchThread == null;
 
+		eventDispatchThread = new EventDispatchThread(scheduler, this);
+		eventDispatchThread.start();
+	}
+
+	void startReal()
+	{
+		assert EventDispatchThread.isActive();
+
 		for (int i = 0; i < regions.length; i++)
 		{
 			regions[i].start();
 		}
 
 		scheduleEndOfYear();
-
-		eventDispatchThread = new EventDispatchThread(scheduler);
-		eventDispatchThread.start();
 	}
 
 	public void stop()

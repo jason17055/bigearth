@@ -4,14 +4,16 @@ public class EventDispatchThread extends Thread
 	implements Stoppable
 {
 	Scheduler scheduler;
+	WorldMaster world;
 	boolean stopRequested = false;
 	long lastEventTime;
 
-	public EventDispatchThread(Scheduler scheduler)
+	public EventDispatchThread(Scheduler scheduler, WorldMaster world)
 	{
 		assert scheduler != null;
 
 		this.scheduler = scheduler;
+		this.world = world;
 	}
 
 	synchronized boolean isStopRequested()
@@ -26,6 +28,9 @@ public class EventDispatchThread extends Thread
 
 	public void run()
 	{
+		lastEventTime = scheduler.currentTime();
+		world.startReal();
+
 		while (!isStopRequested())
 		{
 			try
