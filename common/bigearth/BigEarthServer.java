@@ -507,23 +507,45 @@ class GetCityServlet extends BigEarthServlet
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		Session s = checkSession(request, response);
+		final Session s = checkSession(request, response);
 		if (s == null)
 			return;
 
 		String locStr = request.getParameter("location");
-		Location cityLocation = LocationHelper.parse(locStr, server.world.config);
+		final Location cityLocation = LocationHelper.parse(locStr, server.world.config);
 
-		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
-		try
+		class ResultInfo
+		{
+			int errorCode = 0;
+			String errorMessage;
+			CityInfo cityData;
+		}
+		final ResultInfo result = new ResultInfo();
+
+		server.world.invokeAndWait(new Runnable() {
+		public void run()
 		{
 
 		assert server.world.leaders.containsKey(s.user);
 
 		CityServant city = server.world.getCity(cityLocation);
-		assert city != null;
+		if (city == null)
+		{
+			result.errorCode = HttpServletResponse.SC_NOT_FOUND;
+			result.errorMessage = "Invalid city";
+			return;
+		}
 
-		CityInfo ci = city.makeProfileFor(s.user);
+		result.cityData = city.makeProfileFor(s.user);
+
+		}
+		});
+
+		if (result.errorCode != 0)
+		{
+			doFailure(response, result.errorCode, result.errorMessage);
+			return;
+		}
 
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
@@ -532,14 +554,8 @@ class GetCityServlet extends BigEarthServlet
 		JsonGenerator out = new JsonFactory().createJsonGenerator(
 				response.getOutputStream(),
 				JsonEncoding.UTF8);
-		ci.write(out);
+		result.cityData.write(out);
 		out.close();
-
-		}
-		finally
-		{
-			lock.release();
-		}
 	}
 
 	@Override
