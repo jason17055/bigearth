@@ -102,6 +102,14 @@ public class CityDialog extends JDialog
 			}});
 		buttonPane.add(renameBtn);
 
+		JButton refreshBtn = new JButton("Refresh");
+		refreshBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onRefreshClicked();
+			}});
+		buttonPane.add(refreshBtn);
+
 		equipSelect = new JComboBox<MobType>(equipChoices);
 		buttonPane.add(equipSelect);
 
@@ -561,6 +569,11 @@ public class CityDialog extends JDialog
 	private void onCloseClicked()
 	{
 		dispose();
+	}
+
+	private void onRefreshClicked()
+	{
+		reloadCityInfo();
 	}
 
 	private void onRenameClicked()

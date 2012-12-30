@@ -107,6 +107,7 @@ public class CityServant
 			{
 				workers.remove(fromJob);
 				workerRates.remove(fromJob);
+				workerRateChanged(fromJob, 0.0);
 				return curBal;
 			}
 		}
@@ -139,6 +140,15 @@ public class CityServant
 		d *= nextRandomWorkerRate();
 
 		workerRates.put(job, d);
+		workerRateChanged(job, d);
+	}
+
+	private void workerRateChanged(CityJob job, double newRate)
+	{
+		if (job == CityJob.FARM)
+		{
+			updateFarmRate(newRate);
+		}
 	}
 
 	// called when server is starting up
@@ -863,23 +873,32 @@ public class CityServant
 		}
 	}
 
+	private void updateFarmRate(double farmingRate)
+	{
+		int numFarms = parentRegion.getZoneCount(ZoneType.FARM);
+		if (numFarms == 0 || farmingRate == 0)
+		{
+			parentRegion.stock.removeProducer("farm");
+			return;
+		}
+
+		double maxYield = numFarms * 30.0;
+		double z = maxYield - maxYield * Math.exp(-1 * farmingRate / maxYield);
+		double foodYield = z * getWorldConfig().foodPerFarmer;
+		assert foodYield >= 0.0;
+
+		double asGrain = foodYield / CommodityType.GRAIN.nutrition;
+		double grainPerTick = asGrain / getWorldConfig().ticksPerYear;
+		parentRegion.stock.addProducer("farm", CommodityType.GRAIN, grainPerTick);
+	}
+
 	private void endOfYear_farming()
 	{
 		double farmerPoints = getProduction(CityJob.FARM);
 		production.remove(CityJob.FARM);
 
-		int numFarms = parentRegion.getZoneCount(ZoneType.FARM);
-		if (numFarms == 0)
-			return;
-
-		double maxYield = numFarms * 30.0;
-		double z = maxYield - maxYield * Math.exp(-1 * farmerPoints / maxYield);
-		double foodYield = z * getWorldConfig().foodPerFarmer;
-		assert foodYield >= 0.0;
-
-		double asGrain = foodYield / CommodityType.GRAIN.nutrition;
-
-		addCommodity(CommodityType.GRAIN, (long)Math.floor(asGrain));
+		// do nothing, since farm production is now handled as a
+		// AdvancedCommodityStore.Producer
 	}
 
 	private void endOfYear_gathering()
