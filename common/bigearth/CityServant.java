@@ -678,11 +678,31 @@ public class CityServant
 		notifyLeader(owner, n);
 	}
 
-	private void processLivestock(CommodityType animalType, double shepherdPoints, double pastures)
+	int countPastures(CommodityType animalType)
+	{
+		int count = 0;
+		for (ZoneServant zone : parentRegion.zones.values())
+		{
+			if (zone.type == ZoneType.PASTURE
+			&& zone.commodity == animalType)
+			{
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private void processLivestock(CommodityType animalType, double shepherdPoints)
 	{
 		long numAnimals = getStock(animalType);
 		if (numAnimals == 0)
 			return;
+
+		int numRealPastures = countPastures(animalType);
+		double pastures = Math.max(
+				numRealPastures,
+				0.5 + 0.9 * numRealPastures
+				);
 
 		double numShepherds = shepherdPoints;
 		double protectedAnimals = 8 * numShepherds;
@@ -967,19 +987,12 @@ public class CityServant
 			totalLivestockCount += getStock(type);
 		}
 
-		int numRealPastures = parentRegion.getZoneCount(ZoneType.PASTURE);
-		double pastures = Math.max(
-				numRealPastures,
-				0.5 + 0.9 * numRealPastures
-				);
-
 		double shepherdPoints = getProduction(CityJob.SHEPHERD);
 		for (CommodityType type : livestockTypes)
 		{
 			double portion = (double)getStock(type) / (double)totalLivestockCount;
 			processLivestock(type,
-				portion * shepherdPoints,
-				portion * pastures
+				portion * shepherdPoints
 				);
 		}
 
