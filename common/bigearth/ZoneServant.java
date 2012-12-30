@@ -16,6 +16,7 @@ public class ZoneServant
 
 	ZoneType type;
 	CommodityRecipe recipe;
+	CommodityType commodity;
 
 	ZoneServant(RegionServant parentRegion)
 	{
@@ -49,6 +50,8 @@ public class ZoneServant
 			String s = in.getCurrentName();
 			if (s.equals("type"))
 				type = ZoneType.valueOf(in.nextTextValue());
+			else if (s.equals("commodity"))
+				commodity = CommodityType.valueOf(in.nextTextValue());
 			else if (s.equals("recipe"))
 				recipe = CommodityRecipe.valueOf(in.nextTextValue());
 			else
@@ -65,6 +68,10 @@ public class ZoneServant
 	{
 		out.writeStartObject();
 		out.writeStringField("type", type.name());
+		if (commodity != null)
+		{
+			out.writeStringField("commodity", commodity.name());
+		}
 		if (recipe != null)
 		{
 			out.writeFieldName("recipe");
@@ -78,6 +85,7 @@ public class ZoneServant
 		ZoneInfo zi = new ZoneInfo();
 		zi.type = type;
 		zi.recipe = recipe;
+		zi.commodity = commodity;
 		return zi;
 	}
 

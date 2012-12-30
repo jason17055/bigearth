@@ -11,10 +11,16 @@ import java.util.*;
 public class ZoneInfo
 {
 	ZoneType type;
+	CommodityType commodity;
 	CommodityRecipe recipe;
 
 	public ZoneInfo()
 	{
+	}
+
+	public boolean hasCommodity()
+	{
+		return commodity != null;
 	}
 
 	public boolean hasRecipe()
@@ -42,6 +48,8 @@ public class ZoneInfo
 			String s = in.getCurrentName();
 			if (s.equals("type"))
 				type = ZoneType.valueOf(in.nextTextValue());
+			else if (s.equals("commodity"))
+				commodity = CommodityType.valueOf(in.nextTextValue());
 			else if (s.equals("recipe"))
 				recipe = CommodityRecipe.valueOf(in.nextTextValue());
 			else
@@ -58,6 +66,8 @@ public class ZoneInfo
 	{
 		out.writeStartObject();
 		out.writeStringField("type", type.name());
+		if (hasCommodity())
+			out.writeStringField("commodity", commodity.name());
 		if (hasRecipe())
 			out.writeStringField("recipe", recipe.name());
 		out.writeEndObject();
