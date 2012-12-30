@@ -326,6 +326,7 @@ public class CityDialog extends JDialog
 	{
 		String name;
 		ZoneType type;
+		CommodityType commodity;
 		CommodityRecipe recipe;
 	}
 
@@ -396,6 +397,10 @@ public class CityDialog extends JDialog
 				// \u2192 is Unicode rightwards arrow
 				detailLabel.setText("\u2192"+zi.recipe.getOutputCommodity().getDisplayName());
 			}
+			else if (zi.commodity != null)
+			{
+				detailLabel.setText("\u2193"+zi.commodity.getDisplayName());
+			}
 			else
 			{
 				detailLabel.setText(null);
@@ -439,6 +444,11 @@ public class CityDialog extends JDialog
 		if (zi.type != zone.type)
 		{
 			zi.type = zone.type;
+			anyChange = true;
+		}
+		if (zi.commodity != zone.commodity)
+		{
+			zi.commodity = zone.commodity;
 			anyChange = true;
 		}
 		if (zi.recipe != zone.recipe)
@@ -627,6 +637,58 @@ public class CityDialog extends JDialog
 		}
 	}
 
+	private void examineLand_pasture(ZoneItem zi)
+	{
+		CommodityType [] commodities = new CommodityType [] {
+			CommodityType.SHEEP,
+			CommodityType.PIG,
+			CommodityType.CATTLE,
+			CommodityType.HORSE
+			};
+		String [] choices = new String [commodities.length+1];
+		int myChoice = 0;
+		choices[0] = "--None--";
+		for (int i = 0; i < commodities.length; i++)
+		{
+			if (zi.commodity == commodities[i])
+				myChoice = i+1;
+			choices[i+1] = commodities[i].getDisplayName();
+		}
+
+		JComboBox<String> select = new JComboBox<>(choices);
+		select.setSelectedIndex(myChoice);
+		JComponent [] inputs = new JComponent[] {
+			new JLabel("Choose livestock type for this pasture"),
+			select
+			};
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Examine Zone",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		try
+		{
+
+		int selectIdx = select.getSelectedIndex();
+
+		SetZoneStorageCommand c = new SetZoneStorageCommand();
+		c.zone = zi.name;
+		c.commodity = selectIdx >= 1 ? commodities[selectIdx-1] : null;
+		client.sendCityOrders(cityLocation, c);
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
 	private void examineLand_workshop(ZoneItem zi)
 	{
 		String [] choices = new String [] {
@@ -681,6 +743,11 @@ public class CityDialog extends JDialog
 		if (zi.type == ZoneType.STONE_WORKSHOP)
 		{
 			examineLand_workshop(zi);
+			return;
+		}
+		else if (zi.type == ZoneType.PASTURE)
+		{
+			examineLand_pasture(zi);
 			return;
 		}
 

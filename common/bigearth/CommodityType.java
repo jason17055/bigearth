@@ -15,6 +15,7 @@ public enum CommodityType
 	SHEEP(80.0, 0, true),   // TODO 80kg sheep gives 20kg meat
 	PIG(70.0, 0, true),     // TODO 70kg pig gives 35kg meat
 	CATTLE(750.0, 0, true), // TODO 750kg cow gives 250kg meat
+	HORSE(650.0, 0, true),
 	WILDLIFE(50.0, 0, true); //cannot be captured, only killed for meat
 
 	public double mass;

@@ -350,6 +350,19 @@ public class CityServant
 		if (zone != null)
 		{
 			zone.recipe = c.recipe;
+			cityChanged();
+		}
+	}
+
+	private void setZoneStorage(SetZoneStorageCommand c)
+	{
+		int i = c.zone.lastIndexOf('/');
+		int zoneNumber = Integer.parseInt(c.zone.substring(i+1));
+		ZoneServant zone = parentRegion.zones.get(zoneNumber);
+		if (zone != null)
+		{
+			zone.commodity = c.commodity;
+			cityChanged();
 		}
 	}
 
@@ -396,6 +409,11 @@ public class CityServant
 		else if (currentOrders instanceof SetFactoryRecipeCommand)
 		{
 			setFactoryRecipe((SetFactoryRecipeCommand) currentOrders);
+			return;
+		}
+		else if (currentOrders instanceof SetZoneStorageCommand)
+		{
+			setZoneStorage((SetZoneStorageCommand) currentOrders);
 			return;
 		}
 
