@@ -372,13 +372,41 @@ class GetMobsServlet extends BigEarthServlet
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 		throws IOException, ServletException
 	{
-		Session s = checkSession(request, response);
+		final Session s = checkSession(request, response);
 		if (s == null)
 			return;
 
-		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
-		try
+		class ResultInfo
 		{
+			int errorCode;
+			String errorMessage;
+			Map<String,MobInfo> mobs = new HashMap<>();
+		}
+		final ResultInfo r = new ResultInfo();
+
+		server.world.invokeAndWait(new Runnable() {
+		public void run()
+		{
+
+		for (String mobName : server.world.mobs.keySet())
+		{
+			MobServant mob = server.world.getMob(mobName);
+			if (mob.owner != null && mob.owner.equals(s.user))
+			{
+				MobInfo mobProfile = mob.makeProfileForOwner();
+				r.mobs.put(mobName, mobProfile);
+			}
+			else if (mob.isSeenBy(s.user))
+			{
+				MobInfo mobProfile = mob.makeProfileForObserver();
+				r.mobs.put(mobName, mobProfile);
+			}
+		}
+
+		}
+		});
+
+		assert r.errorCode == 0;
 
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
@@ -389,31 +417,17 @@ class GetMobsServlet extends BigEarthServlet
 				JsonEncoding.UTF8);
 		out.writeStartObject();
 
-		for (String mobName : server.world.mobs.keySet())
+		for (Map.Entry<String,MobInfo> e : r.mobs.entrySet())
 		{
-			MobServant mob = server.world.getMob(mobName);
-			if (mob.owner != null && mob.owner.equals(s.user))
-			{
-				MobInfo mobProfile = mob.makeProfileForOwner();
-				out.writeFieldName(mobName);
-				mobProfile.write(out);
-			}
-			else if (mob.isSeenBy(s.user))
-			{
-				MobInfo mobProfile = mob.makeProfileForObserver();
-				out.writeFieldName(mobName);
-				mobProfile.write(out);
-			}
+			String mobName = e.getKey();
+			MobInfo mobProfile = e.getValue();
+
+			out.writeFieldName(mobName);
+			mobProfile.write(out);
 		}
 
 		out.writeEndObject();
 		out.close();
-
-		}
-		finally
-		{
-			lock.release();
-		}
 	}
 }
 
