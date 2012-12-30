@@ -144,7 +144,10 @@ public class CityServant
 	// called when server is starting up
 	public void start()
 	{
-		//nothing to do
+		for (CityJob job : workers.keySet())
+		{
+			newWorkerRate(job);
+		}
 	}
 
 	public static CityServant parse(JsonParser in, RegionServant parentRegion)
@@ -498,7 +501,7 @@ public class CityServant
 			in.nextToken();
 			int amt = in.getIntValue();
 
-			addWorkers(amt, job);
+			workers.put(job, amt);
 		}
 
 		if (in.getCurrentToken() != JsonToken.END_OBJECT)
