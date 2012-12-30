@@ -438,6 +438,7 @@ System.out.println("in world::stop()");
 		private synchronized void setCompleted(boolean completed)
 		{
 			this.completed = completed;
+			notifyAll();
 		}
 
 		public synchronized void waitForCompletion()
@@ -449,12 +450,18 @@ System.out.println("in world::stop()");
 
 				try
 				{
-					wait(2000);
+					wait(2500);
 				}
 				catch (InterruptedException e)
 				{
 				}
 			}
+		}
+
+		@Override
+		public String toString()
+		{
+			return "RealTimeEvent::"+wrapped;
 		}
 	}
 
