@@ -558,55 +558,66 @@ class GetCityServlet extends BigEarthServlet
 		out.close();
 	}
 
+	private Command parseOrders(HttpServletRequest request)
+		throws IOException
+	{
+		JsonParser in = new JsonFactory().createJsonParser(request.getInputStream());
+		Command orders = Command.parse(in, server.world.config);
+		in.close();
+		return orders;
+	}
+
 	@Override
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 		throws IOException
 	{
-		Session s = checkSession(request, response);
+		final Session s = checkSession(request, response);
 		if (s == null)
 			return;
 
 		String locStr = request.getParameter("location");
-		Location cityLocation = LocationHelper.parse(locStr, server.world.config);
+		final Location cityLocation = LocationHelper.parse(locStr, server.world.config);
+		final Command orders = parseOrders(request);
 
-		Command orders;
+		class ResultInfo
 		{
-			JsonParser in = new JsonFactory().createJsonParser(request.getInputStream());
-			orders = Command.parse(in, server.world.config);
-			in.close();
+			int errorCode = 0;
+			String errorMessage;
 		}
+		final ResultInfo result = new ResultInfo();
 
-		WorldMaster.RealTimeLockHack lock = server.world.acquireRealTimeLock();
-		try
+		server.world.invokeAndWait(new Runnable() {
+		public void run()
 		{
-
-		assert server.world.leaders.containsKey(s.user);
 
 		CityServant city = server.world.getCity(cityLocation);
 		if (city == null)
 		{
-			doFailure(response, HttpServletResponse.SC_NOT_FOUND, "Invalid city");
+			result.errorCode = HttpServletResponse.SC_NOT_FOUND;
+			result.errorMessage = "Invalid city";
 			return;
 		}
 
 		if (!city.canUserCommand(s.user))
 		{
-			// permission denied
-			doFailure(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			result.errorCode = HttpServletResponse.SC_FORBIDDEN;
+			result.errorMessage = "Forbidden";
 			return;
 		}
 
 		// make the actual change
 		city.setOrders(orders);
+		}
+		});
+
+		if (result.errorCode != 0)
+		{
+			doFailure(response, result.errorCode, result.errorMessage);
+			return;
+		}
 
 		// report success
-		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-
-		}
-		finally
-		{
-			lock.release();
-		}
+		doSuccessNoContent(response);
 	}
 }
 
