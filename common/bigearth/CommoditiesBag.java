@@ -20,6 +20,12 @@ class CommoditiesBag
 		stock = new EnumMap<CommodityType, Long>(CommodityType.class);
 	}
 
+	public CommoditiesBag(Map<CommodityType,Long> map)
+	{
+		this();
+		stock.putAll(map);
+	}
+
 	public CommoditiesBag clone()
 	{
 		CommoditiesBag rv = new CommoditiesBag();
