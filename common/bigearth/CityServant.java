@@ -145,9 +145,11 @@ public class CityServant
 
 	private void workerRateChanged(CityJob job, double newRate)
 	{
-		if (job == CityJob.FARM)
+		switch (job)
 		{
+		case FARM:
 			updateFarmRate(newRate);
+			break;
 		}
 	}
 
