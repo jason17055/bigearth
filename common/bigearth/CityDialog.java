@@ -749,57 +749,9 @@ public class CityDialog extends JDialog
 			JOptionPane.PLAIN_MESSAGE);
 	}
 
-	private ZoneType [] getDevelopChoices()
-	{
-		CityInfo city;
-		try
-		{
-			city = client.getCity(cityLocation);
-			if (city != null && city.hasNewZoneChoices())
-				return city.newZoneChoices.toArray(new ZoneType[0]);
-		}
-		catch (IOException e)
-		{
-			//FIXME
-			e.printStackTrace(System.err);
-		}
-		return new ZoneType[0];
-	}
-
 	private void onNewLandClicked()
 	{
-		ZoneType [] developChoices = getDevelopChoices();
-		JComboBox<ZoneType> developSelect = new JComboBox<>(developChoices);
-		JComponent [] inputs = new JComponent[] {
-			new JLabel("Type of land to develop"),
-			developSelect
-			};
-
-		int rv = JOptionPane.showOptionDialog(this, inputs,
-			"Develop Land",
-			JOptionPane.OK_CANCEL_OPTION,
-			JOptionPane.PLAIN_MESSAGE, null, null, null);
-		if (rv != JOptionPane.OK_OPTION)
-			return;
-
-		ZoneType type = (ZoneType) developSelect.getSelectedItem();
-		assert type != null;
-
-		try {
-
-		DevelopCommand c = new DevelopCommand();
-		c.fromZoneType = ZoneType.NATURAL;
-		c.toZoneType = type;
-		client.sendCityOrders(cityLocation, c);
-
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace(System.err);
-			JOptionPane.showMessageDialog(this, e,
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-		}
+		NewZoneDialog.showNewZoneDialog(this, client, cityLocation);
 	}
 
 	private class MyListener
