@@ -8,15 +8,11 @@ public class AdvancedCommodityStore
 {
 	long lastUpdated; //timestamp
 	Map<CommodityType, Long> quantities;
-	Map<CommodityType, Double> partials;
-	Map<CommodityType, Double> rates;
 	Map<String, Producer> producers;
 
 	public AdvancedCommodityStore()
 	{
 		quantities = new HashMap<>();
-		partials = new HashMap<>();
-		rates = new HashMap<>();
 		producers = new HashMap<>();
 	}
 
@@ -49,25 +45,34 @@ public class AdvancedCommodityStore
 		}
 	}
 
-	void addProducer(String key, CommodityType ct, double rate)
-	{
-		CommoditiesBag bag = new CommoditiesBag();
-		bag.add(ct, 1);
-		addProducer(key, bag, rate);
-	}
-
-	void addProducer(String key, CommoditiesBag bag, double rate)
-	{
-		update();
-		producers.put(key, new Producer(bag, rate));
-		calculateFlow();
-	}
-
-	void removeProducer(String key)
+	public void removeProducer(String key)
 	{
 		update();
 		producers.remove(key);
-		calculateFlow();
+	}
+
+	public void setProducer(String key, CommodityType ct, double rate)
+	{
+		CommoditiesBag bag = new CommoditiesBag();
+		bag.add(ct, 1);
+		setProducer(key, bag, rate);
+	}
+
+	public void setProducer(String key, CommoditiesBag bag, double rate)
+	{
+		setProducer(key, new Producer(bag, rate));
+	}
+
+	public void setProducer(String key, Producer newProducer)
+	{
+		update();
+
+		Producer oldProducer = producers.get(key);
+		if (oldProducer != null)
+		{
+			maybeTransferPartial(oldProducer, newProducer);
+		}
+		producers.put(key, newProducer);
 	}
 
 	public CommodityType [] getCommodityTypesArray()
@@ -80,6 +85,14 @@ public class AdvancedCommodityStore
 		update();
 		Long L = quantities.get(ct);
 		return L != null ? L.longValue() : 0;
+	}
+
+	private void maybeTransferPartial(Producer oldProducer, Producer newProducer)
+	{
+		if (newProducer.output.isSupersetOf(oldProducer.output))
+		{
+			newProducer.partial = oldProducer.partial;
+		}
 	}
 
 	public boolean isSupersetOf(CommoditiesBag bag)
@@ -170,29 +183,26 @@ public class AdvancedCommodityStore
 		out.writeEndObject();
 	}
 
-	private void calculateFlow()
+	private void produced(Producer p, long numProduced)
 	{
-		rates.clear();
-		for (Producer p : producers.values())
-		{
-			for (Map.Entry<CommodityType,Long> e : p.getOutput().stock.entrySet())
-			{
-				CommodityType ct = e.getKey();
-				long qty = e.getValue();
+		assert numProduced > 0;
 
-				double rate = rates.containsKey(ct) ? rates.get(ct) : 0.0;
-				rate += qty * p.getRate();
-				rates.put(ct, rate);
-			}
+		for (Map.Entry<CommodityType,Long> e : p.output.stock.entrySet())
+		{
+			CommodityType ct = e.getKey();
+			long v = e.getValue();
+
+			Long oldBalanceObj = quantities.get(ct);
+			long oldBalance = oldBalanceObj != null ? oldBalanceObj.longValue() : 0;
+
+			long newBalance = oldBalance + numProduced * v;
+			if (newBalance != 0)
+				quantities.put(ct, newBalance);
+			else
+				quantities.remove(ct);
 		}
 
-		for (Iterator< Map.Entry<CommodityType,Double> > it = partials.entrySet().iterator();
-				it.hasNext(); )
-		{
-			Map.Entry<CommodityType,Double> e = it.next();
-			if (!rates.containsKey(e.getKey()))
-				it.remove();
-		}
+		p.produced(numProduced);
 	}
 
 	private void update()
@@ -208,39 +218,22 @@ public class AdvancedCommodityStore
 		// so many of the public methods, be careful not to call one
 		// of those public methods from here.
 
-		for (CommodityType ct : rates.keySet())
+		for (Producer p : producers.values())
 		{
-			Long curBalanceL = quantities.get(ct);
-			long curBalance = curBalanceL != null ? curBalanceL.longValue() : 0;
-
-			double rate = rates.get(ct);
-
-			Double partialObj = partials.get(ct);
-			double partial = partialObj != null ? partialObj.doubleValue() : 0.0;
-
-			partial += rate * elapsedTicks;
-			if (partial < 0.0 || partial >= 1.0)
+			p.partial += p.rate * elapsedTicks;
+			if (p.partial >= 1.0)
 			{
-				double delta = Math.floor(partial);
-				curBalance += (long)delta;
+				double f = Math.floor(p.partial);
+				p.partial -= f;
+				assert p.partial >= 0.0 && p.partial < 1.0;
 
-				partial = partial - Math.floor(partial);
-				assert partial >= 0.0 && partial < 1.0;
+				long numProduced = (long)f;
+				produced(p, numProduced);
 			}
-
-			if (curBalance < 0)
-			{
-				curBalance = 0;
-				partial = 0.0;
-			}
-
-			if (curBalance != 0)
-				quantities.put(ct, curBalance);
-			else
-				quantities.remove(ct);
-
-			partials.put(ct, partial);
 		}
+
+		//TODO- consumers
+
 
 		lastUpdated = curTime;
 	}
@@ -249,11 +242,13 @@ public class AdvancedCommodityStore
 	{
 		CommoditiesBag output;
 		double rate;
+		double partial;
 
 		public Producer(CommoditiesBag output, double rate)
 		{
 			this.output = output;
 			this.rate = rate;
+			this.partial = 0.0;
 		}
 
 		public CommoditiesBag getOutput()
@@ -264,6 +259,10 @@ public class AdvancedCommodityStore
 		public double getRate()
 		{
 			return rate;
+		}
+
+		protected void produced(long numProduced)
+		{
 		}
 	}
 

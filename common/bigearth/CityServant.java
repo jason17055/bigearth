@@ -929,7 +929,7 @@ public class CityServant
 
 		double asGrain = foodYield / CommodityType.GRAIN.nutrition;
 		double grainPerTick = asGrain / getWorldConfig().ticksPerYear;
-		parentRegion.stock.addProducer("farm", CommodityType.GRAIN, grainPerTick);
+		parentRegion.stock.setProducer("farm", CommodityType.GRAIN, grainPerTick);
 	}
 
 	private void endOfYear_farming()
