@@ -11,6 +11,10 @@ import java.util.*;
 public class ZoneInfo
 {
 	ZoneType type;
+	int gridx;
+	int gridy;
+	int gridwidth;
+	int gridheight;
 	CommodityType commodity;
 	CommodityRecipe recipe;
 
@@ -50,6 +54,14 @@ public class ZoneInfo
 				type = ZoneType.valueOf(in.nextTextValue());
 			else if (s.equals("commodity"))
 				commodity = CommodityType.valueOf(in.nextTextValue());
+			else if (s.equals("gridx"))
+				gridx = in.nextIntValue(0);
+			else if (s.equals("gridy"))
+				gridy = in.nextIntValue(0);
+			else if (s.equals("gridwidth"))
+				gridwidth = in.nextIntValue(0);
+			else if (s.equals("gridheight"))
+				gridheight = in.nextIntValue(0);
 			else if (s.equals("recipe"))
 				recipe = CommodityRecipe.valueOf(in.nextTextValue());
 			else
@@ -66,6 +78,10 @@ public class ZoneInfo
 	{
 		out.writeStartObject();
 		out.writeStringField("type", type.name());
+		out.writeNumberField("gridx", gridx);
+		out.writeNumberField("gridy", gridy);
+		out.writeNumberField("gridwidth", gridwidth);
+		out.writeNumberField("gridheight", gridheight);
 		if (hasCommodity())
 			out.writeStringField("commodity", commodity.name());
 		if (hasRecipe())

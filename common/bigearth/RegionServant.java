@@ -103,7 +103,9 @@ class RegionServant
 			{
 				it.remove();
 			}
-			
+
+			e.getValue().gridx = (zoneNumber-1) % 8;
+			e.getValue().gridy = (zoneNumber-1) / 8;
 		}
 
 		//check under construction zones

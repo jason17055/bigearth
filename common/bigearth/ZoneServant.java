@@ -15,6 +15,8 @@ public class ZoneServant
 	transient RegionServant parentRegion;
 
 	ZoneType type;
+	int gridx;
+	int gridy;
 	CommodityRecipe recipe;
 	CommodityType commodity;
 
@@ -52,6 +54,10 @@ public class ZoneServant
 				type = ZoneType.valueOf(in.nextTextValue());
 			else if (s.equals("commodity"))
 				commodity = CommodityType.valueOf(in.nextTextValue());
+			else if (s.equals("gridx"))
+				gridx = in.nextIntValue(0);
+			else if (s.equals("gridy"))
+				gridy = in.nextIntValue(0);
 			else if (s.equals("recipe"))
 				recipe = CommodityRecipe.valueOf(in.nextTextValue());
 			else
@@ -68,6 +74,8 @@ public class ZoneServant
 	{
 		out.writeStartObject();
 		out.writeStringField("type", type.name());
+		out.writeNumberField("gridx", gridx);
+		out.writeNumberField("gridy", gridy);
 		if (commodity != null)
 		{
 			out.writeStringField("commodity", commodity.name());
@@ -84,6 +92,10 @@ public class ZoneServant
 	{
 		ZoneInfo zi = new ZoneInfo();
 		zi.type = type;
+		zi.gridx = gridx;
+		zi.gridy = gridy;
+		zi.gridwidth = 1;
+		zi.gridheight = 1;
 		zi.recipe = recipe;
 		zi.commodity = commodity;
 		return zi;
