@@ -529,6 +529,9 @@ public class MakeWorld
 		region.surfaceMinerals.add(CommodityType.COPPER_ORE,
 			mineralsHelper(200, 150)
 			);
+		region.surfaceMinerals.add(CommodityType.GOLD,
+			mineralsHelper(50, 50)
+			);
 		if (biome == BiomeType.FOREST || biome == BiomeType.JUNGLE)
 		{
 			region.surfaceMinerals.add(CommodityType.WOOD,

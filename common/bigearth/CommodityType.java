@@ -8,6 +8,7 @@ public enum CommodityType
 	CLAY(25.0, 0, false),
 	STONE(25.0, 0, false),
 	COPPER_ORE(25.0, 0, false),
+	GOLD(0.25, 0, false),
 	STONE_BLOCK(20.0, 0, false),
 	STONE_WEAPON(2.5, 0, false),
 	MEAT(1.0, 1, false),
