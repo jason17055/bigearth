@@ -11,6 +11,15 @@ public class ZoneRecipe
 	CommoditiesBag required;
 	CommoditiesBag generated;
 	double workRequired;
+	Technology techRequired;
+
+	public Set<Technology> techRequirements()
+	{
+		if (techRequired != null)
+			return Collections.singleton(techRequired);
+		else
+			return Collections.emptySet();
+	}
 
 	public static ZoneRecipe parse1(JsonParser in, WorldConfigIfc world)
 		throws IOException
@@ -37,6 +46,8 @@ public class ZoneRecipe
 				required = CommoditiesBag.parse(in);
 			else if (s.equals("generated"))
 				generated = CommoditiesBag.parse(in);
+			else if (s.equals("techRequired"))
+				techRequired = Technology.valueOf(in.nextTextValue());
 			else if (s.equals("workRequired"))
 			{
 				in.nextToken();

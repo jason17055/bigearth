@@ -85,4 +85,9 @@ public class ZoneRecipeCollection
 		MyKey k = new MyKey(fromZoneType, toZoneType);
 		return recipes.get(k);
 	}
+
+	public Collection<ZoneRecipe> values()
+	{
+		return recipes.values();
+	}
 }

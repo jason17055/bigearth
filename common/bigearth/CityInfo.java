@@ -19,6 +19,7 @@ public class CityInfo
 	int scientists;
 	boolean scientistsIsKnown;
 	Map<String,ZoneInfo> zones;
+	Set<ZoneType> newZoneChoices;
 
 	public CityInfo()
 	{
@@ -71,6 +72,11 @@ public class CityInfo
 	public boolean hasHouses()
 	{
 		return hasZones();
+	}
+
+	public boolean hasNewZoneChoices()
+	{
+		return newZoneChoices != null;
 	}
 
 	public boolean hasOwner()
@@ -186,6 +192,8 @@ public class CityInfo
 				in.nextToken();
 				setScientists(in.getIntValue());
 			}
+			else if (s.equals("newZoneChoices"))
+				parseNewZoneChoices(in);
 			else if (s.equals("zones"))
 			{
 				parseZones(in);
@@ -199,6 +207,21 @@ public class CityInfo
 		}
 
 		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+
+	private void parseNewZoneChoices(JsonParser in)
+		throws IOException
+	{
+		newZoneChoices = new HashSet<ZoneType>();
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_ARRAY)
+			throw new InputMismatchException();
+
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			ZoneType z = ZoneType.valueOf(in.getText());
+			newZoneChoices.add(z);
+		}
 	}
 
 	private void parseZones(JsonParser in)
@@ -249,12 +272,28 @@ public class CityInfo
 			out.writeFieldName("stock");
 			stock.write(out);
 		}
+		if (hasNewZoneChoices())
+		{
+			out.writeFieldName("newZoneChoices");
+			writeNewZoneChoices(out);
+		}
 		if (hasZones())
 		{
 			out.writeFieldName("zones");
 			writeZones(out);
 		}
 		out.writeEndObject();
+	}
+
+	private void writeNewZoneChoices(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartArray();
+		for (ZoneType z : newZoneChoices)
+		{
+			out.writeString(z.name());
+		}
+		out.writeEndArray();
 	}
 
 	private void writeZones(JsonGenerator out)

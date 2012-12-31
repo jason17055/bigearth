@@ -50,14 +50,6 @@ public class CityDialog extends JDialog
 	DefaultListModel<String> scienceListModel;
 	JList<String> scienceList;
 
-	static ZoneType [] developChoices = new ZoneType[] {
-		ZoneType.MUD_COTTAGE,
-		ZoneType.WOOD_COTTAGE,
-		ZoneType.STONE_COTTAGE,
-		ZoneType.FARM,
-		ZoneType.PASTURE,
-		ZoneType.STONE_WORKSHOP
-		};
 	static MobType [] equipChoices = new MobType[] {
 		MobType.SETTLER
 		};
@@ -757,8 +749,26 @@ public class CityDialog extends JDialog
 			JOptionPane.PLAIN_MESSAGE);
 	}
 
+	private ZoneType [] getDevelopChoices()
+	{
+		CityInfo city;
+		try
+		{
+			city = client.getCity(cityLocation);
+			if (city != null && city.hasNewZoneChoices())
+				return city.newZoneChoices.toArray(new ZoneType[0]);
+		}
+		catch (IOException e)
+		{
+			//FIXME
+			e.printStackTrace(System.err);
+		}
+		return new ZoneType[0];
+	}
+
 	private void onNewLandClicked()
 	{
+		ZoneType [] developChoices = getDevelopChoices();
 		JComboBox<ZoneType> developSelect = new JComboBox<>(developChoices);
 		JComponent [] inputs = new JComponent[] {
 			new JLabel("Type of land to develop"),

@@ -287,7 +287,33 @@ public class CityServant
 			ci.zones.put(n, zone.makeProfile());
 		}
 
+		ci.newZoneChoices = getDevelopChoices();
 		return ci;
+	}
+
+	private Set<ZoneType> getDevelopChoices()
+	{
+		HashSet<ZoneType> rv = new HashSet<>();
+		for (ZoneRecipe recipe : getWorldMaster().zoneRecipes.values())
+		{
+			if (recipe.fromZoneType != ZoneType.NATURAL)
+				continue;
+
+			boolean hasTech = true;
+			for (Technology tech : recipe.techRequirements())
+			{
+				if (!science.contains(tech))
+				{
+					hasTech = false;
+					break;
+				}
+			}
+			if (!hasTech)
+				continue;
+
+			rv.add(recipe.toZoneType);
+		}
+		return rv;
 	}
 
 	public boolean canUserCommand(String user)

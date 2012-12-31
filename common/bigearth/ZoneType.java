@@ -11,7 +11,8 @@ public enum ZoneType
 	STONE_COTTAGE,
 	FARM,
 	PASTURE,
-	STONE_WORKSHOP;
+	STONE_WORKSHOP,
+	POTTERY;
 
 	public String getDisplayName()
 	{

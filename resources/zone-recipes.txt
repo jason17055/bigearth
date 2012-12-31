@@ -31,5 +31,12 @@
 "toZoneType":"STONE_WORKSHOP",
 "workRequired":250,
 "required":{"WOOD":50,"STONE":100}
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"POTTERY",
+"workRequired":250,
+"techRequired":"pottery-15",
+"required":{"WOOD":50,"STONE":100}
 }
 ]
