@@ -16,8 +16,7 @@ public class CityDialog extends JDialog
 
 	// {{{ land pane
 
-	JList<ZoneItem> landList;
-	DefaultListModel<ZoneItem> landListModel;
+	CityZonesView zonesView;
 
 	// }}}
 
@@ -281,16 +280,8 @@ public class CityDialog extends JDialog
 	{
 		JPanel mainPane = new JPanel(new BorderLayout());
 
-		landListModel = new DefaultListModel<ZoneItem>();
-		landList = new JList<ZoneItem>(landListModel);
-		landList.setCellRenderer(new MyZoneCellRenderer());
-		landList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		landList.setVisibleRowCount(-1);
-		landList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-
-		JScrollPane landListScroll = new JScrollPane(landList);
-		landListScroll.setPreferredSize(new Dimension(550,212));
-		mainPane.add(landListScroll, BorderLayout.CENTER);
+		zonesView = new CityZonesView();
+		mainPane.add(zonesView, BorderLayout.CENTER);
 
 		JPanel buttonPane = new JPanel();
 		mainPane.add(buttonPane, BorderLayout.SOUTH);
@@ -320,113 +311,6 @@ public class CityDialog extends JDialog
 		ZoneType type;
 		CommodityType commodity;
 		CommodityRecipe recipe;
-	}
-
-	static class MyZoneCellRenderer implements ListCellRenderer<ZoneItem>
-	{
-		JPanel mainPane;
-		JLabel iconLabel;
-		JLabel typeLabel;
-		JLabel detailLabel;
-
-		public MyZoneCellRenderer()
-		{
-			mainPane = new JPanel();
-			mainPane.setLayout(new BorderLayout());
-			mainPane.setOpaque(true);
-
-			JPanel gridPane = new JPanel();
-			gridPane.setLayout(new GridBagLayout());
-			gridPane.setBorder(
-				BorderFactory.createEmptyBorder(4,4,4,4)
-				);
-			gridPane.setOpaque(false);
-
-			GridBagConstraints c = new GridBagConstraints();
-
-			iconLabel = new JLabel();
-			c.gridx = c.gridy = 0;
-			c.gridwidth = 1;
-			c.gridheight = 2;
-			c.fill = GridBagConstraints.BOTH;
-			c.insets = new Insets(0, 0, 0, 6);
-			gridPane.add(iconLabel, c);
-
-			typeLabel = new JLabel();
-			c.gridx = 1;
-			c.gridheight = 1;
-			c.anchor = GridBagConstraints.SOUTHWEST;
-			c.weightx = 1.0;
-			c.weighty = 0.5;
-			c.fill = GridBagConstraints.NONE;
-			c.insets = new Insets(0, 0, 0, 0);
-			gridPane.add(typeLabel, c);
-
-			detailLabel = new JLabel();
-			Font f = detailLabel.getFont();
-			detailLabel.setFont(f.deriveFont(
-					f.getStyle() & ~Font.BOLD,
-					(float)(f.getSize2D() * 0.85)));
-			c.gridx = 1;
-			c.gridy = 1;
-			c.fill = GridBagConstraints.NONE;
-			c.anchor = GridBagConstraints.NORTHWEST;
-			gridPane.add(detailLabel, c);
-
-			mainPane.add(gridPane);
-		}
-
-		//implements ListCellRenderer
-		public Component getListCellRendererComponent(JList<? extends ZoneItem> list, ZoneItem zi, int index, boolean isSelected, boolean cellHasFocus)
-		{
-			URL zoneIconUrl = zi.type.getIconResource();
-			ImageIcon zoneIcon = zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null;
-			iconLabel.setIcon(zoneIcon);
-			typeLabel.setText(zi.type.getDisplayName());
-
-			if (zi.recipe != null)
-			{
-				// \u2192 is Unicode rightwards arrow
-				detailLabel.setText("\u2192"+zi.recipe.getOutputCommodity().getDisplayName());
-			}
-			else if (zi.commodity != null)
-			{
-				detailLabel.setText("\u2193"+zi.commodity.getDisplayName());
-			}
-			else
-			{
-				detailLabel.setText(null);
-			}
-
-			if (isSelected)
-			{
-				mainPane.setBackground(list.getSelectionBackground());
-				mainPane.setForeground(list.getSelectionForeground());
-			}
-			else
-			{
-				mainPane.setBackground(list.getBackground());
-				mainPane.setForeground(list.getForeground());
-			}
-
-			Border b = null;
-			if (cellHasFocus)
-			{
-				if (isSelected)
-					b = UIManager.getBorder("List.focusSelectedCellHighlightBorder");
-				if (b == null)
-					b = UIManager.getBorder("List.focusCellHighlightBorder");
-			}
-			else
-			{
-				b = NO_FOCUS_BORDER;
-			}
-			mainPane.setBorder(b);
-
-			return mainPane;
-		}
-
-		static final Border NO_FOCUS_BORDER = new EmptyBorder(1,1,1,1);
 	}
 
 	private boolean updateZoneItem(ZoneItem zi, ZoneInfo zone)
@@ -486,42 +370,7 @@ public class CityDialog extends JDialog
 	{
 		assert city.hasZones();
 
-		//reverse order so that removing items will not mess up our indexes
-		Set<String> seen = new HashSet<>();
-		for (int i = landListModel.size()-1; i >= 0; i--)
-		{
-			ZoneItem zi = landListModel.get(i);
-			if (city.zones.containsKey(zi.name))
-			{
-				// check whether it needs to be updated
-				if (updateZoneItem(zi, city.zones.get(zi.name)))
-				{
-					landListModel.set(i, zi);
-				}
-				seen.add(zi.name);
-			}
-			else
-			{
-				landListModel.removeElementAt(i);
-			}
-		}
-
-		for (Map.Entry<String,ZoneInfo> e : city.zones.entrySet())
-		{
-			String zoneName = e.getKey();
-			ZoneInfo zone = e.getValue();
-
-			if (zone.type == ZoneType.NATURAL)
-				continue;
-
-			if (!seen.contains(zoneName))
-			{
-				ZoneItem zi = new ZoneItem();
-				zi.name = zoneName;
-				updateZoneItem(zi, zone);
-				landListModel.addElement(zi);
-			}
-		}
+		zonesView.update(city);
 	}
 
 	private void loadCityInfo_stock(CityInfo city)
@@ -728,6 +577,7 @@ public class CityDialog extends JDialog
 
 	private void onExamineLandClicked()
 	{
+/*
 		ZoneItem zi = landList.getSelectedValue();
 		if (zi == null)
 			return;
@@ -747,6 +597,7 @@ public class CityDialog extends JDialog
 			"You selected " + zi.name,
 			"Examine Zone",
 			JOptionPane.PLAIN_MESSAGE);
+*/
 	}
 
 	private void onNewLandClicked()
