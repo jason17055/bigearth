@@ -215,7 +215,7 @@ public class WorldMaster
 			r.endOfYear_cleanup();
 		}
 
-		if (System.currentTimeMillis() - lastSaveRealTime > 20000)
+		if (System.currentTimeMillis() - lastSaveRealTime > 180000)
 		{
 			try
 			{
