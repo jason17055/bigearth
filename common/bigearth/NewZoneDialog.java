@@ -129,7 +129,7 @@ public class NewZoneDialog
 		static final Border NO_FOCUS_BORDER = new EmptyBorder(1,1,1,1);
 	}
 
-	static void showNewZoneDialog(Window ownerWindow, Client client, Location cityLocation)
+	static ZoneType showNewZoneDialog(Window ownerWindow, Client client, Location cityLocation)
 	{
 		NewZoneDialog me = new NewZoneDialog(ownerWindow, client, cityLocation);
 		
@@ -153,26 +153,12 @@ public class NewZoneDialog
 			JOptionPane.OK_CANCEL_OPTION,
 			JOptionPane.PLAIN_MESSAGE, null, null, null);
 		if (rv != JOptionPane.OK_OPTION)
-			return;
+			return null;
 
 		ZoneType type = developList.getSelectedValue();
 		if (type == null)
-			return;
+			return null;
 
-		try {
-
-		DevelopCommand c = new DevelopCommand();
-		c.fromZoneType = ZoneType.NATURAL;
-		c.toZoneType = type;
-		client.sendCityOrders(cityLocation, c);
-
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace(System.err);
-			JOptionPane.showMessageDialog(ownerWindow, e,
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-		}
+		return type;
 	}
 }

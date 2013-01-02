@@ -16,7 +16,19 @@ public class CityZonesView extends JComponent
 	static final int CELLHEIGHT = 48;
 	Point origin = new Point(0,0);
 	String selectedZone;
-	boolean showNewBuildingCursor = true;
+	ArrayList<Listener> listeners = new ArrayList<>();
+
+	static class NewBuildingCursorConfig
+	{
+		ZoneType type;
+
+		NewBuildingCursorConfig(ZoneType type)
+		{
+			this.type = type;
+		}
+	}
+	NewBuildingCursorConfig showNewBuildingCursor = null;
+
 	class NewBuildingCursor
 	{
 		int gridx;
@@ -45,6 +57,21 @@ public class CityZonesView extends JComponent
 			};
 		addMouseListener(mouse);
 		addMouseMotionListener(mouse);
+	}
+
+	public void cancelNewBuildingCursor()
+	{
+		showNewBuildingCursor = null;
+		newBuildingCursor = null;
+		repaint();
+	}
+
+	public void showNewBuildingCursor(ZoneType type)
+	{
+		selectedZone = null;
+		showNewBuildingCursor = new NewBuildingCursorConfig(type);
+		newBuildingCursor = null;
+		repaint();
 	}
 
 	private Rectangle getZoneRectangle(ZoneInfo zone)
@@ -79,7 +106,7 @@ public class CityZonesView extends JComponent
 
 	private void onMouseMoved(MouseEvent ev)
 	{
-		if (!showNewBuildingCursor)
+		if (showNewBuildingCursor == null)
 			return;
 
 		int gridx = (ev.getPoint().x - origin.x) / CELLWIDTH;
@@ -114,6 +141,21 @@ public class CityZonesView extends JComponent
 	{
 		if (zones == null)
 			return;
+
+		if (showNewBuildingCursor != null)
+		{
+			if (newBuildingCursor != null && newBuildingCursor.legal)
+			{
+				fireNewBuildingRequested(
+					showNewBuildingCursor.type,
+					newBuildingCursor.gridx,
+					newBuildingCursor.gridy
+					);
+				cancelNewBuildingCursor();
+				return;
+			}
+			return;
+		}
 
 		for (Map.Entry<String,ZoneInfo> e : zones.entrySet())
 		{
@@ -223,5 +265,23 @@ public class CityZonesView extends JComponent
 
 		this.zones = city.zones;
 		repaint();
+	}
+
+	public void addListener(Listener l)
+	{
+		listeners.add(l);
+	}
+
+	private void fireNewBuildingRequested(ZoneType type, int gridx, int gridy)
+	{
+		for (Listener l : listeners)
+		{
+			l.newBuildingRequested(type, gridx, gridy);
+		}
+	}
+
+	public interface Listener
+	{
+		void newBuildingRequested(ZoneType type, int gridx, int gridy);
 	}
 }

@@ -48,6 +48,7 @@ class RegionServant
 
 	List<ZoneDevelopment> zoneDevelopments;
 
+	static final int ZONE_GRID_WIDTH = 8;
 	static class ZoneDevelopment
 	{
 		int zoneNumber;
@@ -103,9 +104,6 @@ class RegionServant
 			{
 				it.remove();
 			}
-
-			e.getValue().gridx = (zoneNumber-1) % 8;
-			e.getValue().gridy = (zoneNumber-1) / 8;
 		}
 
 		//check under construction zones
@@ -530,6 +528,13 @@ class RegionServant
 		beginDeveloping(zoneNumber, toZoneType);
 	}
 
+	void beginDeveloping(int gridx, int gridy, ZoneType toZoneType)
+		throws InvalidZoneTransition
+	{
+		int zoneNumber = gridy * ZONE_GRID_WIDTH + gridx + 1;
+		beginDeveloping(zoneNumber, toZoneType);
+	}
+
 	void beginDeveloping(int zoneNumber, ZoneType toZoneType)
 		throws InvalidZoneTransition
 	{
@@ -543,6 +548,8 @@ class RegionServant
 		// designate zone for development
 		ZoneServant zone = new ZoneServant(this);
 		zone.type = ZoneType.UNDER_CONSTRUCTION;
+		zone.gridx = (zoneNumber-1) % ZONE_GRID_WIDTH;
+		zone.gridy = (zoneNumber-1) / ZONE_GRID_WIDTH;
 		zones.put(zoneNumber, zone);
 
 		// make a new development

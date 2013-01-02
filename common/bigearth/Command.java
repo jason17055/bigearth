@@ -174,6 +174,8 @@ class DevelopCommand extends Command
 	static final String COMMAND_NAME = "develop";
 	ZoneType fromZoneType;
 	ZoneType toZoneType;
+	int gridx;
+	int gridy;
 
 	public DevelopCommand()
 	{
@@ -190,6 +192,8 @@ class DevelopCommand extends Command
 			out.writeStringField("fromZoneType", fromZoneType.name());
 		if (toZoneType != null)
 			out.writeStringField("toZoneType", toZoneType.name());
+		out.writeNumberField("gridx", gridx);
+		out.writeNumberField("gridy", gridy);
 		out.writeEndObject();
 	}
 
@@ -203,6 +207,10 @@ class DevelopCommand extends Command
 				fromZoneType = ZoneType.valueOf(in.nextTextValue());
 			else if (s.equals("toZoneType"))
 				toZoneType = ZoneType.valueOf(in.nextTextValue());
+			else if (s.equals("gridx"))
+				gridx = in.nextIntValue(0);
+			else if (s.equals("gridy"))
+				gridy = in.nextIntValue(0);
 			else
 			{
 				in.nextToken();

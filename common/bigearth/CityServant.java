@@ -344,19 +344,12 @@ public class CityServant
 		cityChanged();
 	}
 
-	private void beginDeveloping()
+	private void beginDeveloping(DevelopCommand c)
 	{
-		DevelopCommand c = (DevelopCommand) currentOrders;
-
 		try
 		{
-			parentRegion.beginDeveloping(c.fromZoneType, c.toZoneType);
+			parentRegion.beginDeveloping(c.gridx, c.gridy, c.toZoneType);
 			checkDevelopmentCosts();
-		}
-		catch (RegionServant.ZoneTypeNotFound e)
-		{
-			activityFailed("No space left to develop.");
-			return;
 		}
 		catch (RegionServant.InvalidZoneTransition e)
 		{
@@ -424,7 +417,7 @@ public class CityServant
 		}
 		else if (currentOrders instanceof DevelopCommand)
 		{
-			beginDeveloping();
+			beginDeveloping((DevelopCommand) currentOrders);
 			return;
 		}
 		else if (currentOrders instanceof EquipCommand)

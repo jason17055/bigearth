@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class CityDialog extends JDialog
+	implements CityZonesView.Listener
 {
 	Client client;
 	Location cityLocation;
@@ -281,6 +282,7 @@ public class CityDialog extends JDialog
 		JPanel mainPane = new JPanel(new BorderLayout());
 
 		zonesView = new CityZonesView();
+		zonesView.addListener(this);
 		mainPane.add(zonesView, BorderLayout.CENTER);
 
 		JPanel buttonPane = new JPanel();
@@ -604,7 +606,33 @@ public class CityDialog extends JDialog
 
 	private void onNewLandClicked()
 	{
-		NewZoneDialog.showNewZoneDialog(this, client, cityLocation);
+		ZoneType type = NewZoneDialog.showNewZoneDialog(this, client, cityLocation);
+		if (type == null)
+			return;
+
+		zonesView.showNewBuildingCursor(type);
+	}
+
+	//implements CityZonesView.Listener
+	public void newBuildingRequested(ZoneType type, int gridx, int gridy)
+	{
+		try {
+
+		DevelopCommand c = new DevelopCommand();
+		c.fromZoneType = ZoneType.NATURAL;
+		c.toZoneType = type;
+		c.gridx = gridx;
+		c.gridy = gridy;
+		client.sendCityOrders(cityLocation, c);
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	private class MyListener
