@@ -478,7 +478,7 @@ public class CityDialog extends JDialog
 		}
 	}
 
-	private void examineLand_pasture(ZoneItem zi)
+	private void examineLand_pasture(String zoneName, ZoneInfo zone)
 	{
 		CommodityType [] commodities = new CommodityType [] {
 			CommodityType.SHEEP,
@@ -491,7 +491,7 @@ public class CityDialog extends JDialog
 		choices[0] = "--None--";
 		for (int i = 0; i < commodities.length; i++)
 		{
-			if (zi.commodity == commodities[i])
+			if (zone.commodity == commodities[i])
 				myChoice = i+1;
 			choices[i+1] = commodities[i].getDisplayName();
 		}
@@ -516,7 +516,7 @@ public class CityDialog extends JDialog
 		int selectIdx = select.getSelectedIndex();
 
 		SetZoneStorageCommand c = new SetZoneStorageCommand();
-		c.zone = zi.name;
+		c.zone = zoneName;
 		c.commodity = selectIdx >= 1 ? commodities[selectIdx-1] : null;
 		client.sendCityOrders(cityLocation, c);
 
@@ -530,7 +530,7 @@ public class CityDialog extends JDialog
 		}
 	}
 
-	private void examineLand_workshop(ZoneItem zi)
+	private void examineLand_workshop(String zoneName, ZoneInfo zone)
 	{
 		String [] choices = new String [] {
 			"--None--",
@@ -539,8 +539,8 @@ public class CityDialog extends JDialog
 			};
 		JComboBox<String> select = new JComboBox<>(choices);
 		select.setSelectedIndex(
-			zi.recipe == CommodityRecipe.STONE_TO_STONE_BLOCK ? 1 :
-			zi.recipe == CommodityRecipe.STONE_TO_STONE_WEAPON ? 2 : 0);
+			zone.recipe == CommodityRecipe.STONE_TO_STONE_BLOCK ? 1 :
+			zone.recipe == CommodityRecipe.STONE_TO_STONE_WEAPON ? 2 : 0);
 		JComponent [] inputs = new JComponent[] {
 			new JLabel("Choose product for this stone workshop"),
 			select
@@ -559,7 +559,7 @@ public class CityDialog extends JDialog
 		int selectIdx = select.getSelectedIndex();
 
 		SetFactoryRecipeCommand c = new SetFactoryRecipeCommand();
-		c.zone = zi.name;
+		c.zone = zoneName;
 		c.recipe = selectIdx == 1 ? CommodityRecipe.STONE_TO_STONE_BLOCK :
 			selectIdx == 2 ? CommodityRecipe.STONE_TO_STONE_WEAPON :
 			null;
@@ -577,27 +577,29 @@ public class CityDialog extends JDialog
 
 	private void onExamineLandClicked()
 	{
-/*
-		ZoneItem zi = landList.getSelectedValue();
-		if (zi == null)
+		String zoneName = zonesView.selectedZone;
+		if (zoneName == null)
 			return;
 
-		if (zi.type == ZoneType.STONE_WORKSHOP)
+		ZoneInfo zone = zonesView.zones.get(zoneName);
+		if (zone == null)
+			return;
+
+		if (zone.type == ZoneType.STONE_WORKSHOP)
 		{
-			examineLand_workshop(zi);
+			examineLand_workshop(zoneName, zone);
 			return;
 		}
-		else if (zi.type == ZoneType.PASTURE)
+		else if (zone.type == ZoneType.PASTURE)
 		{
-			examineLand_pasture(zi);
+			examineLand_pasture(zoneName, zone);
 			return;
 		}
 
 		JOptionPane.showMessageDialog(this,
-			"You selected " + zi.name,
+			"You selected " + zoneName,
 			"Examine Zone",
 			JOptionPane.PLAIN_MESSAGE);
-*/
 	}
 
 	private void onNewLandClicked()
