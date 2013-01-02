@@ -108,6 +108,30 @@ public class CityZonesView extends JComponent
 			ImageIcon zoneIcon = new ImageIcon(zoneIconUrl);
 			gr.drawImage(zoneIcon.getImage(), rect.x, rect.y, null);
 		}
+
+		CommodityType commodity = null;
+		if (zone.hasCommodity())
+		{
+			commodity = zone.commodity;
+		}
+		else if (zone.hasRecipe())
+		{
+			commodity = zone.recipe.getOutputCommodity();
+		}
+
+		if (commodity != null)
+		{
+			URL commodityIconUrl = commodity.getIconResource();
+			if (commodityIconUrl != null)
+			{
+				ImageIcon icon = new ImageIcon(commodityIconUrl);
+				gr.drawImage(icon.getImage(),
+					rect.x + rect.width - icon.getIconWidth(),
+					rect.y + rect.height - icon.getIconHeight(),
+					null
+					);
+			}
+		}
 	}
 
 	public void update(CityInfo city)
