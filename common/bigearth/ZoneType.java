@@ -30,6 +30,11 @@ public enum ZoneType
 		String n = name();
 		n = n.replace('_', '-');
 		n = n.toLowerCase();
-		return ZoneType.class.getResource("/zone_images/"+n+".png");
+		URL u = ZoneType.class.getResource("/zone_images/"+n+".png");
+		if (u != null)
+			return u;
+
+		u = ZoneType.class.getResource("/zone_images/default.png");
+		return u;
 	}
 }
