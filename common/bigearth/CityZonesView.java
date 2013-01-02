@@ -16,14 +16,35 @@ public class CityZonesView extends JComponent
 	static final int CELLHEIGHT = 48;
 	Point origin = new Point(0,0);
 	String selectedZone;
+	boolean showNewBuildingCursor = true;
+	class NewBuildingCursor
+	{
+		int gridx;
+		int gridy;
+		boolean legal;
+
+		Rectangle getBounds()
+		{
+			return new Rectangle(
+				origin.x + CELLWIDTH * gridx,
+				origin.y + CELLHEIGHT * gridy,
+				CELLWIDTH, CELLHEIGHT);
+		}
+	}
+	NewBuildingCursor newBuildingCursor;
 
 	public CityZonesView()
 	{
-		setPreferredSize(new Dimension(48*GRIDWIDTH,48*GRIDHEIGHT));
-		addMouseListener(new MouseAdapter() {
+		setPreferredSize(new Dimension(CELLWIDTH*GRIDWIDTH,CELLHEIGHT*GRIDHEIGHT));
+
+		MouseAdapter mouse = new MouseAdapter() {
 			public void mousePressed(MouseEvent ev) { onMousePressed(ev); }
 			public void mouseReleased(MouseEvent ev) { onMouseReleased(ev); }
-			});
+			public void mouseMoved(MouseEvent ev) { onMouseMoved(ev); }
+			public void mouseExited(MouseEvent ev) { onMouseExited(ev); }
+			};
+		addMouseListener(mouse);
+		addMouseMotionListener(mouse);
 	}
 
 	private Rectangle getZoneRectangle(ZoneInfo zone)
@@ -34,6 +55,59 @@ public class CityZonesView extends JComponent
 			CELLWIDTH,
 			CELLHEIGHT
 			);
+	}
+
+	private void setNewBuildingCursor(NewBuildingCursor nbc)
+	{
+		if (this.newBuildingCursor != null)
+		{
+			repaint(this.newBuildingCursor.getBounds());
+		}
+
+		this.newBuildingCursor = nbc;
+
+		if (this.newBuildingCursor != null)
+		{
+			repaint(this.newBuildingCursor.getBounds());
+		}
+	}
+		
+	private void onMouseExited(MouseEvent ev)
+	{
+		setNewBuildingCursor(null);
+	}
+
+	private void onMouseMoved(MouseEvent ev)
+	{
+		if (!showNewBuildingCursor)
+			return;
+
+		int gridx = (ev.getPoint().x - origin.x) / CELLWIDTH;
+		int gridy = (ev.getPoint().y - origin.y) / CELLHEIGHT;
+		if (gridx < 0 || gridx >= GRIDWIDTH
+			|| gridy < 0 || gridy >= GRIDHEIGHT
+			|| ev.getPoint().x < origin.x
+			|| ev.getPoint().y < origin.y)
+		{
+			setNewBuildingCursor(null);
+			return;
+		}
+
+		NewBuildingCursor nbc = new NewBuildingCursor();
+		nbc.gridx = gridx;
+		nbc.gridy = gridy;
+
+		// check whether any existing buildings occupy this space
+		nbc.legal = true;
+		for (ZoneInfo zone : zones.values())
+		{
+			if (zone.gridx == nbc.gridx && zone.gridy == nbc.gridy)
+			{
+				nbc.legal = false;
+			}
+		}
+
+		setNewBuildingCursor(nbc);
 	}
 
 	private void onMousePressed(MouseEvent ev)
@@ -97,6 +171,15 @@ public class CityZonesView extends JComponent
 				gr.setColor(new Color(255,255,255,128));
 				gr.fill(rect);
 			}
+		}
+		if (newBuildingCursor != null)
+		{
+			Rectangle rect = newBuildingCursor.getBounds();
+			gr.setColor(newBuildingCursor.legal ?
+				new Color(255, 255, 255, 128) :
+				new Color(255, 0, 0, 128)
+				);
+			gr.fill(rect);
 		}
 	}
 
