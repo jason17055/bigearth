@@ -619,10 +619,9 @@ public class CityDialog extends JDialog
 		try {
 
 		DevelopCommand c = new DevelopCommand();
-		c.fromZoneType = ZoneType.NATURAL;
-		c.toZoneType = type;
 		c.gridx = gridx;
 		c.gridy = gridy;
+		c.toZoneType = type;
 		client.sendCityOrders(cityLocation, c);
 
 		}

@@ -172,10 +172,9 @@ class SimpleCommand extends Command
 class DevelopCommand extends Command
 {
 	static final String COMMAND_NAME = "develop";
-	ZoneType fromZoneType;
-	ZoneType toZoneType;
 	int gridx;
 	int gridy;
+	ZoneType toZoneType;
 
 	public DevelopCommand()
 	{
@@ -188,12 +187,10 @@ class DevelopCommand extends Command
 	{
 		out.writeStartObject();
 		out.writeStringField("command", COMMAND_NAME);
-		if (fromZoneType != null)
-			out.writeStringField("fromZoneType", fromZoneType.name());
-		if (toZoneType != null)
-			out.writeStringField("toZoneType", toZoneType.name());
 		out.writeNumberField("gridx", gridx);
 		out.writeNumberField("gridy", gridy);
+		if (toZoneType != null)
+			out.writeStringField("toZoneType", toZoneType.name());
 		out.writeEndObject();
 	}
 
@@ -203,9 +200,7 @@ class DevelopCommand extends Command
 		while (in.nextToken() == JsonToken.FIELD_NAME)
 		{
 			String s = in.getCurrentName();
-			if (s.equals("fromZoneType"))
-				fromZoneType = ZoneType.valueOf(in.nextTextValue());
-			else if (s.equals("toZoneType"))
+			if (s.equals("toZoneType"))
 				toZoneType = ZoneType.valueOf(in.nextTextValue());
 			else if (s.equals("gridx"))
 				gridx = in.nextIntValue(0);

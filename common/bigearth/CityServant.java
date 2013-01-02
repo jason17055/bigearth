@@ -353,7 +353,7 @@ public class CityServant
 		}
 		catch (RegionServant.InvalidZoneTransition e)
 		{
-			activityFailed("Cannot develop "+c.toZoneType+" from "+c.fromZoneType+".");
+			activityFailed("Cannot build "+c.toZoneType+" at that location.");
 			return;
 		}
 
