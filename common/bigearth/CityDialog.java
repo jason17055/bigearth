@@ -288,6 +288,14 @@ public class CityDialog extends JDialog
 		JPanel buttonPane = new JPanel();
 		mainPane.add(buttonPane, BorderLayout.SOUTH);
 
+		JButton newBtn = new JButton("New...");
+		newBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev)
+			{
+				onNewLandClicked();
+			}});
+		buttonPane.add(newBtn);
+
 		JButton examineLandBtn = new JButton("Examine");
 		examineLandBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
@@ -296,13 +304,13 @@ public class CityDialog extends JDialog
 			}});
 		buttonPane.add(examineLandBtn);
 
-		JButton newBtn = new JButton("New...");
-		newBtn.addActionListener(new ActionListener() {
+		JButton destroyZoneBtn = new JButton("Destroy");
+		destroyZoneBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev)
 			{
-				onNewLandClicked();
+				onDestroyZoneClicked();
 			}});
-		buttonPane.add(newBtn);
+		buttonPane.add(destroyZoneBtn);
 
 		return mainPane;
 	}
@@ -575,6 +583,15 @@ public class CityDialog extends JDialog
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	private void onDestroyZoneClicked()
+	{
+		String zoneName = zonesView.selectedZone;
+		if (zoneName == null)
+			return;
+
+		//TODO
 	}
 
 	private void onExamineLandClicked()
