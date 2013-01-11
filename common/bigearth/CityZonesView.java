@@ -225,12 +225,24 @@ public class CityZonesView extends JComponent
 		}
 	}
 
+	HashMap<ZoneType,ImageIcon> zoneImages = new HashMap<>();
+	private ImageIcon loadZoneImage(ZoneType type)
+	{
+		if (!zoneImages.containsKey(type))
+		{
+			URL zoneIconUrl = type.getIconResource();
+			zoneImages.put(type,
+				zoneIconUrl != null ? new ImageIcon(zoneIconUrl) : null
+				);
+		}
+		return zoneImages.get(type);
+	}
+
 	private void drawZone(Graphics2D gr, Rectangle rect, ZoneInfo zone)
 	{
-		URL zoneIconUrl = zone.type.getIconResource();
-		if (zoneIconUrl != null)
+		ImageIcon zoneIcon = loadZoneImage(zone.type);
+		if (zoneIcon != null)
 		{
-			ImageIcon zoneIcon = new ImageIcon(zoneIconUrl);
 			gr.drawImage(zoneIcon.getImage(), rect.x, rect.y, null);
 		}
 
