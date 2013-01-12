@@ -1179,11 +1179,16 @@ class RegionServant
 
 		// randomly pick those units
 		Map<CommodityType, Long> picked = urn.pickMany(numGathered);
+		long sumPicked = 0;
 		for (CommodityType ct : picked.keySet())
 		{
 			long amt = picked.get(ct);
 			long taken = surfaceMinerals.subtract(ct, amt);
 			stock.add(ct, taken);
+			sumPicked += amt;
 		}
+
+		if (sumPicked != 0)
+			stockChanged();
 	}
 }
