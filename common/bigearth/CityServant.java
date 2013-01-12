@@ -363,8 +363,7 @@ public class CityServant
 
 	private void setFactoryRecipe(SetFactoryRecipeCommand c)
 	{
-		int i = c.zone.lastIndexOf('/');
-		int zoneNumber = Integer.parseInt(c.zone.substring(i+1));
+		int zoneNumber = getZoneNumberFromName(c.zone);
 		ZoneServant zone = parentRegion.zones.get(zoneNumber);
 		if (zone != null)
 		{
