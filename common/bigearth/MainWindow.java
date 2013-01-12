@@ -423,13 +423,31 @@ public class MainWindow extends JFrame
 	{
 		if (map == null)
 			return;
-		if (!view.selection.isRegion())
+
+		int regionId;
+
+		if (view.selection.isMob())
+		{
+			MobListModel mobList = client.mobs;
+			MobInfo mob = mobList.mobs.get(view.selection.getMob());
+			regionId = ((SimpleLocation) mob.location).regionId;
+		}
+		else if (view.selection.isRegion())
+		{
+			regionId = view.selection.getRegion();
+		}
+		else
+		{
+			JOptionPane.showMessageDialog(this,
+				"Select a region first",
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
 			return;
+		}
 
 		RegionEmblem [] emblemsList = RegionEmblem.values();
 		JComponent [] inputs = new JComponent[emblemsList.length];
 
-		int regionId = view.selection.getRegion();
 		RegionProfile rp = map.getRegion(regionId);
 		for (int i = 0; i < emblemsList.length; i++)
 		{
