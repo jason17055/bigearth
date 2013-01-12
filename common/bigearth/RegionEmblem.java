@@ -24,4 +24,9 @@ public enum RegionEmblem
 		default: throw new Error("unreachable");
 		}
 	}
+
+	public String getDisplayName()
+	{
+		return name();
+	}
 }

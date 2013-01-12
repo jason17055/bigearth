@@ -174,6 +174,31 @@ public class Client
 			interpretError(conn);
 	}
 
+	void editMap(Location location, RegionProfile newProfile)
+		throws IOException
+	{
+		String qs = "location="+URLEncoder.encode(location.toString(), "UTF-8");
+		HttpURLConnection conn = makeRequest("POST", "/my/map?" + qs);
+		conn.setDoOutput(true);
+
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		{
+		JsonGenerator out = new JsonFactory().createJsonGenerator(bytes, JsonEncoding.UTF8);
+		newProfile.write(out);
+		out.close();
+		}
+
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Content-Length", Integer.toString(bytes.size()));
+		OutputStream out = conn.getOutputStream();
+		out.write(bytes.toByteArray());
+		out.close();
+
+		int status = conn.getResponseCode();
+		if (status != 204)
+			interpretError(conn);
+	}
+
 	CityInfo getCity(Location cityLocation)
 		throws IOException
 	{

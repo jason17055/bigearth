@@ -1,0 +1,21 @@
+/login
+  validates a username and password
+  returns a session cookie and world information
+
+/cities
+
+/city?location=XXX
+  GET or POST information about a specific city
+
+/events
+
+/my/map
+  GET a snapshot of the player's map
+
+/my/map?location=XYZ
+  POST allows user to make edits to the map (e.g. adding/removing emblems)
+
+/my/mobs
+
+/mob?id=XXX
+  POST orders to a specific mob

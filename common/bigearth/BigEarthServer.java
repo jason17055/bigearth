@@ -675,6 +675,63 @@ class GetMapServlet extends BigEarthServlet
 			lock.release();
 		}
 	}
+
+	private RegionProfile parseRegionProfile(HttpServletRequest request)
+		throws IOException
+	{
+		JsonParser in = new JsonFactory().createJsonParser(request.getInputStream());
+		RegionProfile prof = RegionProfile.parse_s(in, server.world.config);
+		in.close();
+
+		return prof;
+	}
+
+	@Override
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
+		throws IOException
+	{
+		final Session s = checkSession(request, response);
+		if (s == null)
+			return;
+
+		String locStr = request.getParameter("location");
+		final Location loc = LocationHelper.parse(locStr, server.world.config);
+		final RegionProfile prof = parseRegionProfile(request);
+
+		class ResultInfo
+		{
+			int errorCode = 0;
+			String errorMessage;
+		}
+		final ResultInfo result = new ResultInfo();
+
+		server.world.invokeAndWait(new Runnable() {
+		public void run()
+		{
+
+		MapModel map = server.world.leaders.get(s.user).map;
+		if (map == null)
+		{
+			result.errorCode = HttpServletResponse.SC_NOT_FOUND;
+			result.errorMessage = "Invalid map";
+			return;
+		}
+
+		// actually update the map
+		map.updateRegion(loc, prof);
+
+		}
+		});
+
+		if (result.errorCode != 0)
+		{
+			doFailure(response, result.errorCode, result.errorMessage);
+			return;
+		}
+
+		// report success
+		doSuccessNoContent(response);
+	}
 }
 
 class MobOrdersServlet extends BigEarthServlet

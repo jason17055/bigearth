@@ -239,6 +239,16 @@ public class MainWindow extends JFrame
 			}});
 		ordersMenu.add(menuItem);
 
+		JMenu regionMenu = new JMenu("Region");
+		menuBar.add(regionMenu);
+
+		menuItem = new JMenuItem("Emblems...");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onEmblemsClicked();
+			}});
+		regionMenu.add(menuItem);
+
 		setJMenuBar(menuBar);
 	}
 
@@ -407,6 +417,55 @@ public class MainWindow extends JFrame
 				mobName, JOptionPane.INFORMATION_MESSAGE);
 		}
 		});
+	}
+
+	void onEmblemsClicked()
+	{
+		if (map == null)
+			return;
+		if (!view.selection.isRegion())
+			return;
+
+		RegionEmblem [] emblemsList = RegionEmblem.values();
+		JComponent [] inputs = new JComponent[emblemsList.length];
+
+		int regionId = view.selection.getRegion();
+		RegionProfile rp = map.getRegion(regionId);
+		for (int i = 0; i < emblemsList.length; i++)
+		{
+			inputs[i] = new JCheckBox(emblemsList[i].getDisplayName(),
+					rp.hasEmblem(emblemsList[i])
+				);
+		}
+
+		int rv = JOptionPane.showOptionDialog(this, inputs,
+			"Region Emblems",
+			JOptionPane.OK_CANCEL_OPTION,
+			JOptionPane.PLAIN_MESSAGE, null, null, null);
+		if (rv != JOptionPane.OK_OPTION)
+			return;
+
+		RegionProfile newProfile = new RegionProfile();
+		for (int i = 0; i < inputs.length; i++)
+		{
+			if (((JCheckBox) inputs[i]).isSelected())
+			{
+				newProfile.emblems.add(emblemsList[i]);
+			}
+		}
+
+		try
+		{
+			client.editMap(new SimpleLocation(regionId), newProfile);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	void onFlagClicked()
