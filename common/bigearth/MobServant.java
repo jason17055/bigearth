@@ -749,4 +749,28 @@ public class MobServant
 	{
 		return population;
 	}
+
+	void cancelActivity()
+	{
+		if (this.wakeUp != null)
+		{
+			getWorldMaster().scheduler.cancel(this.wakeUp);
+			this.wakeUp = null;
+		}
+	}
+
+	/**
+	 * Checks whether this mob is "hot", i.e. cannot
+	 * change activity until a cooldown period has elapsed.
+	 */
+	boolean isHot()
+	{
+		if (activity == null)
+			return false;
+
+		if (activity.isActivity("move"))
+			return true;
+
+		return false;
+	}
 }

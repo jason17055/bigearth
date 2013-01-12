@@ -798,11 +798,6 @@ class RegionServant
 		world.notifyLeader(user, n);
 	}
 
-	void mobHunt(final String mobName, final MobServant mob)
-	{
-		
-	}
-
 	/**
 	 * Called to start a mob activity.
 	 */
@@ -836,13 +831,16 @@ class RegionServant
 		assert mobName != null;
 		assert command != null;
 
-		if (mobIsHot(mobName))
-			return;
-		mobCancelActivity(mobName);
-
 		MobServant mob = getMob(mobName);
 		assert mob != null;
 
+		if (mob.isHot())
+		{
+			// cannot change activity at this time
+			return;
+		}
+
+		mob.cancelActivity();
 		mob.activity = command;
 		mob.activityStarted = currentTime();
 		mob.activityError = false;
@@ -903,37 +901,6 @@ class RegionServant
 			mob.mobChanged();
 		}
 		}, wakeUp);
-	}
-
-	/**
-	 * Checks whether the specified mob is "hot", i.e. cannot
-	 * change activity until a cooldown period has elapsed.
-	 */
-	boolean mobIsHot(String mobName)
-	{
-		MobServant mob = getMob(mobName);
-		assert mob != null;
-
-		if (mob.activity == null)
-			return false;
-
-		if (mob.activity.isActivity("move"))
-			return true;
-
-		return false;
-	}
-
-	void mobCancelActivity(String mobName)
-	{
-		MobServant mob = getMob(mobName);
-		assert mob != null;
-		assert !mobIsHot(mobName);
-
-		if (mob.wakeUp != null)
-		{
-			world.scheduler.cancel(mob.wakeUp);
-			mob.wakeUp = null;
-		}
 	}
 
 	public int getWildlifeCount()
