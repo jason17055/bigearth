@@ -142,6 +142,7 @@ class RegionProfile
 		}
 		for (RegionEmblem emblem : ref.emblems)
 		{
+			this.emblems.remove(emblem.getOpposite());
 			this.emblems.add(emblem);
 		}
 		return n;
