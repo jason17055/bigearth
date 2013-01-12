@@ -980,33 +980,7 @@ public class CityServant
 		double gatheringPoints = getProduction(CityJob.GATHER_RESOURCES);
 		production.remove(CityJob.GATHER_RESOURCES);
 
-		int numNatural = parentRegion.getZoneCount(ZoneType.NATURAL);
-		if (numNatural == 0)
-			return;
-
-		double maxYield = numNatural * 5.0;
-		double z = maxYield - maxYield * Math.exp(-1 * gatheringPoints / maxYield);
-
-		long numGathered = (long)Math.round(z * 0.25);
-		System.out.printf("%.1f workers gathered %d units\n",
-				gatheringPoints,
-				(int) numGathered
-				);
-
-		ProbabilityUrn<CommodityType> urn = new ProbabilityUrn<CommodityType>();
-		for (CommodityType ct : parentRegion.surfaceMinerals.getCommodityTypesArray())
-		{
-			urn.add(ct, parentRegion.surfaceMinerals.getQuantity(ct));
-		}
-
-		Map<CommodityType, Long> picked = urn.pickMany(numGathered);
-		for (CommodityType ct : picked.keySet())
-		{
-			long amt = picked.get(ct);
-			long taken = parentRegion.surfaceMinerals.subtract(ct, amt);
-			parentRegion.stock.add(ct, taken);
-			System.out.println("  "+taken+" " + ct);
-		}
+		parentRegion.applyProduction_gatherResources(gatheringPoints);
 	}
 
 	private void endOfYear_livestock()

@@ -1216,6 +1216,7 @@ System.err.println(e);
 		assert !activityName.equals("");
 
 		if (activityName.equals("gather-wood") ||
+			activityName.equals("gather-minerals") ||
 			activityName.equals("hunt"))
 		{
 			return "M"; // M == Mine

@@ -209,8 +209,20 @@ class RegionServant
 		return getZoneCount(ZoneType.FARM);
 	}
 
+	public int getNaturalZoneCount()
+	{
+		final int ZONES_PER_REGION = getWorldConfig().zonesPerRegion;
+		int countDeveloped = zones.size();
+		return ZONES_PER_REGION - countDeveloped;
+	}
+
 	public int getZoneCount(ZoneType zoneType)
 	{
+		assert zoneType != null;
+
+		if (zoneType == ZoneType.NATURAL)
+			return getNaturalZoneCount();
+
 		int count = 0;
 		for (ZoneServant zone : zones.values())
 		{
@@ -1145,5 +1157,33 @@ class RegionServant
 			population += mob.getPopulation();
 		}
 		return population;
+	}
+
+	void applyProduction_gatherResources(double gatheringPoints)
+	{
+		int numNatural = getZoneCount(ZoneType.NATURAL);
+		if (numNatural == 0)
+			return;
+
+		// determine how many units can be collected
+		double maxYield = numNatural * 5.0;
+		double z = maxYield - maxYield * Math.exp(-1 * gatheringPoints / maxYield);
+		long numGathered = (long)Math.round(z * 0.25);
+
+		// place all surface minerals of this region into an "urn"
+		ProbabilityUrn<CommodityType> urn = new ProbabilityUrn<CommodityType>();
+		for (CommodityType ct : surfaceMinerals.getCommodityTypesArray())
+		{
+			urn.add(ct, surfaceMinerals.getQuantity(ct));
+		}
+
+		// randomly pick those units
+		Map<CommodityType, Long> picked = urn.pickMany(numGathered);
+		for (CommodityType ct : picked.keySet())
+		{
+			long amt = picked.get(ct);
+			long taken = surfaceMinerals.subtract(ct, amt);
+			stock.add(ct, taken);
+		}
 	}
 }

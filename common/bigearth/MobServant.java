@@ -13,6 +13,7 @@ public class MobServant
 	String owner;
 	Location location;
 	Command activity;
+	CityJob regionActivity; //not actually used
 	long activityStarted;
 	long activityRequiredTime;
 	boolean activityError;
@@ -119,6 +120,8 @@ public class MobServant
 				m.owner = in.nextTextValue();
 			else if (s.equals("activity"))
 				m.activity = Command.parse(in, parentRegion.getWorldConfig());
+			else if (s.equals("regionActivity"))
+				m.regionActivity = CityJob.valueOf(in.nextTextValue());
 			else if (s.equals("activityStarted"))
 			{
 				in.nextToken();
@@ -161,6 +164,8 @@ public class MobServant
 			activity.write(out);
 			out.writeNumberField("activityStarted", activityStarted);
 		}
+		if (regionActivity != null)
+			out.writeStringField("regionActivity", regionActivity.name());
 		out.writeFieldName("stock");
 		stock.write(out);
 		out.writeNumberField("hunger", hunger);
@@ -459,6 +464,11 @@ public class MobServant
 			);
 	}
 
+	private void startGatheringMinerals()
+	{
+		activityRequiredTime = getWorldConfig().ticksPerYear;
+	}
+
 	void onActivityStarted()
 	{
 		if (activity.isActivity("hunt"))
@@ -468,6 +478,10 @@ public class MobServant
 		else if (activity.isActivity("gather-wood"))
 		{
 			activityRequiredTime = 5000;
+		}
+		else if (activity.isActivity("gather-minerals"))
+		{
+			startGatheringMinerals();
 		}
 		else if (activity.isActivity("drop"))
 		{
@@ -523,6 +537,10 @@ public class MobServant
 		{
 			completedGatheringWood();
 		}
+		else if (activity.isActivity("gather-minerals"))
+		{
+			completedGatheringMinerals();
+		}
 		else if (activity.isActivity("build-city"))
 		{
 			completedBuildingCity();
@@ -550,6 +568,11 @@ public class MobServant
 	private void completedGatheringWood()
 	{
 		addCommodity(CommodityType.WOOD, 1);
+	}
+
+	private void completedGatheringMinerals()
+	{
+		parentRegion.applyProduction_gatherResources(this.population);
 	}
 
 	private void completedBuildingCity()
