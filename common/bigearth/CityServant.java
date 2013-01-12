@@ -898,6 +898,8 @@ public class CityServant
 
 	private void endOfYear_developLand()
 	{
+		checkDevelopmentCosts();
+
 		double pts = getProduction(CityJob.DEVELOP_LAND);
 		if (pts != 0.0)
 		{
