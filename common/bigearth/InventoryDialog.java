@@ -14,6 +14,7 @@ public class InventoryDialog extends JDialog
 	MyListener listner;
 
 	JTable inventoryTable;
+	CommodityBagTableModel inventoryModel;
 	JTable availableTable;
 	CommodityBagTableModel availableModel;
 	JButton closeBtn;
@@ -31,7 +32,8 @@ public class InventoryDialog extends JDialog
 		JPanel mainPane = new JPanel(new GridBagLayout());
 		getContentPane().add(mainPane, BorderLayout.CENTER);
 
-		inventoryTable = new JTable();
+		inventoryModel = new CommodityBagTableModel();
+		inventoryTable = new JTable(inventoryModel);
 		JScrollPane scrollPane = new JScrollPane(inventoryTable);
 		inventoryTable.setFillsViewportHeight(false);
 		inventoryTable.setPreferredScrollableViewportSize(
@@ -121,16 +123,7 @@ public class InventoryDialog extends JDialog
 		MobInfo mob = mobList.mobs.get(mobName);
 		mobLocation = mob.location;
 
-		CommodityType [] commodities = mob.stock.getCommodityTypesArray();
-		Object [][] data = new Object[commodities.length][2];
-		for (int i = 0; i < commodities.length; i++)
-		{
-			data[i][0] = commodities[i];
-			data[i][1] = new Long(mob.getStock(commodities[i]));
-		}
-
-		DefaultTableModel model = new DefaultTableModel(data, COLUMN_NAMES);
-		inventoryTable.setModel(model);
+		inventoryModel.refreshFrom(mob.stock);
 	}
 
 	private void reloadRegionStock()
@@ -149,20 +142,6 @@ public class InventoryDialog extends JDialog
 		{
 			availableTable.setVisible(false);
 		}
-	}
-
-	private void loadTableFromStock(JTable jtable, CommoditiesBag stock)
-	{
-		CommodityType [] commodities = stock.getCommodityTypesArray();
-		Object [][] data = new Object[commodities.length][2];
-		for (int i = 0; i < commodities.length; i++)
-		{
-			data[i][0] = commodities[i];
-			data[i][1] = new Long(stock.getQuantity(commodities[i]));
-		}
-
-		DefaultTableModel model = new DefaultTableModel(data, COLUMN_NAMES);
-		jtable.setModel(model);
 	}
 
 	private void onTakeClicked()
