@@ -591,7 +591,20 @@ public class CityDialog extends JDialog
 		if (zoneName == null)
 			return;
 
-		//TODO
+		try
+		{
+		DestroyZoneCommand c = new DestroyZoneCommand();
+		c.zone = zoneName;
+		client.sendCityOrders(cityLocation, c);
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace(System.err);
+			JOptionPane.showMessageDialog(this, e,
+				"Error",
+				JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	private void onExamineLandClicked()

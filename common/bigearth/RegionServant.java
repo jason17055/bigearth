@@ -603,6 +603,17 @@ class RegionServant
 		world.regionChanged(regionId);
 	}
 
+	void destroyZone(int zoneNumber)
+	{
+		ZoneServant zone = zones.get(zoneNumber);
+		if (zone != null)
+		{
+			zone.stop();
+			zones.remove(zoneNumber);
+			world.regionChanged(regionId);
+		}
+	}
+
 	static RegionServant create(WorldMaster world, int regionId)
 	{
 		RegionServant m = new RegionServant(world, regionId);

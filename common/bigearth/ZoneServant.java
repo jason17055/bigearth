@@ -111,4 +111,8 @@ public class ZoneServant
 			}
 		}
 	}
+
+	void stop()
+	{
+	}
 }

@@ -51,7 +51,13 @@ public abstract class Command
 			throw new InputMismatchException();
 
 		String commandName = in.nextTextValue();
-		if (commandName.equals(DevelopCommand.COMMAND_NAME))
+		if (commandName.equals(DestroyZoneCommand.COMMAND_NAME))
+		{
+			DestroyZoneCommand n = new DestroyZoneCommand();
+			n.parse_cont(in, world);
+			return n;
+		}
+		else if (commandName.equals(DevelopCommand.COMMAND_NAME))
 		{
 			DevelopCommand n = new DevelopCommand();
 			n.parse_cont(in, world);
@@ -289,6 +295,46 @@ class RenameSelfCommand extends Command
 			String s = in.getCurrentName();
 			if (s.equals("newName"))
 				newName = in.nextTextValue();
+			else
+			{
+				in.nextToken();
+				in.skipChildren();
+				System.err.println("unrecognized command property: " + s);
+			}
+		}
+
+		assert in.getCurrentToken() == JsonToken.END_OBJECT;
+	}
+}
+
+class DestroyZoneCommand extends Command
+{
+	static final String COMMAND_NAME = "destroy-zone";
+	String zone;
+
+	public DestroyZoneCommand()
+	{
+		super(COMMAND_NAME);
+	}
+
+	@Override
+	public void write(JsonGenerator out)
+		throws IOException
+	{
+		out.writeStartObject();
+		out.writeStringField("command", COMMAND_NAME);
+		out.writeStringField("zone", zone);
+		out.writeEndObject();
+	}
+
+	void parse_cont(JsonParser in, WorldConfigIfc world)
+		throws IOException
+	{
+		while (in.nextToken() == JsonToken.FIELD_NAME)
+		{
+			String s = in.getCurrentName();
+			if (s.equals("zone"))
+				zone = in.nextTextValue();
 			else
 			{
 				in.nextToken();

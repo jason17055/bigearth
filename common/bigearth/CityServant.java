@@ -373,16 +373,28 @@ public class CityServant
 		}
 	}
 
+	private int getZoneNumberFromName(String zoneName)
+	{
+		int i = zoneName.lastIndexOf('/');
+		int zoneNumber = Integer.parseInt(zoneName.substring(i+1));
+		return zoneNumber;
+	}
+
 	private void setZoneStorage(SetZoneStorageCommand c)
 	{
-		int i = c.zone.lastIndexOf('/');
-		int zoneNumber = Integer.parseInt(c.zone.substring(i+1));
+		int zoneNumber = getZoneNumberFromName(c.zone);
 		ZoneServant zone = parentRegion.zones.get(zoneNumber);
 		if (zone != null)
 		{
 			zone.commodity = c.commodity;
 			cityChanged();
 		}
+	}
+
+	private void destroyZone(DestroyZoneCommand c)
+	{
+		int zoneNumber = getZoneNumberFromName(c.zone);
+		parentRegion.destroyZone(zoneNumber);
 	}
 
 	private void beginEquipping()
@@ -434,6 +446,10 @@ public class CityServant
 		{
 			setZoneStorage((SetZoneStorageCommand) currentOrders);
 			return;
+		}
+		else if (currentOrders instanceof DestroyZoneCommand)
+		{
+			destroyZone((DestroyZoneCommand) currentOrders);
 		}
 
 		// unrecognized command
