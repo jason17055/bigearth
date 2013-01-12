@@ -885,11 +885,29 @@ System.err.println(e);
 		if (r.stock.isEmpty())
 			return;
 
-		int [] x_coords = new int[] { p.x - 8, p.x, p.x + 8 };
-		int [] y_coords = new int[] { p.y + 4, p.y - 10, p.y + 4 };
+		if (r.stock.getQuantity(CommodityType.GOLD) != 0)
+			drawRegionEmblemReal(gr, p, RegionEmblem.GOLD);
+		else
+			drawRegionEmblemReal(gr, p, RegionEmblem.STOCKPILE);
+	}
 
-		gr.setColor(Color.MAGENTA);
-		gr.fillPolygon(x_coords, y_coords, x_coords.length);
+	HashMap<RegionEmblem, ImageIcon> emblemImages = new HashMap<>();
+	private void drawRegionEmblemReal(Graphics2D gr, Point p, RegionEmblem emblem)
+	{
+		URL iconUrl = emblem.getIconResource();
+		if (iconUrl != null)
+		{
+			ImageIcon icon = new ImageIcon(iconUrl);
+			gr.drawImage(icon.getImage(), p.x - icon.getIconWidth()/2, p.y - icon.getIconHeight()/2, null);
+		}
+		else
+		{
+			int [] x_coords = new int[] { p.x - 8, p.x, p.x + 8 };
+			int [] y_coords = new int[] { p.y + 4, p.y - 10, p.y + 4 };
+
+			gr.setColor(Color.MAGENTA);
+			gr.fillPolygon(x_coords, y_coords, x_coords.length);
+		}
 	}
 
 	void drawRegionArea(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
