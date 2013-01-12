@@ -13,11 +13,13 @@ class RegionProfile
 	RegionSideDetail.SideFeature [] sides;
 	RegionCornerDetail.PointFeature [] corners;
 	CommoditiesBag stock;
+	HashSet<RegionEmblem> emblems;
 
 	public RegionProfile()
 	{
 		sides = new RegionSideDetail.SideFeature[6];
 		corners = new RegionCornerDetail.PointFeature[6];
+		emblems = new HashSet<RegionEmblem>();
 	}
 
 	public BiomeType getBiome()
@@ -38,6 +40,11 @@ class RegionProfile
 	public boolean hasCitySize()
 	{
 		return citySize != 0;
+	}
+
+	public boolean hasEmblem(RegionEmblem emblem)
+	{
+		return emblems.contains(emblem);
 	}
 
 	public boolean hasStock()
@@ -90,6 +97,8 @@ class RegionProfile
 				if (this.corners[i] != rhs.corners[i])
 					return false;
 			}
+			if (!this.emblems.equals(rhs.emblems))
+				return false;
 			return true;
 		}
 		else
@@ -131,6 +140,10 @@ class RegionProfile
 			if (ref.corners[i] != null)
 				n.corners[i] = ref.corners[i];
 		}
+		for (RegionEmblem emblem : ref.emblems)
+		{
+			this.emblems.add(emblem);
+		}
 		return n;
 	}
 
@@ -164,6 +177,16 @@ class RegionProfile
 				out.writeFieldName("corner"+i);
 				out.writeString(corners[i].name());
 			}
+		}
+		if (!emblems.isEmpty())
+		{
+			out.writeFieldName("emblems");
+			out.writeStartArray();
+			for (RegionEmblem emblem : emblems)
+			{
+				out.writeString(emblem.name());
+			}
+			out.writeEndArray();
 		}
 		out.writeEndObject();
 	}
@@ -218,11 +241,27 @@ class RegionProfile
 				corners[4] = RegionCornerDetail.PointFeature.valueOf(in.nextTextValue());
 			else if (s.equals("corner5"))
 				corners[5] = RegionCornerDetail.PointFeature.valueOf(in.nextTextValue());
+			else if (s.equals("emblems"))
+				parseEmblems(in);
 			else
 			{
 				in.nextToken();
 				in.skipChildren();
 			}
+		}
+	}
+
+	private void parseEmblems(JsonParser in)
+		throws IOException
+	{
+		in.nextToken();
+		if (in.getCurrentToken() != JsonToken.START_ARRAY)
+			throw new InputMismatchException();
+
+		while (in.nextToken() != JsonToken.END_ARRAY)
+		{
+			RegionEmblem em = RegionEmblem.valueOf(in.getText());
+			emblems.add(em);
 		}
 	}
 
