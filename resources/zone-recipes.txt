@@ -45,5 +45,12 @@
 "workRequired":250,
 "techRequired":"pottery-15",
 "required":{"WOOD":50,"STONE":100}
+},
+{
+"fromZoneType":"NATURAL",
+"toZoneType":"TEMPLE",
+"workRequired":250,
+"techRequired":"burial-20",
+"required":{"GOLD":5,"STONE_BLOCK":200}
 }
 ]

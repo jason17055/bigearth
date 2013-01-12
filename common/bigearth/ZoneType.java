@@ -13,7 +13,8 @@ public enum ZoneType
 	FARM,
 	PASTURE,
 	STONE_WORKSHOP,
-	POTTERY;
+	POTTERY,
+	TEMPLE;
 
 	public String getDisplayName()
 	{
