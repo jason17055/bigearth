@@ -876,6 +876,19 @@ System.err.println(e);
 
 	void drawRegionEmblem(Graphics2D gr, int regionId, RegionProfile r, Point p)
 	{
+		if (r.hasEmblem(RegionEmblem.GOLD))
+		{
+			drawRegionEmblemReal(gr, p, RegionEmblem.GOLD);
+			return;
+		}
+		else if (r.hasEmblem(RegionEmblem.STOCKPILE))
+		{
+			drawRegionEmblemReal(gr, p, RegionEmblem.STOCKPILE);
+			return;
+		}
+
+		// auto-generate a stockpile emblem in some cases
+
 		if (!r.hasStock())
 			return;
 
@@ -885,10 +898,7 @@ System.err.println(e);
 		if (r.stock.isEmpty())
 			return;
 
-		if (r.stock.getQuantity(CommodityType.GOLD) != 0)
-			drawRegionEmblemReal(gr, p, RegionEmblem.GOLD);
-		else
-			drawRegionEmblemReal(gr, p, RegionEmblem.STOCKPILE);
+		drawRegionEmblemReal(gr, p, RegionEmblem.STOCKPILE);
 	}
 
 	HashMap<RegionEmblem, ImageIcon> emblemImages = new HashMap<>();
