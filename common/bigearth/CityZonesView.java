@@ -76,6 +76,8 @@ public class CityZonesView extends JComponent
 
 	private Rectangle getZoneRectangle(ZoneInfo zone)
 	{
+		assert zone != null;
+
 		return new Rectangle(
 			origin.x+zone.gridx*CELLWIDTH,
 			origin.y+zone.gridy*CELLHEIGHT,
@@ -276,6 +278,10 @@ public class CityZonesView extends JComponent
 		assert city.hasZones();
 
 		this.zones = city.zones;
+		if (selectedZone != null && !zones.containsKey(selectedZone))
+		{
+			selectedZone = null;
+		}
 		repaint();
 	}
 
