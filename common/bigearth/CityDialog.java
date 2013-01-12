@@ -488,6 +488,15 @@ public class CityDialog extends JDialog
 		}
 	}
 
+	private void examineLand_other(String zoneName, ZoneInfo zone)
+	{
+		JLabel typeLbl = new JLabel("Zone: "+zone.type.getDisplayName());
+		JOptionPane.showMessageDialog(this,
+			typeLbl,
+			"Examine Zone",
+			JOptionPane.PLAIN_MESSAGE);
+	}
+
 	private void examineLand_pasture(String zoneName, ZoneInfo zone)
 	{
 		CommodityType [] commodities = new CommodityType [] {
@@ -627,11 +636,10 @@ public class CityDialog extends JDialog
 			examineLand_pasture(zoneName, zone);
 			return;
 		}
-
-		JOptionPane.showMessageDialog(this,
-			"You selected " + zoneName,
-			"Examine Zone",
-			JOptionPane.PLAIN_MESSAGE);
+		else
+		{
+			examineLand_other(zoneName, zone);
+		}
 	}
 
 	private void onNewLandClicked()
