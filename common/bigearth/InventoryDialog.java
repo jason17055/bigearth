@@ -15,6 +15,7 @@ public class InventoryDialog extends JDialog
 
 	JTable inventoryTable;
 	JTable availableTable;
+	CommodityBagTableModel availableModel;
 	JButton closeBtn;
 
 	InventoryDialog(Window owner, Client client, String mobName)
@@ -44,7 +45,8 @@ public class InventoryDialog extends JDialog
 		c1.gridy++;
 		mainPane.add(scrollPane, c1);
 
-		availableTable = new JTable();
+		availableModel = new CommodityBagTableModel();
+		availableTable = new JTable(availableModel);
 		JScrollPane scrollPane2 = new JScrollPane(availableTable);
 		availableTable.setFillsViewportHeight(false);
 		availableTable.setPreferredScrollableViewportSize(
@@ -140,7 +142,7 @@ public class InventoryDialog extends JDialog
 
 		if (region.hasStock())
 		{
-			loadTableFromStock(availableTable, region.stock);
+			availableModel.refreshFrom(region.stock);
 			availableTable.setVisible(true);
 		}
 		else
