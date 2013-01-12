@@ -201,7 +201,7 @@ public class CityDialog extends JDialog
 		c3.gridx = 2;
 		c3.anchor = GridBagConstraints.EAST;
 
-		c1.gridy = c2.gridy = c2.gridy = nextStockItemRow;
+		c1.gridy = c2.gridy = c3.gridy = nextStockItemRow;
 		nextStockItemRow++;
 
 		StockItem item = new StockItem();
