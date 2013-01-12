@@ -932,20 +932,27 @@ public class CityServant
 		double manufacturePoints = getProduction(CityJob.MANUFACTURE);
 		production.remove(CityJob.MANUFACTURE);
 
-		int numFactories = getFactoryCount();
-		if (numFactories == 0)
-			return;
-
-		double maxYield = numFactories * 100.0;
-		double z = maxYield - maxYield * Math.exp(-1 * manufacturePoints / maxYield);
-
+		ArrayList<ZoneServant> factories = new ArrayList<>();
 		for (ZoneServant zone : parentRegion.zones.values())
 		{
-			if (zone.type == ZoneType.STONE_WORKSHOP)
+			if (zone.type == ZoneType.STONE_WORKSHOP && zone.recipe != null)
 			{
-				assert zone.recipe != null;
-				processManufacturing(zone.recipe, z/numFactories);
+				factories.add(zone);
 			}
+		}
+
+		if (factories.isEmpty())
+			return;
+
+		double maxYield = factories.size() * 100.0;
+		double z = maxYield - maxYield * Math.exp(-1 * manufacturePoints / maxYield);
+		double yieldPerFactory = z / factories.size();
+
+		for (ZoneServant zone : factories)
+		{
+			assert zone.type == ZoneType.STONE_WORKSHOP;
+			assert zone.recipe != null;
+			processManufacturing(zone.recipe, yieldPerFactory);
 		}
 	}
 
