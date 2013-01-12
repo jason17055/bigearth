@@ -13,6 +13,7 @@ import java.util.*;
 public class ZoneServant
 {
 	transient RegionServant parentRegion;
+	transient int zoneNumber;
 
 	ZoneType type;
 	int gridx;
@@ -20,15 +21,16 @@ public class ZoneServant
 	CommodityRecipe recipe;
 	CommodityType commodity;
 
-	ZoneServant(RegionServant parentRegion)
+	ZoneServant(RegionServant parentRegion, int zoneNumber)
 	{
 		this.parentRegion = parentRegion;
+		this.zoneNumber = zoneNumber;
 	}
 
-	public static ZoneServant parse(JsonParser in, RegionServant parentRegion)
+	public static ZoneServant parse(JsonParser in, RegionServant parentRegion, int zoneNumber)
 		throws IOException
 	{
-		ZoneServant zone = new ZoneServant(parentRegion);
+		ZoneServant zone = new ZoneServant(parentRegion, zoneNumber);
 		zone.parse_real(in);
 		return zone;
 	}
@@ -98,6 +100,14 @@ public class ZoneServant
 		zi.gridheight = 1;
 		zi.recipe = recipe;
 		zi.commodity = commodity;
+
+		if (type == ZoneType.UNDER_CONSTRUCTION)
+		{
+			zi.setPortionCompleted(
+				parentRegion.getPortionCompleted(zoneNumber)
+				);
+		}
+
 		return zi;
 	}
 

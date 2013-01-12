@@ -17,9 +17,17 @@ public class ZoneInfo
 	int gridheight;
 	CommodityType commodity;
 	CommodityRecipe recipe;
+	/// For when the zone is under construction.
+	double portionCompleted;
+	boolean portionCompletedIsKnown;
 
 	public ZoneInfo()
 	{
+	}
+
+	public double getPortionCompleted()
+	{
+		return portionCompleted;
 	}
 
 	public boolean hasCommodity()
@@ -27,9 +35,20 @@ public class ZoneInfo
 		return commodity != null;
 	}
 
+	public boolean hasPortionCompleted()
+	{
+		return portionCompletedIsKnown;
+	}
+
 	public boolean hasRecipe()
 	{
 		return recipe != null;
+	}
+
+	public void setPortionCompleted(double portion)
+	{
+		portionCompletedIsKnown = true;
+		portionCompleted = portion;
 	}
 
 	public static ZoneInfo parse(JsonParser in)
@@ -64,6 +83,11 @@ public class ZoneInfo
 				gridheight = in.nextIntValue(0);
 			else if (s.equals("recipe"))
 				recipe = CommodityRecipe.valueOf(in.nextTextValue());
+			else if (s.equals("portionCompleted"))
+			{
+				in.nextToken();
+				setPortionCompleted(in.getDoubleValue());
+			}
 			else
 			{
 				System.out.println("Warning: unrecognized ZoneInfo field: " + s);
@@ -86,6 +110,8 @@ public class ZoneInfo
 			out.writeStringField("commodity", commodity.name());
 		if (hasRecipe())
 			out.writeStringField("recipe", recipe.name());
+		if (hasPortionCompleted())
+			out.writeNumberField("portionCompleted", portionCompleted);
 		out.writeEndObject();
 	}
 }

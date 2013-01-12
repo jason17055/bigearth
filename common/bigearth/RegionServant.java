@@ -482,7 +482,7 @@ class RegionServant
 			String s = in.getCurrentName();
 			int zoneNumber = Integer.parseInt(s);
 
-			ZoneServant zone = ZoneServant.parse(in, this);
+			ZoneServant zone = ZoneServant.parse(in, this, zoneNumber);
 			assert zone.type != ZoneType.NATURAL;
 
 			zones.put(zoneNumber, zone);
@@ -558,7 +558,7 @@ class RegionServant
 			throw new InvalidZoneTransition();
 
 		// designate zone for development
-		ZoneServant zone = new ZoneServant(this);
+		ZoneServant zone = new ZoneServant(this, zoneNumber);
 		zone.type = ZoneType.UNDER_CONSTRUCTION;
 		zone.gridx = (zoneNumber-1) % ZONE_GRID_WIDTH;
 		zone.gridy = (zoneNumber-1) / ZONE_GRID_WIDTH;
@@ -598,6 +598,16 @@ class RegionServant
 				break;
 			}
 		}
+	}
+
+	double getPortionCompleted(int zoneNumber)
+	{
+		for (ZoneDevelopment zd : zoneDevelopments)
+		{
+			if (zd.zoneNumber == zoneNumber)
+				return 0.5;
+		}
+		return 0.0;
 	}
 
 	void endDeveloping(ZoneDevelopment zoneDevelopment)

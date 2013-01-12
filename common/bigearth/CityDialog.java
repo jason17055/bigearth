@@ -490,9 +490,19 @@ public class CityDialog extends JDialog
 
 	private void examineLand_other(String zoneName, ZoneInfo zone)
 	{
-		JLabel typeLbl = new JLabel("Zone: "+zone.type.getDisplayName());
+		ArrayList<JComponent> inputsList = new ArrayList<>();
+		inputsList.add(new JLabel("Zone: "+zone.type.getDisplayName()));
+		if (zone.type == ZoneType.UNDER_CONSTRUCTION)
+		{
+			inputsList.add(new JLabel("Completed: "
+				+ (zone.hasPortionCompleted() ?
+					String.format("%.1f%%", 100.0*zone.getPortionCompleted()) :
+					"Unknown"
+				)));
+		}
+
 		JOptionPane.showMessageDialog(this,
-			typeLbl,
+			inputsList.toArray(new JComponent[0]),
 			"Examine Zone",
 			JOptionPane.PLAIN_MESSAGE);
 	}
