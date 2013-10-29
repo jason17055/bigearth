@@ -1347,13 +1347,17 @@ System.err.println(e);
 			dragStart = ev.getPoint();
 			dragStartPt = mapProj.fromScreen(dragStart);
 
-			selectNearestTo(dragStartPt);
+			if (dragStartPt != null) {
+				selectNearestTo(dragStartPt);
+			}
 		}
 		else if (ev.getButton() == MouseEvent.BUTTON3)
 		{
 			Point3d pt = mapProj.fromScreen(ev.getPoint());
-			int regionId = map.getGeometry().findCell(pt);
-			onRightMouseClick(regionId);
+			if (pt != null) {
+				int regionId = map.getGeometry().findCell(pt);
+				onRightMouseClick(regionId);
+			}
 		}
 	}
 
@@ -1472,7 +1476,7 @@ System.err.println(e);
 	// implements MouseListener
 	public void mouseReleased(MouseEvent ev)
 	{
-		if (ev.getButton() == MouseEvent.BUTTON1 && dragStart!=null)
+		if (ev.getButton() == MouseEvent.BUTTON1 && dragStartPt != null)
 		{
 			int d = Math.abs(ev.getX()-dragStart.x)
 				+ Math.abs(ev.getY()-dragStart.y);
@@ -1480,7 +1484,7 @@ System.err.println(e);
 			{
 				onDragEnd(ev.getPoint());
 			}
-			dragStart = null;
+			dragStartPt = null;
 		}
 		else if (ev.getButton() == MouseEvent.BUTTON3)
 		{ //right-click
@@ -1490,7 +1494,7 @@ System.err.println(e);
 	// implements MouseMotionListener
 	public void mouseDragged(MouseEvent ev)
 	{
-		if (dragStart != null)
+		if (dragStartPt != null)
 		{
 			onDragged(ev.getPoint());
 		}
@@ -1504,7 +1508,7 @@ System.err.println(e);
 	private void onDragEnd(Point endPoint)
 	{
 		mapProj.panTo(dragStartPt, endPoint);
-		dragStart = null;
+		dragStartPt = null;
 
 		terrainDirty = true;
 		repaint();
