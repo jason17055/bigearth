@@ -6,13 +6,15 @@ How to Build
  2. Download jar files for each of the following and save/copy them
     to the extlib directory.
 
-    vecmath.jar (http://vecmath.dev.java.net)
+    vecmath.jar (http://vecmath.dev.java.net, also available in Fedora Linux)
 
     jackson-core.jar (v2.1.0)
 
     servlet.jar
 
     jetty.jar, jetty-util.jar (v6.1.26, from http://jetty.mortbay.org)
+
+ 3. Run: `ant'
 
 
 Preliminaries:

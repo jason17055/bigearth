@@ -44,6 +44,15 @@ public class WorldViewer extends JFrame
 	JButton zoomInBtn;
 	JButton zoomOutBtn;
 
+	static enum ProjectionChoices {
+		ORTHOGRAPHIC,
+		EQUIRECTANGULAR;
+	}
+	Map<ProjectionChoices, JRadioButtonMenuItem> projectionMenuItems = 
+			new EnumMap<ProjectionChoices,JRadioButtonMenuItem>(
+				ProjectionChoices.class);
+	ProjectionChoices currentProjection;
+
 	JPanel toolsPane;
 	Map<String, JToggleButton> toolBtns;
 
@@ -122,6 +131,7 @@ public class WorldViewer extends JFrame
 		buttonsPane.add(zoomOutBtn);
 
 		initMenu();
+		setMapProjection(ProjectionChoices.EQUIRECTANGULAR);
 
 		pack();
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -211,6 +221,23 @@ public class WorldViewer extends JFrame
 		regionPane.add(depthLbl, c_r);
 	}
 
+	void setMapProjection(ProjectionChoices newProjection)
+	{
+		if (currentProjection != null) {
+			JRadioButtonMenuItem btn = projectionMenuItems.get(currentProjection);
+			if (btn != null) {
+				btn.setSelected(false);
+			}
+		}
+		currentProjection = newProjection;
+		if (currentProjection != null) {
+			JRadioButtonMenuItem btn = projectionMenuItems.get(currentProjection);
+			if (btn != null) {
+				btn.setSelected(true);
+			}
+		}
+	}
+
 	void setWorld(MakeWorld newWorld)
 	{
 		world = newWorld;
@@ -259,8 +286,9 @@ public class WorldViewer extends JFrame
 
 		File worldDir = new File(nameField.getText());
 
-		world = MakeWorld.create(worldDir, sz);
-		reloadImage();
+		setWorld(
+			MakeWorld.create(worldDir, sz)
+			);
 
 		}
 		catch (Exception e)
@@ -362,6 +390,26 @@ public class WorldViewer extends JFrame
 		showWildlifeBtn = new JCheckBoxMenuItem("Show Wildlife");
 		showWildlifeBtn.addActionListener(al);
 		viewMenu.add(showWildlifeBtn);
+
+		JMenu projectionMenu = new JMenu("Projection");
+		viewMenu.add(projectionMenu);
+
+		JRadioButtonMenuItem radio;
+		radio = new JRadioButtonMenuItem("Orthographic");
+		projectionMenuItems.put(ProjectionChoices.ORTHOGRAPHIC, radio);
+		radio.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				setMapProjection(ProjectionChoices.ORTHOGRAPHIC);
+			}});
+		projectionMenu.add(radio);
+
+		radio = new JRadioButtonMenuItem("Equirectangular");
+		projectionMenuItems.put(ProjectionChoices.EQUIRECTANGULAR, radio);
+		radio.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				setMapProjection(ProjectionChoices.EQUIRECTANGULAR);
+			}});
+		projectionMenu.add(radio);
 
 		JMenu regionMenu = new JMenu("Region");
 		menuBar.add(regionMenu);
