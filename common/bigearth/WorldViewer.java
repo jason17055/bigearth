@@ -259,8 +259,9 @@ public class WorldViewer extends JFrame
 
 		File worldDir = new File(nameField.getText());
 
-		world = MakeWorld.create(worldDir, sz);
-		reloadImage();
+		setWorld(
+			MakeWorld.create(worldDir, sz)
+			);
 
 		}
 		catch (Exception e)
