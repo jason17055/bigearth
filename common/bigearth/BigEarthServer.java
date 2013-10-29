@@ -224,7 +224,7 @@ public class BigEarthServer
 
 		String x = "url="+URLEncoder.encode(System.getenv("HOSTNAME"),"UTF-8")
 			+"&secret=x"
-			+"&size="+world.getGeometry().getCellCount()
+			+"&size="+world.getGeometry().getFaceCount()
 			+"&population="+info.population
 			+"&year="+info.year
 			+"&year_real_world_duration="+world.config.ticksPerYear

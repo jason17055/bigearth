@@ -39,7 +39,7 @@ public class MakeRivers
 		lakes.clear();
 		lakesByRegion.clear();
 
-		int numCells = world.g.getCellCount();
+		int numCells = world.g.getFaceCount();
 		for (int i = 1; i <= numCells; i++)
 		{
 			for (Geometry.VertexId v : world.g.getSurroundingVertices(i))

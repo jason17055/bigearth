@@ -4,7 +4,7 @@ import javax.vecmath.Point3d;
 
 public interface Geometry
 {
-	int getCellCount();
+	int getFaceCount();
 
 	int getNeighborCount(int cellId);
 

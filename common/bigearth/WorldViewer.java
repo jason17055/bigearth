@@ -836,7 +836,7 @@ public class WorldViewer extends JFrame
 		if (world == null)
 			return;
 
-		int [] colors = new int[world.g.getCellCount()];
+		int [] colors = new int[world.g.getFaceCount()];
 		for (int i = 0; i < colors.length; i++)
 		{
 			colors[i] = colorOfRegion(i+1);

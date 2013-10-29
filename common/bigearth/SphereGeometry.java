@@ -103,7 +103,7 @@ public class SphereGeometry implements Geometry
 	}
 
 	//implements Geometry
-	public int getCellCount()
+	public int getFaceCount()
 	{
 		return (10*size+20)*size + 12;
 	}
@@ -587,7 +587,7 @@ public class SphereGeometry implements Geometry
 		double bestDist = Double.POSITIVE_INFINITY;
 		Vector3d v = new Vector3d();
 
-		for (int i = 0, numCells = getCellCount(); i < numCells; i++)
+		for (int i = 0, numCells = getFaceCount(); i < numCells; i++)
 		{
 			Point3d p = getCenterPoint(i+1);
 			v.sub(pt,p);

@@ -6,7 +6,7 @@ public class TestSphereGeometry
 	{
 		int gSize = Integer.parseInt(args[0]);
 		Geometry g = new SphereGeometry(gSize);
-		int numCells = g.getCellCount();
+		int numCells = g.getFaceCount();
 
 		int numIters;
 		if (args.length>1)

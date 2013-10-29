@@ -27,7 +27,7 @@ public class WorldMaster
 	public WorldMaster(WorldConfig config)
 	{
 		this.config = config;
-		this.regions = new RegionServant[config.getGeometry().getCellCount()];
+		this.regions = new RegionServant[config.getGeometry().getFaceCount()];
 		this.leaders = new HashMap<String, LeaderInfo>();
 		this.mobs = new HashMap<String, RegionServant>();
 		this.scheduler = new Scheduler(config);

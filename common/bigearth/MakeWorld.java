@@ -79,7 +79,7 @@ public class MakeWorld
 		me.worldDir = worldDir;
 		me.g = (SphereGeometry) me.worldConfig.getGeometry();
 
-		int numCells = me.g.getCellCount();
+		int numCells = me.g.getFaceCount();
 		me.elevation = new int[numCells];
 		me.temperature = new int[numCells];
 		me.annualRains = new int[numCells];
@@ -113,7 +113,7 @@ public class MakeWorld
 	{
 		this.g = (SphereGeometry) worldConfig.getGeometry();
 
-		int numCells = g.getCellCount();
+		int numCells = g.getFaceCount();
 		this.elevation = new int[numCells];
 		this.temperature = new int[numCells];
 		this.annualRains = new int[numCells];
@@ -132,7 +132,7 @@ public class MakeWorld
 
 	public void generate()
 	{
-		int numCells = g.getCellCount();
+		int numCells = g.getFaceCount();
 
 		this.elevation = new int[numCells];
 		this.temperature = new int[numCells];
@@ -246,7 +246,7 @@ public class MakeWorld
 
 	void generateRainfalls_oneStep(int [] rains)
 	{
-		int numCells = g.getCellCount();
+		int numCells = g.getFaceCount();
 
 		int highestTemperature = Integer.MIN_VALUE;
 		for (int i = 0; i < numCells; i++)
@@ -413,7 +413,7 @@ public class MakeWorld
 
 	public void generateBiomes()
 	{
-		int numCells = g.getCellCount();
+		int numCells = g.getFaceCount();
 		for (int i = 0; i < numCells; i++)
 		{
 			RegionServant region = world.regions[i];
@@ -490,7 +490,7 @@ public class MakeWorld
 
 	public void generateMinerals()
 	{
-		int numCells = g.getCellCount();
+		int numCells = g.getFaceCount();
 		for (int i = 0; i < numCells; i++)
 		{
 			RegionServant region = world.regions[i];

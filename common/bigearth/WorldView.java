@@ -254,7 +254,7 @@ public class WorldView extends JPanel
 
 		if (this.map != null)
 		{
-			this.colors = new int[map.getGeometry().getCellCount()];
+			this.colors = new int[map.getGeometry().getFaceCount()];
 			this.map.addListener(this);
 		}
 		else
@@ -347,7 +347,7 @@ public class WorldView extends JPanel
 		assert pts.length == colors.length;
 
 		Geometry g = map.getGeometry();
-		int numRegions = g.getCellCount();
+		int numRegions = g.getFaceCount();
 		assert numRegions == pts.length;
 
 		int [] todo = new int[numRegions];
@@ -422,7 +422,7 @@ public class WorldView extends JPanel
 		assert map != null;
 
 		Geometry g = map.getGeometry();
-		int numRegions = g.getCellCount();
+		int numRegions = g.getFaceCount();
 
 		assert pts.length == numRegions;
 
@@ -460,7 +460,7 @@ public class WorldView extends JPanel
 		Geometry g = map.getGeometry();
 
 		int numRegions = colors.length;
-		assert numRegions == g.getCellCount();
+		assert numRegions == g.getFaceCount();
 
 		Point [] pts = new Point[numRegions];
 		for (int i = 0; i < pts.length; i++)
