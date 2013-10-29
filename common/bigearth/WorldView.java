@@ -1552,19 +1552,21 @@ System.err.println(e);
 
 	public void setProjection(MapProjection newProjection)
 	{
-		curProjection = newProjection;
-		switch (curProjection) {
+		AbstractProjection newProj;
+		switch (newProjection) {
 		case ORTHOGRAPHIC:
-			mapProj = new OrthographicProjection();
+			newProj = new OrthographicProjection();
 			break;
 		default:
-			mapProj = new SimpleProjection();
+			newProj = new SimpleProjection();
 			break;
 		}
-		mapProj.setOffset(
-			getWidth()/2,
-			getHeight()/2
-			);
+
+		this.curProjection = newProjection;
+		if (this.mapProj != null) {
+			newProj.copySettingsFrom(mapProj);
+		}
+		this.mapProj = newProj;
 		terrainDirty = true;
 		repaint();
 	}

@@ -38,6 +38,16 @@ public abstract class AbstractProjection
 		updateMatrices();
 	}
 
+	public void copySettingsFrom(AbstractProjection otherProj)
+	{
+		this.zoomFactor = otherProj.zoomFactor;
+		this.curLatitude = otherProj.curLatitude;
+		this.curLongitude = otherProj.curLongitude;
+		this.xOffset = otherProj.xOffset;
+		this.yOffset = otherProj.yOffset;
+		updateMatrices();
+	}
+
 	//implements MapProjection
 	public void scale(double factor)
 	{
