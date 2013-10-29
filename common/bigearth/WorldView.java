@@ -23,13 +23,9 @@ public class WorldView extends JPanel
 	BufferedImage image; //terrain image
 	boolean terrainDirty;
 
-	double curLongitude;
-	double curLatitude;
-	double zoomFactor;
-	int xOffset;
-	int yOffset;
-	Matrix3d transformMatrix;
-	Matrix3d inverseTransformMatrix;
+	AbstractProjection mapProj = new SimpleProjection();
+	MapProjection curProjection = MapProjection.SIMPLE;
+
 	ArrayList<Listener> listeners;
 	boolean showRivers;
 	boolean allowVertexSelection;
@@ -245,13 +241,7 @@ public class WorldView extends JPanel
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
-		zoomFactor = 1.0;
-		yOffset = 0;
 		showRivers = true;
-
-		transformMatrix = new Matrix3d();
-		inverseTransformMatrix = new Matrix3d();
-		updateTransformMatrix();
 	}
 
 	public void setMap(MapModel map)
@@ -347,64 +337,6 @@ public class WorldView extends JPanel
 		this.colors = colors;
 		terrainDirty = true;
 		repaint();
-	}
-
-	Point3d fromScreen(Point p)
-	{
-		int width = getWidth();
-		int height = getHeight();
-
-		double lat = -(p.y - height/2 - yOffset)
-			/ (zoomFactor * DEFAULT_HEIGHT/Math.PI);
-		double lgt = (p.x - width/2 - xOffset)
-			/ (zoomFactor * DEFAULT_WIDTH/(2*Math.PI));
-
-		double zz = Math.cos(lat);
-		Point3d pt = new Point3d(
-			Math.sin(lgt) * zz,
-			Math.sin(lat),
-			Math.cos(lgt) * zz
-			);
-		inverseTransformMatrix.transform(pt);
-		return pt;
-	}
-
-	void toScreen_a(Point3d [] pts, int [] x_coords, int [] y_coords)
-	{
-		assert pts.length == x_coords.length;
-		assert pts.length == y_coords.length;
-
-		for (int i = 0; i < pts.length; i++)
-		{
-			Point p = toScreen(pts[i]);
-			x_coords[i] = p.x;
-			y_coords[i] = p.y;
-		}
-	}
-
-	Point toScreen(Point3d pt)
-	{
-		int width = getWidth();
-		int height = getHeight();
-
-		pt = new Point3d(pt);
-		transformMatrix.transform(pt);
-
-		double lat = Math.asin(pt.y);
-		double lgt = Math.atan2(pt.x, pt.z);
-
-		double x = zoomFactor*lgt*DEFAULT_WIDTH/(Math.PI*2);
-		double y = zoomFactor*lat*DEFAULT_HEIGHT/Math.PI;
-
-		// prevent extreme screen coordinates
-		// (i.e. coordinates that might overflow 32-bit int)
-		x = Math.max(-2*width, Math.min(2*width, x));
-		y = Math.max(-2*height, Math.min(2*height, y));
-
-		return new Point(
-			(int)Math.round(x) + width/2 + xOffset,
-			(int)Math.round(-y) + height/2 + yOffset
-			);
 	}
 
 	void drawMap(BufferedImage image, Point [] pts)
@@ -515,8 +447,9 @@ public class WorldView extends JPanel
 		if (map == null)
 			return;
 
+		mapProj.setOffset(getWidth()/2, getHeight()/2);
+
 		Geometry g = map.getGeometry();
-		updateTransformMatrix();
 
 		int numRegions = colors.length;
 		assert numRegions == g.getCellCount();
@@ -524,7 +457,7 @@ public class WorldView extends JPanel
 		Point [] pts = new Point[numRegions];
 		for (int i = 0; i < pts.length; i++)
 		{
-			pts[i] = toScreen(g.getCenterPoint(i+1));
+			pts[i] = mapProj.toScreen(g.getCenterPoint(i+1));
 		}
 
 		updateRegionBounds(pts);
@@ -535,7 +468,7 @@ public class WorldView extends JPanel
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D gr = image.createGraphics();
 
-		if (zoomFactor < 8)
+		if (mapProj.zoomFactor < 8)
 		{
 			drawMap(image, pts);
 		}
@@ -612,7 +545,7 @@ public class WorldView extends JPanel
 					continue;
 
 				Point3d pt = g.getCenterPoint(i+1);
-				Point p = toScreen(pt);
+				Point p = mapProj.toScreen(pt);
 				RegionProfile r = map.getRegion(i+1);
 				drawRegionEmblem(gr, i+1, r, p);
 			}
@@ -700,8 +633,8 @@ public class WorldView extends JPanel
 
 	void drawGreatCircle(Graphics g, Point3d fromPt, Point3d toPt)
 	{
-		Point p1 = toScreen(fromPt);
-		Point p2 = toScreen(toPt);
+		Point p1 = mapProj.toScreen(fromPt);
+		Point p2 = mapProj.toScreen(toPt);
 
 		if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 10)
 		{
@@ -968,7 +901,7 @@ System.err.println(e);
 			if (!r.hasCitySize())
 				continue;
 
-			Point p = toScreen(g.getCenterPoint(i+1));
+			Point p = mapProj.toScreen(g.getCenterPoint(i+1));
 			CityInfo city = new CityInfo();
 			city.displayName = r.cityName;
 			drawCity(gr, p, city);
@@ -1008,7 +941,7 @@ System.err.println(e);
 				}
 
 				if (sf != RegionSideDetail.SideFeature.BROOK
-					|| zoomFactor > 16)
+					|| mapProj.zoomFactor > 16)
 				{
 
 				gr2.setStroke(new BasicStroke(
@@ -1120,7 +1053,7 @@ System.err.println(e);
 			assert mob != null;
 			assert mob.location != null;
 
-			Point p = toScreen(map.getGeometry().getPoint(mob.location));
+			Point p = mapProj.toScreen(map.getGeometry().getPoint(mob.location));
 			drawFleetSelectionBack(gr, p);
 			drawMob(gr, p, mob);
 			drawFleetSelectionCircle(gr, p);
@@ -1135,7 +1068,7 @@ System.err.println(e);
 			return;
 
 		Location loc = mob.location;
-		Point p = toScreen(map.getGeometry().getPoint(loc));
+		Point p = mapProj.toScreen(map.getGeometry().getPoint(loc));
 
 		Graphics2D gr = (Graphics2D) getGraphics();
 		drawFleetSelectionBack(gr, p);
@@ -1378,25 +1311,10 @@ System.err.println(e);
 			MobInfo mob = mobs.mobs.get(mobName);
 			Location loc = mob.location;
 
-			Point p = toScreen(g.getPoint(loc));
+			Point p = mapProj.toScreen(g.getPoint(loc));
 			drawMob(gr, p, mob);
 		}
 
-	}
-
-	void updateTransformMatrix()
-	{
-		// rotate around Z axis for longitude
-		Matrix3d rZ = new Matrix3d();
-		rZ.rotZ(-curLongitude - Math.PI/2);
-
-		// rotate around X axis for latitude
-		Matrix3d rX = new Matrix3d();
-		rX.rotX(-(Math.PI/2 - curLatitude));
-
-		//transformMatrix.mul(rZ, rX);
-		transformMatrix.mul(rX, rZ);
-		inverseTransformMatrix.invert(transformMatrix);
 	}
 
 	// implements MouseWheelListener
@@ -1426,13 +1344,13 @@ System.err.println(e);
 		if (ev.getButton() == MouseEvent.BUTTON1)
 		{
 			dragStart = ev.getPoint();
+			dragStartPt = mapProj.fromScreen(dragStart);
 
-			Point3d pt = fromScreen(ev.getPoint());
-			selectNearestTo(pt);
+			selectNearestTo(dragStartPt);
 		}
 		else if (ev.getButton() == MouseEvent.BUTTON3)
 		{
-			Point3d pt = fromScreen(ev.getPoint());
+			Point3d pt = mapProj.fromScreen(ev.getPoint());
 			int regionId = map.getGeometry().findCell(pt);
 			onRightMouseClick(regionId);
 		}
@@ -1538,19 +1456,14 @@ System.err.println(e);
 
 	public void zoomIn()
 	{
-		zoomFactor *= 2;
+		mapProj.scale(2.0);
 		terrainDirty = true;
 		repaint();
 	}
 
 	public void zoomOut()
 	{
-		zoomFactor/=2;
-		if (zoomFactor <= 1)
-		{
-			zoomFactor = 1;
-			curLatitude = 0;
-		}
+		mapProj.scale(0.5);
 		terrainDirty = true;
 		repaint();
 	}
@@ -1586,14 +1499,14 @@ System.err.println(e);
 	public void mouseMoved(MouseEvent ev) {}
 
 	private Point dragStart;
+	private Point3d dragStartPt;
 	private void onDragEnd(Point endPoint)
 	{
-		int xDelta = endPoint.x - dragStart.x;
-		int yDelta = endPoint.y - dragStart.y;
-		Point3d pt = fromScreen(new Point(getWidth()/2 - xDelta, getHeight()/2 - yDelta));
-
-		panTo(pt);
+		mapProj.panTo(dragStartPt, endPoint);
 		dragStart = null;
+
+		terrainDirty = true;
+		repaint();
 	}
 
 	private void onDragged(Point curPoint)
@@ -1609,28 +1522,26 @@ System.err.println(e);
 
 	public void panTo(Point3d pt)
 	{
-		double lat = Math.asin(pt.z);
-		double lgt = Math.atan2(pt.y, pt.x);
-
-		if (zoomFactor < 2)
-		{
-			if (Math.abs(lat) > Math.PI/6)
-			{
-				lat = (lat>0 ? 1 : -1) * Math.PI/6;
-			}
-		}
-		else if (zoomFactor < 4)
-		{
-			if (Math.abs(lat) > Math.PI/3)
-			{
-				lat = (lat>0 ? 1 : -1) * Math.PI/3;
-			}
-		}
-
-		curLatitude = lat;
-		curLongitude = lgt;
+		mapProj.panTo(pt, getScreenCenter());
 
 		terrainDirty = true;
 		repaint();
+	}
+
+	void toScreen_a(Point3d [] pp, int [] x_coords, int [] y_coords)
+	{
+		for (int i = 0; i < pp.length; i++) {
+			Point p = mapProj.toScreen(pp[i]);
+			x_coords[i] = p.x;
+			y_coords[i] = p.y;
+		}
+	}
+
+	private Point getScreenCenter()
+	{
+		return new Point(
+			getWidth() / 2,
+			getHeight() / 2
+			);
 	}
 }

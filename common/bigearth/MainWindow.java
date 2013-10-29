@@ -51,7 +51,7 @@ public class MainWindow extends JFrame
 			}
 
 			};
-		view.zoomFactor = 8;
+		view.mapProj.zoomFactor = 8;
 		add(view, BorderLayout.CENTER);
 
 		JPanel sideBar = new JPanel();
