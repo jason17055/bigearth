@@ -29,6 +29,9 @@ public abstract class AbstractProjection
 	Matrix3d transformMatrix = new Matrix3d();
 	Matrix3d inverseMatrix = new Matrix3d();
 
+	static final double DEFAULT_WIDTH = 480;
+	static final double DEFAULT_HEIGHT = 480;
+
 	//constructor
 	protected AbstractProjection()
 	{
@@ -91,23 +94,12 @@ public abstract class AbstractProjection
 		updateMatrices();
 	}
 
-	public abstract Point toScreen(Point3d pt);
-	public abstract Point3d fromScreen(Point p);
-}
-
-class OrthographicProjection extends AbstractProjection
-{
-	static final double DEFAULT_WIDTH = 540;
-	static final double DEFAULT_HEIGHT = 540;
-
-	//implements MapProjection
-	public Point toScreen(Point3d pt)
+	public final Point toScreen(Point3d pt)
 	{
-		pt = new Point3d(pt);
-		transformMatrix.transform(pt);
+		Point3d p = toScreenReal(pt);
 
-		double x = zoomFactor * (DEFAULT_WIDTH/2) * pt.y;
-		double y = zoomFactor * (DEFAULT_HEIGHT/2) * pt.z;
+		double x = zoomFactor * DEFAULT_WIDTH * p.x;
+		double y = zoomFactor * DEFAULT_HEIGHT * p.y;
 
 		// prevent extreme screen coordinates from overflowing 32-bit int
 		x = Math.max(-64000, Math.min(64000, x));
@@ -119,14 +111,28 @@ class OrthographicProjection extends AbstractProjection
 			);
 	}
 
-	//implements MapProjection
+	public abstract Point3d toScreenReal(Point3d pt);
+	public abstract Point3d fromScreen(Point p);
+}
+
+class OrthographicProjection extends AbstractProjection
+{
+	@Override
+	public Point3d toScreenReal(Point3d pt)
+	{
+		pt = new Point3d(pt);
+		transformMatrix.transform(pt);
+		return pt;
+	}
+
+	@Override
 	public Point3d fromScreen(Point p)
 	{
 		Point3d pt = new Point3d();
 		pt.y = (p.x - xOffset) /
-			(zoomFactor * DEFAULT_WIDTH/2);
+			(zoomFactor * DEFAULT_WIDTH);
 		pt.z = -(p.y - yOffset) /
-			(zoomFactor * DEFAULT_HEIGHT/2);
+			(zoomFactor * DEFAULT_HEIGHT);
 
 		double d = 1 - Math.pow(pt.y,2) - Math.pow(pt.z,2);
 		if (d >= 0) {
@@ -142,9 +148,6 @@ class OrthographicProjection extends AbstractProjection
 
 class SimpleProjection extends AbstractProjection
 {
-	static final double DEFAULT_WIDTH = 640;
-	static final double DEFAULT_HEIGHT = 400;
-
 	@Override
 	public void scale(double factor)
 	{
@@ -155,34 +158,27 @@ class SimpleProjection extends AbstractProjection
 		}
 	}
 
-	//implements MapProjection
-	public Point toScreen(Point3d pt)
+	@Override
+	public Point3d toScreenReal(Point3d pt)
 	{
 		pt = new Point3d(pt);
 		transformMatrix.transform(pt);
 
 		double lat = Math.asin(pt.z);
 		double lgt = Math.atan2(pt.y, pt.x);
-		double x = zoomFactor * DEFAULT_WIDTH * lgt / Math.PI;
-		double y = zoomFactor * DEFAULT_HEIGHT * lat / (Math.PI/2.0);
-
-		// prevent extreme screen coordinates from overflowing 32-bit int
-		x = Math.max(-64000, Math.min(64000, x));
-		y = Math.max(-64000, Math.min(64000, y));
-
-		return new Point(
-			(int)(Math.round(x)) + xOffset,
-			(int)(Math.round(-y)) + yOffset
-			);
+		return new Point3d(
+			lgt / Math.PI,
+			lat / (Math.PI/2.0),
+			0.0);
 	}
 
-	//implements MapProjection
+	@Override
 	public Point3d fromScreen(Point p)
 	{
-		double lat = -(p.y - yOffset) /
-			(zoomFactor * DEFAULT_HEIGHT / (Math.PI/2));
-		double lgt = (p.x - xOffset) /
-			(zoomFactor * DEFAULT_WIDTH / Math.PI);
+		double lat = -(p.y - yOffset) / (zoomFactor * DEFAULT_HEIGHT)
+			* (Math.PI/2);
+		double lgt = (p.x - xOffset) / (zoomFactor * DEFAULT_WIDTH)
+			* (Math.PI);
 
 		double zz = Math.cos(lat);
 		Point3d pt = new Point3d(
