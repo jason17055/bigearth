@@ -23,8 +23,8 @@ public class WorldView extends JPanel
 	BufferedImage image; //terrain image
 	boolean terrainDirty;
 
-	AbstractProjection mapProj = new SimpleProjection();
-	MapProjection curProjection = MapProjection.SIMPLE;
+	AbstractProjection mapProj;
+	MapProjection curProjection;
 
 	ArrayList<Listener> listeners;
 	boolean showRivers;
@@ -237,6 +237,7 @@ public class WorldView extends JPanel
 		listeners = new ArrayList<Listener>();
 
 		setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+		setProjection(MapProjection.SIMPLE);
 		addAncestorListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
@@ -1543,5 +1544,24 @@ System.err.println(e);
 			getWidth() / 2,
 			getHeight() / 2
 			);
+	}
+
+	public void setProjection(MapProjection newProjection)
+	{
+		curProjection = newProjection;
+		switch (curProjection) {
+		case ORTHOGRAPHIC:
+			mapProj = new OrthographicProjection();
+			break;
+		default:
+			mapProj = new SimpleProjection();
+			break;
+		}
+		mapProj.setOffset(
+			getWidth()/2,
+			getHeight()/2
+			);
+		terrainDirty = true;
+		repaint();
 	}
 }
