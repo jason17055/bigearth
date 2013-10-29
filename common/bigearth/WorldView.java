@@ -346,16 +346,23 @@ public class WorldView extends JPanel
 		assert pts != null;
 		assert pts.length == colors.length;
 
-		int [] todo = new int[pts.length];
-		for (int i = 0; i < pts.length; i++)
+		Geometry g = map.getGeometry();
+		int numRegions = g.getCellCount();
+		assert numRegions == pts.length;
+
+		int [] todo = new int[numRegions];
+		int curCount = 0;
+		for (int i = 0; i < numRegions; i++)
 		{
-			todo[i] = i;
+			Point3d regionPt = g.getCenterPoint(i+1);
+			if (mapProj.isVisible(regionPt)) {
+				todo[curCount++] = i;
+			}
 		}
 
 		MapPainter mp = new MapPainter(image);
 
 		int radius = 0;
-		int curCount = todo.length;
 		while (todo.length != 0 && radius<100)
 		{
 			int [] next = new int[curCount];

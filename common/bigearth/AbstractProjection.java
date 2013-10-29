@@ -48,6 +48,11 @@ public abstract class AbstractProjection
 		updateMatrices();
 	}
 
+	public boolean isVisible(Point3d pt)
+	{
+		return (toScreenReal(pt).z >= 0.0);
+	}
+
 	//implements MapProjection
 	public void scale(double factor)
 	{
