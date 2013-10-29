@@ -126,8 +126,17 @@ public abstract class AbstractProjection
 			);
 	}
 
+	public final Point3d fromScreen(Point p)
+	{
+		Point3d r = new Point3d(
+			(p.x - xOffset) / (zoomFactor * DEFAULT_WIDTH),
+			-(p.y - yOffset) / (zoomFactor * DEFAULT_HEIGHT),
+			0.0);
+		return fromScreenReal(r);
+	}
+
 	public abstract Point3d toScreenReal(Point3d pt);
-	public abstract Point3d fromScreen(Point p);
+	public abstract Point3d fromScreenReal(Point3d r);
 }
 
 class OrthographicProjection extends AbstractProjection
@@ -137,17 +146,18 @@ class OrthographicProjection extends AbstractProjection
 	{
 		pt = new Point3d(pt);
 		transformMatrix.transform(pt);
-		return pt;
+		return new Point3d(
+			pt.y,
+			pt.z,
+			pt.x);
 	}
 
 	@Override
-	public Point3d fromScreen(Point p)
+	public Point3d fromScreenReal(Point3d r)
 	{
 		Point3d pt = new Point3d();
-		pt.y = (p.x - xOffset) /
-			(zoomFactor * DEFAULT_WIDTH);
-		pt.z = -(p.y - yOffset) /
-			(zoomFactor * DEFAULT_HEIGHT);
+		pt.y = r.x;
+		pt.z = r.y;
 
 		double d = 1 - Math.pow(pt.y,2) - Math.pow(pt.z,2);
 		if (d >= 0) {
@@ -188,12 +198,10 @@ class SimpleProjection extends AbstractProjection
 	}
 
 	@Override
-	public Point3d fromScreen(Point p)
+	public Point3d fromScreenReal(Point3d r)
 	{
-		double lat = -(p.y - yOffset) / (zoomFactor * DEFAULT_HEIGHT)
-			* (Math.PI/2);
-		double lgt = (p.x - xOffset) / (zoomFactor * DEFAULT_WIDTH)
-			* (Math.PI);
+		double lat = r.y * (Math.PI / 2);
+		double lgt = r.x * Math.PI;
 
 		double zz = Math.cos(lat);
 		Point3d pt = new Point3d(
