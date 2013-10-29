@@ -477,6 +477,39 @@ public class WorldView extends JPanel
 	}
 
 	Rectangle [] regionBounds;
+	void updateRegionBounds(Point [] pts)
+	{
+		assert map != null;
+
+		Geometry g = map.getGeometry();
+		int numRegions = g.getCellCount();
+
+		assert pts.length == numRegions;
+
+		regionBounds = new Rectangle[numRegions];
+		for (int i = 0; i < numRegions; i++)
+		{
+			int min_x = pts[i].x;
+			int min_y = pts[i].y;
+			int max_x = pts[i].x;
+			int max_y = pts[i].y;
+
+			for (int n : g.getNeighbors(i+1))
+			{
+				Point p = pts[n-1];
+				if (p.x > -getWidth() && p.x < min_x) min_x = p.x;
+				if (p.y > -getHeight() && p.y < min_y) min_y = p.y;
+				if (p.x < 2*getWidth() && p.x > max_x) max_x = p.x;
+				if (p.y < 2*getHeight() && p.y > max_y) max_y = p.y;
+			}
+			regionBounds[i] = new Rectangle(
+				min_x,
+				min_y,
+				max_x-min_x+1,
+				max_y-min_y+1);
+		}
+	}
+
 	void regenerateTerrainImage()
 	{
 		if (map == null)
@@ -485,37 +518,16 @@ public class WorldView extends JPanel
 		Geometry g = map.getGeometry();
 		updateTransformMatrix();
 
-		Point [] pts = new Point[colors.length];
+		int numRegions = colors.length;
+		assert numRegions == g.getCellCount();
+
+		Point [] pts = new Point[numRegions];
 		for (int i = 0; i < pts.length; i++)
 		{
 			pts[i] = toScreen(g.getCenterPoint(i+1));
 		}
 
-		int numRegions = colors.length;
-		{
-			regionBounds = new Rectangle[numRegions];
-			for (int i = 0; i < numRegions; i++)
-			{
-				int min_x = pts[i].x;
-				int min_y = pts[i].y;
-				int max_x = pts[i].x;
-				int max_y = pts[i].y;
-
-				for (int n : g.getNeighbors(i+1))
-				{
-					Point p = pts[n-1];
-					if (p.x > -getWidth() && p.x < min_x) min_x = p.x;
-					if (p.y > -getHeight() && p.y < min_y) min_y = p.y;
-					if (p.x < 2*getWidth() && p.x > max_x) max_x = p.x;
-					if (p.y < 2*getHeight() && p.y > max_y) max_y = p.y;
-				}
-				regionBounds[i] = new Rectangle(
-					min_x,
-					min_y,
-					max_x-min_x+1,
-					max_y-min_y+1);
-			}
-		}
+		updateRegionBounds(pts);
 
 		Rectangle screen = new Rectangle(0,0,getWidth(),getHeight());
 
