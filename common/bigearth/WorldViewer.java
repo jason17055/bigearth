@@ -1001,6 +1001,12 @@ assert(x >= 1);
 	public void onEdgeSelected(Geometry.EdgeId edge)
 	{
 		System.out.println("selected "+edge);
+		if (mrivers != null) {
+			MakeRivers.RiverInfo river = mrivers.rivers.get(edge);
+			if (river != null) {
+				System.out.println("  river volume: "+river.volume);
+			}
+		}
 	}
 
 	//implements WorldView.Listener
@@ -1009,6 +1015,10 @@ assert(x >= 1);
 		System.out.println("selected "+vertex);
 		if (mrivers != null) {
 			System.out.println("  elevation: " + mrivers.riverElevation.get(vertex));
+			MakeRivers.LakeInfo lake = mrivers.lakes.get(vertex);
+			if (lake != null) {
+				System.out.println("lake here");
+			}
 		}
 	}
 }
