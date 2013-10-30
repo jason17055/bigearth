@@ -80,6 +80,7 @@ public class WorldViewer extends JFrame
 		super("World Viewer");
 		view = new WorldView();
 		view.addListener(this);
+		view.allowEdgeSelection = true;
 		view.allowVertexSelection = true;
 		add(view, BorderLayout.CENTER);
 
@@ -997,9 +998,18 @@ assert(x >= 1);
 	}
 
 	//implements WorldView.Listener
+	public void onEdgeSelected(Geometry.EdgeId edge)
+	{
+		System.out.println("selected "+edge);
+	}
+
+	//implements WorldView.Listener
 	public void onVertexSelected(Geometry.VertexId vertex)
 	{
 		System.out.println("selected "+vertex);
+		if (mrivers != null) {
+			System.out.println("  elevation: " + mrivers.riverElevation.get(vertex));
+		}
 	}
 }
 
