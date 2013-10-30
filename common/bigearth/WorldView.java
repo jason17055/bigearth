@@ -28,6 +28,7 @@ public class WorldView extends JPanel
 
 	ArrayList<Listener> listeners;
 	boolean showRivers;
+	boolean allowEdgeSelection;
 	boolean allowVertexSelection;
 	boolean allowCitySelection = true;
 	boolean allowMobSelection = true;
@@ -41,6 +42,7 @@ public class WorldView extends JPanel
 	{
 		int selectedRegion;
 		Geometry.VertexId selectedVertex;
+		Geometry.EdgeId selectedEdge;
 		String selectedMob;
 		Location selectedCity;
 
@@ -49,6 +51,10 @@ public class WorldView extends JPanel
 			if (selectedVertex != null)
 			{
 				return selectedVertex;
+			}
+			else if (selectedEdge != null)
+			{
+				return selectedEdge;
 			}
 			else if (selectedRegion != 0)
 			{
@@ -64,6 +70,7 @@ public class WorldView extends JPanel
 		public void clear()
 		{
 			this.selectedRegion = 0;
+			this.selectedEdge = null;
 			this.selectedVertex = null;
 			this.selectedMob = null;
 			this.selectedCity = null;
@@ -120,6 +127,7 @@ public class WorldView extends JPanel
 			assert cityLocation != null;
 
 			this.selectedRegion = 0;
+			this.selectedEdge = null;
 			this.selectedVertex = null;
 			this.selectedMob = null;
 			this.selectedCity = cityLocation;
@@ -134,6 +142,7 @@ public class WorldView extends JPanel
 			assert mobName != null;
 
 			this.selectedRegion = 0;
+			this.selectedEdge = null;
 			this.selectedVertex = null;
 			this.selectedMob = mobName;
 			this.selectedCity = null;
@@ -149,6 +158,7 @@ public class WorldView extends JPanel
 			assert regionId != 0;
 
 			this.selectedRegion = regionId;
+			this.selectedEdge = null;
 			this.selectedVertex = null;
 			this.selectedMob = null;
 			this.selectedCity = null;
@@ -159,11 +169,27 @@ public class WorldView extends JPanel
 			repaint();
 		}
 
+		public void selectEdge(Geometry.EdgeId edge)
+		{
+			assert edge != null;
+
+			this.selectedRegion = 0;
+			this.selectedEdge = edge;
+			this.selectedVertex = null;
+			this.selectedMob = null;
+			this.selectedCity = null;
+
+			onSelectionChanged();
+			fireEdgeSelected(this.selectedEdge);
+			repaint();
+		}
+
 		public void selectVertex(Geometry.VertexId vtx)
 		{
 			assert vtx != null;
 
 			this.selectedRegion = 0;
+			this.selectedEdge = null;
 			this.selectedVertex = vtx;
 			this.selectedMob = null;
 			this.selectedCity = null;
@@ -281,6 +307,7 @@ public class WorldView extends JPanel
 		void onCitySelected(Location cityLocation);
 		void onMobSelected(String mobName);
 		void onRegionSelected(int regionId);
+		void onEdgeSelected(Geometry.EdgeId edge);
 		void onVertexSelected(Geometry.VertexId vertex);
 	}
 
@@ -476,7 +503,7 @@ public class WorldView extends JPanel
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D gr = image.createGraphics();
 
-		if (mapProj.zoomFactor < 8)
+		if (mapProj.zoomFactor < 4)
 		{
 			drawMap(image, pts);
 		}
@@ -1404,38 +1431,60 @@ System.err.println(e);
 			}
 		}
 
-		if (!allowVertexSelection)
+		if (allowEdgeSelection || allowVertexSelection)
 		{
-			selection.selectRegion(regionId);
-			return;
-		}
 
-		Point3d regionCenterPoint = g.getCenterPoint(regionId);
-		Vector3d v = new Vector3d();
-		v.sub(pt, regionCenterPoint);
-		double r_dist = v.length();
+			Point3d regionCenterPoint = g.getCenterPoint(regionId);
+			Vector3d v = new Vector3d();
+			v.sub(pt, regionCenterPoint);
+			double r_dist = v.length();
 
-		Point3d [] borderPoints = g.getCellBoundary(regionId);
-		int best = -1;
-		for (int i = 0; i < borderPoints.length; i++)
-		{
-			v.sub(pt, borderPoints[i]);
-			double n_dist = v.length();
-			if (n_dist < r_dist)
+			Point3d [] borderPoints = g.getCellBoundary(regionId);
+			int best_vertex = -1;
+			double v_dist = r_dist;
+			int best_edge = -1;
+			double e_dist = r_dist;
+
+			for (int i = 0; i < borderPoints.length; i++)
 			{
-				best = i;
-				r_dist = n_dist;
+				v.sub(pt, borderPoints[i]);
+				double n_dist = v.length();
+				if (n_dist < v_dist)
+				{
+					best_vertex = i;
+					v_dist = n_dist;
+				}
+
+				Vector3d v2 = new Vector3d();
+				v2.add(borderPoints[i], borderPoints[(i+1)%borderPoints.length]);
+				v2.scale(0.5);
+				v.sub(pt, v2);
+				double m_dist = v.length();
+				if (m_dist < e_dist)
+				{
+					best_edge = i;
+					e_dist = m_dist;
+				}
+			}
+
+			if (allowVertexSelection && best_vertex != -1 &&
+				(v_dist < e_dist || !allowEdgeSelection))
+			{
+				Geometry.VertexId [] vtxs = g.getSurroundingVertices(regionId);
+				selection.selectVertex(vtxs[best_vertex]);
+				return;
+			}
+
+			if (allowEdgeSelection && best_edge != -1)
+			{
+				Geometry.EdgeId [] edges = g.getSurroundingEdges(regionId);
+				selection.selectEdge(edges[best_edge]);
+				return;
 			}
 		}
 
-		if (best == -1)
-		{
-			selection.selectRegion(regionId);
-			return;
-		}
-
-		Geometry.VertexId [] vtxs = g.getSurroundingVertices(regionId);
-		selection.selectVertex(vtxs[best]);
+		selection.selectRegion(regionId);
+		return;
 	}
 
 	protected void onRegionSelected(int regionId)
@@ -1458,6 +1507,12 @@ System.err.println(e);
 	{
 		for (Listener l : listeners)
 			l.onRegionSelected(regionId);
+	}
+
+	private void fireEdgeSelected(Geometry.EdgeId edge)
+	{
+		for (Listener l : listeners)
+			l.onEdgeSelected(edge);
 	}
 
 	private void fireVertexSelected(Geometry.VertexId vertex)
