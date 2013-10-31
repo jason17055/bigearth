@@ -704,6 +704,89 @@ public class SphereGeometry implements Geometry
 		c.orientation = (c.orientation + k + (adjust%k)) % k;
 	}
 
+	private void _E_cell(Cursor c, int mEdge, int idx, int or)
+	{
+		if (idx == 0) {
+
+			assert or == EAST;
+
+			c.location = EDGE_INFO[mEdge][0]-1;
+			c.orientation = EDGE_INFO[mEdge][4];
+		}
+		else if (idx == size+1) {
+
+			assert or == WEST;
+
+			c.location = EDGE_INFO[mEdge][1]-1;
+			c.orientation = EDGE_INFO[mEdge][5];
+		}
+		else {
+			assert idx >= 1 && idx <= size;
+
+			c.location = getEdgeCell(mEdge+1, idx)-1;
+			c.orientation = or;
+		}
+	}
+
+	private void _F_cell(Cursor c, int mFace, int row, int idx, int att)
+	{
+		assert mFace >= 0 && mFace < FACE_INFO.length;
+
+		int [] fi = FACE_INFO[mFace];
+		if (row == 0)
+		{
+			// the "base" row of this triangle is a ridge
+			int mEdge = fi[3] - 1;
+			if (EDGE_INFO[mEdge][0] == fi[0]) {
+				assert EDGE_INFO[mEdge][1] == fi[1];
+				_E_cell(c, mEdge, idx, att);
+			}
+			else {
+				assert EDGE_INFO[mEdge][0] == fi[1];
+				assert EDGE_INFO[mEdge][1] == fi[0];
+				_E_cell(c, mEdge, size+1-idx, (att+3)%6);
+			}
+		}
+		else if (idx == 0)
+		{
+			// the "left" edge of this triangle
+			int mEdge = fi[5] - 1;
+			if (EDGE_INFO[mEdge][0] == fi[0]) {
+				assert EDGE_INFO[mEdge][1] == fi[2];
+				_E_cell(c, mEdge, row, (att+1)%6);
+			}
+			else {
+				assert EDGE_INFO[mEdge][0] == fi[2];
+				assert EDGE_INFO[mEdge][1] == fi[0];
+				_E_cell(c, mEdge, size+1-row, (att+4)%6);
+			}
+		}
+		else if (idx == size + 1 - row)
+		{
+			// the "right" edge of this triangle
+			int mEdge = fi[4] - 1;
+			if (EDGE_INFO[mEdge][0] == fi[1]) {
+				assert EDGE_INFO[mEdge][1] == fi[2];
+				_E_cell(c, mEdge, row, (att+2)%6);
+			}
+			else {
+				assert EDGE_INFO[mEdge][0] == fi[2];
+				assert EDGE_INFO[mEdge][1] == fi[1];
+				_E_cell(c, mEdge, size+1-row, (att+5)%6);
+			}
+		}
+		else
+		{
+			int n = size - row;
+			int b = (size * (size-1) - n * (n+1)) / 2;
+			int i = b + idx - 1;
+
+			int eachFaceSize = size * (size-1) / 2;
+			c.location = 12 + 30 * size + eachFaceSize * mFace + i;
+			c.orientation = att;
+		}
+	}
+
 	//implements Geometry(new)
 	public void stepCursor(Cursor c)
 	{
@@ -725,36 +808,179 @@ public class SphereGeometry implements Geometry
 		{
 			int mEdge = (cellId-12) / size;
 			int idx = 1 + (cellId-12) % size;
-			if (c.orientation == EAST) {
-				if (idx < size) {
-					c.location = getEdgeCell(mEdge+1, idx+1)-1;
-					c.orientation = WEST;
-					return;
+			switch (c.orientation) {
+			case EAST:
+				_E_cell(c, mEdge, idx+1, WEST);
+				return;
+
+			case WEST:
+				_E_cell(c, mEdge, idx-1, EAST);
+				return;
+
+			case NORTHEAST: {
+				int mFace = EDGE_INFO[mEdge][3];
+				if (FACE_INFO[mFace][3] == mEdge+1) {
+					// our edge is the "base" of mFace
+					_F_cell(c, mFace, 1, idx, SOUTHWEST);
+				}
+				else if (FACE_INFO[mFace][4] == mEdge+1) {
+					// our edge is the "right" side of mFace
+					_F_cell(c, mFace, idx, size-idx, EAST);
 				}
 				else {
-					c.location = EDGE_INFO[mEdge][1]-1;
-					c.orientation = EDGE_INFO[mEdge][5];
-					return;
+					// our edge is the "left" side of mFace
+					_F_cell(c, mFace, size-idx, 1, NORTHWEST);
 				}
-			}
-			else if (c.orientation == WEST) {
-				if (idx > 1) {
-					c.location = getEdgeCell(mEdge+1, idx-1)-1;
-					c.orientation = EAST;
-					return;
+				return;
+				}
+
+			case NORTHWEST: {
+				int mFace = EDGE_INFO[mEdge][3];
+				if (FACE_INFO[mFace][3] == mEdge+1) {
+					// our edge is the "base" of mFace
+					_F_cell(c, mFace, 1, idx-1, SOUTHEAST);
+				}
+				else if (FACE_INFO[mFace][4] == mEdge+1) {
+					// our edge is the "right" side of mFace
+					_F_cell(c, mFace, idx-1, size-(idx-1), NORTHWEST);
 				}
 				else {
-					c.location = EDGE_INFO[mEdge][0]-1;
-					c.orientation = EDGE_INFO[mEdge][4];
-					return;
+					// our edge is the "left" side of mFace
+					_F_cell(c, mFace, size+1-idx, 1, WEST);
 				}
-			}
-			else {
+				return;
+				}
+
+			case SOUTHEAST: {
+				int mFace = EDGE_INFO[mEdge][2];
+				if (FACE_INFO[mFace][3] == mEdge+1) {
+					// our edge is the "base" of mFace
+					_F_cell(c, mFace, 1, size-idx, SOUTHEAST);
+				}
+				else if (FACE_INFO[mFace][4] == mEdge+1) {
+					// our edge is the "right" side of mFace
+					_F_cell(c, mFace, size-idx, idx, NORTHEAST);
+				}
+				else {
+					// our edge is the "left" side of mFace
+					_F_cell(c, mFace, idx, 1, WEST);
+				}
+				return;
+				}
+
+			case SOUTHWEST: {
+				int mFace = EDGE_INFO[mEdge][2];
+				if (FACE_INFO[mFace][3] == mEdge+1) {
+					// our edge is the "base" of mFace
+					_F_cell(c, mFace, 1, size+1-idx, SOUTHWEST);
+				}
+				else if (FACE_INFO[mFace][4] == mEdge+1) {
+					// our edge is the "right" side of mFace
+					_F_cell(c, mFace, size+1-idx, idx-1, EAST);
+				}
+				else {
+					// our edge is the "left" side of mFace
+					_F_cell(c, mFace, idx-1, 1, NORTHWEST);
+				}
+				return;
+				}
+
+			default:
 				throw new Error("not implemented");
 			}
 		}
 	}
 
 	static final int EAST = 0;
+	static final int NORTHEAST = 1;
+	static final int NORTHWEST = 2;
 	static final int WEST = 3;
+	static final int SOUTHWEST = 4;
+	static final int SOUTHEAST = 5;
+
+//	private int _makeEVertex(int mEdge, int idx, int b)
+//	{
+//		assert mEdge >= 0 && mEdge < 30;
+//		assert idx >= 1 && idx <= size;
+//		assert b == 0 || b == 1;
+//
+//	}
+//
+//	private int _makeVVertex(int mSpecial, int corner)
+//	{
+//		assert mSpecial >= 0 && mSpecial < 12;
+//		assert corner >= 0 && corner < 5;
+//
+//		return mSpecial*5 + corner;
+//	}
+//
+//	//implements Geometry(new)
+//	public int getVertex(Cursor c)
+//	{
+//		assert size >= 1;
+//
+//		int cellId = c.location;
+//		if (cellId <= 12)
+//		{
+//			return _makeVVertex(cellId-1, c.orientation%5);
+//		}
+//
+//		else if (cellId <= 30 * size + 12)
+//		{
+//			int mEdge = (cellId-13) / size;
+//			int idx = ((cellId-13) % size) + 1;
+//
+//			/*             *****     next E cell
+//			 *           3_______2
+//			 *           /       \
+//			 *          /         \
+//			 *        4/           \1
+//			 *         \           /
+//			 *          \         /
+//			 *           \_______/
+//			 *           5       0
+//			 *             *****     previous E cell
+//			 */
+//
+//			int vtx = c.orientation;
+//			if (vtx == 0) {
+//				idx--;
+//				vtx = 2;
+//			} else if (vtx == 5) {
+//				idx--;
+//				vtx = 3;
+//			}
+//
+//			if (vtx == 2) {
+//				return _makeEVertex(mEdge, idx, 0);
+//			}
+//			else if (vtx == 3) {
+//				return _makeEVertex(mEdge, idx, 1);
+//			}
+//			throw new Error("not implemented");
+//		}
+//
+//		throw new Error("not implemented");
+//	}
+//
+//	//implements Geometry(new)
+//	public Cursor fromVertex(int vertex)
+//	{
+//		assert size >= 1;
+//
+//		if (vertex < 60) {
+//			return new Cursor(vertex/5, vertex%5);
+//		}
+//
+//		vertex -= 60;
+//		if (vertex < (size-1)*2*30) {
+//			assert size-1 >= 1;
+//			int mEdge = vertex / ((size-1)*2);
+//			int idx = (vertex % ((size-1)*2)) / 2;
+//			int jdx = vertex % 2;
+//
+//			int b = getEdgeCell(mEdge+1, idx+1);
+//			return new Cursor(b, jdx);
+//		}
+//	}
 }
