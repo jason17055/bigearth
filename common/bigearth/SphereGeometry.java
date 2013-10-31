@@ -950,71 +950,263 @@ neverReached();
 	static final int SOUTHWEST = 4;
 	static final int SOUTHEAST = 5;
 
-//	private int _makeEVertex(int mEdge, int idx, int b)
-//	{
-//		assert mEdge >= 0 && mEdge < 30;
-//		assert idx >= 1 && idx <= size;
-//		assert b == 0 || b == 1;
-//
-//	}
-//
-//	private int _makeVVertex(int mSpecial, int corner)
-//	{
-//		assert mSpecial >= 0 && mSpecial < 12;
-//		assert corner >= 0 && corner < 5;
-//
-//		return mSpecial*5 + corner;
-//	}
-//
-//	//implements Geometry(new)
-//	public int getVertex(Cursor c)
-//	{
-//		assert size >= 1;
-//
-//		int cellId = c.location;
-//		if (cellId <= 12)
-//		{
-//			return _makeVVertex(cellId-1, c.orientation%5);
-//		}
-//
-//		else if (cellId <= 30 * size + 12)
-//		{
-//			int mEdge = (cellId-13) / size;
-//			int idx = ((cellId-13) % size) + 1;
-//
-//			/*             *****     next E cell
-//			 *           3_______2
-//			 *           /       \
-//			 *          /         \
-//			 *        4/           \1
-//			 *         \           /
-//			 *          \         /
-//			 *           \_______/
-//			 *           5       0
-//			 *             *****     previous E cell
-//			 */
-//
-//			int vtx = c.orientation;
-//			if (vtx == 0) {
-//				idx--;
-//				vtx = 2;
-//			} else if (vtx == 5) {
-//				idx--;
-//				vtx = 3;
-//			}
-//
-//			if (vtx == 2) {
-//				return _makeEVertex(mEdge, idx, 0);
-//			}
-//			else if (vtx == 3) {
-//				return _makeEVertex(mEdge, idx, 1);
-//			}
-//			throw new Error("not implemented");
-//		}
-//
-//		throw new Error("not implemented");
-//	}
-//
+	private int eEdge(int mEdge, int idx, int dir)
+	{
+		assert mEdge >= 0 && mEdge < 30;
+		assert idx >= 1 && idx <= size;
+		assert size >= 1;
+
+		switch (dir)
+		{
+		case WEST:
+			if (idx == 1) {
+				// edge is a vEdge
+				int mSpecial = EDGE_INFO[mEdge][0];
+				return vEdge(mSpecial, EDGE_INFO[mEdge][4]);
+			}
+			else {
+				assert idx >= 2;
+				return 60 + (size-1)*mEdge + (idx-2);
+			}
+
+		case EAST:
+			if (idx == size) {
+				int mSpecial = EDGE_INFO[mEdge][1];
+				return vEdge(mSpecial, EDGE_INFO[mEdge][5]);
+			}
+			else {
+				assert idx < size;
+				return 60 + (size-1)*mEdge + (idx-1);
+			}
+
+		default:
+			throw new Error("not implemented");
+		}
+	}
+
+	private int vEdge(int mSpecial, int dir)
+	{
+		assert mSpecial >= 0 && mSpecial < 12;
+		assert dir >= 0 && dir < 5;
+		assert size >= 1;
+
+		return mSpecial*5 + dir;
+	}
+
+	//implements Geometry(new)
+	public int getEdge(Cursor c)
+	{
+		assert size >= 1;
+
+		int cellId = c.location;
+		if (cellId < 12)
+		{
+			return vEdge(cellId, c.orientation%5);
+		}
+
+		else if (cellId - 12 < 30 * size)
+		{
+			int mEdge = (cellId-12) / size;
+			int idx = ((cellId-12) % size) + 1;
+
+			return eEdge(mEdge, idx, c.orientation);
+		}
+
+		else
+		{
+			CellComponents m = decomposeFaceCell(cellId);
+			throw new Error("not implemented");
+
+			//return fEdge(m.mFace, m.row, m.idx, c.orientation);
+		}
+	}
+
+	static final int SE_CORNER = 0;
+	static final int NE_CORNER = 1;
+	static final int N_CORNER = 2;
+	static final int NW_CORNER = 3;
+	static final int SW_CORNER = 4;
+	static final int S_CORNER = 5;
+
+	private int fVertex(int mFace, int row, int idx, int dir)
+	{
+		assert mFace >= 0 && mFace < 20;
+		assert row >= 0 && row <= size;
+		assert dir >= 0 && dir < 6;
+
+		switch (dir) {
+		case SE_CORNER:
+			return fVertex(mFace, row + 1, idx, N_CORNER);
+		case NE_CORNER:
+			return fVertex(mFace, row, idx + 1, NW_CORNER);
+		case SW_CORNER:
+			return fVertex(mFace, row + 1, idx - 1, N_CORNER);
+		case S_CORNER:
+			return fVertex(mFace, row + 1, idx, NW_CORNER);
+
+		case N_CORNER:
+			if (row == 1) {
+				int mEdge = FACE_INFO[mFace][3]-1;
+				if (EDGE_INFO[mEdge][0] == FACE_INFO[mFace][0]) {
+					assert EDGE_INFO[mEdge][1] == FACE_INFO[mFace][1];
+					return eVertex(mEdge, idx, SE_CORNER);
+				}
+				else {
+					assert EDGE_INFO[mEdge][0]==FACE_INFO[mFace][1];
+					assert EDGE_INFO[mEdge][1] == FACE_INFO[mFace][0];
+					return eVertex(mEdge, size+1-idx, NW_CORNER);
+				}
+			}
+			else if (idx == 0) {
+				int mEdge = FACE_INFO[mFace][5]-1;
+				if (EDGE_INFO[mEdge][0] == FACE_INFO[mFace][0]) {
+					assert EDGE_INFO[mEdge][1] == FACE_INFO[mFace][2];
+					return eVertex(mEdge, row, NW_CORNER);
+				}
+				else {
+					assert EDGE_INFO[mEdge][0] == FACE_INFO[mFace][2];
+					assert EDGE_INFO[mEdge][1] == FACE_INFO[mFace][0];
+					return eVertex(mEdge, size+1-row, SE_CORNER);
+				}
+			}
+			else if (idx == size+1-row) {
+				int mEdge = FACE_INFO[mFace][4]-1;
+				if (EDGE_INFO[mEdge][0] == FACE_INFO[mFace][1]) {
+					assert EDGE_INFO[mEdge][1] == FACE_INFO[mFace][2];
+					return eVertex(mEdge, row, SW_CORNER);
+				}
+				else {
+					assert EDGE_INFO[mEdge][0] == FACE_INFO[mFace][2];
+					assert EDGE_INFO[mEdge][1] == FACE_INFO[mFace][1];
+					return eVertex(mEdge, size+1-row, NE_CORNER);
+				}
+			}
+			else {
+				assert size >= 1;
+				assert row >= 2;
+
+				int redCornersPerFace = size*(size+1)/2;
+				int bluCornersPerFace = (size-2)*(size-1)/2;
+
+				int nrow = size-row;
+				assert nrow >= 1;
+				assert idx >= 1;
+
+				return 60 + (size-1)*60
+					+ mFace*(redCornersPerFace+bluCornersPerFace)
+					+ redCornersPerFace
+					+ (nrow-1)*(nrow)/2 + idx-1;
+			}
+
+		case NW_CORNER:
+			assert row >= 1;
+			assert idx >= 1;
+
+			int redCornersPerFace = size*(size+1)/2;
+			int bluCornersPerFace = (size-2)*(size-1)/2;
+
+			int nrow = size-row;
+			assert nrow >= 0;
+
+			return 60 + (size-1)*60
+				+ mFace*(redCornersPerFace+bluCornersPerFace)
+				+ (nrow)*(nrow+1)/2 + idx-1;
+
+		default:
+			throw new Error("not implemented");
+		}
+	}
+
+	private int eVertex(int mEdge, int idx, int dir)
+	{
+		assert mEdge >= 0 && mEdge < 30;
+		assert idx >= 1 && idx <= size;
+
+		assert size >= 1;
+		final int cornersPerEdge = 2 * (size-1);
+
+		switch (dir)
+		{
+		case SE_CORNER:
+			return 60 + mEdge*cornersPerEdge
+				+ (idx-1)*2
+				+ 0;
+		case NE_CORNER:
+			return 60 + mEdge*cornersPerEdge
+				+ (idx-1)*2
+				+ 1;
+		case SW_CORNER:
+			return eVertex(mEdge, idx-1, SE_CORNER);
+		case NW_CORNER:
+			return eVertex(mEdge, idx-1, SW_CORNER);
+		default:
+			throw new Error("not implemented");
+		}
+	}
+
+	private int vVertex(int mSpecial, int dir)
+	{
+		assert mSpecial >= 0 && mSpecial < 12;
+		assert dir >= 0 && dir < 5;
+
+		return mSpecial*5 + dir;
+	}
+
+	//implements Geometry(new)
+	public int getVertex(Cursor c)
+	{
+		assert size >= 1;
+
+		int cellId = c.location;
+		if (cellId < 12)
+		{
+			return vVertex(cellId, c.orientation%5);
+		}
+
+		else if (cellId - 12 < 30 * size)
+		{
+			int mEdge = (cellId-12) / size;
+			int idx = ((cellId-12) % size) + 1;
+
+			return eVertex(mEdge, idx, c.orientation);
+		}
+
+		else
+		{
+			CellComponents m = decomposeFaceCell(cellId);
+
+			return fVertex(m.mFace, m.row, m.idx, c.orientation);
+		}
+	}
+
+	static class CellComponents
+	{
+		int mFace;
+		int row;
+		int idx;
+	}
+
+	CellComponents decomposeFaceCell(int cellId)
+	{
+		int baseAllFaces = 12 + 30 * size;
+		int eachFaceSize = size * (size-1) / 2;
+
+		int mFace = (cellId - baseAllFaces) / eachFaceSize;
+		int i = (cellId - baseAllFaces) % eachFaceSize;
+		int j = eachFaceSize - i;
+
+		int row = size - 1 - (int)Math.floor((-1 + Math.sqrt(8 * (j-1) + 1))/2);
+		int n = size - row;
+		int b = (size * (size - 1) - n * (n+1)) / 2;
+		int idx = i - b + 1;
+
+		CellComponents m = new CellComponents();
+		m.mFace = mFace;
+		m.row = row;
+		m.idx = idx;
+		return m;
+	}
+
 //	//implements Geometry(new)
 //	public Cursor fromVertex(int vertex)
 //	{
