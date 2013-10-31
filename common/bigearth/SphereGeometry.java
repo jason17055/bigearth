@@ -27,38 +27,66 @@ public class SphereGeometry implements Geometry
 	/// of an icosahedron. Each row corresponds to one of the 30 ridges.
 	/// The first two fields are the endpoints (pentagon regions) of the ridge
 	/// (in lexigraphic order). 3rd and 4th fields are face numbers.
+	/// 5th and 6th fields indicate the orientation within the pentagon
+	/// regions of the edge.
 	static int [][] EDGE_INFO = {
-		{ 1, 2, 5, 1 },
-		{ 1, 3, 1, 2 },
-		{ 1, 4, 2, 3 },
-		{ 1, 5, 3, 4 },
-		{ 1, 6, 4, 5 },
-		{ 2, 3, 6, 1 },
-        	{ 3, 4, 8, 2 },
-        	{ 4, 5, 10, 3 },
-        	{ 5, 6, 12, 4 },
-        	{ 2, 6, 5, 14 },
-        	{ 2, 7, 15, 6 },
-        	{ 3, 7, 6, 7 },
-        	{ 3, 8, 7, 8 },
-        	{ 4, 8, 8, 9},
-        	{ 4, 9, 9, 10 },
-        	{ 5, 9, 10, 11 },
-        	{ 5, 10, 11, 12 },
-        	{ 6, 10, 12, 13 },
-        	{ 6, 11, 13, 14 },
-        	{ 2, 11, 14, 15 },
-        	{ 7, 8, 16, 7 },
-        	{ 8, 9, 17, 9 },
-        	{ 9, 10, 18, 11 },
-        	{ 10, 11, 19, 13 },
-        	{ 7, 11, 15, 20 },
-        	{ 8, 12, 16, 17 },
-        	{ 9, 12, 17, 18 },
-        	{ 10, 12, 18, 19 },
-        	{ 11, 12, 19, 20 },
-        	{ 7, 12, 20, 16 }
+	//edge 1..10
+		{  1, 2,    5, 1,    4, 0 },
+		{  1, 3,    1, 2,    3, 0 },
+		{  1, 4,    2, 3,    2, 0 },
+		{  1, 5,    3, 4,    1, 0 },
+		{  1, 6,    4, 5,    0, 0 },
+		{  2, 3,    6, 1,    1, 4 },
+        	{  3, 4,    8, 2,    1, 4 },
+        	{  4, 5,   10, 3,    1, 4 },
+        	{  5, 6,   12, 4,    1, 4 },
+        	{  2, 6,    5,14,    4, 1 },
+	//edge 11..20
+        	{  2, 7,   15, 6,    2, 0 },
+        	{  3, 7,    6, 7,    3, 1 },
+        	{  3, 8,    7, 8,    2, 0 },
+        	{  4, 8,    8, 9,    3, 1 },
+        	{  4, 9,    9,10,    2, 0 },
+        	{  5, 9,   10,11,    3, 1 },
+        	{  5,10,   11,12,    2, 0 },
+        	{  6,10,   12,13,    3, 1 },
+        	{  6,11,   13,14,    2, 0 },
+        	{  2,11,   14,15,    3, 1 },
+	//edge 21..30
+        	{  7, 8,   16, 7,    2, 4 },
+        	{  8, 9,   17, 9,    2, 4 },
+        	{  9,10,   18,11,    2, 4 },
+        	{ 10,11,   19,13,    2, 4 },
+        	{  7,11,   15,20,    4, 2 },
+        	{  8,12,   16,17,    3, 0 },
+        	{  9,12,   17,18,    3, 1 },
+        	{ 10,12,   18,19,    3, 2 },
+        	{ 11,12,   19,20,    3, 3 },
+        	{  7,12,   20,16,    3, 4 }
 		};
+
+	private static boolean checkEdgeBackAttitudes()
+	{
+		for (int i = 0; i < PENT_INFO.length; i++) {
+			for (int j = 0; j < 5; j++) {
+				int eid = PENT_INFO[i][j] - 1;
+				if (EDGE_INFO[eid][0] == i+1) {
+					return false;
+				}
+				else if (EDGE_INFO[eid][1] == i+1) {
+					return false;
+				}
+				else {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	static
+	{
+		assert checkEdgeBackAttitudes();
+	}
 
 	/// Describes the "faces" of this geometry. (Faces are those areas
 	/// composed entirely of hexagonal regions and on a plane.)
