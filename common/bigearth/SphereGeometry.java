@@ -72,10 +72,14 @@ public class SphereGeometry implements Geometry
 			for (int j = 0; j < 5; j++) {
 				int eid = PENT_INFO[i][j] - 1;
 				if (EDGE_INFO[eid][0] == i+1) {
-					return false;
+					if (EDGE_INFO[eid][4] != j) {
+						throw new Error("wrong back-link for edge "+eid+".0");
+					}
 				}
 				else if (EDGE_INFO[eid][1] == i+1) {
-					return false;
+					if (EDGE_INFO[eid][5] != j) {
+						throw new Error("wrong back-link for edge "+eid+".1");
+					}
 				}
 				else {
 					return false;
@@ -818,7 +822,7 @@ public class SphereGeometry implements Geometry
 				return;
 
 			case NORTHEAST: {
-				int mFace = EDGE_INFO[mEdge][3];
+				int mFace = EDGE_INFO[mEdge][3]-1;
 				if (FACE_INFO[mFace][3] == mEdge+1) {
 					// our edge is the "base" of mFace
 					_F_cell(c, mFace, 1, idx, SOUTHWEST);
@@ -835,7 +839,7 @@ public class SphereGeometry implements Geometry
 				}
 
 			case NORTHWEST: {
-				int mFace = EDGE_INFO[mEdge][3];
+				int mFace = EDGE_INFO[mEdge][3]-1;
 				if (FACE_INFO[mFace][3] == mEdge+1) {
 					// our edge is the "base" of mFace
 					_F_cell(c, mFace, 1, idx-1, SOUTHEAST);
@@ -852,7 +856,7 @@ public class SphereGeometry implements Geometry
 				}
 
 			case SOUTHEAST: {
-				int mFace = EDGE_INFO[mEdge][2];
+				int mFace = EDGE_INFO[mEdge][2]-1;
 				if (FACE_INFO[mFace][3] == mEdge+1) {
 					// our edge is the "base" of mFace
 					_F_cell(c, mFace, 1, size-idx, SOUTHEAST);
@@ -869,7 +873,7 @@ public class SphereGeometry implements Geometry
 				}
 
 			case SOUTHWEST: {
-				int mFace = EDGE_INFO[mEdge][2];
+				int mFace = EDGE_INFO[mEdge][2]-1;
 				if (FACE_INFO[mFace][3] == mEdge+1) {
 					// our edge is the "base" of mFace
 					_F_cell(c, mFace, 1, size+1-idx, SOUTHWEST);
@@ -888,6 +892,9 @@ public class SphereGeometry implements Geometry
 			default:
 				throw new Error("not implemented");
 			}
+		}
+		else {
+			throw new Error("not implemented");
 		}
 	}
 

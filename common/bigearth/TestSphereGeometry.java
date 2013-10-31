@@ -62,6 +62,7 @@ public class TestSphereGeometry
 				}
 				while (c.location >= 12);
 
+				assert count == g.size+1;
 				System.out.print(" walked "+count+" steps to "+c);
 
 				for (int k = 0; k < count; k++) {
@@ -71,6 +72,33 @@ public class TestSphereGeometry
 
 				assert c.location == i;
 				System.out.println();
+			}
+		}
+
+		for (int i = 0; i < g.getFaceCount(); i++) {
+			int [] nn = g.getNeighbors(i+1);
+			boolean [] found = new boolean[nn.length];
+			for (int j = 0; j < nn.length; j++) {
+				Cursor c = new Cursor(i, j);
+
+				g.stepCursor(c);
+				assert c.location != i;
+
+				boolean anyFound = false;
+				for (int k = 0; k < nn.length; k++) {
+					if (!found[k] && nn[k] == c.location+1) {
+						found[k] = true;
+						anyFound = true;
+					}
+				}
+				assert anyFound;
+
+				g.stepCursor(c);
+				assert c.location == i;
+			}
+
+			for (boolean b : found) {
+				assert b;
 			}
 		}
 	}
