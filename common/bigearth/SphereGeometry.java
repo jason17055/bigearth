@@ -798,8 +798,6 @@ private void neverReached() { throw new Error("reached"); }
 	//implements Geometry(new)
 	public void stepCursor(Cursor c)
 	{
-		assert size >= 1;
-
 		int cellId = c.location;
 		if (cellId < 12)
 		{
