@@ -727,7 +727,7 @@ public class SphereGeometry implements Geometry
 		else {
 			assert idx >= 1 && idx <= size;
 
-			c.location = getEdgeCell(mEdge+1, idx)-1;
+			c.location = 12 + size * mEdge + (idx-1);
 			c.orientation = att;
 		}
 	}
