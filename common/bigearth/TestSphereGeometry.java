@@ -77,28 +77,22 @@ public class TestSphereGeometry
 
 		for (int i = 0; i < g.getFaceCount(); i++) {
 			int [] nn = g.getNeighbors(i+1);
-			boolean [] found = new boolean[nn.length];
+System.out.print(i+": expected neighbors:");
+for (int j = 0; j < nn.length; j++) {
+	System.out.print(" "+(nn[j]-1));
+}
+System.out.println();
 			for (int j = 0; j < nn.length; j++) {
 				Cursor c = new Cursor(i, j);
 
 				g.stepCursor(c);
 				assert c.location != i;
 
-				boolean anyFound = false;
-				for (int k = 0; k < nn.length; k++) {
-					if (!found[k] && nn[k] == c.location+1) {
-						found[k] = true;
-						anyFound = true;
-					}
-				}
-				assert anyFound;
+System.out.println(new Cursor(i,j) + " => "+c);
+				assert c.location == nn[j]-1;
 
 				g.stepCursor(c);
-				assert c.location == i;
-			}
-
-			for (boolean b : found) {
-				assert b;
+				assert c.location == i && c.orientation == j: "step back from "+new Cursor(i,j)+" gave "+c;
 			}
 		}
 	}

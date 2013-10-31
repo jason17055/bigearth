@@ -708,18 +708,18 @@ public class SphereGeometry implements Geometry
 		c.orientation = (c.orientation + k + (adjust%k)) % k;
 	}
 
-	private void _E_cell(Cursor c, int mEdge, int idx, int or)
+	private void _E_cell(Cursor c, int mEdge, int idx, int att)
 	{
 		if (idx == 0) {
 
-			assert or == EAST;
+			assert att == EAST;
 
 			c.location = EDGE_INFO[mEdge][0]-1;
 			c.orientation = EDGE_INFO[mEdge][4];
 		}
 		else if (idx == size+1) {
 
-			assert or == WEST;
+			assert att == WEST;
 
 			c.location = EDGE_INFO[mEdge][1]-1;
 			c.orientation = EDGE_INFO[mEdge][5];
@@ -728,7 +728,7 @@ public class SphereGeometry implements Geometry
 			assert idx >= 1 && idx <= size;
 
 			c.location = getEdgeCell(mEdge+1, idx)-1;
-			c.orientation = or;
+			c.orientation = att;
 		}
 	}
 
@@ -749,6 +749,7 @@ public class SphereGeometry implements Geometry
 				assert EDGE_INFO[mEdge][0] == fi[1];
 				assert EDGE_INFO[mEdge][1] == fi[0];
 				_E_cell(c, mEdge, size+1-idx, (att+3)%6);
+neverReached();
 			}
 		}
 		else if (idx == 0)
@@ -763,6 +764,7 @@ public class SphereGeometry implements Geometry
 				assert EDGE_INFO[mEdge][0] == fi[2];
 				assert EDGE_INFO[mEdge][1] == fi[0];
 				_E_cell(c, mEdge, size+1-row, (att+4)%6);
+neverReached();
 			}
 		}
 		else if (idx == size + 1 - row)
@@ -791,6 +793,8 @@ public class SphereGeometry implements Geometry
 		}
 	}
 
+private void neverReached() { throw new Error("reached"); }
+
 	//implements Geometry(new)
 	public void stepCursor(Cursor c)
 	{
@@ -817,53 +821,16 @@ public class SphereGeometry implements Geometry
 				_E_cell(c, mEdge, idx+1, WEST);
 				return;
 
-			case WEST:
-				_E_cell(c, mEdge, idx-1, EAST);
-				return;
-
 			case NORTHEAST: {
-				int mFace = EDGE_INFO[mEdge][3]-1;
-				if (FACE_INFO[mFace][3] == mEdge+1) {
-					// our edge is the "base" of mFace
-					_F_cell(c, mFace, 1, idx, SOUTHWEST);
-				}
-				else if (FACE_INFO[mFace][4] == mEdge+1) {
-					// our edge is the "right" side of mFace
-					_F_cell(c, mFace, idx, size-idx, EAST);
-				}
-				else {
-					// our edge is the "left" side of mFace
-					_F_cell(c, mFace, size-idx, 1, NORTHWEST);
-				}
-				return;
-				}
-
-			case NORTHWEST: {
-				int mFace = EDGE_INFO[mEdge][3]-1;
-				if (FACE_INFO[mFace][3] == mEdge+1) {
-					// our edge is the "base" of mFace
-					_F_cell(c, mFace, 1, idx-1, SOUTHEAST);
-				}
-				else if (FACE_INFO[mFace][4] == mEdge+1) {
-					// our edge is the "right" side of mFace
-					_F_cell(c, mFace, idx-1, size-(idx-1), NORTHWEST);
-				}
-				else {
-					// our edge is the "left" side of mFace
-					_F_cell(c, mFace, size+1-idx, 1, WEST);
-				}
-				return;
-				}
-
-			case SOUTHEAST: {
 				int mFace = EDGE_INFO[mEdge][2]-1;
 				if (FACE_INFO[mFace][3] == mEdge+1) {
-					// our edge is the "base" of mFace
+					// our edge is the "top" of mFace
 					_F_cell(c, mFace, 1, size-idx, SOUTHEAST);
+neverReached();
 				}
 				else if (FACE_INFO[mFace][4] == mEdge+1) {
 					// our edge is the "right" side of mFace
-					_F_cell(c, mFace, size-idx, idx, NORTHEAST);
+					_F_cell(c, mFace, size-idx, idx, SOUTHEAST);
 				}
 				else {
 					// our edge is the "left" side of mFace
@@ -872,11 +839,12 @@ public class SphereGeometry implements Geometry
 				return;
 				}
 
-			case SOUTHWEST: {
+			case NORTHWEST: {
 				int mFace = EDGE_INFO[mEdge][2]-1;
 				if (FACE_INFO[mFace][3] == mEdge+1) {
-					// our edge is the "base" of mFace
-					_F_cell(c, mFace, 1, size+1-idx, SOUTHWEST);
+					// our edge is the "top" of mFace
+					_F_cell(c, mFace, 1, size+1-idx, SOUTHEAST);
+neverReached();
 				}
 				else if (FACE_INFO[mFace][4] == mEdge+1) {
 					// our edge is the "right" side of mFace
@@ -884,7 +852,47 @@ public class SphereGeometry implements Geometry
 				}
 				else {
 					// our edge is the "left" side of mFace
-					_F_cell(c, mFace, idx-1, 1, NORTHWEST);
+					_F_cell(c, mFace, idx-1, 1, SOUTHWEST);
+				}
+				return;
+				}
+
+			case WEST:
+				_E_cell(c, mEdge, idx-1, EAST);
+				return;
+
+			case SOUTHWEST: {
+				int mFace = EDGE_INFO[mEdge][3]-1;
+				if (FACE_INFO[mFace][3] == mEdge+1) {
+					// our edge is the "top" of mFace
+					_F_cell(c, mFace, 1, idx-1, NORTHEAST);
+				}
+				else if (FACE_INFO[mFace][4] == mEdge+1) {
+					// our edge is the "right" side of mFace
+					_F_cell(c, mFace, idx-1, size-(idx-1), SOUTHEAST);
+				}
+				else {
+					// our edge is the "left" side of mFace
+					_F_cell(c, mFace, size+1-idx, 1, WEST);
+neverReached();
+				}
+				return;
+				}
+
+			case SOUTHEAST: {
+				int mFace = EDGE_INFO[mEdge][3]-1;
+				if (FACE_INFO[mFace][3] == mEdge+1) {
+					// our edge is the "top" of mFace
+					_F_cell(c, mFace, 1, idx, NORTHWEST);
+				}
+				else if (FACE_INFO[mFace][4] == mEdge+1) {
+					// our edge is the "right" side of mFace
+					_F_cell(c, mFace, idx, size-idx, EAST);
+				}
+				else {
+					// our edge is the "left" side of mFace
+					_F_cell(c, mFace, size-idx, 1, NORTHWEST);
+neverReached();
 				}
 				return;
 				}
@@ -893,8 +901,42 @@ public class SphereGeometry implements Geometry
 				throw new Error("not implemented");
 			}
 		}
-		else {
-			throw new Error("not implemented");
+		else
+		{
+			int baseAllFaces = 12 + 30 * size;
+			int eachFaceSize = size * (size-1) / 2;
+
+			int mFace = (cellId - baseAllFaces) / eachFaceSize;
+			int i = (cellId - baseAllFaces) % eachFaceSize;
+			int j = eachFaceSize - i;
+
+			int row = size - 1 - (int)Math.floor((-1 + Math.sqrt(8 * (j-1) + 1))/2);
+			int n = size - row;
+			int b = (size * (size - 1) - n * (n+1)) / 2;
+			int idx = i - b + 1;
+
+			switch (c.orientation) {
+			case EAST:
+				_F_cell(c, mFace, row, idx+1, WEST);
+				return;
+			case NORTHEAST:
+				_F_cell(c, mFace, row-1, idx+1, SOUTHWEST);
+				return;
+			case NORTHWEST:
+				_F_cell(c, mFace, row-1, idx, SOUTHEAST);
+				return;
+			case WEST:
+				_F_cell(c, mFace, row, idx-1, EAST);
+				return;
+			case SOUTHWEST:
+				_F_cell(c, mFace, row+1, idx-1, NORTHEAST);
+				return;
+			case SOUTHEAST:
+				_F_cell(c, mFace, row+1, idx, NORTHWEST);
+				return;
+			default:
+				throw new Error("not implemented");
+			}
 		}
 	}
 
