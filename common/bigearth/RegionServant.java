@@ -33,6 +33,10 @@ class RegionServant
 	/// Average additional moisture from flooding of flood plains.
 	int floods;
 
+	boolean [] riverIn = new boolean[6];
+	boolean [] riverOut = new boolean[6];
+	int riverSize;
+
 	WildlifeServant wildlife;
 
 	/// Goods that are stockpiled.

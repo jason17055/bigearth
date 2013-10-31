@@ -58,18 +58,20 @@ public class MakeRivers
 	 */
 	private boolean addRiverAt(int fromRegion)
 	{
-		double myHeight = world.elevation[fromRegion-1];
+		assert fromRegion >= 0 && fromRegion < g.getFaceCount();
+
+		double myHeight = riverElevation[fromRegion];
 		ArrayList<Integer> candidates = new ArrayList<Integer>();
-		for (int neighbor : g.getNeighbors(fromRegion))
+		for (int nid : g.getNeighbors(fromRegion+1))
 		{
-			if (!remaining.contains(neighbor))
+			if (!remaining.contains(nid-1))
 				continue;
 
-			double neighborHeight = world.elevation[neighbor-1];
+			double neighborHeight = riverElevation[nid-1];
 			if (neighborHeight < myHeight)
 				continue; // never create a river coming from lower elevation
 
-			candidates.add(neighbor);
+			candidates.add(nid-1);
 		}
 
 		if (candidates.isEmpty())
@@ -209,12 +211,14 @@ public class MakeRivers
 
 	void addWaterToRiver(int startRegion, int water)
 	{
+		assert startRegion >= 0 && startRegion < g.getFaceCount();
+
 		int v = startRegion;
 		LakeInfo lake = null; //never add water to initial lake
 		while (lake == null && drainage.containsKey(v))
 		{
 			int next = drainage.get(v);
-			riverVolumes[next-1] += water;
+			riverVolumes[next] += water;
 
 			v = next;
 			lake = lakesByRegion.get(v);
@@ -258,7 +262,7 @@ public class MakeRivers
 		if (candidates.isEmpty())
 		{
 			// this presumably means the entire world is covered in ocean
-			throw new Error("not implemented");
+			throw new Error("Oops, entire world is covered in ocean now");
 		}
 		else
 		{
@@ -276,7 +280,7 @@ public class MakeRivers
 		assert newWaterElevation <= lake.lakeElevation;
 
 		double deltaVolume = LAKE_UNIT_VOLUME * (newWaterElevation-lake.lakeElevation) * lake.regions.size();
-		lake.remaining += deltaVolume;
+		//lake.remaining += Math.floor(deltaVolume);
 		lake.lakeElevation = newWaterElevation;
 	}
 
@@ -343,7 +347,7 @@ System.out.println(lake.toString() + " : addRegionToLake");
 
 		double deltaVolume = LAKE_UNIT_VOLUME * (lake.lakeElevation - (world.elevation[regionId] - 0.5));
 		lake.lakeVolume += deltaVolume;
-		lake.remaining -= deltaVolume;
+		lake.remaining -= Math.floor(deltaVolume);
 
 		// check drainage rules for the new region
 		if (lake.type == LakeType.NONTERMINAL)
@@ -368,7 +372,7 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		}
 
 		// check if this region touches any other lakes
-		for (int nid : g.getNeighbors(regionId))
+		for (int nid : g.getNeighbors(regionId+1))
 		{
 			LakeInfo otherLake = lakesByRegion.get(nid-1);
 			if (otherLake != null && otherLake != lake)
@@ -427,24 +431,6 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		{
 			processMultiHexLake(lake);
 		}
-
-		if (lake.regions.size() >= OCEAN_SIZE_THRESHOLD)
-		{
-			processOcean(lake);
-		}
-	}
-
-	private void processOcean(LakeInfo lake)
-	{
-		// make this an ocean
-		lake.isOcean = true;
-		while (lake.floorElevation < 0)
-		{
-			lake.remaining = 1;
-System.out.println("OCEAN size "+lake.regions.size() + " depth "+lake.lakeElevation);
-			processMultiHexLake(lake);
-		}
-		lake.remaining = 0;
 	}
 
 	boolean checkDrainageCycle(int startVtx)
@@ -534,17 +520,43 @@ System.out.println(lake);
 		}
 	}
 
+	int directionOf(int srcRegion, int destRegion)
+	{
+		int [] nn = g.getNeighbors(srcRegion);
+		int dir = 0;
+		for (int i = 1; i < nn.length; i++) {
+			if (nn[i] == destRegion) {
+				dir = i;
+			}
+		}
+		return dir;
+	}
+
 		//
 		// place rivers
 		//
 	void placeRivers()
 	{
-		//TODO
-		//	RegionServant region = world.world.regions[bRegion-1];
-		//	region.setRiver(aRegion,
-		//		r.volume > 2000 ? RegionSideDetail.SideFeature.RIVER :
-		//		r.volume > 200 ? RegionSideDetail.SideFeature.CREEK :
-		//		RegionSideDetail.SideFeature.BROOK);
+		int numRegions = g.getFaceCount();
+		for (int regionId = 0; regionId < numRegions; regionId++) {
+
+			if (drainage.containsKey(regionId)) {
+				int volume = riverVolumes[regionId];
+				int drainsTo = drainage.get(regionId);
+				int dir = directionOf(regionId+1, drainsTo+1);
+
+				RegionServant fromRegion = world.world.regions[regionId];
+				fromRegion.riverOut[dir] = true;
+				fromRegion.riverSize =
+					volume > 2000 ? 3 :
+					volume > 200 ? 2 :
+					1;
+
+				RegionServant toRegion = world.world.regions[drainsTo];
+				dir = directionOf(drainsTo+1, regionId+1);
+				toRegion.riverIn[dir] = true;
+			}
+		}
 	}
 
 	static enum LakeType
