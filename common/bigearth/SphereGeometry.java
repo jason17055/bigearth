@@ -1,6 +1,7 @@
 package bigearth;
 
 import javax.vecmath.*;
+import bigearth.geom.Cursor;
 
 public class SphereGeometry implements Geometry
 {
@@ -695,4 +696,65 @@ public class SphereGeometry implements Geometry
 			throw new IllegalArgumentException("invalid location");
 		}
 	}
+
+	//implements Geometry(new)
+	public void rotateCursor(Cursor c, int adjust)
+	{
+		int k = c.location < 12 ? 5 : 6;
+		c.orientation = (c.orientation + k + (adjust%k)) % k;
+	}
+
+	//implements Geometry(new)
+	public void stepCursor(Cursor c)
+	{
+		assert size >= 1;
+
+		int cellId = c.location;
+		if (cellId < 12)
+		{
+			assert c.orientation >= 0 && c.orientation < 5;
+
+			int [] pi = PENT_INFO[cellId];
+			int mEdge = pi[c.orientation]-1;
+			int [] ei = EDGE_INFO[mEdge];
+			c.location = getEdgeCell(mEdge+1, ei[0]==cellId+1 ? 1 : size)-1;
+			c.orientation = ei[0] == cellId+1 ? WEST : EAST;
+			return;
+		}
+		else if (cellId - 12 < 30 * size)
+		{
+			int mEdge = (cellId-12) / size;
+			int idx = 1 + (cellId-12) % size;
+			if (c.orientation == EAST) {
+				if (idx < size) {
+					c.location = getEdgeCell(mEdge+1, idx+1)-1;
+					c.orientation = WEST;
+					return;
+				}
+				else {
+					c.location = EDGE_INFO[mEdge][1]-1;
+					c.orientation = EDGE_INFO[mEdge][5];
+					return;
+				}
+			}
+			else if (c.orientation == WEST) {
+				if (idx > 1) {
+					c.location = getEdgeCell(mEdge+1, idx-1)-1;
+					c.orientation = EAST;
+					return;
+				}
+				else {
+					c.location = EDGE_INFO[mEdge][0]-1;
+					c.orientation = EDGE_INFO[mEdge][4];
+					return;
+				}
+			}
+			else {
+				throw new Error("not implemented");
+			}
+		}
+	}
+
+	static final int EAST = 0;
+	static final int WEST = 3;
 }
