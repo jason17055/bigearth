@@ -808,8 +808,13 @@ private void neverReached() { throw new Error("reached"); }
 			int [] pi = PENT_INFO[cellId];
 			int mEdge = pi[c.orientation]-1;
 			int [] ei = EDGE_INFO[mEdge];
-			c.location = getEdgeCell(mEdge+1, ei[0]==cellId+1 ? 1 : size)-1;
-			c.orientation = ei[0] == cellId+1 ? WEST : EAST;
+			if (ei[0] == cellId+1) {
+				_E_cell(c, mEdge, 1, WEST);
+			}
+			else {
+				assert(ei[1] == cellId+1);
+				_E_cell(c, mEdge, size, EAST);
+			}
 			return;
 		}
 		else if (cellId - 12 < 30 * size)
