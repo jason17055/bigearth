@@ -1103,6 +1103,13 @@ class RegionServant
 		{
 			if (this.sides[i] != null)
 				p.sides[i] = this.sides[i].feature;
+			else if (this.riverIn[i]) {
+				p.sides[i] = RegionSideDetail.SideFeature.RIVER;
+			}
+			else if (this.riverOut[i]) {
+				p.sides[i] = RegionSideDetail.SideFeature.OUTGOING_RIVER;
+			}
+
 			if (this.corners[i] != null)
 				p.corners[i] = this.corners[i].feature;
 		}

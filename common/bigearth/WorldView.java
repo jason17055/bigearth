@@ -550,6 +550,10 @@ public class WorldView extends JPanel
 				toScreen_a(bb, x_coords, y_coords);
 
 				RegionProfile r = map.getRegion(i+1);
+				drawRegionRiver((Graphics2D)gr,
+					i+1, r, 
+					mapProj.toScreen(g.getCenterPoint(i+1)),
+					x_coords, y_coords);
 				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
 			}
 
@@ -943,59 +947,42 @@ System.err.println(e);
 		}
 	}
 
-	void drawRegionBorder(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
+	void drawRegionRiver(Graphics2D gr, int regionId, RegionProfile r, Point cp, int [] x_coords, int [] y_coords)
 	{
 		int n = x_coords.length;
 
 		if (r == null)
 			return;
 
+		Stroke oldStroke = gr.getStroke();
+
 		gr.setColor(Color.BLACK);
 		for (int i = 0; i < n; i++)
 		{
 			RegionSideDetail.SideFeature sf = r.getSideFeature(i);
-			if (sf.isRiver())
+			if (sf == RegionSideDetail.SideFeature.RIVER ||
+				sf == RegionSideDetail.SideFeature.OUTGOING_RIVER)
 			{
-				Graphics2D gr2 = (Graphics2D) gr;
-
-				Stroke oldStroke = gr2.getStroke();
-				if (sf != RegionSideDetail.SideFeature.BROOK)
-				{
-
-				gr2.setStroke(new BasicStroke(
+				gr.setStroke(new BasicStroke(
 					sf == RegionSideDetail.SideFeature.RIVER ? 8.0f : 5.0f
 					));
-				gr2.setColor(new Color(170,149,53));
+				gr.setColor(new Color(170,149,53));
+
+				int x0 = cp.x;
+				int y0 = cp.y;
+				int x1 = (x_coords[(i+n-1)%n] + x_coords[i])/2;
+				int y1 = (y_coords[(i+n-1)%n] + y_coords[i])/2;
 
 				drawRiver(gr,
-					x_coords[(i+n-1)%n],
-					y_coords[(i+n-1)%n],
-					x_coords[i],
-					y_coords[i]
+					x0, y0, x1, y1
 					);
-				}
-
-				if (sf != RegionSideDetail.SideFeature.BROOK
-					|| mapProj.zoomFactor > 16)
-				{
-
-				gr2.setStroke(new BasicStroke(
-					sf == RegionSideDetail.SideFeature.RIVER ? 3.0f :
-					sf == RegionSideDetail.SideFeature.CREEK ? 2.0f : 1.0f));
-				gr2.setColor(Color.BLUE);
-
-				drawRiver(gr,
-					x_coords[(i+n-1)%n],
-					y_coords[(i+n-1)%n],
-					x_coords[i],
-					y_coords[i]
-					);
-
-				}
-
-				gr2.setStroke(oldStroke);
 			}
 		}
+		gr.setStroke(oldStroke);
+	}
+
+	void drawRegionBorder(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)
+	{
 	}
 
 	void drawRegionCorners(Graphics gr, int regionId, RegionProfile r, int [] x_coords, int [] y_coords)

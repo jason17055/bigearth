@@ -11,7 +11,7 @@ public class MakeRivers
 	Set<Integer> remaining;
 	Map<Integer, Integer> drainage;
 
-	double [] riverElevation;
+	int [] riverElevation;
 	int [] riverVolumes;
 	Map<Integer, LakeInfo> lakesByRegion;
 	Collection<LakeInfo> lakes;
@@ -29,7 +29,7 @@ public class MakeRivers
 		this.remaining = new HashSet<Integer>();
 		this.drainage = new HashMap<Integer, Integer>();
 
-		this.riverElevation = new double[g.getFaceCount()];
+		this.riverElevation = new int[g.getFaceCount()];
 		this.riverVolumes = new int[g.getFaceCount()];
 		this.lakesByRegion = new HashMap<Integer,LakeInfo>();
 		this.lakes = new ArrayList<LakeInfo>();
@@ -49,7 +49,7 @@ public class MakeRivers
 		for (int i = 0; i < numCells; i++)
 		{
 			remaining.add(i);
-			riverElevation[i] = world.elevation[i];
+			riverElevation[i] = 10*world.elevation[i];
 		}
 	}
 
@@ -60,14 +60,14 @@ public class MakeRivers
 	{
 		assert fromRegion >= 0 && fromRegion < g.getFaceCount();
 
-		double myHeight = riverElevation[fromRegion];
+		int myHeight = riverElevation[fromRegion];
 		ArrayList<Integer> candidates = new ArrayList<Integer>();
 		for (int nid : g.getNeighbors(fromRegion+1))
 		{
 			if (!remaining.contains(nid-1))
 				continue;
 
-			double neighborHeight = riverElevation[nid-1];
+			int neighborHeight = riverElevation[nid-1];
 			if (neighborHeight < myHeight)
 				continue; // never create a river coming from lower elevation
 
@@ -110,11 +110,11 @@ public class MakeRivers
 	 * ensuring that the river slopes down in elevation by
 	 * at least a certain rate.
 	 */
-	void enforceRiverSlope(int vtx, double maxElev)
+	void enforceRiverSlope(int vtx, int maxElev)
 	{
 		assert vtx >= 0 && vtx < g.getFaceCount();
 
-		double h = maxElev;
+		int h = maxElev;
 		while (drainage.containsKey(vtx))
 		{
 			int nextVtx = drainage.get(vtx);
@@ -122,7 +122,7 @@ public class MakeRivers
 			h -= MIN_RIVER_SLOPE;
 
 			vtx = nextVtx;
-			double h1 = riverElevation[vtx];
+			int h1 = riverElevation[vtx];
 			if (h1 <= h)
 			{
 				h = h1;
@@ -131,6 +131,7 @@ public class MakeRivers
 			else
 			{
 				// make a change to river elevation
+				System.out.println("adj riv elevation at "+(vtx+1)+" from "+riverElevation[vtx]+" to "+h);
 				riverElevation[vtx] = h;
 			}
 		}
@@ -168,11 +169,11 @@ public class MakeRivers
 			{
 				// find a starting spot
 				ArrayList<Integer> candidates = new ArrayList<Integer>();
-				double bestH = Double.POSITIVE_INFINITY;
+				int bestH = Integer.MAX_VALUE;
 
 				for (int v : remaining)
 				{
-					double h = riverElevation[v];
+					int h = riverElevation[v];
 					if (h < bestH)
 					{
 						bestH = h;
@@ -275,7 +276,7 @@ public class MakeRivers
 		}
 	}
 
-	private void reduceLakeDepth(LakeInfo lake, double newWaterElevation)
+	private void reduceLakeDepth(LakeInfo lake, int newWaterElevation)
 	{
 		assert newWaterElevation <= lake.lakeElevation;
 
@@ -290,7 +291,7 @@ public class MakeRivers
 		assert lake2 != null;
 		assert lake1 != lake2;
 
-		double newEl = Math.min(lake1.lakeElevation, lake2.lakeElevation);
+		int newEl = Math.min(lake1.lakeElevation, lake2.lakeElevation);
 		reduceLakeDepth(lake1, newEl);
 		reduceLakeDepth(lake2, newEl);
 
@@ -341,11 +342,11 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		lake.regions.add(regionId);
 		lakesByRegion.put(regionId, lake);
 
-		if (lake.floorElevation < world.elevation[regionId]) {
-			lake.floorElevation = world.elevation[regionId];
+		if (lake.floorElevation < riverElevation[regionId]) {
+			lake.floorElevation = riverElevation[regionId];
 		}
 
-		double deltaVolume = LAKE_UNIT_VOLUME * (lake.lakeElevation - (world.elevation[regionId] - 0.5));
+		double deltaVolume = LAKE_UNIT_VOLUME * (lake.lakeElevation - (riverElevation[regionId] - 0.5));
 		lake.lakeVolume += deltaVolume;
 		lake.remaining -= Math.floor(deltaVolume);
 
@@ -472,13 +473,14 @@ System.out.println(lake.toString() + " : addRegionToLake");
 
 		// lowest-elevation to highest-elevation
 
+if (false) {
 		LakeInfo [] allLakes = lakes.toArray(new LakeInfo[0]);
 		Arrays.sort(allLakes,
 			new Comparator<LakeInfo>() {
 			public int compare(LakeInfo a, LakeInfo b)
 			{
-				double a_el = a.lakeElevation;
-				double b_el = b.lakeElevation;
+				int a_el = a.lakeElevation;
+				int b_el = b.lakeElevation;
 				return (a_el > b_el ? 1 :
 					a_el < b_el ? -1 : 0);
 			}});
@@ -492,6 +494,7 @@ System.out.println(lake);
 				processLakeExcess(lake);
 			}
 		}
+}
 
 		placeLakes();
 		placeRivers();
@@ -577,7 +580,7 @@ System.out.println(lake);
 		int origin;
 
 		// The elevation of this lake's surface.
-		double lakeElevation;
+		int lakeElevation;
 
 		/// This is the lake's inflow, units water per units time.
 		int volume;
@@ -636,7 +639,7 @@ System.out.println(lake);
 
 		public String toString()
 		{
-			return String.format("%s at %s (h=%.1f, excess=%d)",
+			return String.format("%s at %s (h=%d, excess=%d)",
 				String.format("%d-region lake", regions.size()),
 				origin,
 				lakeElevation,
@@ -699,7 +702,7 @@ final int LAKE_FLOOD = 10;
 			int cur = Q.remove();
 			for (int n : g.getNeighbors(cur+1))
 			{
-				int heightDiff = world.elevation[n-1] - world.elevation[cur];
+				int heightDiff = riverElevation[n-1] - riverElevation[cur];
 				int floodLevel = floods[cur] - Math.max(1, 1 + heightDiff);
 				if (floodLevel > floods[n-1])
 				{

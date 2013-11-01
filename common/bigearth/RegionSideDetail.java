@@ -10,7 +10,8 @@ public class RegionSideDetail
 		NONE,
 		BROOK,
 		CREEK,
-		RIVER;
+		RIVER,
+		OUTGOING_RIVER;
 
 		public boolean isRiver()
 		{

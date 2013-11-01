@@ -33,7 +33,6 @@ public class WorldViewer extends JFrame
 
 	WorldView view;
 	MakeRivers mrivers;
-	JButton expandLakeBtn;
 	JButton stepBtn;
 	JCheckBoxMenuItem showElevationBtn;
 	JCheckBoxMenuItem showTemperatureBtn;
@@ -109,10 +108,6 @@ public class WorldViewer extends JFrame
 
 		JPanel buttonsPane = new JPanel();
 		add(buttonsPane, BorderLayout.SOUTH);
-
-		expandLakeBtn = new JButton("Expand Lake");
-		expandLakeBtn.addActionListener(this);
-		buttonsPane.add(expandLakeBtn);
 
 		stepBtn = new JButton("Step");
 		stepBtn.addActionListener(this);
@@ -465,42 +460,6 @@ public class WorldViewer extends JFrame
 		new LeadersFrame(world.world, this).setVisible(true);
 	}
 
-	void onExpandLakeClicked()
-	{
-	try {
-		if (mrivers == null)
-			throw new Exception("Must generate rivers first");
-
-		MakeRivers.LakeInfo lake = null;
-		if (view.selection.selectedVertex != null)
-		{
-			lake = mrivers.getLakeAt(view.selection.selectedVertex);
-		}
-		else if (view.selection.selectedRegion != 0)
-		{
-			lake = mrivers.lakesByRegion.get(view.selection.selectedRegion);
-		}
-		
-		if (lake == null)
-			throw new Exception("No lake at selected location");
-
-		if (lake.remaining <= 0)
-			lake.remaining = 1;
-
-		mrivers.processLakeExcess(lake);
-		mrivers.placeLakes();
-		mrivers.placeRivers();
-		reloadImage();
-
-	}
-	catch (Exception e)
-		{
-			JOptionPane.showMessageDialog(this, e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
 	void onGenerateMineralsClicked()
 	{
 		world.generateMinerals();
@@ -783,10 +742,6 @@ public class WorldViewer extends JFrame
 		{
 			onToolSelected(ev.getActionCommand());
 		}
-		else if (ev.getSource() == expandLakeBtn)
-		{
-			onExpandLakeClicked();
-		}
 		else if (ev.getSource() == stepBtn)
 		{
 			world.doOneStep();
@@ -1001,12 +956,6 @@ assert(x >= 1);
 	public void onEdgeSelected(Geometry.EdgeId edge)
 	{
 		System.out.println("selected "+edge);
-		if (mrivers != null) {
-			MakeRivers.RiverInfo river = mrivers.rivers.get(edge);
-			if (river != null) {
-				System.out.println("  river volume: "+river.volume);
-			}
-		}
 	}
 
 	//implements WorldView.Listener
@@ -1014,11 +963,11 @@ assert(x >= 1);
 	{
 		System.out.println("selected "+vertex);
 		if (mrivers != null) {
-			System.out.println("  elevation: " + mrivers.riverElevation.get(vertex));
-			MakeRivers.LakeInfo lake = mrivers.lakes.get(vertex);
-			if (lake != null) {
-				System.out.println("lake here");
-			}
+		//	System.out.println("  elevation: " + mrivers.riverElevation.get(vertex));
+		//	MakeRivers.LakeInfo lake = mrivers.lakesByRegion.get(vertex);
+		//	if (lake != null) {
+		//		System.out.println("lake here");
+		//	}
 		}
 	}
 }
@@ -1044,6 +993,11 @@ class MapAdapter extends MapModel
 		{
 			if (realRegion.sides[i] != null)
 				r.sides[i] = realRegion.sides[i].feature;
+			else if (realRegion.riverIn[i])
+				r.sides[i] = RegionSideDetail.SideFeature.RIVER;
+			else if (realRegion.riverOut[i])
+				r.sides[i] = RegionSideDetail.SideFeature.OUTGOING_RIVER;
+
 			if (realRegion.corners[i] != null)
 				r.corners[i] = realRegion.corners[i].feature;
 		}
