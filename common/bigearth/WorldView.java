@@ -517,6 +517,10 @@ public class WorldView extends JPanel
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
+				Point3d regionPt = g.getCenterPoint(i+1);
+				if (!mapProj.isVisible(regionPt))
+					continue;
+
 				Point3d [] bb = g.getCellBoundary(i+1);
 				int [] x_coords = new int[bb.length];
 				int [] y_coords = new int[bb.length];
@@ -544,6 +548,10 @@ public class WorldView extends JPanel
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
+				Point3d regionPt = g.getCenterPoint(i+1);
+				if (!mapProj.isVisible(regionPt))
+					continue;
+
 				Point3d [] bb = g.getCellBoundary(i+1);
 				int [] x_coords = new int[bb.length];
 				int [] y_coords = new int[bb.length];
@@ -565,6 +573,10 @@ public class WorldView extends JPanel
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
+				Point3d regionPt = g.getCenterPoint(i+1);
+				if (!mapProj.isVisible(regionPt))
+					continue;
+
 				Point3d [] bb = g.getCellBoundary(i+1);
 				int [] x_coords = new int[bb.length];
 				int [] y_coords = new int[bb.length];
@@ -581,6 +593,10 @@ public class WorldView extends JPanel
 			for (int i = 0; i < regionBounds.length; i++)
 			{
 				if (!screen.intersects(regionBounds[i]))
+					continue;
+
+				Point3d regionPt = g.getCenterPoint(i+1);
+				if (!mapProj.isVisible(regionPt))
 					continue;
 
 				Point3d pt = g.getCenterPoint(i+1);
