@@ -1,6 +1,7 @@
 package bigearth;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import javax.vecmath.*;
 
 /**
@@ -46,6 +47,30 @@ public abstract class AbstractProjection
 		this.xOffset = otherProj.xOffset;
 		this.yOffset = otherProj.yOffset;
 		updateMatrices();
+	}
+
+	protected double getAspectMaxX()
+	{
+		return 1.0;
+	}
+
+	protected double getAspectMinX()
+	{
+		return -1.0;
+	}
+
+	public Rectangle getMapDimension()
+	{
+		int x0 = (int)Math.round(
+			DEFAULT_WIDTH * zoomFactor * getAspectMinX()
+			);
+		int x1 = (int)Math.round(
+			DEFAULT_WIDTH * zoomFactor * getAspectMaxX()
+			);
+
+		return new Rectangle(
+			x0, 0, x1-x0, 0
+			);
 	}
 
 	public boolean isVisible(Point3d pt)

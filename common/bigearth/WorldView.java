@@ -381,8 +381,7 @@ public class WorldView extends JPanel
 		int curCount = 0;
 		for (int i = 0; i < numRegions; i++)
 		{
-			Point3d regionPt = g.getCenterPoint(i+1);
-			if (mapProj.isVisible(regionPt)) {
+			if (pts[i] != null) {
 				todo[curCount++] = i;
 			}
 		}
@@ -444,36 +443,58 @@ public class WorldView extends JPanel
 	}
 
 	Rectangle [] regionBounds;
-	void updateRegionBounds(Point [] pts)
+	Polygon [] regionBounds2;
+	Point [] regionPoints;
+
+	void updateRegionBounds()
 	{
 		assert map != null;
 
 		Geometry g = map.getGeometry();
 		int numRegions = g.getFaceCount();
 
-		assert pts.length == numRegions;
-
-		regionBounds = new Rectangle[numRegions];
+		regionPoints = new Point[numRegions];
 		for (int i = 0; i < numRegions; i++)
 		{
-			int min_x = pts[i].x;
-			int min_y = pts[i].y;
-			int max_x = pts[i].x;
-			int max_y = pts[i].y;
-
-			for (int n : g.getNeighbors(i+1))
-			{
-				Point p = pts[n-1];
-				if (p.x > -getWidth() && p.x < min_x) min_x = p.x;
-				if (p.y > -getHeight() && p.y < min_y) min_y = p.y;
-				if (p.x < 2*getWidth() && p.x > max_x) max_x = p.x;
-				if (p.y < 2*getHeight() && p.y > max_y) max_y = p.y;
+			Point3d pt = g.getCenterPoint(i+1);
+			if (mapProj.isVisible(pt)) {
+				regionPoints[i] = mapProj.toScreen(pt);
 			}
-			regionBounds[i] = new Rectangle(
-				min_x,
-				min_y,
-				max_x-min_x+1,
-				max_y-min_y+1);
+		}
+
+		regionBounds = new Rectangle[numRegions];
+		regionBounds2 = new Polygon[numRegions];
+
+		Rectangle nomRect = mapProj.getMapDimension();
+
+		for (int i = 0; i < numRegions; i++)
+		{
+			if (regionPoints[i] == null) {
+				continue;
+			}
+
+			Point3d [] bb = g.getCellBoundary(i+1);
+			int [] x_coords = new int[bb.length];
+			int [] y_coords = new int[bb.length];
+			toScreen_a(bb, x_coords, y_coords);
+
+			if (regionPoints[i].x < nomRect.x + nomRect.width/4) {
+				for (int j = 0; j < bb.length; j++) {
+					if (x_coords[j] > nomRect.x + nomRect.width - nomRect.width/4) {
+						x_coords[j] -= nomRect.width;
+					}
+				}
+			}
+			else if (regionPoints[i].x > nomRect.x+nomRect.width-nomRect.width/4) {
+				for (int j = 0; j < bb.length; j++) {
+					if (x_coords[j] < nomRect.x+nomRect.width/4) {
+						x_coords[j] += nomRect.width;
+					}
+				}
+			}
+
+			regionBounds2[i] = new Polygon(x_coords, y_coords, bb.length);
+			regionBounds[i] = regionBounds2[i].getBounds();
 		}
 	}
 
@@ -489,13 +510,7 @@ public class WorldView extends JPanel
 		int numRegions = colors.length;
 		assert numRegions == g.getFaceCount();
 
-		Point [] pts = new Point[numRegions];
-		for (int i = 0; i < pts.length; i++)
-		{
-			pts[i] = mapProj.toScreen(g.getCenterPoint(i+1));
-		}
-
-		updateRegionBounds(pts);
+		updateRegionBounds();
 
 		Rectangle screen = new Rectangle(0,0,getWidth(),getHeight());
 
@@ -505,31 +520,28 @@ public class WorldView extends JPanel
 
 		if (mapProj.zoomFactor < 4)
 		{
-			drawMap(image, pts);
+			drawMap(image, regionPoints);
 		}
 		else
 		{
 			//
 			// fill region areas
 			//
-			for (int i = 0; i < regionBounds.length; i++)
+			for (int i = 0; i < numRegions; i++)
 			{
+				if (regionBounds[i] == null)
+					continue;
+
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
-				Point3d regionPt = g.getCenterPoint(i+1);
-				if (!mapProj.isVisible(regionPt))
-					continue;
-
-				Point3d [] bb = g.getCellBoundary(i+1);
-				int [] x_coords = new int[bb.length];
-				int [] y_coords = new int[bb.length];
-				toScreen_a(bb, x_coords, y_coords);
+				int [] x_coords = regionBounds2[i].xpoints;
+				int [] y_coords = regionBounds2[i].ypoints;
 
 				if (colors[i] != 0)
 				{
 					gr.setColor(new Color(colors[i]));
-					gr.fillPolygon(x_coords, y_coords, bb.length);
+					gr.fillPolygon(x_coords, y_coords, x_coords.length);
 				}
 				else
 				{
@@ -545,22 +557,19 @@ public class WorldView extends JPanel
 			//
 			for (int i = 0; i < regionBounds.length; i++)
 			{
+				if (regionBounds[i] == null)
+					continue;
+
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
-				Point3d regionPt = g.getCenterPoint(i+1);
-				if (!mapProj.isVisible(regionPt))
-					continue;
-
-				Point3d [] bb = g.getCellBoundary(i+1);
-				int [] x_coords = new int[bb.length];
-				int [] y_coords = new int[bb.length];
-				toScreen_a(bb, x_coords, y_coords);
+				int [] x_coords = regionBounds2[i].xpoints;
+				int [] y_coords = regionBounds2[i].ypoints;
 
 				RegionProfile r = map.getRegion(i+1);
 				drawRegionRiver((Graphics2D)gr,
 					i+1, r, 
-					mapProj.toScreen(g.getCenterPoint(i+1)),
+					regionPoints[i],
 					x_coords, y_coords);
 				drawRegionBorder(gr, i+1, r, x_coords, y_coords);
 			}
@@ -570,17 +579,14 @@ public class WorldView extends JPanel
 			//
 			for (int i = 0; i < regionBounds.length; i++)
 			{
+				if (regionBounds[i] == null)
+					continue;
+
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
-				Point3d regionPt = g.getCenterPoint(i+1);
-				if (!mapProj.isVisible(regionPt))
-					continue;
-
-				Point3d [] bb = g.getCellBoundary(i+1);
-				int [] x_coords = new int[bb.length];
-				int [] y_coords = new int[bb.length];
-				toScreen_a(bb, x_coords, y_coords);
+				int [] x_coords = regionBounds2[i].xpoints;
+				int [] y_coords = regionBounds2[i].ypoints;
 
 				RegionProfile r = map.getRegion(i+1);
 				drawRegionCorners(gr, i+1, r, x_coords, y_coords);
@@ -592,6 +598,9 @@ public class WorldView extends JPanel
 			//
 			for (int i = 0; i < regionBounds.length; i++)
 			{
+				if (regionBounds[i] == null)
+					continue;
+
 				if (!screen.intersects(regionBounds[i]))
 					continue;
 
@@ -599,8 +608,9 @@ public class WorldView extends JPanel
 				if (!mapProj.isVisible(regionPt))
 					continue;
 
-				Point3d pt = g.getCenterPoint(i+1);
-				Point p = mapProj.toScreen(pt);
+				Point p = regionPoints[i];
+				assert p != null;
+
 				RegionProfile r = map.getRegion(i+1);
 				drawRegionEmblem(gr, i+1, r, p);
 			}
@@ -948,6 +958,9 @@ System.err.println(e);
 		Geometry g = map.getGeometry();
 		for (int i = 0; i < regionBounds.length; i++)
 		{
+			if (regionBounds[i] == null)
+				continue;
+
 			Rectangle rb = regionBounds[i];
 			if (!gr.hitClip(rb.x, rb.y, rb.width, rb.height))
 				continue;
