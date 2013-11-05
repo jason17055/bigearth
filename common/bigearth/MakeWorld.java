@@ -17,6 +17,8 @@ public class MakeWorld
 	int [] annualRains; //in millimeters-per-year
 	int [] floods;
 
+	int [] rivers;
+
 	WorldConfig worldConfig;
 	WorldMaster world;
 
@@ -185,6 +187,75 @@ public class MakeWorld
 			region.biome = (
 				this.elevation[i] >= 0 ? BiomeType.GRASSLAND :
 				BiomeType.OCEAN);
+		}
+	}
+
+	int countRiversNear(int regionNum)
+	{
+		assert regionNum >= 0 && regionNum < g.getFaceCount();
+
+		int count = 0;
+		for (int nid : g.getNeighbors(regionNum+1))
+		{
+			if (rivers[nid-1] != -1)
+				count++;
+		}
+		return count;
+	}
+
+	int countOceanNear(int regionNum)
+	{
+		assert regionNum >= 0 && regionNum < g.getFaceCount();
+
+		int count = 0;
+		for (int nid : g.getNeighbors(regionNum+1))
+		{
+			if (world.regions[nid-1].biome.isOcean())
+				count++;
+		}
+		return count;
+	}
+
+	int pickRiverStart()
+	{
+		RouletteWheel<Integer> RW = new RouletteWheel<Integer>();
+
+		int numRegions = g.getFaceCount();
+		for (int i = 0; i < numRegions; i++)
+		{
+			BiomeType b = world.regions[i].biome;
+			if (b.isOcean())
+				continue;
+
+			if (this.rivers[i] != -1)
+				continue;
+
+			if (countRiversNear(i) + countOceanNear(i) > 1)
+				continue;
+
+			double f = 1.0;
+			RW.add(i, f);
+		}
+
+		return RW.next();
+	}
+
+	void makeRivers()
+	{
+		int desiredRivers = (int)Math.round(
+			g.getFaceCount() * 0.4 * 0.15
+			);
+
+		int actualRivers = 0;
+		this.rivers = new int[g.getFaceCount()];
+		Arrays.fill(this.rivers, -1);
+
+		while (actualRivers < desiredRivers)
+		{
+			int tile = pickRiverStart();
+
+			//TODO- add a river
+			throw new Error("not implemented");
 		}
 	}
 

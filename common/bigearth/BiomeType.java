@@ -25,4 +25,9 @@ public enum BiomeType
 		return this.ordinal() == OCEAN.ordinal()
 		|| this.ordinal() == LAKE.ordinal();
 	}
+
+	public boolean isOcean()
+	{
+		return this == OCEAN;
+	}
 }
