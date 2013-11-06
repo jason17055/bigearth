@@ -195,6 +195,7 @@ public class MakeRivers
 	{
 		assert lake.remaining > 0;
 		assert !lake.regions.isEmpty();
+		assert lake.type == LakeType.TERMINAL;
 
 		// find the lowest adjacent region that this lake can expand to
 		Set<Integer> candidates = new HashSet<Integer>();
