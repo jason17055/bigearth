@@ -417,22 +417,30 @@ public class WorldView extends JPanel
 
 				if (radius == 0)
 				{
-					if (mp.tryPixel(x, y, col))
-						flag = true;
+					mp.tryPixel(x, y, col);
+					flag = true;
 				}
 				else
 				{
 				Polygon p = regionBounds2[i];
 				for (int j = 0; j < radius; j++)
 				{
-					if (p.contains(x-radius+j,y-j) && mp.tryPixel(x-radius+j, y-j, col))
+					if (p.contains(x-radius+j,y-j)) {
+						mp.tryPixel(x-radius+j, y-j, col);
 						flag = true;
-					if (p.contains(x+j,y-radius+j) && mp.tryPixel(x+j, y-radius+j, col))
+					}
+					if (p.contains(x+j,y-radius+j)) {
+						mp.tryPixel(x+j, y-radius+j, col);
 						flag = true;
-					if (p.contains(x+radius-j,y+j) && mp.tryPixel(x+radius-j, y+j, col))
+					}
+					if (p.contains(x+radius-j,y+j)) {
+						mp.tryPixel(x+radius-j, y+j, col);
 						flag = true;
-					if (p.contains(x-j,y+radius-j) && mp.tryPixel(x-j, y+radius-j, col))
+					}
+					if (p.contains(x-j,y+radius-j)) {
+						mp.tryPixel(x-j, y+radius-j, col);
 						flag = true;
+					}
 				}
 				}
 					
@@ -448,8 +456,9 @@ public class WorldView extends JPanel
 	Rectangle [] regionBounds;
 	Polygon [] regionBounds2;
 	Point [] regionPoints;
+	int numRegionsOnScreen;
 
-	void updateRegionBounds()
+	void updateRegionBounds(Rectangle screen)
 	{
 		assert map != null;
 
@@ -470,6 +479,7 @@ public class WorldView extends JPanel
 
 		Rectangle nomRect = mapProj.getMapDimension();
 
+		numRegionsOnScreen = 0;
 		for (int i = 0; i < numRegions; i++)
 		{
 			if (regionPoints[i] == null) {
@@ -498,6 +508,15 @@ public class WorldView extends JPanel
 
 			regionBounds2[i] = new Polygon(x_coords, y_coords, bb.length);
 			regionBounds[i] = regionBounds2[i].getBounds();
+
+			if (screen.intersects(regionBounds[i])) {
+				numRegionsOnScreen++;
+			}
+			else {
+				regionPoints[i] = null;
+				regionBounds[i] = null;
+				regionBounds2[i] = null;
+			}
 		}
 	}
 
@@ -513,15 +532,14 @@ public class WorldView extends JPanel
 		int numRegions = colors.length;
 		assert numRegions == g.getFaceCount();
 
-		updateRegionBounds();
-
 		Rectangle screen = new Rectangle(0,0,getWidth(),getHeight());
+		updateRegionBounds(screen);
 
 		this.image = new BufferedImage(getWidth(),getHeight(),
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D gr = image.createGraphics();
 
-		if (mapProj.zoomFactor < 4)
+		if (numRegionsOnScreen >= 400)
 		{
 			drawMap(image);
 		}
