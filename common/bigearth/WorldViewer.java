@@ -937,7 +937,7 @@ assert(x >= 1);
 		int regionId = view.selection.selectedRegion;
 
 		if (mrivers != null) {
-			MakeRivers.LakeInfo lake = mrivers.lakesByRegion.get(regionId);
+			MakeRivers.LakeInfo lake = mrivers.getUltimateSink(regionId);
 			mrivers.growLake(lake);
 			mrivers.apply();
 			reloadImage();

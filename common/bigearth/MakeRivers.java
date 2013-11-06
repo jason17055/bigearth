@@ -353,23 +353,23 @@ System.out.println(lake.toString() + " : addRegionToLake");
 	 */
 	private LakeInfo getSink(int srcRegion)
 	{
-		assert drainage.containsKey(srcRegion);
-
 		for (;;)
 		{
-			srcRegion = drainage.get(srcRegion);
-
 			LakeInfo lake = lakesByRegion.get(srcRegion);
 			if (lake != null)
 				return lake;
 
-			assert drainage.containsKey(srcRegion);
+			if (!drainage.containsKey(srcRegion)) {
+				throw new Error("no drainage known for region "+srcRegion);
+			}
+
+			srcRegion = drainage.get(srcRegion);
 		}
 	}
 
-	private LakeInfo getUltimateSink(int srcRegion)
+	LakeInfo getUltimateSink(int srcRegion)
 	{
-		while (drainage.containsKey(srcRegion))
+		for (;;)
 		{
 			LakeInfo lake = getSink(srcRegion);
 			if (lake.type == LakeType.TERMINAL) {
@@ -377,7 +377,6 @@ System.out.println(lake.toString() + " : addRegionToLake");
 			}
 			srcRegion = lake.drain;
 		}
-		throw new Error("no drainage known for region "+srcRegion);
 	}
 
 	void processLakeExcess(LakeInfo lake)
