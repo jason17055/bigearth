@@ -539,7 +539,7 @@ public class WorldView extends JPanel
 				BufferedImage.TYPE_INT_RGB);
 		Graphics2D gr = image.createGraphics();
 
-		if (numRegionsOnScreen >= 400)
+		if (numRegionsOnScreen >= 800)
 		{
 			drawMap(image);
 		}
@@ -1014,7 +1014,7 @@ System.err.println(e);
 				sf == RegionSideDetail.SideFeature.OUTGOING_RIVER)
 			{
 				gr.setStroke(new BasicStroke(
-					sf == RegionSideDetail.SideFeature.RIVER ? 8.0f : 5.0f
+					sf == RegionSideDetail.SideFeature.RIVER ? 3.0f : 1.0f
 					));
 				gr.setColor(new Color(170,149,53));
 

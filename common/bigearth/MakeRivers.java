@@ -198,6 +198,7 @@ public class MakeRivers
 
 		// find an djacent region that this lake can expand to
 		Set<Integer> candidates = new HashSet<Integer>();
+		Set<Integer> candidates2 = new HashSet<Integer>();
 
 		for (int aRegion : lake.regions)
 		{
@@ -209,16 +210,14 @@ public class MakeRivers
 					{
 						candidates.add(nid);
 					}
+					else if (world.elevation[nid-1] == lake.lakeElevation) {
+						candidates2.add(nid);
+					}
 				}
 			}
 		}
 
-		if (candidates.isEmpty())
-		{
-			increaseLakeDepth(lake);
-			return;
-		}
-		else
+		if (!candidates.isEmpty())
 		{
 			Integer [] regionsList = candidates.toArray(new Integer[0]);
 			// shuffle array
@@ -235,6 +234,20 @@ public class MakeRivers
 			}
 
 			throw new Error("unable to grow lake");
+		}
+		else if (!candidates2.isEmpty())
+		{
+			Integer [] regionsList = candidates2.toArray(new Integer[0]);
+			int i = (int)Math.floor(Math.random() * regionsList.length);
+
+			int nid = regionsList[i];
+			addLakeDrainThrough(lake, nid, drainage.get(nid));
+			return;
+		}
+		else
+		{
+			increaseLakeDepth(lake);
+			return;
 		}
 	}
 
@@ -256,6 +269,9 @@ public class MakeRivers
 		lake.lakeElevation = newWaterElevation;
 	}
 
+	/**
+	 * Resulting lake will always be terminal.
+	 */
 	private void mergeLakes(LakeInfo lake1, LakeInfo lake2)
 	{
 		assert lake1 != null;
@@ -280,9 +296,11 @@ public class MakeRivers
 		lake2.volume = 0;
 
 		assert lake1.type == LakeType.TERMINAL;
-		assert lake2.type == LakeType.NONTERMINAL;
 
-		drainage.remove(lake2.drain);
+		if (lake2.type == LakeType.NONTERMINAL) {
+
+			drainage.remove(lake2.drain);
+		}
 
 //		if (lake1.type == LakeType.TERMINAL) {
 //			lake1.type = lake2.type;
@@ -385,7 +403,7 @@ System.out.println(lake.toString() + " : addRegionToLake("+regionId+")");
 	{
 		assert lake.type == LakeType.TERMINAL;
 		assert !lakesByRegion.containsKey(region1);
-		assert world.elevation[region1-1] > world.elevation[region2-1];
+		assert world.elevation[region1-1] >= world.elevation[region2-1];
 
 		int lakeRegion = 0;
 		for (int nid : g.getNeighbors(region1)) {
