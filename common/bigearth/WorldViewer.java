@@ -927,7 +927,7 @@ assert(x >= 1);
 
 			if (mrivers.drainage.containsKey(regionId)) {
 				System.out.println("river here");
-				System.out.println("  elevation: " + mrivers.riverElevation[regionId]);
+				System.out.println("  elevation: " + mrivers.riverElevation[regionId-1]);
 			}
 		}
 	}
