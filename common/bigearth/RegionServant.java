@@ -276,6 +276,8 @@ class RegionServant
 		{
 			corners[i] = null;
 		}
+		Arrays.fill(riverIn, false);
+		Arrays.fill(riverOut, false);
 	}
 
 	void setRiver(int neighborId, RegionSideDetail.SideFeature riverLevel)

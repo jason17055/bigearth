@@ -939,6 +939,7 @@ assert(x >= 1);
 		if (mrivers != null) {
 			MakeRivers.LakeInfo lake = mrivers.lakesByRegion.get(regionId);
 			mrivers.growLake(lake);
+			mrivers.apply();
 			reloadImage();
 
 			System.out.println("lake volume is now "+lake.lakeVolumeI);

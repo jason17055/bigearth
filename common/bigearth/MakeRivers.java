@@ -451,6 +451,11 @@ System.out.println(lake);
 		}
 }
 
+		apply();
+	}
+
+	void apply()
+	{
 		placeLakes();
 		placeRivers();
 	}
@@ -464,6 +469,7 @@ System.out.println(lake);
 		{
 			r.biome = BiomeType.GRASSLAND;
 			r.clearSides();
+			r.riverSize = 0;
 		}
 
 		for (LakeInfo lake : lakes)
