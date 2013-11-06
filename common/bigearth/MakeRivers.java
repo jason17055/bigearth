@@ -199,7 +199,6 @@ public class MakeRivers
 
 		// find the lowest adjacent region that this lake can expand to
 		Set<Integer> candidates = new HashSet<Integer>();
-		double bestEl = Double.POSITIVE_INFINITY;
 
 		for (int aRegion : lake.regions)
 		{
@@ -207,13 +206,7 @@ public class MakeRivers
 			{
 				if (!lake.regions.contains(nid))
 				{
-					if (world.elevation[nid-1] < bestEl)
-					{
-						bestEl = world.elevation[nid-1];
-						candidates.clear();
-						candidates.add(nid);
-					}
-					else if (world.elevation[nid-1] == bestEl)
+					if (world.elevation[nid-1] == lake.lakeElevation)
 					{
 						candidates.add(nid);
 					}
@@ -223,8 +216,8 @@ public class MakeRivers
 
 		if (candidates.isEmpty())
 		{
-			// this presumably means the entire world is covered in ocean
-			throw new Error("Oops, entire world is covered in ocean now");
+			increaseLakeDepth(lake);
+			return;
 		}
 		else
 		{
@@ -235,6 +228,15 @@ public class MakeRivers
 			addRegionToLake(lake, nid);
 			return;
 		}
+	}
+
+	void increaseLakeDepth(LakeInfo lake)
+	{
+		System.out.println("increasing lake depth");
+		lake.lakeElevation++;
+		lake.lakeVolumeI += lake.regions.size();
+
+		System.out.println("  new elevation "+lake.lakeElevation);
 	}
 
 	private void reduceLakeDepth(LakeInfo lake, int newWaterElevation)
@@ -290,6 +292,7 @@ public class MakeRivers
 	{
 		assert lake != null;
 		assert regionId >= 1 && regionId <= g.getFaceCount();
+		assert lake.lakeElevation == world.elevation[regionId-1];
 
 System.out.println(lake.toString() + " : addRegionToLake");
 
@@ -303,8 +306,8 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		lake.regions.add(regionId);
 		lakesByRegion.put(regionId, lake);
 
-		int deltaVolume = lake.lakeElevation + 1 - world.elevation[regionId];
-		lake.lakeVolumeI += deltaVolume;
+		assert lake.lakeElevation == world.elevation[regionId-1];
+		lake.lakeVolumeI++;
 
 		// check drainage rules for the new region
 		if (lake.type == LakeType.NONTERMINAL)
