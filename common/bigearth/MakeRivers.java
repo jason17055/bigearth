@@ -19,6 +19,7 @@ public class MakeRivers
 	static final int LAKE_UNIT_VOLUME = 1500;
 	static final int OCEAN_SIZE_THRESHOLD = 30;
 	static final double MIN_RIVER_SLOPE = 0.1;
+	static final int RIVER_ELEVATION_RESOLUTION = 10;
 
 	public MakeRivers(MakeWorld world)
 	{
@@ -45,11 +46,10 @@ public class MakeRivers
 		lakesByRegion.clear();
 		lakes.clear();
 
-		int numCells = world.g.getFaceCount();
-		for (int i = 0; i < numCells; i++)
+		int numRegions = world.g.getFaceCount();
+		for (int i = 1; i <= numRegions; i++)
 		{
 			remaining.add(i);
-			riverElevation[i] = 10*world.elevation[i];
 		}
 	}
 
@@ -58,20 +58,21 @@ public class MakeRivers
 	 */
 	private boolean addRiverAt(int fromRegion)
 	{
-		assert fromRegion >= 0 && fromRegion < g.getFaceCount();
+		assert fromRegion >= 1 && fromRegion <= g.getFaceCount();
+		assert lakesByRegion.containsKey(fromRegion) || drainage.containsKey(fromRegion);
 
-		int myHeight = riverElevation[fromRegion];
+		int myHeight = riverElevation[fromRegion-1];
 		ArrayList<Integer> candidates = new ArrayList<Integer>();
-		for (int nid : g.getNeighbors(fromRegion+1))
+		for (int nid : g.getNeighbors(fromRegion))
 		{
-			if (!remaining.contains(nid-1))
+			if (!remaining.contains(nid))
 				continue;
 
-			int neighborHeight = riverElevation[nid-1];
-			if (neighborHeight < myHeight)
+			int neighborHeight = world.elevation[nid-1] * RIVER_ELEVATION_RESOLUTION;
+			if (neighborHeight <= myHeight)
 				continue; // never create a river coming from lower elevation
 
-			candidates.add(nid-1);
+			candidates.add(nid);
 		}
 
 		if (candidates.isEmpty())
@@ -84,78 +85,35 @@ public class MakeRivers
 		todo.add(toRegion);
 
 		addRiverSegment(toRegion, fromRegion);
+		riverElevation[toRegion-1] = Math.max(
+			toRiverEl(world.elevation[toRegion-1]),
+			myHeight+1);
+
 		return true;
+	}
+
+	private int toRiverEl(int worldEl)
+	{
+		return (worldEl - 1) * RIVER_ELEVATION_RESOLUTION + 1;
 	}
 
 	private void addRiverSegment(int upstream, int downstream)
 	{
-		assert upstream >= 0 && upstream < g.getFaceCount();
-		assert downstream >= 0 && downstream < g.getFaceCount();
+		assert upstream >= 1 && upstream <= g.getFaceCount();
+		assert downstream >= 1 && downstream <= g.getFaceCount();
 
 		drainage.put(upstream, downstream);
 
 		assert checkDrainageCycle(upstream);
-		enforceRiverSlope(upstream);
+		assert checkRiverSlope(upstream);
 	}
 
-	void enforceRiverSlope(int vtx)
+	boolean checkRiverSlope(int regionId)
 	{
-		assert vtx >= 0 && vtx < g.getFaceCount();
+		assert regionId >= 1 && regionId <= g.getFaceCount();
 
-		enforceRiverSlope(vtx, riverElevation[vtx]);
-	}
-
-	/**
-	 * Updates river elevation downstream of a given vertex,
-	 * ensuring that the river slopes down in elevation by
-	 * at least a certain rate.
-	 */
-	void enforceRiverSlope(int vtx, int maxElev)
-	{
-		assert vtx >= 0 && vtx < g.getFaceCount();
-
-		int h = maxElev;
-		while (drainage.containsKey(vtx))
-		{
-			int nextVtx = drainage.get(vtx);
-
-			h -= MIN_RIVER_SLOPE;
-
-			vtx = nextVtx;
-			int h1 = riverElevation[vtx];
-			if (h1 <= h)
-			{
-				h = h1;
-				return; // no change needed, stop here
-			}
-			else
-			{
-				// make a change to river elevation
-				System.out.println("adj riv elevation at "+(vtx+1)+" from "+riverElevation[vtx]+" to "+h);
-				riverElevation[vtx] = h;
-			}
-		}
-
-		LakeInfo lake = lakesByRegion.get(vtx);
-		assert lake != null;
-
-		if (lake.lakeElevation > h)
-		{
-			//TODO
-			//checkLakeElevation(lake);
-		}
-	}
-
-	/**
-	 * Updates river elevation downstream of a given lake,
-	 * ensuring that the river slopes down in elevation
-	 * by at least a certain rate.
-	 */
-	void enforceRiverSlope(LakeInfo lake)
-	{
-		if (lake.type == LakeType.NONTERMINAL) {
-			enforceRiverSlope(lake.drain, lake.lakeElevation);
-		}
+		//TODO
+		return true;
 	}
 
 	/**
@@ -173,7 +131,7 @@ public class MakeRivers
 
 				for (int v : remaining)
 				{
-					int h = riverElevation[v];
+					int h = riverElevation[v-1];
 					if (h < bestH)
 					{
 						bestH = h;
@@ -195,7 +153,7 @@ public class MakeRivers
 				todo.add(choice);
 
 				LakeInfo lake = new LakeInfo(choice);
-				lake.lakeElevation = riverElevation[choice];
+				lake.lakeElevation = toRiverEl(world.elevation[choice-1]);
 				lakesByRegion.put(choice, lake);
 				lakes.add(lake);
 			}
@@ -212,14 +170,14 @@ public class MakeRivers
 
 	void addWaterToRiver(int startRegion, int water)
 	{
-		assert startRegion >= 0 && startRegion < g.getFaceCount();
+		assert startRegion >= 1 && startRegion <= g.getFaceCount();
 
 		int v = startRegion;
 		LakeInfo lake = null; //never add water to initial lake
 		while (lake == null && drainage.containsKey(v))
 		{
 			int next = drainage.get(v);
-			riverVolumes[next] += water;
+			riverVolumes[next-1] += water;
 
 			v = next;
 			lake = lakesByRegion.get(v);
@@ -231,7 +189,7 @@ public class MakeRivers
 		lake.remaining += water;
 	}
 
-	private void processMultiHexLake(LakeInfo lake)
+	void growLake(LakeInfo lake)
 	{
 		assert lake.remaining > 0;
 		assert !lake.regions.isEmpty();
@@ -242,19 +200,19 @@ public class MakeRivers
 
 		for (int aRegion : lake.regions)
 		{
-			for (int nid : g.getNeighbors(aRegion+1))
+			for (int nid : g.getNeighbors(aRegion))
 			{
-				if (!lake.regions.contains(nid-1))
+				if (!lake.regions.contains(nid))
 				{
-					if (riverElevation[nid-1] < bestEl)
+					if (world.elevation[nid-1] < bestEl)
 					{
-						bestEl = riverElevation[nid-1];
+						bestEl = world.elevation[nid-1];
 						candidates.clear();
-						candidates.add(nid-1);
+						candidates.add(nid);
 					}
-					else if (riverElevation[nid-1] == bestEl)
+					else if (world.elevation[nid-1] == bestEl)
 					{
-						candidates.add(nid-1);
+						candidates.add(nid);
 					}
 				}
 			}
@@ -328,7 +286,7 @@ public class MakeRivers
 	private void addRegionToLake(LakeInfo lake, int regionId)
 	{
 		assert lake != null;
-		assert regionId >= 0 && regionId < g.getFaceCount();
+		assert regionId >= 1 && regionId <= g.getFaceCount();
 
 System.out.println(lake.toString() + " : addRegionToLake");
 
@@ -342,13 +300,8 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		lake.regions.add(regionId);
 		lakesByRegion.put(regionId, lake);
 
-		if (lake.floorElevation < riverElevation[regionId]) {
-			lake.floorElevation = riverElevation[regionId];
-		}
-
-		double deltaVolume = LAKE_UNIT_VOLUME * (lake.lakeElevation - (riverElevation[regionId] - 0.5));
-		lake.lakeVolume += deltaVolume;
-		lake.remaining -= Math.floor(deltaVolume);
+		int deltaVolume = lake.lakeElevation + 1 - world.elevation[regionId];
+		lake.lakeVolumeI += deltaVolume;
 
 		// check drainage rules for the new region
 		if (lake.type == LakeType.NONTERMINAL)
@@ -373,9 +326,9 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		}
 
 		// check if this region touches any other lakes
-		for (int nid : g.getNeighbors(regionId+1))
+		for (int nid : g.getNeighbors(regionId))
 		{
-			LakeInfo otherLake = lakesByRegion.get(nid-1);
+			LakeInfo otherLake = lakesByRegion.get(nid);
 			if (otherLake != null && otherLake != lake)
 			{
 				mergeLakes(lake, otherLake);
@@ -385,7 +338,7 @@ System.out.println(lake.toString() + " : addRegionToLake");
 
 	private void clearRiver(int upstreamRegion)
 	{
-		assert upstreamRegion >= 0 && upstreamRegion < g.getFaceCount();
+		assert upstreamRegion >= 1 && upstreamRegion <= g.getFaceCount();
 		assert drainage.containsKey(upstreamRegion);
 
 		drainage.remove(upstreamRegion);
@@ -421,7 +374,7 @@ System.out.println(lake.toString() + " : addRegionToLake");
 			}
 			srcRegion = lake.drain;
 		}
-		throw new Error("no drainage known for region "+(srcRegion+1));
+		throw new Error("no drainage known for region "+srcRegion);
 	}
 
 	void processLakeExcess(LakeInfo lake)
@@ -430,13 +383,13 @@ System.out.println(lake.toString() + " : addRegionToLake");
 
 		while (lake.remaining > 0)
 		{
-			processMultiHexLake(lake);
+			growLake(lake);
 		}
 	}
 
 	boolean checkDrainageCycle(int startVtx)
 	{
-		assert startVtx >= 0 && startVtx < g.getFaceCount();
+		assert startVtx >= 1 && startVtx <= g.getFaceCount();
 
 		int v = startVtx;
 		while (drainage.containsKey(v))
@@ -459,7 +412,7 @@ System.out.println(lake.toString() + " : addRegionToLake");
 
 		for (int srcRegion : drainage.keySet())
 		{
-			int water = world.annualRains[srcRegion];
+			int water = world.annualRains[srcRegion-1];
 			water = (water - 30) / 10;
 			if (water <= 0)
 				continue;
@@ -516,6 +469,8 @@ System.out.println(lake);
 			boolean isOcean = lake.isOcean;
 			for (int regionId : lake.regions)
 			{
+				assert regionId >= 1 && regionId <= g.getFaceCount();
+
 				world.world.regions[regionId-1].biome =
 					isOcean ? BiomeType.OCEAN : BiomeType.LAKE;
 				world.world.regions[regionId-1].waterLevel = (int) Math.ceil(lake.lakeElevation);
@@ -541,22 +496,22 @@ System.out.println(lake);
 	void placeRivers()
 	{
 		int numRegions = g.getFaceCount();
-		for (int regionId = 0; regionId < numRegions; regionId++) {
+		for (int regionId = 1; regionId <= numRegions; regionId++) {
 
 			if (drainage.containsKey(regionId)) {
-				int volume = riverVolumes[regionId];
+				int volume = riverVolumes[regionId-1];
 				int drainsTo = drainage.get(regionId);
-				int dir = directionOf(regionId+1, drainsTo+1);
+				int dir = directionOf(regionId, drainsTo);
 
-				RegionServant fromRegion = world.world.regions[regionId];
+				RegionServant fromRegion = world.world.regions[regionId-1];
 				fromRegion.riverOut[dir] = true;
 				fromRegion.riverSize =
 					volume > 2000 ? 3 :
 					volume > 200 ? 2 :
 					1;
 
-				RegionServant toRegion = world.world.regions[drainsTo];
-				dir = directionOf(drainsTo+1, regionId+1);
+				RegionServant toRegion = world.world.regions[drainsTo-1];
+				dir = directionOf(drainsTo, regionId);
 				toRegion.riverIn[dir] = true;
 			}
 		}
@@ -592,6 +547,7 @@ System.out.println(lake);
 
 		// Total volume of space taken up by water in this lake.
 		double lakeVolume;
+		int lakeVolumeI;
 
 		boolean isOcean;
 
@@ -607,34 +563,6 @@ System.out.println(lake);
 			this.regions = new HashSet<Integer>();
 			this.regions.add(origin);
 			this.floorElevation = Integer.MIN_VALUE;
-		}
-
-		/**
-		 * True iff the vertex is on an outer corner of this lake.
-		 * I.e. the vertex touches exactly one region of the lake.
-		 */
-		boolean isOnBorder(Geometry.VertexId vtx)
-		{
-			int count = 0;
-			for (int adjCell : vtx.getAdjacentCells())
-			{
-				if (this.regions.contains(adjCell))
-					count++;
-			}
-
-			return (count == 1);
-		}
-
-		boolean contains(Geometry.VertexId vtx)
-		{
-			int count = 0;
-			for (int adjCell : vtx.getAdjacentCells())
-			{
-				if (this.regions.contains(adjCell))
-					count++;
-			}
-
-			return (count != 0);
 		}
 
 		public String toString()
@@ -678,7 +606,7 @@ final int LAKE_FLOOD = 10;
 		Queue<Integer> Q = new ArrayDeque<Integer>();
 		for (int i = 0; i < numRegions; i++)
 		{
-			LakeInfo lake = lakesByRegion.get(i);
+			LakeInfo lake = lakesByRegion.get(i+1);
 			if (lake != null && lake.isOcean)
 			{
 				floods[i] = OCEAN_FLOOD;
@@ -700,10 +628,10 @@ final int LAKE_FLOOD = 10;
 		while (!Q.isEmpty())
 		{
 			int cur = Q.remove();
-			for (int n : g.getNeighbors(cur+1))
+			for (int n : g.getNeighbors(cur))
 			{
-				int heightDiff = riverElevation[n-1] - riverElevation[cur];
-				int floodLevel = floods[cur] - Math.max(1, 1 + heightDiff);
+				int heightDiff = world.elevation[n-1] - world.elevation[cur-1];
+				int floodLevel = floods[cur-1] - Math.max(1, 1 + heightDiff);
 				if (floodLevel > floods[n-1])
 				{
 					floods[n-1] = floodLevel;

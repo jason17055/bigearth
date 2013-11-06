@@ -79,8 +79,8 @@ public class WorldViewer extends JFrame
 		super("World Viewer");
 		view = new WorldView();
 		view.addListener(this);
-		view.allowEdgeSelection = true;
-		view.allowVertexSelection = true;
+		//view.allowEdgeSelection = true;
+		//view.allowVertexSelection = true;
 		add(view, BorderLayout.CENTER);
 
 		toolsPane = new JPanel();
@@ -423,6 +423,13 @@ public class WorldViewer extends JFrame
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
 				onSpawnCharacterClicked();
+			}});
+		regionMenu.add(menuItem);
+
+		menuItem = new JMenuItem("Increase Lake");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onIncreaseLakeClicked();
 			}});
 		regionMenu.add(menuItem);
 
@@ -908,6 +915,34 @@ assert(x >= 1);
 		regionPane.setVisible(true);
 
 		mobPane.setVisible(false);
+
+		if (mrivers != null) {
+			MakeRivers.LakeInfo lake = mrivers.lakesByRegion.get(regionId);
+			if (lake != null) {
+				System.out.println("lake here");
+				System.out.println("  elevation: "+lake.lakeElevation);
+				System.out.println("  flow: "+lake.volume);
+				System.out.println("  volume: "+lake.lakeVolumeI);
+			}
+
+			if (mrivers.drainage.containsKey(regionId)) {
+				System.out.println("river here");
+				System.out.println("  elevation: " + mrivers.riverElevation[regionId]);
+			}
+		}
+	}
+
+	private void onIncreaseLakeClicked()
+	{
+		int regionId = view.selection.selectedRegion;
+
+		if (mrivers != null) {
+			MakeRivers.LakeInfo lake = mrivers.lakesByRegion.get(regionId);
+			mrivers.growLake(lake);
+			reloadImage();
+
+			System.out.println("lake volume is now "+lake.lakeVolumeI);
+		}
 	}
 
 	//implements WorldView.Listener
@@ -962,13 +997,6 @@ assert(x >= 1);
 	public void onVertexSelected(Geometry.VertexId vertex)
 	{
 		System.out.println("selected "+vertex);
-		if (mrivers != null) {
-		//	System.out.println("  elevation: " + mrivers.riverElevation.get(vertex));
-		//	MakeRivers.LakeInfo lake = mrivers.lakesByRegion.get(vertex);
-		//	if (lake != null) {
-		//		System.out.println("lake here");
-		//	}
-		}
 	}
 }
 
