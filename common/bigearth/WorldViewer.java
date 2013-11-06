@@ -427,6 +427,9 @@ public class WorldViewer extends JFrame
 		regionMenu.add(menuItem);
 
 		menuItem = new JMenuItem("Increase Lake");
+		menuItem.setAccelerator(
+				KeyStroke.getKeyStroke("ctrl L")
+				);
 		menuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
 				onIncreaseLakeClicked();
