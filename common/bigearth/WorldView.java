@@ -367,21 +367,21 @@ public class WorldView extends JPanel
 		repaint();
 	}
 
-	void drawMap(BufferedImage image, Point [] pts)
+	void drawMap(BufferedImage image)
 	{
 		assert image != null;
-		assert pts != null;
-		assert pts.length == colors.length;
+		assert regionPoints != null;
+		assert regionPoints.length == colors.length;
 
 		Geometry g = map.getGeometry();
 		int numRegions = g.getFaceCount();
-		assert numRegions == pts.length;
+		assert numRegions == regionPoints.length;
 
 		int [] todo = new int[numRegions];
 		int curCount = 0;
 		for (int i = 0; i < numRegions; i++)
 		{
-			if (pts[i] != null) {
+			if (regionPoints[i] != null) {
 				todo[curCount++] = i;
 			}
 		}
@@ -397,8 +397,8 @@ public class WorldView extends JPanel
 			{
 				int i = todo[ii];
 				boolean flag = false;
-				int x = pts[i].x;
-				int y = pts[i].y;
+				int x = regionPoints[i].x;
+				int y = regionPoints[i].y;
 				int col = colors[i];
 				if (col == 0)
 				{
@@ -421,16 +421,19 @@ public class WorldView extends JPanel
 						flag = true;
 				}
 				else
+				{
+				Polygon p = regionBounds2[i];
 				for (int j = 0; j < radius; j++)
 				{
-					if (mp.tryPixel(x-radius+j, y-j, col))
+					if (p.contains(x-radius+j,y-j) && mp.tryPixel(x-radius+j, y-j, col))
 						flag = true;
-					if (mp.tryPixel(x+j, y-radius+j, col))
+					if (p.contains(x+j,y-radius+j) && mp.tryPixel(x+j, y-radius+j, col))
 						flag = true;
-					if (mp.tryPixel(x+radius-j, y+j, col))
+					if (p.contains(x+radius-j,y+j) && mp.tryPixel(x+radius-j, y+j, col))
 						flag = true;
-					if (mp.tryPixel(x-j, y+radius-j, col))
+					if (p.contains(x-j,y+radius-j) && mp.tryPixel(x-j, y+radius-j, col))
 						flag = true;
+				}
 				}
 					
 				if (flag)
@@ -520,7 +523,7 @@ public class WorldView extends JPanel
 
 		if (mapProj.zoomFactor < 4)
 		{
-			drawMap(image, regionPoints);
+			drawMap(image);
 		}
 		else
 		{
