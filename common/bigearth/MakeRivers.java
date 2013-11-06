@@ -193,11 +193,10 @@ public class MakeRivers
 
 	void growLake(LakeInfo lake)
 	{
-		assert lake.remaining > 0;
 		assert !lake.regions.isEmpty();
 		assert lake.type == LakeType.TERMINAL;
 
-		// find the lowest adjacent region that this lake can expand to
+		// find an djacent region that this lake can expand to
 		Set<Integer> candidates = new HashSet<Integer>();
 
 		for (int aRegion : lake.regions)
@@ -206,7 +205,7 @@ public class MakeRivers
 			{
 				if (!lake.regions.contains(nid))
 				{
-					if (world.elevation[nid-1] == lake.lakeElevation)
+					if (world.elevation[nid-1] == lake.lakeElevation && drainage.get(nid) == aRegion)
 					{
 						candidates.add(nid);
 					}
@@ -222,11 +221,20 @@ public class MakeRivers
 		else
 		{
 			Integer [] regionsList = candidates.toArray(new Integer[0]);
-			int i = (int) Math.floor(Math.random() * regionsList.length);
-			int nid = regionsList[i];
+			// shuffle array
+			for (int i = 0; i < regionsList.length; i++) {
+				int j = (int) Math.floor(Math.random() * (regionsList.length-i)) + i;
+				int tmp = regionsList[j];
+				regionsList[j] = regionsList[i];
+				regionsList[i] = tmp;
+			}
 
-			addRegionToLake(lake, nid);
-			return;
+			for (int i = 0; i < regionsList.length; i++) {
+				if (addRegionToLake(lake, regionsList[i]))
+					return;
+			}
+
+			throw new Error("unable to grow lake");
 		}
 	}
 
@@ -255,8 +263,8 @@ public class MakeRivers
 		assert lake1 != lake2;
 
 		int newEl = Math.min(lake1.lakeElevation, lake2.lakeElevation);
-		reduceLakeDepth(lake1, newEl);
-		reduceLakeDepth(lake2, newEl);
+		//reduceLakeDepth(lake1, newEl);
+		//reduceLakeDepth(lake2, newEl);
 
 		for (int r2 : lake2.regions)
 		{
@@ -271,14 +279,19 @@ public class MakeRivers
 		lake2.remaining = 0;
 		lake2.volume = 0;
 
-		if (lake1.type == LakeType.TERMINAL) {
-			lake1.type = lake2.type;
-			lake1.drain = lake2.drain;
-		}
-		else if (lake1.type == LakeType.NONTERMINAL && lake2.type == LakeType.NONTERMINAL) {
-			drainage.remove(lake2.drain);
-			lake2.type = LakeType.TERMINAL;
-		}
+		assert lake1.type == LakeType.TERMINAL;
+		assert lake2.type == LakeType.NONTERMINAL;
+
+		drainage.remove(lake2.drain);
+
+//		if (lake1.type == LakeType.TERMINAL) {
+//			lake1.type = lake2.type;
+//			lake1.drain = lake2.drain;
+//		}
+//		else if (lake1.type == LakeType.NONTERMINAL && lake2.type == LakeType.NONTERMINAL) {
+//			drainage.remove(lake2.drain);
+//			lake2.type = LakeType.TERMINAL;
+//		}
 
 		lakes.remove(lake2);
 	}
@@ -287,14 +300,16 @@ public class MakeRivers
 	 * Adds a region to the specified lake, merging adjacent lakes automatically
 	 * as needed. Also, the lake's elevation is raised to the max possible given
 	 * the lake's sources.
+	 * @return true if successful
 	 */
-	private void addRegionToLake(LakeInfo lake, int regionId)
+	private boolean addRegionToLake(LakeInfo lake, int regionId)
 	{
 		assert lake != null;
 		assert regionId >= 1 && regionId <= g.getFaceCount();
 		assert lake.lakeElevation == world.elevation[regionId-1];
+		assert lake.type == LakeType.TERMINAL;
 
-System.out.println(lake.toString() + " : addRegionToLake");
+System.out.println(lake.toString() + " : addRegionToLake("+regionId+")");
 
 		// check if the specified regionId is already part of a
 		// regional lake
@@ -303,6 +318,34 @@ System.out.println(lake.toString() + " : addRegionToLake");
 			throw new Error("Oops, somehow two lakes are touching.");
 		}
 
+		// check for adjacent lower elevation regions
+		for (int nid : g.getNeighbors(regionId)) {
+			if (lake.regions.contains(nid))
+				continue;
+
+			LakeInfo nLake = lakesByRegion.get(nid);
+			int nEl = nLake != null ? nLake.lakeElevation : world.elevation[nid-1];
+			if (nEl < lake.lakeElevation) {
+				addLakeDrainThrough(lake, regionId, nid);
+				return true;
+			}
+		}
+
+		// check for adjacent other lakes
+
+		for (int nid : g.getNeighbors(regionId)) {
+			if (lake.regions.contains(nid))
+				continue;
+
+			LakeInfo nLake = lakesByRegion.get(nid);
+			if (nLake != null && nLake.lakeElevation != lake.lakeElevation) {
+				System.out.println("neighboring lake has different elevation");
+				return false;
+			}
+		}
+
+		// ok so far
+
 		lake.regions.add(regionId);
 		lakesByRegion.put(regionId, lake);
 
@@ -310,13 +353,7 @@ System.out.println(lake.toString() + " : addRegionToLake");
 		lake.lakeVolumeI++;
 
 		// check drainage rules for the new region
-		if (lake.type == LakeType.NONTERMINAL)
 		{
-			if (drainage.containsKey(regionId)) {
-				drainage.remove(regionId);
-			}
-		}
-		else {
 			assert lake.type == LakeType.TERMINAL;
 
 			// does the new region drain to a lower lake?
@@ -337,9 +374,39 @@ System.out.println(lake.toString() + " : addRegionToLake");
 			LakeInfo otherLake = lakesByRegion.get(nid);
 			if (otherLake != null && otherLake != lake)
 			{
+				assert lake.lakeElevation == otherLake.lakeElevation;
 				mergeLakes(lake, otherLake);
 			}
 		}
+		return true;
+	}
+
+	void addLakeDrainThrough(LakeInfo lake, int region1, int region2)
+	{
+		assert lake.type == LakeType.TERMINAL;
+		assert !lakesByRegion.containsKey(region1);
+		assert world.elevation[region1-1] > world.elevation[region2-1];
+
+		int lakeRegion = 0;
+		for (int nid : g.getNeighbors(region1)) {
+			if (lake.regions.contains(nid)) {
+				lakeRegion = nid;
+				break;
+			}
+		}
+
+		assert lakeRegion != 0;
+
+		System.out.println("adding drain for lake at "+lakeRegion+" to "+region2+" through "+region1);
+
+		drainage.put(lakeRegion, region1);
+		drainage.put(region1, region2);
+
+		lake.drain = lakeRegion;
+		lake.type = LakeType.NONTERMINAL;
+
+		LakeInfo lake2 = getUltimateSink(region2);
+		System.out.println("  region "+region2+" ultimately drains to "+lake2);
 	}
 
 	private void clearRiver(int upstreamRegion)
@@ -372,13 +439,20 @@ System.out.println(lake.toString() + " : addRegionToLake");
 
 	LakeInfo getUltimateSink(int srcRegion)
 	{
+		int loop = 0;
 		for (;;)
 		{
 			LakeInfo lake = getSink(srcRegion);
 			if (lake.type == LakeType.TERMINAL) {
 				return lake;
 			}
-			srcRegion = lake.drain;
+
+			assert drainage.containsKey(lake.drain);
+			srcRegion = drainage.get(lake.drain);
+
+			if (++loop > 100000) {
+				throw new Error("infinite loop in getUltimateSink("+srcRegion+")");
+			}
 		}
 	}
 
