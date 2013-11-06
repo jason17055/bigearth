@@ -131,7 +131,7 @@ public class MakeRivers
 
 				for (int v : remaining)
 				{
-					int h = riverElevation[v-1];
+					int h = world.elevation[v-1];
 					if (h < bestH)
 					{
 						bestH = h;
@@ -153,9 +153,11 @@ public class MakeRivers
 				todo.add(choice);
 
 				LakeInfo lake = new LakeInfo(choice);
-				lake.lakeElevation = toRiverEl(world.elevation[choice-1]);
+				lake.lakeElevation = world.elevation[choice-1];
 				lakesByRegion.put(choice, lake);
 				lakes.add(lake);
+
+				riverElevation[choice-1] = toRiverEl(world.elevation[choice-1]);
 			}
 
 			// choose from TODO array randomly
