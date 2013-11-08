@@ -30,8 +30,8 @@ public abstract class AbstractProjection
 	Matrix3d transformMatrix = new Matrix3d();
 	Matrix3d inverseMatrix = new Matrix3d();
 
-	static final double DEFAULT_WIDTH = 480;
-	static final double DEFAULT_HEIGHT = 480;
+	static final double DEFAULT_WIDTH = 240;
+	static final double DEFAULT_HEIGHT = 240;
 
 	//constructor
 	protected AbstractProjection()
