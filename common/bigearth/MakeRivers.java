@@ -251,6 +251,98 @@ public class MakeRivers
 		}
 	}
 
+	void shrinkLake(LakeInfo lake)
+	{
+		// find a region that is level with the lake
+		ArrayList<Integer> candidates = new ArrayList<Integer>();
+		for (int region : lake.regions)
+		{
+			if (world.elevation[region-1] == lake.lakeElevation) {
+				candidates.add(region);
+			}
+		}
+
+		if (candidates.isEmpty()) {
+			// lower level of lake
+			System.out.println("no land to expose, lowering overall water level instead.");
+			lake.lakeElevation--;
+			lake.lakeVolumeI -= lake.regions.size();
+			return;
+		}
+
+		int k = (int)Math.floor(Math.random() * candidates.size());
+		int region = candidates.get(k);
+
+		removeRegionFromLake(lake, region);
+	}
+
+	void removeRegionFromLake(LakeInfo lake, int region)
+	{
+		assert lake != null;
+		assert lakesByRegion.get(region) == lake;
+
+		if (lake.regions.size() == 1) {
+			// elimination of lake
+			throw new Error("not implemented");
+		}
+
+		lake.regions.remove(region);
+		lake.lakeVolumeI -= 1;
+		lakesByRegion.remove(region);
+
+		// pick neighbor that's still in lake to drain to
+		int bestEl = lake.lakeElevation+1;
+		int best = 0;
+		for (int nid : g.getNeighbors(region)) {
+			if (lakesByRegion.get(nid) == lake
+				&& world.elevation[nid-1] < bestEl)
+			{
+				bestEl = world.elevation[nid-1];
+				best = nid;
+			}
+		}
+		
+		if (best == 0) {
+			throw new Error("unexpected");
+		}
+		drainage.put(region, best);
+
+		Set<Integer> set = getConnectedRegionsInSameLake(best);
+		if (set.size() == lake.regions.size()) {
+			// we're good.
+			return;
+		}
+
+		// split off this lake
+		unmergeLake(lake, set);
+	}
+
+	Set<Integer> getConnectedRegionsInSameLake(int aRegion)
+	{
+		LakeInfo aLake = lakesByRegion.get(aRegion);
+		assert aLake != null;
+
+		HashSet<Integer> rv = new HashSet<Integer>();
+		rv.add(aRegion);
+
+		ArrayDeque<Integer> Q = new ArrayDeque<Integer>();
+		Q.add(aRegion);
+
+		while (!Q.isEmpty()) {
+			int rid = Q.remove();
+			for (int nid : g.getNeighbors(rid)) {
+				if (lakesByRegion.get(nid) == aLake
+					&& !rv.contains(nid))
+				{
+					rv.add(nid);
+					Q.add(nid);
+				}
+			}
+		}
+
+		return rv;
+	}
+
 	void increaseLakeDepth(LakeInfo lake)
 	{
 		System.out.println("increasing lake depth");
@@ -740,6 +832,50 @@ final int LAKE_FLOOD = 10;
 					floods[n-1] = floodLevel;
 					Q.add(n);
 				}
+			}
+		}
+	}
+
+	void simplifyRivers()
+	{
+		int numRegions = g.getFaceCount();
+		for (int regionId = 1; regionId <= numRegions; regionId++)
+		{
+			if (!drainage.containsKey(regionId)) {
+				continue;
+			}
+
+			int firstRiver = drainage.get(regionId);
+			int river = firstRiver;
+			int best = firstRiver;
+			int [] nn = g.getNeighbors(regionId);
+
+			for (;;) {
+				if (drainage.containsKey(river)) {
+					river = drainage.get(river);
+				}
+				else {
+					LakeInfo lake = lakesByRegion.get(river);
+					if (lake.type == LakeType.TERMINAL) {
+						break;
+					}
+					river = lake.drain;
+				}
+
+				boolean isNeighbor = false;
+				for (int nid : nn) {
+					if (nid == river) {
+						isNeighbor = true;
+					}
+				}
+				if (isNeighbor) {
+					best = river;
+				}
+			}
+
+			if (best != firstRiver) {
+				System.out.println("updating drainage of "+regionId+" to "+best);
+				drainage.put(regionId, best);
 			}
 		}
 	}

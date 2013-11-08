@@ -436,6 +436,16 @@ public class WorldViewer extends JFrame
 			}});
 		regionMenu.add(menuItem);
 
+		menuItem = new JMenuItem("Decrease Lake");
+		menuItem.setAccelerator(
+				KeyStroke.getKeyStroke("ctrl M")
+				);
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ev) {
+				onDecreaseLakeClicked();
+			}});
+		regionMenu.add(menuItem);
+
 		JMenu mobMenu = new JMenu("Mob");
 		menuBar.add(mobMenu);
 
@@ -486,6 +496,7 @@ public class WorldViewer extends JFrame
 	{
 		mrivers = new MakeRivers(world);
 		mrivers.generateRivers();
+		mrivers.simplifyRivers();
 		reloadImage();
 	}
 
@@ -932,6 +943,18 @@ assert(x >= 1);
 				System.out.println("river here");
 				System.out.println("  elevation: " + mrivers.riverElevation[regionId-1]);
 			}
+		}
+	}
+
+	private void onDecreaseLakeClicked()
+	{
+		int regionId = view.selection.selectedRegion;
+
+		if (mrivers != null) {
+			MakeRivers.LakeInfo lake = mrivers.getUltimateSink(regionId);
+			mrivers.shrinkLake(lake);
+			mrivers.apply();
+			reloadImage();
 		}
 	}
 
