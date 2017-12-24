@@ -1376,6 +1376,7 @@ function adjustPlayerCash(delta)
 
 function sendRequest(verb, data, success)
 {
+	data['action'] = verb;
 	var onSuccess = function(data)
 	{
 		if (success) { success(data); }
@@ -1387,11 +1388,12 @@ function sendRequest(verb, data, success)
 
 	$.ajax({
 	type: "POST",
-	url: ("/request/" + verb),
-	data: data,
+	url: "/api/actions",
+	data: JSON.stringify(data),
 	success: onSuccess,
 	error: onError,
-	dataType: "json"
+	dataType: "json",
+	contentType: "application/json"
 	});
 }
 
