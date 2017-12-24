@@ -451,6 +451,7 @@ function fetchGameState()
 		serverState.basisTime = fetchBeginTime +
 			Math.round((fetchEndTime - fetchBeginTime) / 2) -
 			serverState.serverTime;
+		serverState.eventsSeen = 0;
 		onGameState();
 	};
 	var onError = function(xhr, status, errorThrown)
@@ -476,7 +477,6 @@ function getGameTime()
 }
 
 var eventsListenerEnabled = false;
-var nextEventId = null;
 
 function onGameEvent(evt)
 {
@@ -524,9 +524,10 @@ function startEventsListener()
 	var onSuccess = function(data,status)
 	{
 		errorCounter = 0;
-		onGameEvent(data);
-		serverState.nextEvent = data.nextEvent;
-		fetchNextEvent();
+		while (serverState.eventsSeen < data.length) {
+			onGameEvent(data[serverState.eventsSeen++]);
+		}
+		setTimeout(fetchNextEvent, 500);
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
@@ -542,7 +543,7 @@ function startEventsListener()
 	fetchNextEvent = function()
 	{
 		$.ajax({
-		url: "/event/" + serverState.nextEvent + "?r="+rdm,
+		url: "/api/events?r="+rdm,
 		success: onSuccess,
 		error: onError,
 		dataType: "json"
