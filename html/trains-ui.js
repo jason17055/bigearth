@@ -515,19 +515,31 @@ function onGameEvent(evt)
 	}
 }
 
+function getEventsNow() {
+	if (serverState.timerId) {
+		clearTimeout(serverState.timerId);
+		serverState.timerId = 0;
+		startEventsListener();
+	}
+}
+
 function startEventsListener()
 {
 	var rdm = new Date().getTime();
 	var errorCounter = 0;
+	serverState.timerId = 0;
 
 	var fetchNextEvent;
 	var onSuccess = function(data,status)
 	{
 		errorCounter = 0;
+		let anyFound = false;
 		while (serverState.eventsSeen < data.length) {
+			anyFound = true;
 			onGameEvent(data[serverState.eventsSeen++]);
 		}
-		setTimeout(fetchNextEvent, 500);
+		serverState.timerId = setTimeout(fetchNextEvent,
+			anyFound ? 500 : 2500);
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
@@ -1381,6 +1393,7 @@ function sendRequest(verb, data, success)
 	var onSuccess = function(data)
 	{
 		if (success) { success(data); }
+		getEventsNow();
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
