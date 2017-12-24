@@ -49,7 +49,7 @@ $(function() {
 			if (--pendingImages == 0)
 				repaint();
 		};
-	img.src = "terrain_mountain.png";
+	img.src = "resources/terrain_mountain.png";
 });
 
 var resourceImages = {};
@@ -459,7 +459,7 @@ function fetchGameState()
 	};
 
 	$.ajax({
-		url: "/gamestate",
+		url: "/api/gamestate",
 		success: onSuccess,
 		error: onError,
 		dataType: "json"
