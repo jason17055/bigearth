@@ -413,31 +413,6 @@ function onResize()
 }
 window.onresize = onResize;
 
-function beginLoadMap(mapName)
-{
-	var onSuccess = function(data,status)
-	{
-		mapData = data;
-		if (!mapData.rivers)
-		{
-			mapData.rivers = {};
-		}
-		if (!mapData.rails)
-		{
-			mapData.rails = {};
-		}
-		CELLS_PER_ROW = mapData.terrain[0].length;
-		autoCreateDemands();
-		zoomShowAll();
-	};
-
-	$.ajax({
-	url: "maps/"+mapName+".txt",
-	success: onSuccess,
-	dataType: "json"
-	});
-}
-
 var serverState;
 function fetchGameState($http, gameId)
 {
@@ -2276,11 +2251,29 @@ function cropTerrain(offsetx, offsety, cx, cy)
 
 function showEditMapPane()
 {
-	isEditing = {};
-	$('#editMapPane').fadeIn();
-
-	makeMoreRoomOnMap(10);
 	stopEventsListener();
+
+	var onSuccess = function(data) {
+		mapData.terrain = data.terrain;
+		mapData.rivers = data.rivers;
+		mapData.cities = data.cities;
+
+		isEditing = {};
+		$('#editMapPane').fadeIn();
+
+		makeMoreRoomOnMap(10);
+	};
+	var onError = function(xhr, status, errorThrown) {
+		alert("request error " + errorThrown);
+	};
+
+	$.ajax({
+	type: "GET",
+	url: "/api/map?map=cloud",
+	success: onSuccess,
+	error: onError,
+	dataType: "json",
+	});
 }
 
 function makeMoreRoomOnMap(amt)
@@ -2316,19 +2309,6 @@ function dismissEditMapPane()
 	$('#editCityPane').fadeOut();
 
 	makeMoreRoomOnMap(0);
-
-	var aRivers = new Array();
-	for (var i in mapData.rivers)
-	{
-		aRivers.push(i);
-	}
-
-	sendRequest("editMap",
-		{
-		terrain: mapData.terrain.join("\n"),
-		rivers: aRivers.join(" "),
-		cities: mapData.cities
-		});
 	startEventsListener();
 }
 
@@ -2569,4 +2549,41 @@ angular.module('trains', ['ngRoute'])
 
   fetchGameState($http, this.gameId);
   preloadImages();
+
+  var lastMapName = null;
+  this.loadMap = function() {
+    var mapName = window.prompt('Enter map name to load', lastMapName);
+    if (mapName) {
+      lastMapName = mapName;
+      $http.get('/api/map', {
+        params: {
+          'map': mapName,
+        },
+        responseType: 'json',
+      }).then(
+        function(httpResponse) {
+          mapData = httpResponse.data;
+          repaint();
+        },
+        function(rejection) {
+          mapData.terrain = ['.'];
+          mapData.cities = {};
+          mapData.rivers = {};
+          makeMoreRoomOnMap(10);
+          zoomShowAll();
+        });
+    }
+  };
+  this.saveMap = function() {
+    var mapName = window.prompt('Save map as', lastMapName);
+    if (mapName) {
+      lastMapName = mapName;
+      $http.put('/api/map', JSON.stringify(mapData), {
+        params: {'map': mapName},
+      }).then(
+        function(httpResponse) {
+          alert('success');
+        });
+    }
+  };
 });

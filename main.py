@@ -14,6 +14,10 @@ class GameActions(ndb.Model):
   all_demands = ndb.StringProperty(repeated=True)
 
 
+class Map(ndb.Model):
+  map_json = ndb.TextProperty()
+
+
 def InitializeGame(ent):
   with open('maps/nippon.txt', 'r') as f:
     map_data = json.load(f)
@@ -123,8 +127,45 @@ class ActionsHandler(webapp2.RequestHandler):
     self.response.write(json.dumps(response))
 
 
+class EditMapHandler(webapp2.RequestHandler):
+  def get(self):
+    map_name = self.request.get('map')
+    map_key = ndb.Key(Map, map_name)
+    ent = map_key.get()
+    if not ent:
+      self.error(404)
+      self.response.write('Not found')
+      return
+
+    self.response.headers['Content-Type'] = 'application/json'
+    self.response.write(ent.map_json)
+
+  def put(self):
+    map_name = self.request.get('map')
+    req = json.loads(self.request.body)
+    if not map_name:
+      self.error(400)
+      self.response.write('Invalid request')
+      return
+
+    map_key = ndb.Key(Map, map_name)
+    def _Update():
+      ent = map_key.get()
+      if not ent:
+        ent = Map(id=map_key.id())
+      ent.map_json = json.dumps(req)
+      ent.put()
+
+    ndb.transaction(_Update)
+    response = {}
+
+    self.response.headers['Content-Type'] = 'application/json'
+    self.response.write(json.dumps(response))
+
+
 app = webapp2.WSGIApplication([
     ('/api/gamestate', GameStateHandler),
     ('/api/actions', ActionsHandler),
     ('/api/events', EventsHandler),
+    ('/api/map', EditMapHandler),
 ], debug=True)

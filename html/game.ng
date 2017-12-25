@@ -50,7 +50,11 @@
     </div>
     </form>
   </div>
-  <div class="widgetFooter"><button type="button" onclick="dismissEditMapPane()">Dismiss</button></div>
+  <div class="widgetFooter">
+    <button type="button" ng-click="c.loadMap()">Load</button>
+    <button type="button" ng-click="c.saveMap()">Save</button>
+    <button type="button" onclick="dismissEditMapPane()">Close</button>
+  </div>
 </div>
 <div class="widget" id="demandsPane">
   <div class="widgetHeader">Current Demands</div>
