@@ -46,7 +46,10 @@ class GameActions(ndb.Model):
 
 
 class Map(ndb.Model):
-  map_json = ndb.TextProperty()
+  terrain_json = ndb.TextProperty()
+  cities_json = ndb.TextProperty()
+  rivers_json = ndb.TextProperty()
+  geometry = ndb.StringProperty()
 
 
 def InitializeGame(ent):
@@ -169,8 +172,14 @@ class EditMapHandler(webapp2.RequestHandler):
       self.response.write('Not found')
       return
 
+    map_data = {
+        'terrain': json.loads(ent.terrain_json),
+        'cities': json.loads(ent.cities_json),
+        'rivers': json.loads(ent.rivers_json),
+        'geometry': ent.geometry,
+    }
     self.response.headers['Content-Type'] = 'application/json'
-    self.response.write(ent.map_json)
+    self.response.write(json.dumps(map_data))
 
   def put(self):
     map_name = self.request.get('map')
@@ -185,7 +194,10 @@ class EditMapHandler(webapp2.RequestHandler):
       ent = map_key.get()
       if not ent:
         ent = Map(id=map_key.id())
-      ent.map_json = json.dumps(req)
+      ent.terrain_json = json.dumps(req['terrain'])
+      ent.cities_json = json.dumps(req['cities'])
+      ent.rivers_json = json.dumps(req['rivers'])
+      ent.geometry = req.get('geometry', 'hex_horz')
       ent.put()
 
     ndb.transaction(_Update)

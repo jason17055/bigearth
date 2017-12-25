@@ -2553,6 +2553,7 @@ angular.module('trains', ['ngRoute'])
         function(httpResponse) {
           var newMap = httpResponse.data;
           mapData = newMap;
+          mapData['rails'] = {};
           CELLS_PER_ROW = mapData.terrain[0].length;
           zoomShowAll();
         },
