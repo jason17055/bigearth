@@ -97,8 +97,135 @@ function setPlayerId(pid)
 	}
 }
 
-function drawCell(ctx, pt, c, w, nw, ne)
+function cityVisible(cityId)
 {
+	return !mapFeatures.filterCities ||
+		mapFeatures.filterCities[cityId];
+}
+
+function cityColor(cityId)
+{
+	if (mapFeatures.highlightCities
+		&& mapFeatures.highlightCities[cityId])
+	{
+		return "#ffff44";
+	}
+	else
+	{
+		return "#ff4444";
+	}
+}
+
+function trackVisible(trackId)
+{
+	return !mapFeatures.filterTrack ||
+		mapFeatures.filterTrack[trackId];
+}
+
+function Painter(canvas, ctx, mapData) {
+  this.canvas = canvas;
+  this.ctx = ctx;
+  this.mapData = mapData;
+}
+
+// pt: the desired *center* point of the dot, in screen coordinates
+//
+Painter.prototype.drawCityDot = function(pt, cityId) {
+  const ctx = this.ctx;
+
+	ctx.fillStyle = cityColor(cityId);
+	ctx.beginPath();
+	ctx.arc(pt.x, pt.y, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
+	ctx.closePath();
+	ctx.fill();
+};
+
+Painter.prototype.paint = function() {
+
+  const ctx = this.ctx;
+  const mapData = this.mapData;
+
+	for (var y = 0; y < mapData.terrain.length; y++)
+	{
+		for (var x = 0; x < mapData.terrain[y].length; x++)
+		{
+			var c = mapData.terrain[y].charAt(x);
+			var w = x > 0 ? mapData.terrain[y].charAt(x-1) : c;
+			var n = y > 0 ? mapData.terrain[y-1].charAt(x) : c;
+			var nw,ne;
+			if (y % 2 == 0)
+			{
+				nw = n;
+				ne = y > 0 && x+1 < mapData.terrain[y-1].length ?
+					mapData.terrain[y-1].charAt(x+1) : n;
+			}
+			else
+			{
+				nw = y > 0 && x > 0 ? mapData.terrain[y-1].charAt(x-1) : n;
+				ne = n;
+			}
+
+			var pt = {
+				x: x * CELL_WIDTH + (y % 2 == 0 ? CELL_WIDTH / 2 : 0) - MAP_ORIGIN_X,
+				y: y * CELL_HEIGHT - MAP_ORIGIN_Y
+				};
+			this.drawCell(pt, c, w, nw, ne);
+
+			var cellIdx = getCell(y,x);
+			this.drawRivers(pt, cellIdx);
+
+			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
+			{
+				this.drawCityDot({
+				x: pt.x + CELL_WIDTH / 2,
+				y: pt.y + CELL_ASCENT / 2
+				}, cellIdx);
+			}
+
+			this.drawRails(pt, cellIdx);
+		}
+	}
+
+	ctx.save();
+	ctx.fillStyle = "#333333";
+	ctx.font = CELL_WIDTH >= 24 ?
+		"24px sans-serif" :
+		"16px sans-serif";
+	for (var cityLoc in mapData.cities)
+	{
+		if (cityVisible(cityLoc))
+		{
+			var cityName = mapData.cities[cityLoc].name;
+			var p = getCellPoint(cityLoc);
+			ctx.fillText(cityName,
+			p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2,
+			p.y + CELL_ASCENT);
+
+			var xx = p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2;
+			for (var o in mapData.cities[cityLoc].offers)
+			{
+				var resourceType = mapData.cities[cityLoc].offers[o];
+				if (resourceImages[resourceType])
+				{
+					ctx.drawImage(resourceImages[resourceType],
+					xx,
+					p.y + CELL_ASCENT,
+					16,16);
+					xx += 16;
+				}
+				else
+				{
+					loadResourceImage(resourceType);
+				}
+			}
+		}
+	}
+	ctx.restore();
+};
+
+Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
+  const ctx = this.ctx;
+
 	var getColor = function(cc)
 	{
 		if (mapFeatures.hideTerrain)
@@ -141,10 +268,11 @@ function drawCell(ctx, pt, c, w, nw, ne)
 			pt.y + CELL_ASCENT/2 - imageSize/2,
 			imageSize, imageSize);
 	}
-}
+};
 
-function drawRivers(ctx, pt, cellIdx)
-{
+Painter.prototype.drawRivers = function(pt, cellIdx) {
+  const ctx = this.ctx;
+
 	ctx.save();
 	ctx.strokeStyle = '#1155ff';
 	ctx.lineWidth =
@@ -186,47 +314,9 @@ function drawRivers(ctx, pt, cellIdx)
 	}
 
 	ctx.restore();
-}
+};
 
-function drawRails(ctx, pt, cellIdx)
-{
-	var t;
-	if (t = hasTrackAtDir(cellIdx, 0)) //West
-	{
-		if (trackVisible(getTrackIndex(cellIdx, 0)))
-		{
-		ctx.save();
-		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
-		drawRailsHelper(ctx, t);
-		ctx.restore();
-		}
-	}
-	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
-	{
-		if (trackVisible(getTrackIndex(cellIdx, 1)))
-		{
-		ctx.save();
-		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
-		ctx.rotate(Math.PI / 3);
-		drawRailsHelper(ctx, t);
-		ctx.restore();
-		}
-	}
-	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
-	{
-		if (trackVisible(getTrackIndex(cellIdx, 2)))
-		{
-		ctx.save();
-		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
-		ctx.rotate(Math.PI * 2 / 3);
-		drawRailsHelper(ctx, t);
-		ctx.restore();
-		}
-	}
-}
-
-function drawRailsHelper(ctx, owner)
-{
+Painter.prototype.drawRailsHelper = function(ctx, owner) {
 	var RAIL_WIDTH = CELL_WIDTH / 16;
 	var TIE_LENGTH = CELL_WIDTH / 10;
 
@@ -271,131 +361,56 @@ function drawRailsHelper(ctx, owner)
 		ctx.lineTo(CELL_WIDTH * i / 5, TIE_LENGTH);
 		ctx.stroke();
 	}
-}
+};
 
-function cityVisible(cityId)
-{
-	return !mapFeatures.filterCities ||
-		mapFeatures.filterCities[cityId];
-}
+Painter.prototype.drawRails = function(pt, cellIdx) {
+  const ctx = this.ctx;
 
-function cityColor(cityId)
-{
-	if (mapFeatures.highlightCities
-		&& mapFeatures.highlightCities[cityId])
+	var t;
+	if (t = hasTrackAtDir(cellIdx, 0)) //West
 	{
-		return "#ffff44";
+		if (trackVisible(getTrackIndex(cellIdx, 0)))
+		{
+		ctx.save();
+		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
+		this.drawRailsHelper(ctx, t);
+		ctx.restore();
+		}
 	}
-	else
+	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
 	{
-		return "#ff4444";
+		if (trackVisible(getTrackIndex(cellIdx, 1)))
+		{
+		ctx.save();
+		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.rotate(Math.PI / 3);
+		this.drawRailsHelper(ctx, t);
+		ctx.restore();
+		}
 	}
-}
-
-function trackVisible(trackId)
-{
-	return !mapFeatures.filterTrack ||
-		mapFeatures.filterTrack[trackId];
-}
-
-// pt: the desired *center* point of the dot, in screen coordinates
-//
-function drawCityDot(ctx, pt, cityId)
-{
-	ctx.fillStyle = cityColor(cityId);
-	ctx.beginPath();
-	ctx.arc(pt.x, pt.y, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
-	ctx.closePath();
-	ctx.fill();
-}
+	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
+	{
+		if (trackVisible(getTrackIndex(cellIdx, 2)))
+		{
+		ctx.save();
+		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.rotate(Math.PI * 2 / 3);
+		this.drawRailsHelper(ctx, t);
+		ctx.restore();
+		}
+	}
+};
 
 function repaint()
 {
 	var canvas = document.getElementById('theCanvas');
 	var ctx = canvas.getContext('2d');
-
 	ctx.fillStyle = "#ffffff";
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
-	if (!mapData)
-		return;
-
-	for (var y = 0; y < mapData.terrain.length; y++)
-	{
-		for (var x = 0; x < mapData.terrain[y].length; x++)
-		{
-			var c = mapData.terrain[y].charAt(x);
-			var w = x > 0 ? mapData.terrain[y].charAt(x-1) : c;
-			var n = y > 0 ? mapData.terrain[y-1].charAt(x) : c;
-			var nw,ne;
-			if (y % 2 == 0)
-			{
-				nw = n;
-				ne = y > 0 && x+1 < mapData.terrain[y-1].length ?
-					mapData.terrain[y-1].charAt(x+1) : n;
-			}
-			else
-			{
-				nw = y > 0 && x > 0 ? mapData.terrain[y-1].charAt(x-1) : n;
-				ne = n;
-			}
-
-			var pt = {
-				x: x * CELL_WIDTH + (y % 2 == 0 ? CELL_WIDTH / 2 : 0) - MAP_ORIGIN_X,
-				y: y * CELL_HEIGHT - MAP_ORIGIN_Y
-				};
-			drawCell(ctx, pt, c, w, nw, ne);
-
-			var cellIdx = getCell(y,x);
-			drawRivers(ctx, pt, cellIdx);
-
-			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
-			{
-				drawCityDot(ctx, {
-				x: pt.x + CELL_WIDTH / 2,
-				y: pt.y + CELL_ASCENT / 2
-				}, cellIdx);
-			}
-
-			drawRails(ctx, pt, cellIdx);
-		}
+	if (mapData) {
+		new Painter(canvas, ctx, mapData).paint();
 	}
-
-	ctx.save();
-	ctx.fillStyle = "#333333";
-	ctx.font = CELL_WIDTH >= 24 ?
-		"24px sans-serif" :
-		"16px sans-serif";
-	for (var cityLoc in mapData.cities)
-	{
-		if (cityVisible(cityLoc))
-		{
-			var cityName = mapData.cities[cityLoc].name;
-			var p = getCellPoint(cityLoc);
-			ctx.fillText(cityName,
-			p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2,
-			p.y + CELL_ASCENT);
-
-			var xx = p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2;
-			for (var o in mapData.cities[cityLoc].offers)
-			{
-				var resourceType = mapData.cities[cityLoc].offers[o];
-				if (resourceImages[resourceType])
-				{
-					ctx.drawImage(resourceImages[resourceType],
-					xx,
-					p.y + CELL_ASCENT,
-					16,16);
-					xx += 16;
-				}
-				else
-				{
-					loadResourceImage(resourceType);
-				}
-			}
-		}
-	}
-	ctx.restore();
 }
 
 function onResize()
