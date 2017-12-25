@@ -1385,7 +1385,7 @@ function sendRequest(verb, data, success)
 
 	$.ajax({
 	type: "POST",
-	url: "/api/actions",
+	url: "/api/actions?game=" + escape('test'),
 	data: JSON.stringify(data),
 	success: onSuccess,
 	error: onError,

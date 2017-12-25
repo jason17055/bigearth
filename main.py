@@ -42,7 +42,9 @@ class EventsHandler(webapp2.RequestHandler):
     if ent:
       response = [json.loads(evt) for evt in ent.events]
     else:
-      response = []
+      self.error(404)
+      self.response.write('Not found')
+      return
     self.response.headers['Content-Type'] = 'application/json'
     self.response.write(json.dumps(response))
 
@@ -68,22 +70,31 @@ def ProcessGameAction(game_ent, action_req):
 
 class ActionsHandler(webapp2.RequestHandler):
   def post(self):
-    game_id = 'test'  # self.request.get('game')
+    game_id = self.request.get('game')
     req = json.loads(self.request.body)
     if 'action' not in req:
       self.error(400)
       self.response.write('missing required field')
       return
 
+    class EntityNotFound(Exception):
+      pass
+
     actions_key = ndb.Key(GameActions, game_id)
     def _Update():
       ent = actions_key.get()
       if not ent:
-        ent = GameActions(id=actions_key.id(), actions=[])
+        raise EntityNotFound()
       ProcessGameAction(ent, req)
       ent.put()
 
-    ndb.transaction(_Update)
+    try:
+      ndb.transaction(_Update)
+    except EntityNotFound:
+      self.error(404)
+      self.response.write('Not found')
+      return
+
     response = {}
     self.response.headers['Content-Type'] = 'application/json'
     self.response.write(json.dumps(response))
