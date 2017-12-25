@@ -7,25 +7,37 @@ from google.appengine.ext import ndb
 class GameActions(ndb.Model):
   actions = ndb.StringProperty(repeated=True)
   events = ndb.StringProperty(repeated=True)
-  rails_json = ndb.StringProperty()
+  map_json = ndb.TextProperty()
+  rails_json = ndb.TextProperty()
 
 
 class GameStateHandler(webapp2.RequestHandler):
   def get(self):
+    game_id = self.request.get('game')
+    gamestate_key = ndb.Key(GameActions, game_id)
+    def _Fetch():
+      ent = gamestate_key.get()
+      if not ent:
+        ent = GameActions(id=gamestate_key.id())
+        with open('maps/nippon.txt', 'r') as f:
+          ent.map_json = json.dumps(json.load(f))
+        ent.put()
+      return ent
+
+    ent = ndb.transaction(_Fetch)
     response = {
         "rails": {},
-        "map": {},
+        "map": json.loads(ent.map_json),
         "players": {},
     }
-    with open('maps/nippon.txt', 'r') as f:
-      response['map'] = json.load(f)
     self.response.headers['Content-Type'] = 'application/json'
     self.response.write(json.dumps(response))
 
 
 class EventsHandler(webapp2.RequestHandler):
   def get(self):
-    gamestate_key = ndb.Key(GameActions, 'test')
+    game_id = self.request.get('game')
+    gamestate_key = ndb.Key(GameActions, game_id)
     ent = gamestate_key.get()
     if ent:
       response = [json.loads(evt) for evt in ent.events]
@@ -56,13 +68,14 @@ def ProcessGameAction(game_ent, action_req):
 
 class ActionsHandler(webapp2.RequestHandler):
   def post(self):
+    game_id = 'test'  # self.request.get('game')
     req = json.loads(self.request.body)
     if 'action' not in req:
       self.error(400)
       self.response.write('missing required field')
       return
 
-    actions_key = ndb.Key(GameActions, 'test')
+    actions_key = ndb.Key(GameActions, game_id)
     def _Update():
       ent = actions_key.get()
       if not ent:

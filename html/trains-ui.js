@@ -520,6 +520,7 @@ function getEventsNow() {
 function startEventsListener()
 {
 	var rdm = new Date().getTime();
+	var gameId = "test";
 	var errorCounter = 0;
 	serverState.timerId = 0;
 
@@ -549,7 +550,7 @@ function startEventsListener()
 	fetchNextEvent = function()
 	{
 		$.ajax({
-		url: "/api/events?r="+rdm,
+		url: "/api/events?game=" + escape(gameId) + "&r="+rdm,
 		success: onSuccess,
 		error: onError,
 		dataType: "json"
