@@ -182,10 +182,7 @@ Painter.prototype.paint = function() {
 
 			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
 			{
-				this.drawCityDot({
-				x: pt.x + CELL_WIDTH / 2,
-				y: pt.y + CELL_ASCENT / 2
-				}, cellIdx);
+				this.drawCityDot(pt, cellIdx);
 			}
 
 			this.drawRails(pt, cellIdx);
@@ -204,10 +201,10 @@ Painter.prototype.paint = function() {
 			var cityName = mapData.cities[cityLoc].name;
 			var p = getCellPoint(cityLoc);
 			ctx.fillText(cityName,
-			p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2,
-			p.y + CELL_ASCENT);
+			p.x + Math.round(CELL_HEIGHT*.36)-2,
+			p.y + CELL_ASCENT / 2);
 
-			var xx = p.x + Math.round(CELL_WIDTH/2 + CELL_HEIGHT*.36)-2;
+			var xx = p.x + Math.round(CELL_HEIGHT*.36)-2;
 			for (var o in mapData.cities[cityLoc].offers)
 			{
 				var resourceType = mapData.cities[cityLoc].offers[o];
@@ -215,7 +212,7 @@ Painter.prototype.paint = function() {
 				{
 					ctx.drawImage(resourceImages[resourceType],
 					xx,
-					p.y + CELL_ASCENT,
+					p.y + CELL_ASCENT / 2,
 					16,16);
 					xx += 16;
 				}
@@ -251,18 +248,18 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 	if (c != nw || c != ne)
 	{
 		ctx.beginPath();
-		ctx.moveTo(pt.x, pt.y);
-		ctx.lineTo(pt.x + CELL_WIDTH / 2, pt.y - CELL_DESCENT);
-		ctx.lineTo(pt.x + CELL_WIDTH + 1, pt.y);
-		ctx.lineTo(pt.x + CELL_WIDTH + 1, pt.y + CELL_HEIGHT + 1);
-		ctx.lineTo(pt.x, pt.y + CELL_HEIGHT + 1);
+		ctx.moveTo(pt.x - CELL_WIDTH / 2, pt.y - CELL_ASCENT / 2);
+		ctx.lineTo(pt.x, pt.y - CELL_DESCENT - CELL_ASCENT / 2);
+		ctx.lineTo(pt.x + CELL_WIDTH / 2, pt.y - CELL_ASCENT / 2);
+		ctx.lineTo(pt.x + CELL_WIDTH / 2, pt.y + CELL_HEIGHT + 1 - CELL_ASCENT / 2);
+		ctx.lineTo(pt.x - CELL_WIDTH / 2, pt.y + CELL_HEIGHT + 1 - CELL_ASCENT / 2);
 		ctx.closePath();
 		ctx.fill();
 	}
 	else
 	{
 		ctx.fillRect(
-			pt.x, pt.y,
+			pt.x - CELL_WIDTH / 2, pt.y - CELL_ASCENT / 2,
 			CELL_WIDTH+1, CELL_HEIGHT+1
 			);
 	}
@@ -272,8 +269,8 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 	{
 		var imageSize = CELL_WIDTH * .8;
 		ctx.drawImage(terrainImages.mountain,
-			pt.x + CELL_WIDTH/2 - imageSize/2,
-			pt.y + CELL_ASCENT/2 - imageSize/2,
+			pt.x - imageSize/2,
+			pt.y - imageSize/2,
 			imageSize, imageSize);
 	}
 };
@@ -300,14 +297,14 @@ Painter.prototype.drawRivers = function(pt, cellIdx) {
 	if (t = mapData.rivers[cellIdx * 3]) //west
 	{
 		ctx.save();
-		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
+		ctx.translate(pt.x - CELL_WIDTH/2, pt.y);
 		drawRiverHelper(t);
 		ctx.restore();
 	}
 	if (t = mapData.rivers[cellIdx * 3 + 1]) //northwest
 	{
 		ctx.save();
-		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.translate(pt.x - CELL_WIDTH/2 + CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
 		ctx.rotate(Math.PI / 3);
 		drawRiverHelper(t);
 		ctx.restore();
@@ -315,7 +312,7 @@ Painter.prototype.drawRivers = function(pt, cellIdx) {
 	if (t = mapData.rivers[cellIdx * 3 + 2]) //northeast
 	{
 		ctx.save();
-		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.translate(pt.x - CELL_WIDTH/2 + 3 * CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
 		ctx.rotate(Math.PI * 2 / 3);
 		drawRiverHelper(t);
 		ctx.restore();
@@ -380,7 +377,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 		if (trackVisible(getTrackIndex(cellIdx, 0)))
 		{
 		ctx.save();
-		ctx.translate(pt.x, pt.y + CELL_ASCENT/2);
+		ctx.translate(pt.x - CELL_WIDTH / 2, pt.y);
 		this.drawRailsHelper(ctx, t);
 		ctx.restore();
 		}
@@ -390,7 +387,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 		if (trackVisible(getTrackIndex(cellIdx, 1)))
 		{
 		ctx.save();
-		ctx.translate(pt.x + CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.translate(pt.x - CELL_WIDTH / 2 + CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
 		ctx.rotate(Math.PI / 3);
 		this.drawRailsHelper(ctx, t);
 		ctx.restore();
@@ -401,7 +398,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 		if (trackVisible(getTrackIndex(cellIdx, 2)))
 		{
 		ctx.save();
-		ctx.translate(pt.x + 3 * CELL_WIDTH / 4, pt.y - CELL_DESCENT / 2);
+		ctx.translate(pt.x - CELL_WIDTH / 2 + 3 * CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
 		ctx.rotate(Math.PI * 2 / 3);
 		this.drawRailsHelper(ctx, t);
 		ctx.restore();
@@ -661,14 +658,14 @@ function getEdgeFromPoint(pt) {
   var mapCenterX = getMapWidth() / 2;
   var mapCenterY = getMapHeight() / 2;
 
-  var iy = Math.floor(pt.y / CELL_HEIGHT + mapCenterY);
-  var ia = Math.floor(pt.x / (CELL_WIDTH/2) + mapCenterX * 2) - (1 - iy % 2);
+  var iy = Math.floor((pt.y + CELL_ASCENT / 2) / CELL_HEIGHT + mapCenterY);
+  var ia = Math.floor((pt.x + CELL_WIDTH / 2) / (CELL_WIDTH/2) + mapCenterX * 2) - (1 - iy % 2);
 
   if (iy < 0 || iy >= getMapHeight()) {
     return null;
   }
 
-	var ry = pt.y - (iy - mapCenterY) * CELL_HEIGHT;
+	var ry = pt.y + CELL_ASCENT / 2 - (iy - mapCenterY) * CELL_HEIGHT;
 	if (ry < CELL_ASCENT)
 	{
 		var col = Math.floor((ia+1) / 2);
@@ -691,8 +688,8 @@ function getCellFromPoint(pt)
   var mapCenterX = getMapWidth() / 2;
   var mapCenterY = getMapHeight() / 2;
 
-  var iy = Math.floor(pt.y / CELL_HEIGHT + mapCenterY);
-  var ix = Math.floor((pt.x - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH + mapCenterX);
+  var iy = Math.floor((pt.y + CELL_ASCENT / 2) / CELL_HEIGHT + mapCenterY);
+  var ix = Math.floor((pt.x + CELL_WIDTH / 2 - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH + mapCenterX);
   if (iy >= 0 && iy < getMapHeight()) {
     if (ix >= 0 && ix < getMapWidth()) {
       return getCell(iy, ix);
@@ -1085,7 +1082,7 @@ function onMouseDown_build(cellIdx)
 	var ctx = canvas.getContext('2d');
 	ctx.beginPath();
 	ctx.fillStyle = '#009999';
-	ctx.arc(pt.x + CELL_WIDTH / 2, pt.y + CELL_ASCENT / 2, 6, 0, Math.PI * 2, true);
+	ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2, true);
 	ctx.closePath();
 	ctx.fill();
 
@@ -1133,14 +1130,10 @@ function onMouseMove(evt)
 			return;
 		}
 		var cellPt = toCanvasCoords(getCellPoint(cellIdx));
-		var cellCenterPt = {
-			x: cellPt.x + CELL_WIDTH / 2,
-			y: cellPt.y + CELL_ASCENT / 2
-			};
 
 		if (cellIdx != isDragging.start
-			&& Math.abs(cellCenterPt.x - pt.x) < 16
-			&& Math.abs(cellCenterPt.y - pt.y) < 16
+			&& Math.abs(cellPt.x - pt.x) < 16
+			&& Math.abs(cellPt.y - pt.y) < 16
 			&& isCellAdjacent(isDragging.start, cellIdx))
 		{
 			track_addSegment(isDragging.start, cellIdx);
@@ -1238,8 +1231,8 @@ function track_addSegment(fromIdx, toIdx)
 	ctx.beginPath();
 	ctx.strokeStyle = isBuilding.erasing ? '#ffffff' : '#009999';
 	ctx.lineWidth = 4;
-	ctx.moveTo(p0.x + CELL_WIDTH/2, p0.y + CELL_ASCENT/2);
-	ctx.lineTo(p1.x + CELL_WIDTH/2, p1.y + CELL_ASCENT/2);
+	ctx.moveTo(p0.x, p0.y);
+	ctx.lineTo(p1.x, p1.y);
 	ctx.stroke();
 	ctx.restore();
 
