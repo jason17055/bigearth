@@ -510,23 +510,35 @@ function onGameEvent(evt)
 }
 
 function getEventsNow() {
+	stopEventsListener();
+	startEventsListener();
+}
+
+function stopEventsListener() {
 	if (serverState.timerId) {
 		clearTimeout(serverState.timerId);
 		serverState.timerId = 0;
-		startEventsListener();
 	}
+	serverState.currentFetch = null;
 }
 
-function startEventsListener()
-{
+function startEventsListener() {
+
 	var rdm = new Date().getTime();
 	var gameId = "test";
 	var errorCounter = 0;
 	serverState.timerId = 0;
 
+	var myFetch = {};
+	serverState.currentFetch = myFetch;
+
 	var fetchNextEvent;
 	var onSuccess = function(data,status)
 	{
+		if (serverState.currentFetch !== myFetch) {
+			return;
+		}
+
 		errorCounter = 0;
 		let anyFound = false;
 		while (serverState.eventsSeen < data.length) {
@@ -538,6 +550,10 @@ function startEventsListener()
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
+		if (serverState != myFetch) {
+			return;
+		}
+
 		errorCounter++;
 		if (errorCounter < 3)
 		{
@@ -2264,6 +2280,7 @@ function showEditMapPane()
 	$('#editMapPane').fadeIn();
 
 	makeMoreRoomOnMap(10);
+	stopEventsListener();
 }
 
 function makeMoreRoomOnMap(amt)
@@ -2312,6 +2329,7 @@ function dismissEditMapPane()
 		rivers: aRivers.join(" "),
 		cities: mapData.cities
 		});
+	startEventsListener();
 }
 
 function editmap_addCityResource()
