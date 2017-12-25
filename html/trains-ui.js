@@ -705,8 +705,8 @@ function updateWaypointSpritePosition(sprite)
 	var $t = sprite.el;
 	var p = $('#theCanvas').position();
 	$t.css({
-		left: (p.left + pt.x + CELL_WIDTH/2 - $t.outerWidth()/2) + "px",
-		top: (p.top + pt.y + CELL_ASCENT/2 - $t.outerHeight()) + "px"
+		left: (p.left + pt.x - $t.outerWidth()/2) + "px",
+		top: (p.top + pt.y - $t.outerHeight()) + "px"
 		});
 }
 
@@ -724,8 +724,8 @@ function updateTrainSpritePosition(train)
 	var $t = train.el;
 	var origin_pt = $('#theCanvas').position();
 	$t.css({
-		left: (origin_pt.left + pt.x + CELL_WIDTH/2 - 15) + "px",
-		top: (origin_pt.top + pt.y + CELL_ASCENT/2 - 15) + "px"
+		left: (origin_pt.left + pt.x - 15) + "px",
+		top: (origin_pt.top + pt.y - 15) + "px"
 		});
 }
 
