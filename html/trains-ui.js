@@ -41,7 +41,7 @@ MAP_ORIGIN_Y = CELL_ASCENT/2;
 
 var pendingImages = 0;
 var terrainImages = {};
-$(function() {
+function preloadImages() {
 	pendingImages++;
 	var img = new Image();
 	img.onload = function() {
@@ -50,7 +50,7 @@ $(function() {
 				repaint();
 		};
 	img.src = "resources/terrain_mountain.png";
-});
+}
 
 var resourceImages = {};
 var resourceImagesFetch = {};
@@ -412,7 +412,6 @@ function onResize()
 	repaint();
 }
 window.onresize = onResize;
-$(onResize);
 
 function beginLoadMap(mapName)
 {
@@ -466,7 +465,6 @@ function fetchGameState()
 		dataType: "json"
 		});
 }
-$(fetchGameState);
 
 function getGameTime()
 {
@@ -1277,18 +1275,6 @@ function onTouchEnd_r(evt)
 		});
 	}
 }
-
-$(function() {
-	document.getElementById('theCanvas').addEventListener('mousedown', onMouseDown, false);
-	$(document).mouseup(onMouseUp);
-	$(document).mousemove(onMouseMove);
-	document.getElementById('theCanvas').addEventListener('DOMMouseScroll',
-			onMouseWheel, false);
-
-	document.getElementById('theCanvas').addEventListener('touchstart', onTouchStart_r, false);
-	document.addEventListener('touchmove', onTouchMove_r, false);
-	document.addEventListener('touchend', onTouchEnd_r, false);
-});
 
 function setZoomLevel(w, basisPt)
 {
@@ -2538,3 +2524,32 @@ function joinGame()
 		setPlayerId(data.pid);
 		});
 }
+
+angular.module('trains', ['ngRoute'])
+
+.config(function($routeProvider, $locationProvider) {
+  $routeProvider
+  .when('/game/:game', {
+    controller: 'GameController',
+    controllerAs: 'c',
+    templateUrl: 'resources/game.ng'
+  })
+  .otherwise({
+    redirectTo: '/game/test'
+  });
+})
+.controller('GameController', function() {
+  onResize();
+  document.getElementById('theCanvas').addEventListener('mousedown', onMouseDown, false);
+  $(document).mouseup(onMouseUp);
+  $(document).mousemove(onMouseMove);
+  document.getElementById('theCanvas').addEventListener('DOMMouseScroll',
+      onMouseWheel, false);
+
+  document.getElementById('theCanvas').addEventListener('touchstart', onTouchStart_r, false);
+  document.addEventListener('touchmove', onTouchMove_r, false);
+  document.addEventListener('touchend', onTouchEnd_r, false);
+
+  fetchGameState();
+  preloadImages();
+});

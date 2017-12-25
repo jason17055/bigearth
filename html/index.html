@@ -1,4 +1,4 @@
-<html>
+<html ng-app="trains">
 <head>
 <title>Trains</title>
 <style type="text/css">
@@ -105,185 +105,14 @@ body {
 	padding-right: 2pt;
 }
 </style>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.7/angular.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.7/angular-resource.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.7/angular-route.min.js"></script>
 <script type="text/javascript" src="resources/js/jquery-1.7.min.js"></script>
 <script type="text/javascript" src="resources/trains-ui.js"></script>
 <script type="text/javascript" src="resources/trains-common.js"></script>
 </head>
 <body>
-<div id="contentArea">
-<canvas id="theCanvas" width="600" height="600"></canvas>
-</div>
-<div id="buttonBar">
-<div style="padding:3pt">
-<button type="button" onclick="showPlayers()">Show Players</button>
-<button type="button" onclick="showDemands()">Show Demands</button>
-<button type="button" onclick="beginBuilding()">Build Track</button>
-<button type="button" onclick="addLocomotive()">Add Locomotive</button>
-<button type="button" onclick="zoomIn()">Zoom In</button>
-<button type="button" onclick="zoomOut()">Zoom Out</button>
-<button type="button" onclick="showEditMapPane()">Edit Map</button>
-<span>Cash on hand: <span id="cashIndicator">0</span></span>
-<span id="trainStartClock">Train movement</span>
-</div>
-</div>
-<div class="widget" id="editCityPane">
-  <div class="widgetHeader">Edit City</div>
-  <div class="widgetContent">
-    <div>Name: <input type="text" size="10" id="editCityNameEntry"></div>
-    <div>Offers:</div>
-    <div><select id="offersList" size="4"></select></div>
-    <div>
-      <select id="offersChoices"><option value="" id="nullOffersChoice" selected="selected">--select--</option></select>
-      <button type="button" onclick="editmap_addCityResource()">Add</button>
-      <button type="button" onclick="editmap_removeCityResource()">Remove</button>
-    </div>
-  </div>
-  <div class="widgetFooter">
-      <button type="button" onclick="dismissEditCityPane()">Save</button>
-      <button type="button" onclick="editmap_deleteCity()">Delete</button>
-  </div>
-</div>
-<div class="widget" id="editMapPane">
-  <div class="widgetHeader">Edit Map</div>
-  <div class="widgetContent">
-    <form name="editMapForm">
-    <div style="float:left; padding: 2pt">
-     <div><b>Terrain Tools</b></div>
-     <div><input type="radio" name="tool" value="grass" id="editTool_grass"><label for="editTool_grass">Grass</label></div>
-     <div><input type="radio" name="tool" value="mountain" id="editTool_mountain"><label for="editTool_mountain">Mountain</label></div>
-     <div><input type="radio" name="tool" value="sea" id="editTool_sea"><label for="editTool_sea">Sea</label></div>
-     <div><input type="radio" name="tool" value="erase" id="editTool_erase"><label for="editTool_erase">Erase</label></div>
-    </div>
-    <div style="float:left; padding: 2pt">
-     <div><b>Misc Tools</b></div>
-     <div><input type="radio" name="tool" value="hand" id="editTool_hand" checked="checked"><label for="editTool_hand">Hand</label></div>
-     <div><input type="radio" name="tool" value="rivers" id="editTool_rivers"><label for="editTool_rivers">Rivers</label></div>
-     <div><input type="radio" name="tool" value="city" id="editTool_city"><label for="editTool_city">City</label></div>
-    </div>
-    </form>
-  </div>
-  <div class="widgetFooter"><button type="button" onclick="dismissEditMapPane()">Dismiss</button></div>
-</div>
-<div class="widget" id="demandsPane">
-  <div class="widgetHeader">Current Demands</div>
-  <div class="widgetContent">
-  <table border="0" cellspacing="0">
-    <tr class="aDemand" id="demandsPaneTableTemplate" style="display:none"><td><img src=""></td>
-        <td width="100%"><span class="cityName">Erie</span></td>
-        <td align="right">$<span class="amount">10</span></td></tr>
-  </table>
-  </div>
-  <div class="widgetFooter"><button type="button" onclick="dismissCurrentDialog()">Dismiss</button></div>
-</div>
-<div class="widget" id="buildTrackInfo">
-  <div class="widgetHeader">Build Track</div>
-  <div class="widgetContent">
-  <div>Click and drag from a city or existing track.</div>
-  <p>Cost so far: <span id="buildTrackCost">0</span></p>
-  </div>
-  <div class="widgetFooter">
-    <button type="button" onclick="commitBuilding()">Commit</button>
-    <button type="button" onclick="abandonBuilding()">Abandon</button>
-  </div>
-</div>
-<div class="widget" id="planPane">
-  <div class="widgetHeader">Train 1</div>
-  <div class="widgetContent">
-  <div id="brandNewInstructions">Click a city to set this locomotive's starting point.</div>
-  <div id="trainCargo"></div>
-  <table border="0" cellspacing="0">
-    <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
-        <td class="waypointNumber" align="center"></td>
-        <td class="waypointCity" width="100%">Erie</td>
-        <td class="waypointEta" align="right"></td>
-    </tr>
-    <tr class="aManifest" id="aManifestTemplate" style="display:none">
-        <td></td>
-        <td colspan="2">
-           <div class="deliverSummary"></div>
-           <div class="pickupSummary"></div>
-        </td>
-    </tr>
-    <tr id="aManifestControl" style="display:none">
-        <td align="center" colspan="3"><button type="button">Pick Up</button</td>
-    </tr>
-  </table>
-  </div>
-  <div class="widgetFooter">
-    <button type="button" id="startTrain_btn" onclick="startTrainBtn()">Go!</button>
-    <button type="button" id="stopTrain_btn" style="display:none" onclick="stopTrainBtn()">Stop</button>
-    <button type="button" onclick="dismissPlan()">Dismiss</button>
-  </div>
-</div>
-<div class="widget" id="waypointPane">
-  <div class="widgetHeader">City</div>
-  <div class="widgetContent">
-     <table width="100%">
-     <tr id="deliverHeader"><td colspan="2">You are delivering:</td></tr>
-     <tr id="deliverTemplate" style="display:none">
-       <td valign="top" align="center">
-          <div><img class="resource_icon" src=""></div>
-          <div><small class="resource_name">resource</small></div>
-       </td>
-       <td align="left" valign="bottom">
-             <div><small class="wantedInfo"></small></div>
-            <span style="float:right"><button type="button">Don't Deliver</button></span>
-       </td>
-     </tr>
-     <tr id="keepHeader"><td colspan="2">You will have:</td></tr>
-     <tr id="keepTemplate" style="display:none">
-       <td valign="top" align="center">
-          <div><img class="resource_icon" src="resource_icons/plastics.png"></div>
-          <div><small class="resource_name">plastics</small></div>
-       </td>
-       <td align="left" valign="bottom">
-             <div><small class="wantedInfo">Wanted in Scranton</small></div>
-            <span style="float:right"><button type="button">Deliver for $10</button></span>
-       </td>
-     </tr>
-     <tr id="pickupHeader"><td colspan="2">You will pick up:</td></tr>
-     <tr id="pickupTemplate" style="display:none">
-       <td valign="top" align="center">
-          <div><img class="resource_icon" src="resource_icons/steel.png"></div>
-          <div><small class="resource_name">steel</small></div>
-       </td>
-       <td align="left" valign="bottom">
-             <div><small class="wantedInfo">Wanted in Scranton</small></div>
-            <span style="float:right"><button type="button">Don't Pick Up</button></span>
-       </td>
-     </tr>
-     <tr id="availableHeader"><td colspan="2">Available here:</td></tr>
-     <tr id="availableTemplate" style="display:none">
-      <td valign="top" align="center">
-          <div><img class="resource_icon" src="resource_icons/steel.png"></div>
-          <div><small class="resource_name">steel</small></div>
-      </td>
-      <td align="left" valign="bottom">
-          <div><small class="wantedInfo">Wanted in Scranton</small></div>
-          <span style="float:right"><button type="button">Pick Up</button></span>
-      </td>
-     </tr>
-     </table>
-  </div>
-  <div class="widgetFooter">
-    <button type="button" onclick="dismissWaypoint()">Dismiss</button>
-  </div>
-</div>
-<div class="widget" id="gameRosterPane">
-  <div class="widgetHeader">Players</div>
-  <div class="widgetContent">
-  <table border="0" cellspacing="0">
-    <tr id="gameRosterPaneTableTemplate" style="display:none">
-        <td><span class="playerId"></span></td>
-        <td width="100%"><span class="playerName">Player Name</span></td>
-        <td><button class="playAsBtn">Play</button></td>
-    </tr>
-  </table>
-  </div>
-  <div class="widgetFooter">
-    <button type="button" onclick="joinGame()">New Player</button>
-    <button type="button" onclick="dismissCurrentDialog()">Dismiss</button>
-  </div>
-</div>
+<div ng-view></div>
 </body>
 </html>
