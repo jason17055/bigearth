@@ -2253,27 +2253,16 @@ function showEditMapPane()
 {
 	stopEventsListener();
 
-	var onSuccess = function(data) {
-		mapData.terrain = data.terrain;
-		mapData.rivers = data.rivers;
-		mapData.cities = data.cities;
+  mapFeatures = {};
+  mapData.terrain = ['.'];
+  mapData.cities = {};
+  mapData.rivers = {};
+  CELLS_PER_ROW = mapData.terrain[0].length;
+  makeMoreRoomOnMap(10);
+  zoomShowAll();
 
-		isEditing = {};
-		$('#editMapPane').fadeIn();
-
-		makeMoreRoomOnMap(10);
-	};
-	var onError = function(xhr, status, errorThrown) {
-		alert("request error " + errorThrown);
-	};
-
-	$.ajax({
-	type: "GET",
-	url: "/api/map?map=cloud",
-	success: onSuccess,
-	error: onError,
-	dataType: "json",
-	});
+	isEditing = {};
+	$('#editMapPane').fadeIn();
 }
 
 function makeMoreRoomOnMap(amt)
@@ -2562,15 +2551,13 @@ angular.module('trains', ['ngRoute'])
         responseType: 'json',
       }).then(
         function(httpResponse) {
-          mapData = httpResponse.data;
-          repaint();
+          var newMap = httpResponse.data;
+          mapData = newMap;
+          CELLS_PER_ROW = mapData.terrain[0].length;
+          zoomShowAll();
         },
         function(rejection) {
-          mapData.terrain = ['.'];
-          mapData.cities = {};
-          mapData.rivers = {};
-          makeMoreRoomOnMap(10);
-          zoomShowAll();
+          alert('Load failed.');
         });
     }
   };
