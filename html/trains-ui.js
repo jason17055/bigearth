@@ -439,31 +439,27 @@ function beginLoadMap(mapName)
 }
 
 var serverState;
-function fetchGameState()
+function fetchGameState($http, gameId)
 {
 	var fetchBeginTime = new Date().getTime();
 
-	var onSuccess = function(data,status)
-	{
+	var onSuccess = function(httpResponse) {
 		var fetchEndTime = new Date().getTime();
-		serverState = data;
+		serverState = httpResponse.data;
 		serverState.basisTime = fetchBeginTime +
 			Math.round((fetchEndTime - fetchBeginTime) / 2) -
 			serverState.serverTime;
 		serverState.eventsSeen = 0;
 		onGameState();
 	};
-	var onError = function(xhr, status, errorThrown)
-	{
+	var onError = function(err) {
 		//FIXME, report an error, I suppose
 	};
 
-	$.ajax({
-		url: "/api/gamestate",
-		success: onSuccess,
-		error: onError,
-		dataType: "json"
-		});
+	$http.get('/api/gamestate', {
+		params: {game: gameId},
+		responseType: 'json',
+	}).then(onSuccess, onError);
 }
 
 function getGameTime()
@@ -2538,7 +2534,9 @@ angular.module('trains', ['ngRoute'])
     redirectTo: '/game/test'
   });
 })
-.controller('GameController', function() {
+.controller('GameController', function($http, $routeParams) {
+  this.gameId = $routeParams['game'];
+
   onResize();
   document.getElementById('theCanvas').addEventListener('mousedown', onMouseDown, false);
   $(document).mouseup(onMouseUp);
@@ -2550,6 +2548,6 @@ angular.module('trains', ['ngRoute'])
   document.addEventListener('touchmove', onTouchMove_r, false);
   document.addEventListener('touchend', onTouchEnd_r, false);
 
-  fetchGameState();
+  fetchGameState($http, this.gameId);
   preloadImages();
 });
