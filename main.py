@@ -6,6 +6,24 @@ import webapp2
 from google.appengine.ext import ndb
 
 
+ALL_COMMODITIES = [
+    "cars",
+    "coal",
+    "copper",
+    "fish",
+    "furniture",
+    "gold",
+    "imports",
+    "machinery",
+    "passengers",
+    "plastics",
+    "steel",
+    "tea",
+    "tobacco",
+    "wine",
+    "wood",
+];
+
 class GameActions(ndb.Model):
   actions = ndb.StringProperty(repeated=True)
   events = ndb.StringProperty(repeated=True)
@@ -56,6 +74,7 @@ class GameStateHandler(webapp2.RequestHandler):
         "rails": {},
         "map": json.loads(ent.map_json),
         "players": {},
+        "allServerResourceTypes": ALL_COMMODITIES,
     }
     self.response.headers['Content-Type'] = 'application/json'
     self.response.write(json.dumps(response))
