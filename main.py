@@ -1,4 +1,6 @@
+import collections
 import json
+import random
 import webapp2
 
 from google.appengine.ext import ndb
@@ -9,6 +11,28 @@ class GameActions(ndb.Model):
   events = ndb.StringProperty(repeated=True)
   map_json = ndb.TextProperty()
   rails_json = ndb.TextProperty()
+  all_demands = ndb.StringProperty(repeated=True)
+
+
+def InitializeGame(ent):
+  with open('maps/nippon.txt', 'r') as f:
+    map_data = json.load(f)
+  ent.map_json = json.dumps(map_data)
+
+  # Create demands.
+  all_resource_types = collections.defaultdict(set)
+  for city_id, city in map_data['cities'].items():
+    for resource_type in city.get('offers', []):
+      all_resource_types[resource_type].add(city_id)
+
+  all_demands = []
+  for city_id, city in map_data['cities'].items():
+    here = set(city.get('offers', []))
+    for rt in all_resource_types.keys():
+      if rt not in here:
+        all_demands.append('%s:%s:%d' % (city_id, rt, 10))
+  random.shuffle(all_demands)
+  ent.all_demands = all_demands
 
 
 class GameStateHandler(webapp2.RequestHandler):
@@ -19,8 +43,7 @@ class GameStateHandler(webapp2.RequestHandler):
       ent = gamestate_key.get()
       if not ent:
         ent = GameActions(id=gamestate_key.id())
-        with open('maps/nippon.txt', 'r') as f:
-          ent.map_json = json.dumps(json.load(f))
+        InitializeGame(ent)
         ent.put()
       return ent
 
