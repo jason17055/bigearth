@@ -24,6 +24,11 @@ var noRedraw = 0;
 
 var CELLS_PER_ROW = 1;
 var CELL_WIDTH = 64;
+var DISPLAY_SETTINGS = {
+  zoomLevel: 64,
+  offsetX: 0,
+  offsetY: 0,
+};
 var CELL_HEIGHT;
 var CELL_ASCENT;
 var CELL_DESCENT;
@@ -145,6 +150,10 @@ Painter.prototype.paint = function() {
   const ctx = this.ctx;
   const mapData = this.mapData;
 
+  ctx.save();
+  ctx.translate(DISPLAY_SETTINGS.offsetX, DISPLAY_SETTINGS.offsetY);
+  ctx.scale(DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH, DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH);
+
 	for (var y = 0; y < mapData.terrain.length; y++)
 	{
 		for (var x = 0; x < mapData.terrain[y].length; x++)
@@ -165,13 +174,10 @@ Painter.prototype.paint = function() {
 				ne = n;
 			}
 
-			var pt = {
-				x: x * CELL_WIDTH + (y % 2 == 0 ? CELL_WIDTH / 2 : 0) - MAP_ORIGIN_X,
-				y: y * CELL_HEIGHT - MAP_ORIGIN_Y
-				};
-			this.drawCell(pt, c, w, nw, ne);
-
 			var cellIdx = getCell(y,x);
+			var pt = getCellPoint(cellIdx);
+
+			this.drawCell(pt, c, w, nw, ne);
 			this.drawRivers(pt, cellIdx);
 
 			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
@@ -221,6 +227,8 @@ Painter.prototype.paint = function() {
 		}
 	}
 	ctx.restore();
+
+  ctx.restore();
 };
 
 Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
@@ -617,26 +625,50 @@ function onGameState()
 	}
 }
 
+/**
+ * @return cell's center position in (unzoomed) display coordinates.
+ */
 function getCellPoint(cellIdx)
 {
+  var mapCenterX = getMapWidth() / 2;
+  var mapCenterY = getMapHeight() / 2;
+
 	var x = getCellColumn(cellIdx);
 	var y = getCellRow(cellIdx);
 
 	return {
-		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * x - MAP_ORIGIN_X,
-		y: CELL_HEIGHT * y - MAP_ORIGIN_Y
+		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * (x - mapCenterX),
+		y: CELL_HEIGHT * (y - mapCenterY)
 		};
 }
 
-function getEdgeFromPoint(x, y)
-{
-	x += MAP_ORIGIN_X;
-	y += MAP_ORIGIN_Y;
+function fromCanvasCoords(pt) {
+  return {
+      x: (pt.x - DISPLAY_SETTINGS.offsetX) / (DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH),
+      y: (pt.y - DISPLAY_SETTINGS.offsetY) / (DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH),
+  };
+}
 
-	var iy = Math.floor(y / CELL_HEIGHT);
-	var ia = Math.floor(x / (CELL_WIDTH/2)) - (1 - iy % 2);
+function toCanvasCoords(pt) {
+  return {
+      x: pt.x * (DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH) + DISPLAY_SETTINGS.offsetX,
+      y: pt.y * (DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH) + DISPLAY_SETTINGS.offsetY,
+  };
+}
 
-	var ry = y - iy * CELL_HEIGHT;
+function getEdgeFromPoint(pt) {
+
+  var mapCenterX = getMapWidth() / 2;
+  var mapCenterY = getMapHeight() / 2;
+
+  var iy = Math.floor(pt.y / CELL_HEIGHT + mapCenterY);
+  var ia = Math.floor(pt.x / (CELL_WIDTH/2) + mapCenterX * 2) - (1 - iy % 2);
+
+  if (iy < 0 || iy >= getMapHeight()) {
+    return null;
+  }
+
+	var ry = pt.y - (iy - mapCenterY) * CELL_HEIGHT;
 	if (ry < CELL_ASCENT)
 	{
 		var col = Math.floor((ia+1) / 2);
@@ -654,19 +686,24 @@ function getEdgeFromPoint(x, y)
 	}
 }
 
-function getCellFromPoint(x, y)
+function getCellFromPoint(pt)
 {
-	x += MAP_ORIGIN_X;
-	y += MAP_ORIGIN_Y;
+  var mapCenterX = getMapWidth() / 2;
+  var mapCenterY = getMapHeight() / 2;
 
-	var iy = Math.floor(y / CELL_HEIGHT);
-	var ix = Math.floor((x - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH);
-	return getCell(iy, ix);
+  var iy = Math.floor(pt.y / CELL_HEIGHT + mapCenterY);
+  var ix = Math.floor((pt.x - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH + mapCenterX);
+  if (iy >= 0 && iy < getMapHeight()) {
+    if (ix >= 0 && ix < getMapWidth()) {
+      return getCell(iy, ix);
+    }
+  }
+  return null;
 }
 
 function updateWaypointSpritePosition(sprite)
 {
-	var pt = getCellPoint(sprite.loc);
+	var pt = toCanvasCoords(getCellPoint(sprite.loc));
 
 	var $t = sprite.el;
 	var p = $('#theCanvas').position();
@@ -678,11 +715,11 @@ function updateWaypointSpritePosition(sprite)
 
 function updateTrainSpritePosition(train)
 {
-	var pt = getCellPoint(train.loc);
+	var pt = toCanvasCoords(getCellPoint(train.loc));
 
 	if (train.tick && train.route && train.route[0])
 	{
-		var pt1 = getCellPoint(train.route[0]);
+		var pt1 = toCanvasCoords(getCellPoint(train.route[0]));
 		pt.x += (pt1.x - pt.x) * train.tick / 12.0;
 		pt.y += (pt1.y - pt.y) * train.tick / 12.0;
 	}
@@ -955,15 +992,16 @@ function onMouseDown(evt)
 function onTouchStart(evt)
 {
 	var p = $('#theCanvas').position();
-	var pt = {
+	var screenPt = {
 		x: evt.clientX - p.left,
 		y: evt.clientY - p.top
-		};
-	var cellIdx = getCellFromPoint(pt.x, pt.y);
-
-	if (cellIdx == 0)
+	};
+	var pt = fromCanvasCoords(screenPt);
+	var cellIdx = getCellFromPoint(pt);
+	if (cellIdx === null)
 		return;
-	var cellP = getCellPoint(cellIdx);
+
+	var cellP = toCanvasCoords(getCellPoint(cellIdx));
 
 	if (isCity(cellIdx) && isPlanning)
 	{
@@ -989,8 +1027,8 @@ function onTouchStart(evt)
 
 	// begin pan of whole map
 	isPanning = {
-		originX: pt.x,
-		originY: pt.y
+		originX: screenPt.x,
+		originY: screenPt.y
 		};
 	return;
 }
@@ -1018,7 +1056,10 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 	}
 	else if (t == "rivers")
 	{
-		var edgeIdx = getEdgeFromPoint(oPt.x, oPt.y);
+		var edgeIdx = getEdgeFromPoint(oPt);
+		if (edgeIdx === null) {
+			return;
+		}
 		if (mapData.rivers[edgeIdx])
 			delete mapData.rivers[edgeIdx];
 		else
@@ -1039,7 +1080,7 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 
 function onMouseDown_build(cellIdx)
 {
-	var pt = getCellPoint(cellIdx);
+	var pt = toCanvasCoords(getCellPoint(cellIdx));
 	var canvas = document.getElementById('theCanvas');
 	var ctx = canvas.getContext('2d');
 	ctx.beginPath();
@@ -1087,8 +1128,11 @@ function onMouseMove(evt)
 
 	if (isDragging)
 	{
-		var cellIdx = getCellFromPoint(pt.x, pt.y);
-		var cellPt = getCellPoint(cellIdx);
+		var cellIdx = getCellFromPoint(fromCanvasCoords(pt));
+		if (cellIdx === null) {
+			return;
+		}
+		var cellPt = toCanvasCoords(getCellPoint(cellIdx));
 		var cellCenterPt = {
 			x: cellPt.x + CELL_WIDTH / 2,
 			y: cellPt.y + CELL_ASCENT / 2
@@ -1123,8 +1167,8 @@ function onMouseMove(evt)
 			(rect.right-rect.left), (rect.bottom-rect.top)
 			);
 
-		MAP_ORIGIN_X -= dx;
-		MAP_ORIGIN_Y -= dy;
+		DISPLAY_SETTINGS.offsetX += dx;
+		DISPLAY_SETTINGS.offsetY += dy;
 		updateAllSpritePositions();
 
 		isPanning.originX = pt.x;
@@ -1187,8 +1231,8 @@ function track_addSegment(fromIdx, toIdx)
 	var canvas = document.getElementById('theCanvas');
 	var ctx = canvas.getContext('2d');
 
-	var p0 = getCellPoint(fromIdx);
-	var p1 = getCellPoint(toIdx);
+	var p0 = toCanvasCoords(getCellPoint(fromIdx));
+	var p1 = toCanvasCoords(getCellPoint(toIdx));
 
 	ctx.save();
 	ctx.beginPath();
@@ -1290,18 +1334,18 @@ function setZoomLevel(w, basisPt)
 		};
 	}
 
-	var newCellWidth = 2 * Math.round(w/2);
-	if (newCellWidth > 64)
-		newCellWidth = 64;
-	if (newCellWidth < 12)
-		newCellWidth = 12;
+	var newZoomLevel = 2 * Math.round(w/2);
+	if (newZoomLevel > 64)
+		newZoomLevel = 64;
+	if (newZoomLevel < 12)
+		newZoomLevel = 12;
 
 	var relX = (basisPt.x + MAP_ORIGIN_X) / CELL_WIDTH;
 	var relY = (basisPt.y + MAP_ORIGIN_Y) / CELL_WIDTH;
 
-	CELL_WIDTH = newCellWidth;
-	MAP_ORIGIN_X = relX * CELL_WIDTH - basisPt.x;
-	MAP_ORIGIN_Y = relY * CELL_WIDTH - basisPt.y;
+	DISPLAY_SETTINGS.zoomLevel = newZoomLevel;
+	MAP_ORIGIN_X = relX * DISPLAY_SETTINGS.zoomLevel - basisPt.x;
+	MAP_ORIGIN_Y = relY * DISPLAY_SETTINGS.zoomLevel - basisPt.y;
 
 	updateMapMetrics();
 	if (!noRedraw)
@@ -1313,45 +1357,49 @@ function setZoomLevel(w, basisPt)
 
 function zoomIn(basisPt)
 {
-	setZoomLevel(CELL_WIDTH * 4/3, basisPt);
+	setZoomLevel(DISPLAY_SETTINGS.zoomLevel * 4/3, basisPt);
 }
 
 function zoomOut(basisPt)
 {
-	setZoomLevel(CELL_WIDTH * 3/4, basisPt);
+	setZoomLevel(DISPLAY_SETTINGS.zoomLevel * 3/4, basisPt);
+}
+
+function getMapWidth() {
+	return CELLS_PER_ROW;
+}
+
+function getMapHeight() {
+	return mapData.terrain.length;
 }
 
 function zoomShowAll()
 {
+	var mapWidth = getMapWidth();
+	var mapHeight = getMapHeight();
+
 	var canvas = document.getElementById('theCanvas');
-	var cw1 = canvas.width / CELLS_PER_ROW;
-	var cw2 = (canvas.height / mapData.terrain.length) * 64/56;
+	var cw1 = canvas.width / mapWidth;
+	var cw2 = (canvas.height / mapHeight) * 64/56;
 
-	var mapWidth = CELLS_PER_ROW;
-	var mapHeight = mapData.terrain.length;
-
-	CELL_WIDTH = 12;
+	DISPLAY_SETTINGS.zoomLevel = 12;
+	DISPLAY_SETTINGS.offsetX = canvas.width / 2;
+	DISPLAY_SETTINGS.offsetY = canvas.height / 2;
 	updateMapMetrics();
-	MAP_ORIGIN_X = -(canvas.width - mapWidth * CELL_WIDTH) / 2;
-	MAP_ORIGIN_Y = -(canvas.height - mapHeight * CELL_HEIGHT) / 2;
 
 	setZoomLevel(cw1 < cw2 ? cw1 : cw2);
 }
 
-function centerMapOn(cellIdx)
-{
-	var cellX = getCellColumn(cellIdx);
-	var cellY = getCellRow(cellIdx);
+function centerMapOn(cellIdx) {
 
-	var canvas = document.getElementById('theCanvas');
-	MAP_ORIGIN_X = -canvas.width / 2 + cellX * CELL_WIDTH;
-	MAP_ORIGIN_Y = -canvas.height / 2 + cellY * CELL_HEIGHT;
+  var pt = getCellPoint(cityIdx);
+  DISPLAY_SETTINGS.offsetX = -pt.x * DISPLAY_SETTINGS.zoomLevel;
+  DISPLAY_SETTINGS.offsetY = -pt.y * DISPLAY_SETTINGS.zoomLevel;
 
-	if (!noRedraw)
-	{
-		repaint();
-		updateAllSpritePositions();
-	}
+  if (!noRedraw) {
+    repaint();
+    updateAllSpritePositions();
+  }
 }
 
 function beginBuilding()
