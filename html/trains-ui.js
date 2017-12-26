@@ -355,7 +355,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	var t;
 	if (t = hasTrackAtDir(cellIdx, 0)) //West
 	{
-		if (trackVisible(getTrackIndex(cellIdx, 0)))
+		if (trackVisible(GEOMETRY.getTrackIndex(cellIdx, 0)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2, pt.y);
@@ -365,7 +365,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	}
 	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
 	{
-		if (trackVisible(getTrackIndex(cellIdx, 1)))
+		if (trackVisible(GEOMETRY.getTrackIndex(cellIdx, 1)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2 + CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
@@ -376,7 +376,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	}
 	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
 	{
-		if (trackVisible(getTrackIndex(cellIdx, 2)))
+		if (trackVisible(GEOMETRY.getTrackIndex(cellIdx, 2)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2 + 3 * CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
@@ -397,6 +397,32 @@ function repaint()
 	if (mapData) {
 		new Painter(canvas, ctx, mapData).paint();
 	}
+}
+
+// dir: 0 == west, 1 == northwest, 2 == northeast,
+//      3 == east, 4 == southeast, 5 == southwest
+//
+function hasTrackAtDir(cellIdx, dir)
+{
+	var trackIdx = GEOMETRY.getTrackIndex(cellIdx, dir);
+	if (mapData.rails[trackIdx] && mapData.rails[trackIdx] == getPlayerId())
+		return 1;
+	else if (isBuilding && isBuilding.rails[trackIdx])
+		return 2;
+	else if (mapData.rails[trackIdx])
+		return 3;
+	else
+		return null;
+}
+
+function hasTrackAt(cellIdx)
+{
+	return hasTrackAtDir(cellIdx, 0) ||
+		hasTrackAtDir(cellIdx, 1) ||
+		hasTrackAtDir(cellIdx, 2) ||
+		hasTrackAtDir(cellIdx, 3) ||
+		hasTrackAtDir(cellIdx, 4) ||
+		hasTrackAtDir(cellIdx, 5);
 }
 
 function onResize()
@@ -1563,7 +1589,7 @@ function filterMapToReachable(train)
 
 		for (var dir = 0; dir < 6; dir++)
 		{
-			var ti = getTrackIndex(l, dir);
+			var ti = GEOMETRY.getTrackIndex(l, dir);
 			if (mapData.rails[ti])
 			{
 				reachableTrack[ti] = true;
@@ -2161,7 +2187,7 @@ outerLoop:
 
 		for (var dir = 0; dir < 6; dir++)
 		{
-			var ti = getTrackIndex(l, dir);
+			var ti = GEOMETRY.getTrackIndex(l, dir);
 			if (mapData.rails[ti])
 			{
 				var adjCellIdx = GEOMETRY.getAdjacentCell(l, dir);

@@ -130,51 +130,20 @@ function isCity(cellIdx)
 	return mapData.cities[cellIdx];
 }
 
-// dir: 0 == west, 1 == northwest, 2 == northeast,
-//      3 == east, 4 == southeast, 5 == southwest
-//
-function hasTrackAtDir(cellIdx, dir)
-{
-	var trackIdx = getTrackIndex(cellIdx, dir);
-	if (mapData.rails[trackIdx] && mapData.rails[trackIdx] == getPlayerId())
-		return 1;
-	else if (isBuilding && isBuilding.rails[trackIdx])
-		return 2;
-	else if (mapData.rails[trackIdx])
-		return 3;
-	else
-		return null;
-}
-
-function getTrackIndex(cellIdx, dir)
-{
-	if (dir == 3)
-	{
-		return getTrackIndex(getAdjacentE(cellIdx), 0);
-	}
-	else if (dir == 4)
-	{
-		return getTrackIndex(getAdjacentSE(cellIdx), 1);
-	}
-	else if (dir == 5)
-	{
-		return getTrackIndex(getAdjacentSW(cellIdx), 2);
-	}
-	else
-	{
-		return cellIdx * 3 + (dir + 1);
-	}
-}
-
-function hasTrackAt(cellIdx)
-{
-	return hasTrackAtDir(cellIdx, 0) ||
-		hasTrackAtDir(cellIdx, 1) ||
-		hasTrackAtDir(cellIdx, 2) ||
-		hasTrackAtDir(cellIdx, 3) ||
-		hasTrackAtDir(cellIdx, 4) ||
-		hasTrackAtDir(cellIdx, 5);
-}
+Geometry.prototype.getTrackIndex = function(cellIdx, dir) {
+  if (dir == 3) {
+    return this.getTrackIndex(this.getAdjacentCell(cellIdx, Geometry.EAST), 0);
+  }
+  else if (dir == 4) {
+    return this.getTrackIndex(this.getAdjacentCell(cellIdx, Geometry.SOUTHEAST), 1);
+  }
+  else if (dir == 5) {
+    return this.getTrackIndex(this.getAdjacentCell(cellIdx, Geometry.SOUTHWEST), 2);
+  }
+  else {
+    return cellIdx * 3 + (dir + 1);
+  }
+};
 
 /** @deprecated not used */
 Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2) {
