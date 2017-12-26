@@ -154,6 +154,16 @@ def ProcessGameAction(game_ent, action_req):
       'playerMoney': 0,
     }
     game_ent.events.append(json.dumps(event))
+  elif action_req['action'] == 'startTrain':
+    event = {
+      'event': 'train',
+      'time': time.time() - game_ent.start_time,
+      'plan': action_req['plan'],
+      'trainId': action_req['trainId'],
+      'running': action_req['running'],
+      'spawnLocation': action_req.get('spawnLocation'),
+    }
+    game_ent.events.append(json.dumps(event))
 
 
 class ActionsHandler(webapp2.RequestHandler):

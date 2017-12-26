@@ -29,6 +29,7 @@ var DISPLAY_SETTINGS = {
   offsetX: 0,
   offsetY: 0,
 };
+var TRAINS = {};
 var CELL_HEIGHT;
 var CELL_ASCENT;
 var CELL_DESCENT;
@@ -76,12 +77,7 @@ function loadResourceImage(resourceType)
 	img.src = "resource_icons/" + resourceType + ".png";
 }
 
-var playerId = "1";
-if (window.location.hash && window.location.hash.match(/^#pid=/))
-{
-	playerId = window.location.hash.substr(5);
-}
-
+var playerId = "";
 function getPlayerId()
 {
 	return playerId;
@@ -471,6 +467,14 @@ function onGameEvent(evt)
 		for (var i in evt.rails)
 		{
 			mapData.rails[i] = evt.rails[i];
+		}
+	}
+	if (evt.event == 'train') {
+		if (!(evt.trainId in TRAINS)) {
+			if (!evt.spawnLocation) {
+				return;
+			}
+			createTrain(evt.trainId, evt.spawnLocation);
 		}
 	}
 	if (evt.newPlayers)
@@ -929,7 +933,7 @@ function removeWaypointSprite(waypointId)
 	}
 }
 
-function addTrainSprite(trainLoc)
+function addTrainSprite(trainId, trainLoc)
 {
 	var $t = $('<div class="trainSprite">T</div>');
 	$t.css({
@@ -939,6 +943,7 @@ function addTrainSprite(trainLoc)
 
 	var train = {
 		el: $t,
+		trainId: trainId,
 		loc: trainLoc,
 		plan: new Array(),
 		route: new Array(),
@@ -1499,6 +1504,10 @@ function addLocomotive()
 	showPlan(theTrain);
 }
 
+function createTrain(trainId, location) {
+	TRAINS[trainId] = addTrainSprite(trainId, location);
+}
+
 function showPlan(train)
 {
 	if (isPlanning && isPlanning.train == train)
@@ -1594,7 +1603,7 @@ function addCityToPlan(cellIdx)
 	if (!isPlanning.train)
 	{
 		// player is designating their starting location
-		theTrain = addTrainSprite(cellIdx);
+		theTrain = addTrainSprite(playerId + '.1', cellIdx);
 		isPlanning.train = theTrain;
 
 		// update map for planning
@@ -2109,10 +2118,20 @@ function startTrainBtn()
 	if (train.timer)
 		return;
 
-	startTrain(train);
+	var req = {
+            trainId: train.trainId,
+            plan: train.plan,
+            running: true,
+        };
+	if (train.brandNew) {
+		req.spawnLocation = train.loc;
+	}
+	sendRequest('startTrain', req);
 
-	$('#startTrain_btn').hide();
-	$('#stopTrain_btn').show();
+//	startTrain(train);
+//
+//	$('#startTrain_btn').hide();
+//	$('#stopTrain_btn').show();
 }
 
 function startTrain(train)
@@ -2608,6 +2627,8 @@ angular.module('trains', ['ngRoute'])
         });
     }
   };
+  this.playerId = null;
+  this.playerData = null;
   this.joinGame = function() {
     var playerName = window.prompt('Enter player name');
     if (!playerName) {

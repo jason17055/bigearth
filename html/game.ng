@@ -4,10 +4,12 @@
 <div id="buttonBar">
 <div style="padding:3pt">
 <button type="button" onclick="showPlayers()">Show Players</button>
-<button type="button" onclick="showDemands()">Show Demands</button>
 <button type="button" ng-click="c.joinGame()">Join Game</button>
+<span ng-if="c.playerId">
+<button type="button" onclick="showDemands()">Show Demands</button>
 <button type="button" onclick="beginBuilding()">Build Track</button>
 <button type="button" onclick="addLocomotive()">Add Locomotive</button>
+</span>
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
 <button type="button" onclick="showEditMapPane()">Edit Map</button>
