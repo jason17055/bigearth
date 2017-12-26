@@ -1,5 +1,4 @@
 var mapData;
-var theTrain = null;
 var mapFeatures = {};
 var isBuilding = null;
 var isPlanning = null;
@@ -1394,9 +1393,12 @@ function beginBuilding()
 	dismissCurrentDialog();
 	$('#buildTrackInfo').fadeIn();
 
-	if (theTrain)
-	{
-		updateTrainSpriteSensitivity(theTrain);
+	updateAllTrainSpritesSensitivity();
+}
+
+function updateAllTrainSpritesSensitivity() {
+	for (let train of TRAINS) {
+		updateTrainSpriteSensitivity(train);
 	}
 }
 
@@ -1462,11 +1464,7 @@ function commitBuilding()
 	isBuilding = null;
 	$('#buildTrackInfo').fadeOut();
 
-	if (theTrain)
-	{
-		updateTrainSpriteSensitivity(theTrain);
-	}
-
+	updateAllTrainSpritesSensitivity();
 	repaint();
 }
 
@@ -1478,11 +1476,7 @@ function abandonBuilding()
 	isBuilding = null;
 	$('#buildTrackInfo').fadeOut();
 
-	if (theTrain)
-	{
-		updateTrainSpriteSensitivity(theTrain);
-	}
-
+	updateAllTrainSpritesSensitivity();
 	repaint();
 }
 
@@ -1496,26 +1490,33 @@ function fixWidgetDimensions($widget)
 
 function onTrainClicked(train)
 {
-	showPlan(train);
+	showPlan(train.trainId, train);
 }
 
 function addLocomotive()
 {
-	showPlan(theTrain);
+	var trainId = playerId + '.1';
+	if (trainId in TRAINS) {
+		showPlan(trainId, TRAINS[trainId]);
+	} else {
+		// New train
+		showPlan(trainId, null);
+	}
 }
 
 function createTrain(trainId, location) {
 	TRAINS[trainId] = addTrainSprite(trainId, location);
 }
 
-function showPlan(train)
+function showPlan(trainId, train)
 {
 	if (isPlanning && isPlanning.train == train)
 		return;
 
 	isPlanning = {
-		train: train
-		};
+		trainId: trainId,
+		train: train,
+	};
 	reloadPlan();
 	$('#planPane').fadeIn();
 
@@ -1525,6 +1526,7 @@ function showPlan(train)
 		mapFeatures.hideTerrain = true;
 		filterMapToReachable(isPlanning.train);
 		repaint();
+		$('#brandNewInstructions').hide();
 	}
 	else
 	{
@@ -1544,7 +1546,6 @@ function dismissPlan()
 	{
 		isPlanning.train.el.remove();
 		delete isPlanning.train;
-		theTrain = null;
 	}
 
 	isPlanning = null;
@@ -1603,7 +1604,7 @@ function addCityToPlan(cellIdx)
 	if (!isPlanning.train)
 	{
 		// player is designating their starting location
-		theTrain = addTrainSprite(playerId + '.1', cellIdx);
+		let theTrain = addTrainSprite(isPlanning.trainId, cellIdx);
 		isPlanning.train = theTrain;
 
 		// update map for planning
@@ -1648,9 +1649,8 @@ function addCityToPlan(cellIdx)
 
 function updateAllSpritePositions()
 {
-	if (theTrain)
-	{
-		updateTrainSpritePosition(theTrain);
+	for (let train of TRAINS) {
+		updateTrainSpritePosition(train);
 	}
 	for (var i in waypointSprites)
 	{
