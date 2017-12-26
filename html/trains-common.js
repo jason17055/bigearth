@@ -16,14 +16,8 @@ function Geometry(width, height) {
   this.height = height;
 }
 
-function getCellRow(cellIdx)
-{
-	return Math.floor(cellIdx / CELLS_PER_ROW);
-}
-
 Geometry.prototype.getCellRow = function(cellIdx) {
-	//FIXME
-	return getCellRow(cellIdx);
+  return Math.floor(cellIdx / this.width);
 };
 
 Geometry.prototype.getCellColumn = function(cellIdx) {
@@ -35,12 +29,12 @@ Geometry.prototype.getCell = function(row, column) {
 };
 
 Geometry.prototype.isCellAdjacent = function(cell1, cell2) {
-	return cell2 == getAdjacentW(cell1) ||
-		cell2 == getAdjacentNW(cell1) ||
-		cell2 == getAdjacentNE(cell1) ||
-		cell2 == getAdjacentE(cell1) ||
-		cell2 == getAdjacentSE(cell1) ||
-		cell2 == getAdjacentSW(cell1);
+	return cell2 == this.getAdjacentW(cell1) ||
+		cell2 == this.getAdjacentNW(cell1) ||
+		cell2 == this.getAdjacentNE(cell1) ||
+		cell2 == this.getAdjacentE(cell1) ||
+		cell2 == this.getAdjacentSE(cell1) ||
+		cell2 == this.getAdjacentSW(cell1);
 };
 
 Geometry.WEST = 0;
@@ -51,84 +45,64 @@ Geometry.SOUTHEAST = 4;
 Geometry.SOUTHWEST = 5;
 
 Geometry.prototype.getAdjacentCell = function(cellIdx, dir) {
-	switch (dir)
-	{
-	case 0: return getAdjacentW(cellIdx);
-	case 1: return getAdjacentNW(cellIdx);
-	case 2: return getAdjacentNE(cellIdx);
-	case 3: return getAdjacentE(cellIdx);
-	case 4: return getAdjacentSE(cellIdx);
-	case 5: return getAdjacentSW(cellIdx);
-	}
-	return null;
+  switch (dir) {
+  case 0: return this.getAdjacentW(cellIdx);
+  case 1: return this.getAdjacentNW(cellIdx);
+  case 2: return this.getAdjacentNE(cellIdx);
+  case 3: return this.getAdjacentE(cellIdx);
+  case 4: return this.getAdjacentSE(cellIdx);
+  case 5: return this.getAdjacentSW(cellIdx);
+  }
+  return null;
 };
 
-function getAdjacentW(cellIdx)
-{
-	return cellIdx - 1;
-}
+Geometry.prototype.getAdjacentW = function(cellIdx) {
+  return cellIdx - 1;
+};
 
-function getAdjacentNW(cellIdx)
-{
-	var origRow = getCellRow(cellIdx);
-	if (origRow % 2 == 0)
-	{
-		return cellIdx - CELLS_PER_ROW;
-	}
-	else
-	{
-		return cellIdx - CELLS_PER_ROW - 1;
-	}
-}
+Geometry.prototype.getAdjacentNW = function(cellIdx) {
+  var origRow = this.getCellRow(cellIdx);
+  if (origRow % 2 == 0) {
+    return cellIdx - this.width;
+  }
+  else {
+    return cellIdx - this.width - 1;
+  }
+};
 
-function getAdjacentNE(cellIdx)
-{
-	var origRow = getCellRow(cellIdx);
-	if (origRow % 2 == 0)
-	{
-		return cellIdx - CELLS_PER_ROW + 1;
-	}
-	else
-	{
-		return cellIdx - CELLS_PER_ROW;
-	}
-}
+Geometry.prototype.getAdjacentNE = function(cellIdx) {
+  var origRow = this.getCellRow(cellIdx);
+  if (origRow % 2 == 0) {
+    return cellIdx - this.width + 1;
+  }
+  else {
+    return cellIdx - this.width;
+  }
+};
 
-function getAdjacentE(cellIdx)
-{
-	return cellIdx + 1;
-}
+Geometry.prototype.getAdjacentE = function(cellIdx) {
+  return cellIdx + 1;
+};
 
-function getAdjacentSE(cellIdx)
-{
-	var origRow = getCellRow(cellIdx);
-	if (origRow % 2 == 0)
-	{
-		return cellIdx + CELLS_PER_ROW + 1;
-	}
-	else
-	{
-		return cellIdx + CELLS_PER_ROW;
-	}
-}
+Geometry.prototype.getAdjacentSE = function(cellIdx) {
+  var origRow = this.getCellRow(cellIdx);
+  if (origRow % 2 == 0) {
+    return cellIdx + this.width + 1;
+  }
+  else {
+    return cellIdx + this.width;
+  }
+};
 
-function getAdjacentSW(cellIdx)
-{
-	var origRow = getCellRow(cellIdx);
-	if (origRow % 2 == 0)
-	{
-		return cellIdx + CELLS_PER_ROW;
-	}
-	else
-	{
-		return cellIdx + CELLS_PER_ROW - 1;
-	}
-}
-
-function isCity(cellIdx)
-{
-	return mapData.cities[cellIdx];
-}
+Geometry.prototype.getAdjacentSW = function(cellIdx) {
+  var origRow = this.getCellRow(cellIdx);
+  if (origRow % 2 == 0) {
+    return cellIdx + this.width;
+  }
+  else {
+    return cellIdx + this.width - 1;
+  }
+};
 
 Geometry.prototype.getTrackIndex = function(cellIdx, dir) {
   if (dir == 3) {
@@ -158,3 +132,8 @@ Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2) {
   var diag = Math.floor(distRows / 2);
   return distRows + (distCols > diag ? distCols - diag : 0);
 };
+
+function isCity(cellIdx)
+{
+	return mapData.cities[cellIdx];
+}
