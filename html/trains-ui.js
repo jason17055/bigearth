@@ -264,7 +264,7 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 	}
 
 	if (c == "M" && terrainImages.mountain && !mapFeatures.hideTerrain
-		&& CELL_WIDTH >= 24)
+		&& DISPLAY_SETTINGS.zoomLevel >= 24)
 	{
 		var imageSize = CELL_WIDTH * .8;
 		ctx.drawImage(terrainImages.mountain,
@@ -279,10 +279,7 @@ Painter.prototype.drawRivers = function(pt, cellIdx) {
 
 	ctx.save();
 	ctx.strokeStyle = '#1155ff';
-	ctx.lineWidth =
-		CELL_WIDTH >= 48 ? 5 :
-		CELL_WIDTH >= 20 ? 3 :
-		2;
+	ctx.lineWidth = 3;
 
 	var drawRiverHelper = function()
 	{
@@ -340,9 +337,9 @@ Painter.prototype.drawRailsHelper = function(ctx, owner) {
 		ctx.lineWidth = 1;
 	}
 
-	if (CELL_WIDTH < 20)
+	if (DISPLAY_SETTINGS.zoomLevel < 20)
 	{
-		ctx.lineWidth = 3;
+		ctx.lineWidth = 1.2*RAIL_WIDTH;
 		ctx.beginPath();
 		ctx.moveTo(-CELL_WIDTH / 2, 0);
 		ctx.lineTo(CELL_WIDTH / 2, 0);
