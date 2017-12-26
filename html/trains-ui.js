@@ -434,7 +434,7 @@ function fetchGameState($http, gameId)
 		serverState = httpResponse.data;
 		serverState.basisTime = fetchBeginTime +
 			Math.round((fetchEndTime - fetchBeginTime) / 2) -
-			serverState.serverTime;
+			1000 * serverState.serverTime;
 		serverState.eventsSeen = 0;
 		serverState.gameId = gameId;
 		onGameState();
@@ -452,7 +452,7 @@ function fetchGameState($http, gameId)
 function getGameTime()
 {
 	if (serverState)
-		return new Date().getTime() - serverState.basisTime;
+		return (new Date().getTime() - serverState.basisTime) / 1000.0;
 	else
 		return 0;
 }
@@ -475,6 +475,9 @@ function onGameEvent(evt)
 			}
 			createTrain(evt.trainId, evt.spawnLocation);
 		}
+		TRAINS[evt.trainId].plan = evt.plan;
+		TRAINS[evt.trainId].lastUpdated = evt.time;
+		train_next(TRAINS[evt.trainId]);
 	}
 	if (evt.newPlayers)
 	{
@@ -703,11 +706,13 @@ function updateTrainSpritePosition(train)
 {
 	var pt = toCanvasCoords(getCellPoint(train.loc));
 
-	if (train.tick && train.route && train.route[0])
+	var elapsed = getGameTime() - train.lastUpdated;
+	var dist = elapsed * train.speed;
+	if (dist > 0 && train.route && train.route[0])
 	{
 		var pt1 = toCanvasCoords(getCellPoint(train.route[0]));
-		pt.x += (pt1.x - pt.x) * train.tick / 12.0;
-		pt.y += (pt1.y - pt.y) * train.tick / 12.0;
+		pt.x += (pt1.x - pt.x) * dist;
+		pt.y += (pt1.y - pt.y) * dist;
 	}
 
 	var $t = train.el;
@@ -873,20 +878,18 @@ function onTrainLocationChanged(train)
 
 function animateTrain(train)
 {
-	if (train.tick == null)
-	{
-		train.tick = 0;
-	}
-	else
-	{
-		train.tick++;
+	if (!('speed' in train)) {
+		train.speed = 1000.0/(12*150);
 	}
 
-	while (train.tick >= 12 && train.route.length >= 1)
-	{
+	var elapsed = getGameTime() - train.lastUpdated;
+	var dist = elapsed * train.speed;
+
+	while (dist >= 1.0 && train.route.length >= 1) {
+		train.lastUpdated += 1.0 / train.speed;
 		train.loc = train.route.shift();
 		onTrainLocationChanged(train);
-		train.tick -= 12;
+		dist -= 1.0;
 	}
 
 	updateTrainSpritePosition(train);
@@ -1649,7 +1652,8 @@ function addCityToPlan(cellIdx)
 
 function updateAllSpritePositions()
 {
-	for (let train of TRAINS) {
+	for (let trainId in TRAINS) {
+		let train = TRAINS[trainId];
 		updateTrainSpritePosition(train);
 	}
 	for (var i in waypointSprites)
