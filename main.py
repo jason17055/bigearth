@@ -108,13 +108,18 @@ class GameStateHandler(webapp2.RequestHandler):
         ent.put()
       return ent
 
+    def _MakeDemand(demand_str):
+      city_id, resource_type, value = demand_str.split(':')
+      return [int(city_id), resource_type, int(value)]
+
     ent = ndb.transaction(_Fetch)
     response = {
         "rails": {},
         "map": json.loads(ent.map_json),
-        "players": json.loads(ent.players_json or '{}'),
+        "players": {},
         "allServerResourceTypes": ALL_COMMODITIES,
         'serverTime': time.time() - (ent.start_time or 0),
+        'allDemands': [_MakeDemand(x) for x in ent.all_demands],
     }
     self.response.headers['Content-Type'] = 'application/json'
     self.response.write(json.dumps(response))
@@ -257,19 +262,21 @@ class LoginHandler(webapp2.RequestHandler):
       new_pid = str(max_pid + 1)
       players[new_pid] = {'identity': req['name'], 'money': 0}
       gamestate.players_json = json.dumps(players)
+      event = {
+        'event': 'join',
+        'time': time.time() - gamestate.start_time,
+        'playerId': new_pid,
+        'playerData': players[new_pid],
+      }
+      gamestate.events.append(json.dumps(event))
       gamestate.put()
       return gamestate, new_pid, players[new_pid]
-
-    def _MakeDemand(demand_str):
-      city_id, resource_type, value = demand_str.split(':')
-      return [city_id, resource_type, value]
 
     ent, pid, p = ndb.transaction(_Update)
     response = {
         'playerId': pid,
         'player': {
             'identity': p['identity'],
-            'demands': [_MakeDemand(x) for x in ent.all_demands[:8]],
             'money': p['money'],
         },
     }

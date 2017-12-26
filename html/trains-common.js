@@ -128,7 +128,7 @@ function isCity(cellIdx)
 function hasTrackAtDir(cellIdx, dir)
 {
 	var trackIdx = getTrackIndex(cellIdx, dir);
-	if (mapData.rails[trackIdx] == getPlayerId())
+	if (mapData.rails[trackIdx] && mapData.rails[trackIdx] == getPlayerId())
 		return 1;
 	else if (isBuilding && isBuilding.rails[trackIdx])
 		return 2;

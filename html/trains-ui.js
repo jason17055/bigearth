@@ -4,7 +4,8 @@ var isBuilding = null;
 var isPlanning = null;
 var isEditing = null;
 var curPlayer = {
-	demands: new Array()
+	playerId: null,
+	demands: [],
 	};
 var curDialog = null;
 var noRedraw = 0;
@@ -65,20 +66,20 @@ function loadResourceImage(resourceType)
 	img.src = "resource_icons/" + resourceType + ".png";
 }
 
-var playerId = "";
 function getPlayerId()
 {
-	return playerId;
+	return curPlayer.playerId;
 }
 
-function setPlayerId(pid, playerData)
+function setPlayerId(pid)
 {
-	playerId = pid;
 	document.title = 'Trains : Seat ' + pid;
 
-        serverState.players[pid] = playerData;
-	curPlayer.demands = serverState.players[pid].demands;
+	curPlayer.playerId = pid;
+	curPlayer.demands = serverState.players[pid] ? serverState.players[pid].demands : [];
 
+	console.log('players is ' + JSON.stringify(serverState.players));
+	console.log('curPlayer.demands is ' + JSON.stringify(curPlayer.demands));
 	// reload or something?
 	if (curDialog == 'gameRosterPane')
 	{
@@ -457,6 +458,14 @@ function onGameEvent(evt)
 			mapData.rails[i] = evt.rails[i];
 		}
 	}
+	if (evt.event == 'join') {
+		let p = evt.playerData;
+		p.demands = serverState.allDemands.slice(0, 9);
+		serverState.players[evt.playerId] = p;
+		if (curPlayer.playerId == evt.playerId) {
+			curPlayer.demands = p.demands;
+		}
+	}
 	if (evt.event == 'train') {
 		if (!(evt.trainId in TRAINS)) {
 			if (!evt.spawnLocation) {
@@ -469,13 +478,6 @@ function onGameEvent(evt)
 		TRAINS[evt.trainId].running = evt.running;
 		if (evt.running) {
 			train_next(TRAINS[evt.trainId]);
-		}
-	}
-	if (evt.newPlayers)
-	{
-		for (var pid in evt.newPlayers)
-		{
-			serverState.players[pid] = evt.newPlayers[pid];
 		}
 	}
 	if (evt.playerMoney)
@@ -493,7 +495,7 @@ function onGameEvent(evt)
 
 	onGameState();
 
-	if (evt.newPlayers && curDialog == 'gameRosterPane')
+	if (evt.event == 'join' && curDialog == 'gameRosterPane')
 	{
 		showPlayers();
 	}
@@ -585,10 +587,10 @@ function onGameState()
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
 
-	if (playerId && serverState.players[playerId])
+	if (curPlayer.playerId && serverState.players[curPlayer.playerId])
 	{
-		curPlayer.demands = serverState.players[playerId].demands;
-		document.title = 'Trains : Seat ' + playerId;
+		curPlayer.demands = serverState.players[curPlayer.playerId].demands;
+		document.title = 'Trains : Seat ' + curPlayer.playerId;
 	}
 	else
 	{
@@ -1489,7 +1491,7 @@ function onTrainClicked(train)
 
 function addLocomotive()
 {
-	var trainId = playerId + '.1';
+	var trainId = curPlayer.playerId + '.1';
 	if (trainId in TRAINS) {
 		showPlan(trainId, TRAINS[trainId]);
 	} else {
@@ -2546,7 +2548,7 @@ function showPlayers()
 			{
 				$('button.playAsBtn', $row).click(function() {
 					dismissCurrentDialog();
-					setPlayerId(pid, p);
+					setPlayerId(pid);
 					});
 			}
 			if (pid == getPlayerId())
@@ -2641,7 +2643,7 @@ angular.module('trains', ['ngRoute'])
       .then(httpResponse => {
         this.playerId = httpResponse.data.playerId;
         this.playerData = httpResponse.data.player;
-        setPlayerId(this.playerId, this.playerData);
+        setPlayerId(this.playerId);
       });
   };
 });
