@@ -22,6 +22,7 @@ var noRedraw = 0;
 //           \  /          20px
 //            \/          _
 
+var GEOMETRY = new Geometry(1);
 var CELLS_PER_ROW = 1;
 var DISPLAY_SETTINGS = {
   zoomLevel: 64,
@@ -428,7 +429,7 @@ function fetchGameState($http, gameId)
 		serverState.eventsSeen = 0;
 		serverState.gameId = gameId;
 		gameState.futureDemands = serverState.allDemands;
-		onGameState();
+		onGameState(true);
 	};
 	var onError = function(err) {
 		//FIXME, report an error, I suppose
@@ -494,7 +495,7 @@ function onGameEvent(evt)
 		}
 	}
 
-	onGameState();
+	onGameState(false);
 
 	if (evt.event == 'join' && curDialog == 'gameRosterPane')
 	{
@@ -570,10 +571,8 @@ function startEventsListener() {
 	eventsListenerEnabled = true;
 }
 
-function onGameState()
+function onGameState(firstLoad)
 {
-	var firstLoad = (CELLS_PER_ROW == 1);
-
 	if (serverState.map)
 	{
 		mapData = serverState.map;
@@ -583,7 +582,7 @@ function onGameState()
 			mapData.rails = {};
 		if (!mapData.terrain)
 			alert("Oops, map does not have terrain");
-		CELLS_PER_ROW = mapData.terrain[0].length;
+		updateGeometry();
 	}
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
@@ -2280,8 +2279,13 @@ function cropTerrain(offsetx, offsety, cx, cy)
 	mapData.cities = newCities;
 	mapData.terrain = newTerrain;
 	mapData.rivers = newRivers;
-	CELLS_PER_ROW = cx;
+	updateGeometry();
 	repaint();
+}
+
+function updateGeometry() {
+  GEOMETRY = new Geometry(mapData.terrain[0].length);
+  CELLS_PER_ROW = GEOMETRY.cellsPerRow;
 }
 
 function showEditMapPane()
@@ -2292,7 +2296,7 @@ function showEditMapPane()
   mapData.terrain = ['.'];
   mapData.cities = {};
   mapData.rivers = {};
-  CELLS_PER_ROW = mapData.terrain[0].length;
+  updateGeometry();
   makeMoreRoomOnMap(10);
   zoomShowAll();
 
@@ -2582,7 +2586,7 @@ angular.module('trains', ['ngRoute'])
           var newMap = httpResponse.data;
           mapData = newMap;
           mapData['rails'] = {};
-          CELLS_PER_ROW = mapData.terrain[0].length;
+          updateGeometry();
           zoomShowAll();
         },
         function(rejection) {

@@ -11,7 +11,8 @@ function shuffleArray(arr)
 	return;
 }
 
-function Geometry() {
+function Geometry(cellsPerRow) {
+  this.cellsPerRow = cellsPerRow;
 }
 
 function getCellRow(cellIdx)
