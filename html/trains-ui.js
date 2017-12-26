@@ -32,8 +32,6 @@ var TRAINS = {};
 var CELL_HEIGHT;
 var CELL_ASCENT;
 var CELL_DESCENT;
-var MAP_ORIGIN_X;
-var MAP_ORIGIN_Y;
 function updateMapMetrics()
 {
 	CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
@@ -41,8 +39,6 @@ function updateMapMetrics()
 	CELL_DESCENT = CELL_HEIGHT - CELL_ASCENT;
 }
 updateMapMetrics();
-MAP_ORIGIN_X = CELL_WIDTH/2;
-MAP_ORIGIN_Y = CELL_ASCENT/2;
 
 var pendingImages = 0;
 var terrainImages = {};
@@ -1313,7 +1309,7 @@ function setZoomLevel(w, basisPt)
 	if (!basisPt)
 	{
 		var canvas = document.getElementById('theCanvas');
-		basisPt = {x: 0, y: 0};
+		basisPt = {x: canvas.width/2, y: canvas.height/2};
 	}
 
 	var newZoomLevel = 2 * Math.round(w/2);
@@ -1322,12 +1318,13 @@ function setZoomLevel(w, basisPt)
 	if (newZoomLevel < 12)
 		newZoomLevel = 12;
 
-	var relX = (basisPt.x + MAP_ORIGIN_X) / CELL_WIDTH;
-	var relY = (basisPt.y + MAP_ORIGIN_Y) / CELL_WIDTH;
-
+	DISPLAY_SETTINGS.offsetX -= basisPt.x;
+	DISPLAY_SETTINGS.offsetX *= newZoomLevel / DISPLAY_SETTINGS.zoomLevel;
+	DISPLAY_SETTINGS.offsetX += basisPt.x;
+	DISPLAY_SETTINGS.offsetY -= basisPt.y;
+	DISPLAY_SETTINGS.offsetY *= newZoomLevel / DISPLAY_SETTINGS.zoomLevel;
+	DISPLAY_SETTINGS.offsetY += basisPt.y;
 	DISPLAY_SETTINGS.zoomLevel = newZoomLevel;
-	MAP_ORIGIN_X = relX * DISPLAY_SETTINGS.zoomLevel - basisPt.x;
-	MAP_ORIGIN_Y = relY * DISPLAY_SETTINGS.zoomLevel - basisPt.y;
 
 	updateMapMetrics();
 	if (!noRedraw)
@@ -2308,8 +2305,6 @@ function cropTerrain(offsetx, offsety, cx, cy)
 	mapData.terrain = newTerrain;
 	mapData.rivers = newRivers;
 	CELLS_PER_ROW = cx;
-	MAP_ORIGIN_X -= CELL_WIDTH * offsetx;
-	MAP_ORIGIN_Y -= CELL_HEIGHT * offsety;
 	repaint();
 }
 
