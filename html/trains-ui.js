@@ -1318,10 +1318,7 @@ function setZoomLevel(w, basisPt)
 	if (!basisPt)
 	{
 		var canvas = document.getElementById('theCanvas');
-		basisPt = {
-		x: canvas.width / 2,
-		y: canvas.height / 2
-		};
+		basisPt = {x: 0, y: 0};
 	}
 
 	var newZoomLevel = 2 * Math.round(w/2);
@@ -1382,9 +1379,11 @@ function zoomShowAll()
 
 function centerMapOn(cellIdx) {
 
-  var pt = getCellPoint(cityIdx);
-  DISPLAY_SETTINGS.offsetX = -pt.x * DISPLAY_SETTINGS.zoomLevel;
-  DISPLAY_SETTINGS.offsetY = -pt.y * DISPLAY_SETTINGS.zoomLevel;
+  var canvas = document.getElementById('theCanvas');
+
+  var pt = getCellPoint(cellIdx);
+  DISPLAY_SETTINGS.offsetX = -pt.x * DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH + canvas.width / 2;
+  DISPLAY_SETTINGS.offsetY = -pt.y * DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH + canvas.height / 2;
 
   if (!noRedraw) {
     repaint();
