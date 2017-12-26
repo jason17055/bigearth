@@ -1671,9 +1671,14 @@ function updateAllSpritePositions()
 function selectWaypoint(newSelection)
 {
 	var oldSelection = $('#planPane').attr('selected-waypoint');
-	if (oldSelection)
+	if (oldSelection !== null)
 	{
 		$('#planPane tr[waypoint-number='+oldSelection+']').removeClass('selected');
+		if (oldSelection == newSelection) {
+			$('#planPane').removeAttr('selected-waypoint');
+			$('#waypointPane').fadeOut();
+			return;
+		}
 	}
 
 	$('#planPane tr[waypoint-number='+newSelection+']').addClass('selected');
