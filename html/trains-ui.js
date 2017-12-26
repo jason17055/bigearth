@@ -34,6 +34,8 @@ const CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
 const CELL_ASCENT = Math.round(CELL_HEIGHT * 36/56);
 const CELL_DESCENT = CELL_HEIGHT - CELL_ASCENT;
 
+const INITIAL_DEMAND_COUNT = 12;
+
 var pendingImages = 0;
 var terrainImages = {};
 function preloadImages() {
@@ -469,7 +471,7 @@ function onGameEvent(evt)
 		p.demands = [];
 		p.money = 50;
 		serverState.players[evt.playerId] = p;
-		for (var i = 0; i < 9; i++) {
+		for (var i = 0; i < INITIAL_DEMAND_COUNT; i++) {
 			nextDemand(evt.playerId);
 		}
 		if (curPlayer.playerId == evt.playerId) {
@@ -483,6 +485,7 @@ function onGameEvent(evt)
 			}
 			createTrain(evt.trainId, evt.spawnLocation);
 		}
+		TRAINS[evt.trainId].owner = evt.owner || '1';
 		TRAINS[evt.trainId].plan = evt.plan;
 		TRAINS[evt.trainId].lastUpdated = evt.time;
 		TRAINS[evt.trainId].running = evt.running;
@@ -771,15 +774,16 @@ function train_deliver(train, resource_type)
 
 	if (found)
 	{
-		for (var i in curPlayer.demands)
+		var p = serverState.players[train.owner];
+		for (var i in p.demands)
 		{
-			var d = curPlayer.demands[i];
+			var d = p.demands[i];
 			if (d[0] == train.loc && d[1] == resource_type) {
 				train.revenue += (+d[2]);
-				adjustPlayerCash(+d[2]);
-				curPlayer.demands.splice(i,1);
+				adjustPlayerCash(train.owner, d[2]);
+				p.demands.splice(i,1);
 				gameState.pastDemands.push(d);
-				nextDemand(curPlayer.playerId);
+				nextDemand(train.owner);
 				break;
 			}
 		}
@@ -1409,11 +1413,13 @@ function updateAllTrainSpritesSensitivity() {
 	}
 }
 
-function adjustPlayerCash(delta)
-{
-	var money = parseFloat($('#cashIndicator').text());
-	money += delta;
-	$('#cashIndicator').text(money);
+function adjustPlayerCash(pid, delta) {
+
+	serverState.players[pid].money += delta;
+	if (curPlayer.playerId == pid) {
+		curPlayer.money = serverState.players[pid].money;
+		$('#cashIndicator').text(curPlayer.money);
+	}
 }
 
 function sendRequest(verb, data, success)
@@ -2095,6 +2101,7 @@ function reloadPlan()
 
 function showDemands()
 {
+	dismissPlan();
 	$('#demandsPane .insertedRow').remove();
 	var count = 0;
 	for (var i in curPlayer.demands)
@@ -2134,6 +2141,7 @@ function startTrainBtn()
 
 	var req = {
             trainId: train.trainId,
+	    owner: curPlayer.playerId,
             plan: train.plan,
             running: true,
         };
@@ -2141,22 +2149,6 @@ function startTrainBtn()
 		req.spawnLocation = train.loc;
 	}
 	sendRequest('startTrain', req);
-
-//	startTrain(train);
-//
-//	$('#startTrain_btn').hide();
-//	$('#stopTrain_btn').show();
-}
-
-function startTrain(train)
-{
-	if (train.running)
-		return;
-
-	delete train.brandNew;
-	train.running = true;
-
-	train_next(train);
 }
 
 function stopTrainBtn()

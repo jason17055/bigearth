@@ -165,6 +165,7 @@ def ProcessGameAction(game_ent, action_req):
       'time': time.time() - game_ent.start_time,
       'plan': action_req['plan'],
       'trainId': action_req['trainId'],
+      'owner': action_req['owner'],
       'running': action_req['running'],
       'spawnLocation': action_req.get('spawnLocation'),
     }

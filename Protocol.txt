@@ -1,0 +1,33 @@
+=== Events ===
+
+New player
+----------
+
+{
+  "event": "join",
+  "time": game time of update,
+  "playerId": "1",
+  "playerData": { ... },
+}
+
+Track changes
+-------------
+
+{
+  "event": "track-built",
+  "rails": { ... },
+  "playerMoney": 0,
+}
+
+Train updates
+-------------
+
+{
+  "event": "train",
+  "time": game time of update,
+  "plan": { ... },
+  "trainId": "1.1",
+  "owner": "1",    // player id
+  "running": true/false,
+  "spawnLocation": cellId,
+}
