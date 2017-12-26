@@ -189,11 +189,11 @@ Painter.prototype.paint = function() {
 		}
 	}
 
-	ctx.save();
-	ctx.fillStyle = "#333333";
-	ctx.font = CELL_WIDTH >= 24 ?
-		"24px sans-serif" :
-		"16px sans-serif";
+  ctx.fillStyle = "#333333";
+  ctx.font = DISPLAY_SETTINGS.zoomLevel >= 24 ?
+      "30px sans-serif" :
+      "40px sans-serif";
+
 	for (var cityLoc in mapData.cities)
 	{
 		if (cityVisible(cityLoc))
@@ -202,7 +202,7 @@ Painter.prototype.paint = function() {
 			var p = getCellPoint(cityLoc);
 			ctx.fillText(cityName,
 			p.x + Math.round(CELL_HEIGHT*.36)-2,
-			p.y + CELL_ASCENT / 2);
+			p.y + CELL_ASCENT / 2 - 5);
 
 			var xx = p.x + Math.round(CELL_HEIGHT*.36)-2;
 			for (var o in mapData.cities[cityLoc].offers)
@@ -223,7 +223,6 @@ Painter.prototype.paint = function() {
 			}
 		}
 	}
-	ctx.restore();
 
   ctx.restore();
 };
