@@ -22,23 +22,16 @@ var noRedraw = 0;
 //            \/          _
 
 var CELLS_PER_ROW = 1;
-var CELL_WIDTH = 64;
 var DISPLAY_SETTINGS = {
   zoomLevel: 64,
   offsetX: 0,
   offsetY: 0,
 };
 var TRAINS = {};
-var CELL_HEIGHT;
-var CELL_ASCENT;
-var CELL_DESCENT;
-function updateMapMetrics()
-{
-	CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
-	CELL_ASCENT = Math.round(CELL_HEIGHT * 36/56);
-	CELL_DESCENT = CELL_HEIGHT - CELL_ASCENT;
-}
-updateMapMetrics();
+const CELL_WIDTH = 64;
+const CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
+const CELL_ASCENT = Math.round(CELL_HEIGHT * 36/56);
+const CELL_DESCENT = CELL_HEIGHT - CELL_ASCENT;
 
 var pendingImages = 0;
 var terrainImages = {};
@@ -1326,7 +1319,6 @@ function setZoomLevel(w, basisPt)
 	DISPLAY_SETTINGS.offsetY += basisPt.y;
 	DISPLAY_SETTINGS.zoomLevel = newZoomLevel;
 
-	updateMapMetrics();
 	if (!noRedraw)
 	{
 		repaint();
@@ -1364,7 +1356,6 @@ function zoomShowAll()
 	DISPLAY_SETTINGS.zoomLevel = 12;
 	DISPLAY_SETTINGS.offsetX = canvas.width / 2;
 	DISPLAY_SETTINGS.offsetY = canvas.height / 2;
-	updateMapMetrics();
 
 	setZoomLevel(cw1 < cw2 ? cw1 : cw2);
 }
