@@ -660,12 +660,12 @@ function getEdgeFromPoint(pt) {
 	else if (ia % 2 == 0)
 	{
 		var col = Math.floor(ia / 2);
-		return getAdjacentSW(getCell(iy, col)) * 3 + 2;
+		return getAdjacentCell(getCell(iy, col), Geometry.SOUTHWEST) * 3 + 2;
 	}
 	else
 	{
 		var col = Math.floor(ia / 2);
-		return getAdjacentSE(getCell(iy, col)) * 3 + 1;
+		return getAdjacentCell(getCell(iy, col), Geometry.SOUTHEAST) * 3 + 1;
 	}
 }
 
@@ -1146,32 +1146,32 @@ function track_addSegment(fromIdx, toIdx)
 	// is this track already in the plan?
 	var cellIdx;
 	var dir;
-	if (fromIdx == getAdjacentW(toIdx))
+	if (fromIdx == getAdjacentCell(toIdx, Geometry.WEST))
 	{
 		cellIdx = toIdx;
 		dir = 0;
 	}
-	else if (fromIdx == getAdjacentNW(toIdx))
+	else if (fromIdx == getAdjacentCell(toIdx, Geometry.NORTHWEST))
 	{
 		cellIdx = toIdx;
 		dir = 1;
 	}
-	else if (fromIdx == getAdjacentNE(toIdx))
+	else if (fromIdx == getAdjacentCell(toIdx, Geometry.NORTHEAST))
 	{
 		cellIdx = toIdx;
 		dir = 2;
 	}
-	else if (fromIdx == getAdjacentE(toIdx))
+	else if (fromIdx == getAdjacentCell(toIdx, Geometry.EAST))
 	{
 		cellIdx = fromIdx;
 		dir = 0;
 	}
-	else if (fromIdx == getAdjacentSE(toIdx))
+	else if (fromIdx == getAdjacentCell(toIdx, Geometry.SOUTHEAST))
 	{
 		cellIdx = fromIdx;
 		dir = 1;
 	}
-	else if (fromIdx == getAdjacentSW(toIdx))
+	else if (fromIdx == getAdjacentCell(toIdx, Geometry.SOUTHWEST))
 	{
 		cellIdx = fromIdx;
 		dir = 2;

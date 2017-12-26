@@ -45,6 +45,13 @@ function isCellAdjacent(cell1, cell2)
 		cell2 == getAdjacentSW(cell1);
 }
 
+Geometry.WEST = 0;
+Geometry.NORTHWEST = 1;
+Geometry.NORTHEAST = 2;
+Geometry.EAST = 3;
+Geometry.SOUTHEAST = 4;
+Geometry.SOUTHWEST = 5;
+
 function getAdjacentCell(cellIdx, dir)
 {
 	switch (dir)
