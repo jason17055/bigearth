@@ -23,7 +23,6 @@ var noRedraw = 0;
 //            \/          _
 
 var GEOMETRY = new Geometry(1, 1);
-var CELLS_PER_ROW = 1;
 var DISPLAY_SETTINGS = {
   zoomLevel: 64,
   offsetX: 0,
@@ -1354,11 +1353,11 @@ function zoomOut(basisPt)
 }
 
 function getMapWidth() {
-	return CELLS_PER_ROW;
+	return GEOMETRY.width;
 }
 
 function getMapHeight() {
-	return mapData.terrain.length;
+	return GEOMETRY.height;
 }
 
 function zoomShowAll()
@@ -2264,8 +2263,8 @@ function cropTerrain(offsetx, offsety, cx, cy)
 
 	var convertCellIdx = function(cellIdx)
 	{
-		var row = Math.floor(cellIdx / CELLS_PER_ROW);
-		var col = cellIdx % CELLS_PER_ROW;
+		var row = GEOMETRY.getCellRow(cellIdx);
+		var col = GEOMETRY.getCellColumn(cellIdx);
 
 		row -= offsety;
 		col -= offsetx;
@@ -2311,7 +2310,6 @@ function cropTerrain(offsetx, offsety, cx, cy)
 
 function updateGeometry() {
   GEOMETRY = new Geometry(mapData.terrain[0].length, mapData.terrain.length);
-  CELLS_PER_ROW = GEOMETRY.width;
 }
 
 function showEditMapPane()
@@ -2332,15 +2330,15 @@ function showEditMapPane()
 
 function makeMoreRoomOnMap(amt)
 {
-	var minX = CELLS_PER_ROW;
+	var minX = GEOMETRY.width;
 	var maxX = 0;
-	var minY = mapData.terrain.length;
+	var minY = GEOMETRY.height;
 	var maxY = 0;
 
-	var height = mapData.terrain.length;
+	var height = GEOMETRY.height;
 	for (var row = 0; row < height; row++)
 	{
-		for (var col = 0; col < CELLS_PER_ROW; col++)
+		for (var col = 0; col < GEOMETRY.width; col++)
 		{
 			var c = mapData.terrain[row].charAt(col);
 			if (c && c != " ")
