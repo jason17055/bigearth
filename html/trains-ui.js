@@ -606,17 +606,6 @@ function onGameState()
 		zoomShowAll();
 	else
 		repaint();
-
-	var pid = getPlayerId();
-	var p = serverState.players[pid];
-	if (p)
-	{
-		$('#cashIndicator').text(p.money);
-	}
-	else
-	{
-		$('#cashIndicator').text("");
-	}
 }
 
 /**

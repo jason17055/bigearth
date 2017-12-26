@@ -11,7 +11,9 @@
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
 <button type="button" onclick="showEditMapPane()">Edit Map</button>
-<span>Cash on hand: <span id="cashIndicator">0</span></span>
+<span ng-if="c.playerData">
+<span>Cash on hand: <span id="cashIndicator">{{c.playerData.money}}</span></span>
+</span>
 <span id="trainStartClock">Train movement</span>
 </div>
 </div>

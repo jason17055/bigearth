@@ -42,6 +42,7 @@ class GameActions(ndb.Model):
   events = ndb.StringProperty(repeated=True)
   map_json = ndb.TextProperty()
   rails_json = ndb.TextProperty()
+  players_json = ndb.TextProperty()
   all_demands = ndb.StringProperty(repeated=True)
 
 
@@ -73,6 +74,7 @@ def GetMap(map_name):
 
 def InitializeGame(ent, map_data):
   ent.map_json = json.dumps(map_data)
+  ent.players_json = json.dumps({})
 
   # Create demands.
   all_resource_types = collections.defaultdict(set)
@@ -107,7 +109,7 @@ class GameStateHandler(webapp2.RequestHandler):
     response = {
         "rails": {},
         "map": json.loads(ent.map_json),
-        "players": {},
+        "players": json.loads(ent.players_json or '{}'),
         "allServerResourceTypes": ALL_COMMODITIES,
     }
     self.response.headers['Content-Type'] = 'application/json'
@@ -229,18 +231,30 @@ class LoginHandler(webapp2.RequestHandler):
     gamestate_key = ndb.Key(GameActions, game_id)
     def _Update():
       gamestate = gamestate_key.get()
-      return gamestate
+      players = json.loads(gamestate.players_json or '{}')
+      max_pid = 0
+      for pid, player in players.items():
+        if int(pid) > max_pid:
+          max_pid = int(pid)
+        if player['identity'] == req['name']:
+          return gamestate, pid, player
+      new_pid = str(max_pid + 1)
+      players[new_pid] = {'name': req['name'], 'money': 0}
+      gamestate.players_json = json.dumps(players)
+      gamestate.put()
+      return gamestate, new_pid, players[new_pid]
 
     def _MakeDemand(demand_str):
       city_id, resource_type, value = demand_str.split(':')
       return [city_id, resource_type, value]
 
-    ent = ndb.transaction(_Update)
+    ent, pid, p = ndb.transaction(_Update)
     response = {
         'playerId': 1,
         'player': {
-            'identity': req['name'],
+            'identity': p['name'],
             'demands': [_MakeDemand(x) for x in ent.all_demands[:8]],
+            'money': p['money'],
         },
     }
     self.response.headers['Content-Type'] = 'application/json'
