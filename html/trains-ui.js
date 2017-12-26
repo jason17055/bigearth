@@ -616,8 +616,8 @@ function getCellPoint(cellIdx)
   var mapCenterX = getMapWidth() / 2;
   var mapCenterY = getMapHeight() / 2;
 
-	var x = getCellColumn(cellIdx);
-	var y = getCellRow(cellIdx);
+	var x = GEOMETRY.getCellColumn(cellIdx);
+	var y = GEOMETRY.getCellRow(cellIdx);
 
 	return {
 		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * (x - mapCenterX),
@@ -1014,8 +1014,8 @@ function getRadioButtonValue(radioObj)
 
 function onMouseDown_editTerrain(cellIdx, oPt)
 {
-	var r = getCellRow(cellIdx);
-	var col = getCellColumn(cellIdx);
+	var r = GEOMETRY.getCellRow(cellIdx);
+	var col = GEOMETRY.getCellColumn(cellIdx);
 
 	var t = getRadioButtonValue(document.editMapForm.tool);
 	if (t == "city")

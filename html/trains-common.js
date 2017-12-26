@@ -21,10 +21,14 @@ function getCellRow(cellIdx)
 	return Math.floor(cellIdx / CELLS_PER_ROW);
 }
 
-function getCellColumn(cellIdx)
-{
-	return cellIdx % CELLS_PER_ROW;
-}
+Geometry.prototype.getCellRow = function(cellIdx) {
+	//FIXME
+	return getCellRow(cellIdx);
+};
+
+Geometry.prototype.getCellColumn = function(cellIdx) {
+  return cellIdx % this.width;
+};
 
 function getCell(row, column)
 {
@@ -168,15 +172,16 @@ function hasTrackAt(cellIdx)
 		hasTrackAtDir(cellIdx, 5);
 }
 
-function simpleDistance(cellIdx1, cellIdx2)
-{
-	var row1 = getCellRow(cellIdx1);
-	var col1 = getCellColumn(cellIdx1);
-	var row2 = getCellRow(cellIdx2);
-	var col2 = getCellColumn(cellIdx2);
+/** @deprecated not used */
+Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2) {
 
-	var distRows = Math.abs(row2-row1);
-	var distCols = Math.abs(col2-col1);
-	var diag = Math.floor(distRows / 2);
-	return distRows + (distCols > diag ? distCols - diag : 0);
-}
+  var row1 = this.getCellRow(cellIdx1);
+  var col1 = this.getCellColumn(cellIdx1);
+  var row2 = this.getCellRow(cellIdx2);
+  var col2 = this.getCellColumn(cellIdx2);
+
+  var distRows = Math.abs(row2-row1);
+  var distCols = Math.abs(col2-col1);
+  var diag = Math.floor(distRows / 2);
+  return distRows + (distCols > diag ? distCols - diag : 0);
+};
