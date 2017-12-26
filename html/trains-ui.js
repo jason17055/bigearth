@@ -418,10 +418,7 @@ function onResize()
 window.onresize = onResize;
 
 var serverState;
-var gameState = {
-    futureDemands: [],
-    pastDemands: [],
-};
+var gameState = new GameState();
 function fetchGameState($http, gameId)
 {
 	var fetchBeginTime = new Date().getTime();
