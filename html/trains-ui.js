@@ -34,8 +34,6 @@ const CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
 const CELL_ASCENT = Math.round(CELL_HEIGHT * 36/56);
 const CELL_DESCENT = CELL_HEIGHT - CELL_ASCENT;
 
-const INITIAL_DEMAND_COUNT = 12;
-
 var pendingImages = 0;
 var terrainImages = {};
 function preloadImages() {
@@ -464,10 +462,6 @@ function onGameEvent(evt)
 	if (evt.event == 'join') {
 		let p = evt.playerData;
 		gameState.newPlayer(evt.playerId, p);
-		// TODO: move this to GameState.
-		for (var i = 0; i < INITIAL_DEMAND_COUNT; i++) {
-			nextDemand(evt.playerId);
-		}
 		if (curPlayer.playerId == evt.playerId) {
 			curPlayer.demands = p.demands;
 		}
@@ -732,23 +726,6 @@ function train_cargoChanged(train)
 	}
 }
 
-function nextDemand(pid) {
-
-	if (gameState.futureDemands.length == 0)
-	{
-		gameState.futureDemands = mapData.pastDemands;
-		gameState.pastDemands = [];
-		//non-deterministic
-		//shuffleArray(gameState.futureDemands);
-	}
-
-	if (gameState.futureDemands.length > 0)
-	{
-		var d = gameState.futureDemands.shift();
-		gameState.players[pid].demands.push(d);
-	}
-}
-
 function train_deliver(train, resource_type)
 {
 	if (!train.cargo)
@@ -777,7 +754,7 @@ function train_deliver(train, resource_type)
 				adjustPlayerCash(train.owner, d[2]);
 				p.demands.splice(i,1);
 				gameState.pastDemands.push(d);
-				nextDemand(train.owner);
+				gameState.nextDemand(train.owner);
 				break;
 			}
 		}
