@@ -18,7 +18,20 @@ function GameState() {
 
   // Trains, keyed by trainId.
   // Each Train is {
+  //   trainId: int
+  //   loc: cell index
+  //   plan: list of Waypoint
+  //   route: list
+  //   revenue: int
+  //   running: bool
   // }.
+  // Each Waypoint is {
+  //   class: "waypoint"
+  //   location: cell index
+  //   deliver: optional list of str
+  //   pickup: optional list of str
+  // }.
+  // When a waypoint is reached, it is removed from plan[].
   this.trains = {};
 }
 
