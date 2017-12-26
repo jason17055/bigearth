@@ -1,6 +1,7 @@
 import collections
 import json
 import random
+import time
 import webapp2
 
 from google.appengine.ext import ndb
@@ -44,6 +45,7 @@ class GameActions(ndb.Model):
   rails_json = ndb.TextProperty()
   players_json = ndb.TextProperty()
   all_demands = ndb.StringProperty(repeated=True)
+  start_time = ndb.FloatProperty()
 
 
 class Map(ndb.Model):
@@ -75,6 +77,7 @@ def GetMap(map_name):
 def InitializeGame(ent, map_data):
   ent.map_json = json.dumps(map_data)
   ent.players_json = json.dumps({})
+  ent.start_time = time.time()
 
   # Create demands.
   all_resource_types = collections.defaultdict(set)
@@ -111,6 +114,7 @@ class GameStateHandler(webapp2.RequestHandler):
         "map": json.loads(ent.map_json),
         "players": json.loads(ent.players_json or '{}'),
         "allServerResourceTypes": ALL_COMMODITIES,
+        'serverTime': time.time() - (ent.start_time or 0),
     }
     self.response.headers['Content-Type'] = 'application/json'
     self.response.write(json.dumps(response))
@@ -132,6 +136,8 @@ class EventsHandler(webapp2.RequestHandler):
 
 
 def ProcessGameAction(game_ent, action_req):
+  if not game_ent.start_time:
+    game_ent.start_time = time.time()
   game_ent.actions.append(json.dumps(action_req))
   if action_req['action'] == 'build':
     rails_data = {}
