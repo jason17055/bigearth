@@ -466,7 +466,10 @@ function onGameEvent(evt)
 		}
 		TRAINS[evt.trainId].plan = evt.plan;
 		TRAINS[evt.trainId].lastUpdated = evt.time;
-		train_next(TRAINS[evt.trainId]);
+		TRAINS[evt.trainId].running = evt.running;
+		if (evt.running) {
+			train_next(TRAINS[evt.trainId]);
+		}
 	}
 	if (evt.newPlayers)
 	{
@@ -758,9 +761,9 @@ function train_deliver(train, resource_type)
 		for (var i in curPlayer.demands)
 		{
 			var d = curPlayer.demands[i];
-			if (d[0] == train.loc && d[1] == resource_type)
-			{
-				adjustPlayerCash(d[2]);
+			if (d[0] == train.loc && d[1] == resource_type) {
+				train.revenue += (+d[2]);
+				adjustPlayerCash(+d[2]);
 				curPlayer.demands.splice(i,1);
 				mapData.pastDemands.push(d);
 				nextDemand();
@@ -938,6 +941,7 @@ function addTrainSprite(trainId, trainLoc)
 		loc: trainLoc,
 		plan: new Array(),
 		route: new Array(),
+		revenue: 0,
 		};
 	updateTrainSpritePosition(train);
 	updateTrainSpriteSensitivity(train);
@@ -1976,11 +1980,16 @@ function selectDemand($row)
 function reloadPlan()
 {
 	$('#trainCargo').empty();
+	$('#planPane .train-income').hide();
 	$('#planPane .insertedRow').remove();
 
 	var train = isPlanning && isPlanning.train;
 	if (!train)
 		return;
+
+	$('#planPane .train-id').text(train.trainId);
+	$('#planPane .train-income').show();
+	$('#planPane .income-ind').text(train.revenue);
 
 	//
 	// train cargo

@@ -84,9 +84,10 @@
   </div>
 </div>
 <div class="widget" id="planPane">
-  <div class="widgetHeader">Train 1</div>
+  <div class="widgetHeader">Train <span class="train-id">1</span></div>
   <div class="widgetContent">
   <div id="brandNewInstructions">Click a city to set this locomotive's starting point.</div>
+  <div class="train-income">Income: <span class="income-ind"></span></div>
   <div id="trainCargo"></div>
   <table border="0" cellspacing="0">
     <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
