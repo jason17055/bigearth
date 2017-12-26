@@ -77,6 +77,7 @@ function setPlayerId(pid)
 
 	curPlayer.playerId = pid;
 	curPlayer.demands = serverState.players[pid] ? serverState.players[pid].demands : [];
+	curPlayer.money = serverState.players[pid] ? serverState.players[pid].money : 0;
 
 	console.log('players is ' + JSON.stringify(serverState.players));
 	console.log('curPlayer.demands is ' + JSON.stringify(curPlayer.demands));
@@ -415,6 +416,10 @@ function onResize()
 window.onresize = onResize;
 
 var serverState;
+var gameState = {
+    futureDemands: [],
+    pastDemands: [],
+};
 function fetchGameState($http, gameId)
 {
 	var fetchBeginTime = new Date().getTime();
@@ -427,6 +432,7 @@ function fetchGameState($http, gameId)
 			1000 * serverState.serverTime;
 		serverState.eventsSeen = 0;
 		serverState.gameId = gameId;
+		gameState.futureDemands = serverState.allDemands;
 		onGameState();
 	};
 	var onError = function(err) {
@@ -460,8 +466,12 @@ function onGameEvent(evt)
 	}
 	if (evt.event == 'join') {
 		let p = evt.playerData;
-		p.demands = serverState.allDemands.slice(0, 9);
+		p.demands = [];
+		p.money = 50;
 		serverState.players[evt.playerId] = p;
+		for (var i = 0; i < 9; i++) {
+			nextDemand(evt.playerId);
+		}
 		if (curPlayer.playerId == evt.playerId) {
 			curPlayer.demands = p.demands;
 		}
@@ -725,19 +735,20 @@ function train_cargoChanged(train)
 	}
 }
 
-function nextDemand()
-{
-	if (mapData.futureDemands.length == 0)
+function nextDemand(pid) {
+
+	if (gameState.futureDemands.length == 0)
 	{
-		mapData.futureDemands = mapData.pastDemands;
-		mapData.pastDemands = new Array();
-		shuffleArray(mapData.futureDemands);
+		gameState.futureDemands = mapData.pastDemands;
+		gameState.pastDemands = [];
+		//non-deterministic
+		//shuffleArray(gameState.futureDemands);
 	}
 
-	if (mapData.futureDemands.length > 0)
+	if (gameState.futureDemands.length > 0)
 	{
-		var d = mapData.futureDemands.shift();
-		curPlayer.demands.push(d);
+		var d = gameState.futureDemands.shift();
+		serverState.players[pid].demands.push(d);
 	}
 }
 
@@ -767,8 +778,8 @@ function train_deliver(train, resource_type)
 				train.revenue += (+d[2]);
 				adjustPlayerCash(+d[2]);
 				curPlayer.demands.splice(i,1);
-				mapData.pastDemands.push(d);
-				nextDemand();
+				gameState.pastDemands.push(d);
+				nextDemand(curPlayer.playerId);
 				break;
 			}
 		}
@@ -1435,7 +1446,7 @@ function commitBuilding()
 		return;
 
 	var cost = parseFloat($('#buildTrackCost').text());
-	var money = parseFloat($('#cashIndicator').text());
+	var money = curPlayer.money;
 	money -= cost;
 
 	if (money < 0)
