@@ -11,9 +11,7 @@ function shuffleArray(arr)
 	return;
 }
 
-function loadGeometry(width, height)
-{
-	CELLS_PER_ROW = width;
+function Geometry() {
 }
 
 function getCellRow(cellIdx)
@@ -179,11 +177,4 @@ function simpleDistance(cellIdx1, cellIdx2)
 	var distCols = Math.abs(col2-col1);
 	var diag = Math.floor(distRows / 2);
 	return distRows + (distCols > diag ? distCols - diag : 0);
-}
-
-if (typeof global !== 'undefined')
-{
-	global.shuffleArray = shuffleArray;
-	global.simpleDistance = simpleDistance;
-	global.loadGeometry = loadGeometry;
 }
