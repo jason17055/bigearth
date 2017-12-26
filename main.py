@@ -239,7 +239,7 @@ class LoginHandler(webapp2.RequestHandler):
         if player['identity'] == req['name']:
           return gamestate, pid, player
       new_pid = str(max_pid + 1)
-      players[new_pid] = {'name': req['name'], 'money': 0}
+      players[new_pid] = {'identity': req['name'], 'money': 0}
       gamestate.players_json = json.dumps(players)
       gamestate.put()
       return gamestate, new_pid, players[new_pid]
@@ -252,7 +252,7 @@ class LoginHandler(webapp2.RequestHandler):
     response = {
         'playerId': 1,
         'player': {
-            'identity': p['name'],
+            'identity': p['identity'],
             'demands': [_MakeDemand(x) for x in ent.all_demands[:8]],
             'money': p['money'],
         },
