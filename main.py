@@ -52,9 +52,26 @@ class Map(ndb.Model):
   geometry = ndb.StringProperty()
 
 
-def InitializeGame(ent):
-  with open('maps/nippon.txt', 'r') as f:
-    map_data = json.load(f)
+class MapNotFound(Exception):
+  pass
+
+
+def GetMap(map_name):
+  map_key = ndb.Key(Map, map_name)
+  ent = map_key.get()
+  if not ent:
+    raise MapNotFound('%s: not found' % map_name)
+
+  map_data = {
+      'terrain': json.loads(ent.terrain_json),
+      'cities': json.loads(ent.cities_json),
+      'rivers': json.loads(ent.rivers_json),
+      'geometry': ent.geometry,
+  }
+  return map_data
+
+
+def InitializeGame(ent, map_data):
   ent.map_json = json.dumps(map_data)
 
   # Create demands.
@@ -77,11 +94,12 @@ class GameStateHandler(webapp2.RequestHandler):
   def get(self):
     game_id = self.request.get('game')
     gamestate_key = ndb.Key(GameActions, game_id)
+    map_data = GetMap('nippon')
     def _Fetch():
       ent = gamestate_key.get()
       if not ent:
         ent = GameActions(id=gamestate_key.id())
-        InitializeGame(ent)
+        InitializeGame(ent, map_data)
         ent.put()
       return ent
 
@@ -165,21 +183,13 @@ class ActionsHandler(webapp2.RequestHandler):
 class EditMapHandler(webapp2.RequestHandler):
   def get(self):
     map_name = self.request.get('map')
-    map_key = ndb.Key(Map, map_name)
-    ent = map_key.get()
-    if not ent:
+    try:
+      map_data = GetMap(map_name)
+      self.response.headers['Content-Type'] = 'application/json'
+      self.response.write(json.dumps(map_data))
+    except MapNotFound:
       self.error(404)
       self.response.write('Not found')
-      return
-
-    map_data = {
-        'terrain': json.loads(ent.terrain_json),
-        'cities': json.loads(ent.cities_json),
-        'rivers': json.loads(ent.rivers_json),
-        'geometry': ent.geometry,
-    }
-    self.response.headers['Content-Type'] = 'application/json'
-    self.response.write(json.dumps(map_data))
 
   def put(self):
     map_name = self.request.get('map')
