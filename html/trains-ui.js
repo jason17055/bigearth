@@ -28,7 +28,6 @@ var DISPLAY_SETTINGS = {
   offsetX: 0,
   offsetY: 0,
 };
-var TRAINS = {};
 const CELL_WIDTH = 64;
 const CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
 const CELL_ASCENT = Math.round(CELL_HEIGHT * 36/56);
@@ -493,18 +492,19 @@ function onGameEvent(evt)
 		}
 	}
 	if (evt.event == 'train') {
-		if (!(evt.trainId in TRAINS)) {
+		if (!gameState.hasTrain(evt.trainId)) {
 			if (!evt.spawnLocation) {
 				return;
 			}
 			createTrain(evt.trainId, evt.spawnLocation);
 		}
-		TRAINS[evt.trainId].owner = evt.owner || '1';
-		TRAINS[evt.trainId].plan = evt.plan;
-		TRAINS[evt.trainId].lastUpdated = evt.time;
-		TRAINS[evt.trainId].running = evt.running;
+		var t = gameState.trains[evt.trainId];
+		t.owner = evt.owner || '1';
+		t.plan = evt.plan;
+		t.lastUpdated = evt.time;
+		t.running = evt.running;
 		if (evt.running) {
-			train_next(TRAINS[evt.trainId]);
+			train_next(t);
 		}
 	}
 	if (evt.playerMoney)
@@ -1403,9 +1403,9 @@ function beginBuilding()
 }
 
 function updateAllTrainSpritesSensitivity() {
-	for (let train of TRAINS) {
-		updateTrainSpriteSensitivity(train);
-	}
+  for (let trainId in gameState.trains) {
+    updateTrainSpriteSensitivity(gameState.trains[trainId]);
+  }
 }
 
 function adjustPlayerCash(pid, delta) {
@@ -1504,8 +1504,8 @@ function onTrainClicked(train)
 function addLocomotive()
 {
 	var trainId = curPlayer.playerId + '.1';
-	if (trainId in TRAINS) {
-		showPlan(trainId, TRAINS[trainId]);
+	if (gameState.hasTrain(trainId)) {
+		showPlan(trainId, gameState.trains[trainId]);
 	} else {
 		// New train
 		showPlan(trainId, null);
@@ -1513,8 +1513,8 @@ function addLocomotive()
 }
 
 function createTrain(trainId, location) {
-	TRAINS[trainId] = addTrainSprite(trainId, location);
-	return TRAINS[trainId];
+	gameState.trains[trainId] = addTrainSprite(trainId, location);
+	return gameState.trains[trainId];
 }
 
 function showPlan(trainId, train)
@@ -1658,8 +1658,8 @@ function addCityToPlan(cellIdx)
 
 function updateAllSpritePositions()
 {
-	for (let trainId in TRAINS) {
-		let train = TRAINS[trainId];
+	for (let trainId in gameState.trains) {
+		let train = gameState.trains[trainId];
 		updateTrainSpritePosition(train);
 	}
 	for (var i in waypointSprites)

@@ -15,6 +15,11 @@ function GameState() {
   //   demands: list of Demand
   // }.
   this.players = {};
+
+  // Trains, keyed by trainId.
+  // Each Train is {
+  // }.
+  this.trains = {};
 }
 
 /** Called when a new player is added to the game. */
@@ -40,3 +45,7 @@ GameState.prototype.nextDemand = function(pid) {
     this.players[pid].demands.push(d);
   }
 }
+
+GameState.prototype.hasTrain = function(trainId) {
+  return trainId in this.trains;
+};
