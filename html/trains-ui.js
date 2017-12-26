@@ -441,6 +441,7 @@ function fetchGameState($http, gameId)
 			Math.round((fetchEndTime - fetchBeginTime) / 2) -
 			serverState.serverTime;
 		serverState.eventsSeen = 0;
+		serverState.gameId = gameId;
 		onGameState();
 	};
 	var onError = function(err) {
@@ -516,7 +517,7 @@ function stopEventsListener() {
 function startEventsListener() {
 
 	var rdm = new Date().getTime();
-	var gameId = "test";
+	var gameId = serverState.gameId;
 	var errorCounter = 0;
 	serverState.timerId = 0;
 
@@ -1428,7 +1429,7 @@ function sendRequest(verb, data, success)
 
 	$.ajax({
 	type: "POST",
-	url: "/api/actions?game=" + escape('test'),
+	url: "/api/actions?game=" + escape(serverState.gameId),
 	data: JSON.stringify(data),
 	success: onSuccess,
 	error: onError,
