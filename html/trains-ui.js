@@ -87,12 +87,12 @@ function getPlayerId()
 	return playerId;
 }
 
-function setPlayerId(pid)
+function setPlayerId(pid, playerData)
 {
 	playerId = pid;
-	location.hash = "#pid=" + pid;
 	document.title = 'Trains : Seat ' + pid;
 
+        serverState.players[pid] = playerData;
 	curPlayer.demands = serverState.players[pid].demands;
 
 	// reload or something?
@@ -2540,7 +2540,7 @@ function showPlayers()
 			{
 				$('button.playAsBtn', $row).click(function() {
 					dismissCurrentDialog();
-					setPlayerId(pid);
+					setPlayerId(pid, p);
 					});
 			}
 			if (pid == getPlayerId())
@@ -2553,13 +2553,6 @@ function showPlayers()
 	}
 
 	popupDialog('gameRosterPane');
-}
-
-function joinGame()
-{
-	sendRequest('join', {}, function(data) {
-		setPlayerId(data.pid);
-		});
 }
 
 angular.module('trains', ['ngRoute'])
@@ -2626,5 +2619,21 @@ angular.module('trains', ['ngRoute'])
           alert('success');
         });
     }
+  };
+  this.joinGame = function() {
+    var playerName = window.prompt('Enter player name');
+    if (!playerName) {
+      return;
+    }
+    var request = {
+      game: this.gameId,
+      name: playerName,
+    };
+    $http.post('/api/login', JSON.stringify(request))
+      .then(httpResponse => {
+        this.playerId = httpResponse.data.playerId;
+        this.playerData = httpResponse.data.player;
+        setPlayerId(this.playerId, this.playerData);
+      });
   };
 });

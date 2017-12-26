@@ -217,9 +217,40 @@ class EditMapHandler(webapp2.RequestHandler):
     self.response.write(json.dumps(response))
 
 
+class LoginHandler(webapp2.RequestHandler):
+  def post(self):
+    req = json.loads(self.request.body)
+    if 'game' not in req or 'name' not in req:
+      self.error(400)
+      self.response.write('missing required field')
+      return
+
+    game_id = req['game']
+    gamestate_key = ndb.Key(GameActions, game_id)
+    def _Update():
+      gamestate = gamestate_key.get()
+      return gamestate
+
+    def _MakeDemand(demand_str):
+      city_id, resource_type, value = demand_str.split(':')
+      return [city_id, resource_type, value]
+
+    ent = ndb.transaction(_Update)
+    response = {
+        'playerId': 1,
+        'player': {
+            'identity': req['name'],
+            'demands': [_MakeDemand(x) for x in ent.all_demands[:8]],
+        },
+    }
+    self.response.headers['Content-Type'] = 'application/json'
+    self.response.write(json.dumps(response))
+
+
 app = webapp2.WSGIApplication([
     ('/api/gamestate', GameStateHandler),
     ('/api/actions', ActionsHandler),
     ('/api/events', EventsHandler),
+    ('/api/login', LoginHandler),
     ('/api/map', EditMapHandler),
 ], debug=True)
