@@ -946,7 +946,6 @@ function addTrainSprite(trainId, trainLoc)
 		loc: trainLoc,
 		plan: new Array(),
 		route: new Array(),
-		brandNew: true
 		};
 	updateTrainSpritePosition(train);
 	updateTrainSpriteSensitivity(train);
@@ -1506,6 +1505,7 @@ function addLocomotive()
 
 function createTrain(trainId, location) {
 	TRAINS[trainId] = addTrainSprite(trainId, location);
+	return TRAINS[trainId];
 }
 
 function showPlan(trainId, train)
@@ -1604,8 +1604,8 @@ function addCityToPlan(cellIdx)
 	if (!isPlanning.train)
 	{
 		// player is designating their starting location
-		let theTrain = addTrainSprite(isPlanning.trainId, cellIdx);
-		isPlanning.train = theTrain;
+		isPlanning.train = createTrain(isPlanning.trainId, cellIdx);
+		isPlanning.train.brandNew = true;
 
 		// update map for planning
 		mapFeatures.hideTerrain = true;
