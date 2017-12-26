@@ -78,11 +78,9 @@ function setPlayerId(pid)
 	document.title = 'Trains : Seat ' + pid;
 
 	curPlayer.playerId = pid;
-	curPlayer.demands = serverState.players[pid] ? serverState.players[pid].demands : [];
-	curPlayer.money = serverState.players[pid] ? serverState.players[pid].money : 0;
+	curPlayer.demands = gameState.players[pid] ? gameState.players[pid].demands : [];
+	curPlayer.money = gameState.players[pid] ? gameState.players[pid].money : 0;
 
-	console.log('players is ' + JSON.stringify(serverState.players));
-	console.log('curPlayer.demands is ' + JSON.stringify(curPlayer.demands));
 	// reload or something?
 	if (curDialog == 'gameRosterPane')
 	{
@@ -465,9 +463,8 @@ function onGameEvent(evt)
 	}
 	if (evt.event == 'join') {
 		let p = evt.playerData;
-		p.demands = [];
-		p.money = 50;
-		serverState.players[evt.playerId] = p;
+		gameState.newPlayer(evt.playerId, p);
+		// TODO: move this to GameState.
 		for (var i = 0; i < INITIAL_DEMAND_COUNT; i++) {
 			nextDemand(evt.playerId);
 		}
@@ -494,7 +491,7 @@ function onGameEvent(evt)
 	{
 		for (var pid in evt.playerMoney)
 		{
-			var p = serverState.players[pid];
+			var p = gameState.players[pid];
 			if (p)
 			{
 				var newBalance = evt.playerMoney[pid];
@@ -597,9 +594,9 @@ function onGameState()
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
 
-	if (curPlayer.playerId && serverState.players[curPlayer.playerId])
+	if (curPlayer.playerId && gameState.players[curPlayer.playerId])
 	{
-		curPlayer.demands = serverState.players[curPlayer.playerId].demands;
+		curPlayer.demands = gameState.players[curPlayer.playerId].demands;
 		document.title = 'Trains : Seat ' + curPlayer.playerId;
 	}
 	else
@@ -748,7 +745,7 @@ function nextDemand(pid) {
 	if (gameState.futureDemands.length > 0)
 	{
 		var d = gameState.futureDemands.shift();
-		serverState.players[pid].demands.push(d);
+		gameState.players[pid].demands.push(d);
 	}
 }
 
@@ -771,7 +768,7 @@ function train_deliver(train, resource_type)
 
 	if (found)
 	{
-		var p = serverState.players[train.owner];
+		var p = gameState.players[train.owner];
 		for (var i in p.demands)
 		{
 			var d = p.demands[i];
@@ -1412,9 +1409,9 @@ function updateAllTrainSpritesSensitivity() {
 
 function adjustPlayerCash(pid, delta) {
 
-	serverState.players[pid].money += delta;
+	gameState.players[pid].money += delta;
 	if (curPlayer.playerId == pid) {
-		curPlayer.money = serverState.players[pid].money;
+		curPlayer.money = gameState.players[pid].money;
 		$('#cashIndicator').text(curPlayer.money);
 	}
 }
@@ -2534,11 +2531,11 @@ function dismissCurrentDialog(andThen)
 function showPlayers()
 {
 	$('#gameRosterPane .insertedRow').remove();
-	if (serverState && serverState.players)
+	if (serverState)
 	{
-		for (var pid in serverState.players)
+		for (var pid in gameState.players)
 		{
-			var p = serverState.players[pid];
+			var p = gameState.players[pid];
 
 			var $row = $('#gameRosterPaneTableTemplate').clone();
 			$row.addClass('insertedRow');
