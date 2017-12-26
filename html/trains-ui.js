@@ -159,7 +159,7 @@ Painter.prototype.paint = function() {
 				ne = n;
 			}
 
-			var cellIdx = getCell(y,x);
+			var cellIdx = GEOMETRY.getCell(y,x);
 			var pt = getCellPoint(cellIdx);
 
 			this.drawCell(pt, c, w, nw, ne);
@@ -655,17 +655,17 @@ function getEdgeFromPoint(pt) {
 	if (ry < CELL_ASCENT)
 	{
 		var col = Math.floor((ia+1) / 2);
-		return getCell(iy, col) * 3;
+		return GEOMETRY.getCell(iy, col) * 3;
 	}
 	else if (ia % 2 == 0)
 	{
 		var col = Math.floor(ia / 2);
-		return getAdjacentCell(getCell(iy, col), Geometry.SOUTHWEST) * 3 + 2;
+		return GEOMETRY.getAdjacentCell(GEOMETRY.getCell(iy, col), Geometry.SOUTHWEST) * 3 + 2;
 	}
 	else
 	{
 		var col = Math.floor(ia / 2);
-		return getAdjacentCell(getCell(iy, col), Geometry.SOUTHEAST) * 3 + 1;
+		return GEOMETRY.getAdjacentCell(GEOMETRY.getCell(iy, col), Geometry.SOUTHEAST) * 3 + 1;
 	}
 }
 
@@ -678,7 +678,7 @@ function getCellFromPoint(pt)
   var ix = Math.floor((pt.x + CELL_WIDTH / 2 - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH + mapCenterX);
   if (iy >= 0 && iy < getMapHeight()) {
     if (ix >= 0 && ix < getMapWidth()) {
-      return getCell(iy, ix);
+      return GEOMETRY.getCell(iy, ix);
     }
   }
   return null;
@@ -1106,7 +1106,7 @@ function onMouseMove(evt)
 		if (cellIdx != isDragging.start
 			&& Math.abs(cellPt.x - pt.x) < 16
 			&& Math.abs(cellPt.y - pt.y) < 16
-			&& isCellAdjacent(isDragging.start, cellIdx))
+			&& GEOMETRY.isCellAdjacent(isDragging.start, cellIdx))
 		{
 			track_addSegment(isDragging.start, cellIdx);
 			isDragging.start = cellIdx;
@@ -1146,32 +1146,32 @@ function track_addSegment(fromIdx, toIdx)
 	// is this track already in the plan?
 	var cellIdx;
 	var dir;
-	if (fromIdx == getAdjacentCell(toIdx, Geometry.WEST))
+	if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.WEST))
 	{
 		cellIdx = toIdx;
 		dir = 0;
 	}
-	else if (fromIdx == getAdjacentCell(toIdx, Geometry.NORTHWEST))
+	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.NORTHWEST))
 	{
 		cellIdx = toIdx;
 		dir = 1;
 	}
-	else if (fromIdx == getAdjacentCell(toIdx, Geometry.NORTHEAST))
+	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.NORTHEAST))
 	{
 		cellIdx = toIdx;
 		dir = 2;
 	}
-	else if (fromIdx == getAdjacentCell(toIdx, Geometry.EAST))
+	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.EAST))
 	{
 		cellIdx = fromIdx;
 		dir = 0;
 	}
-	else if (fromIdx == getAdjacentCell(toIdx, Geometry.SOUTHEAST))
+	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.SOUTHEAST))
 	{
 		cellIdx = fromIdx;
 		dir = 1;
 	}
-	else if (fromIdx == getAdjacentCell(toIdx, Geometry.SOUTHWEST))
+	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.SOUTHWEST))
 	{
 		cellIdx = fromIdx;
 		dir = 2;
@@ -1567,7 +1567,7 @@ function filterMapToReachable(train)
 			if (mapData.rails[ti])
 			{
 				reachableTrack[ti] = true;
-				var adjCellIdx = getAdjacentCell(l, dir);
+				var adjCellIdx = GEOMETRY.getAdjacentCell(l, dir);
 				if (adjCellIdx && !visited[adjCellIdx])
 				{
 					queue.push(adjCellIdx);
@@ -2164,7 +2164,7 @@ outerLoop:
 			var ti = getTrackIndex(l, dir);
 			if (mapData.rails[ti])
 			{
-				var adjCellIdx = getAdjacentCell(l, dir);
+				var adjCellIdx = GEOMETRY.getAdjacentCell(l, dir);
 				if (!visited[adjCellIdx])
 				{
 					backlinks[adjCellIdx] = l;

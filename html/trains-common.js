@@ -30,20 +30,18 @@ Geometry.prototype.getCellColumn = function(cellIdx) {
   return cellIdx % this.width;
 };
 
-function getCell(row, column)
-{
-	return row * CELLS_PER_ROW + column;
-}
+Geometry.prototype.getCell = function(row, column) {
+  return row * this.width + column;
+};
 
-function isCellAdjacent(cell1, cell2)
-{
+Geometry.prototype.isCellAdjacent = function(cell1, cell2) {
 	return cell2 == getAdjacentW(cell1) ||
 		cell2 == getAdjacentNW(cell1) ||
 		cell2 == getAdjacentNE(cell1) ||
 		cell2 == getAdjacentE(cell1) ||
 		cell2 == getAdjacentSE(cell1) ||
 		cell2 == getAdjacentSW(cell1);
-}
+};
 
 Geometry.WEST = 0;
 Geometry.NORTHWEST = 1;
@@ -52,8 +50,7 @@ Geometry.EAST = 3;
 Geometry.SOUTHEAST = 4;
 Geometry.SOUTHWEST = 5;
 
-function getAdjacentCell(cellIdx, dir)
-{
+Geometry.prototype.getAdjacentCell = function(cellIdx, dir) {
 	switch (dir)
 	{
 	case 0: return getAdjacentW(cellIdx);
@@ -64,7 +61,7 @@ function getAdjacentCell(cellIdx, dir)
 	case 5: return getAdjacentSW(cellIdx);
 	}
 	return null;
-}
+};
 
 function getAdjacentW(cellIdx)
 {
