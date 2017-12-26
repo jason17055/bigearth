@@ -250,7 +250,7 @@ class LoginHandler(webapp2.RequestHandler):
 
     ent, pid, p = ndb.transaction(_Update)
     response = {
-        'playerId': 1,
+        'playerId': pid,
         'player': {
             'identity': p['identity'],
             'demands': [_MakeDemand(x) for x in ent.all_demands[:8]],

@@ -323,12 +323,12 @@ Painter.prototype.drawRailsHelper = function(ctx, owner) {
 
 	if (owner == 2)
 	{
-		ctx.strokeStyle = "#009999";
+		ctx.strokeStyle = "#099";
 		ctx.lineWidth = 2;
 	}
 	else if (owner == 3)
 	{
-		ctx.strokeStyle = '#990099';
+		ctx.strokeStyle = '#f4c';
 		ctx.lineWidth = 1;
 	}
 	else
