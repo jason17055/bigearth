@@ -22,7 +22,7 @@ var noRedraw = 0;
 //           \  /          20px
 //            \/          _
 
-var GEOMETRY = new Geometry(1);
+var GEOMETRY = new Geometry(1, 1);
 var CELLS_PER_ROW = 1;
 var DISPLAY_SETTINGS = {
   zoomLevel: 64,
@@ -2284,8 +2284,8 @@ function cropTerrain(offsetx, offsety, cx, cy)
 }
 
 function updateGeometry() {
-  GEOMETRY = new Geometry(mapData.terrain[0].length);
-  CELLS_PER_ROW = GEOMETRY.cellsPerRow;
+  GEOMETRY = new Geometry(mapData.terrain[0].length, mapData.terrain.length);
+  CELLS_PER_ROW = GEOMETRY.width;
 }
 
 function showEditMapPane()
