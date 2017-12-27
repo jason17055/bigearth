@@ -847,6 +847,7 @@ function train_next(train)
 		if (train.plan.length >= 2)
 		{
 			train.plan.shift();
+			train.curWaypoint = train.plan[0].id;
 			var oldSelection = $('#planPane').attr('selected-waypoint');
 			if (oldSelection != null)
 			{
@@ -1641,7 +1642,6 @@ function addCityToPlan(cellIdx)
 	}
 
 	var waypoint = {
-		class: "waypoint",
 		location: cellIdx
 		};
 	if (priorWaypoint)
@@ -1649,6 +1649,10 @@ function addCityToPlan(cellIdx)
 		var r = new Array();
 		findBestPath(priorWaypoint.location, waypoint.location, r);
 		waypoint.distanceHint = r.length;
+		waypoint.id = (priorWaypoint.id || 0) + 1;
+	} else {
+		waypoint.id = 0;
+		isPlanning.train.curWaypoint = 0;
 	}
 
         isPlanning.train.plan.push(waypoint);
@@ -1666,6 +1670,12 @@ function updateAllSpritePositions()
 	{
 		updateWaypointSpritePosition(waypointSprites[i]);
 	}
+}
+
+function dropWaypoint() {
+	var curWaypoint = +$('#planPane').attr('selected-waypoint');
+	// TODO
+	alert('not implemented');
 }
 
 function selectWaypoint(newSelection)
@@ -1690,6 +1700,7 @@ function selectWaypoint(newSelection)
 	$('#waypointPane .widgetHeader').text(cityName);
 
 	reloadWaypoint(waypoint);
+	$('#waypointPane .drop-waypoint-btn').toggle(newSelection != 0);
 
 	$('#waypointPane').fadeIn();
 	var $pw = $('#planPane');

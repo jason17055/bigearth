@@ -164,7 +164,7 @@
      </table>
   </div>
   <div class="widgetFooter">
-    <button type="button" onclick="dismissWaypoint()">Dismiss</button>
+    <button type="button" onclick="dropWaypoint()" class="drop-waypoint-btn">Drop This Waypoint</button>
   </div>
 </div>
 <div class="widget" id="gameRosterPane">

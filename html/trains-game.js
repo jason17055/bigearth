@@ -24,12 +24,14 @@ function GameState() {
   //   route: list
   //   revenue: int
   //   running: bool
+  //   curWaypoint: int
   // }.
   // Each Waypoint is {
-  //   class: "waypoint"
+  //   id: int, starting from 0
   //   location: cell index
   //   deliver: optional list of str
   //   pickup: optional list of str
+  //   distanceHint: int, number of steps
   // }.
   // When a waypoint is reached, it is removed from plan[].
   this.trains = {};
