@@ -313,51 +313,6 @@ function toCanvasCoords(pt) {
   };
 }
 
-function getEdgeFromPoint(pt) {
-
-  var mapCenterX = getMapWidth() / 2;
-  var mapCenterY = getMapHeight() / 2;
-
-  var iy = Math.floor((pt.y + CELL_ASCENT / 2) / CELL_HEIGHT + mapCenterY);
-  var ia = Math.floor((pt.x + CELL_WIDTH / 2) / (CELL_WIDTH/2) + mapCenterX * 2) - (1 - iy % 2);
-
-  if (iy < 0 || iy >= getMapHeight()) {
-    return null;
-  }
-
-	var ry = pt.y + CELL_ASCENT / 2 - (iy - mapCenterY) * CELL_HEIGHT;
-	if (ry < CELL_ASCENT)
-	{
-		var col = Math.floor((ia+1) / 2);
-		return mapData.G.getCell(iy, col) * 3;
-	}
-	else if (ia % 2 == 0)
-	{
-		var col = Math.floor(ia / 2);
-		return mapData.G.getAdjacentCell(mapData.G.getCell(iy, col), Geometry.SOUTHWEST) * 3 + 2;
-	}
-	else
-	{
-		var col = Math.floor(ia / 2);
-		return mapData.G.getAdjacentCell(mapData.G.getCell(iy, col), Geometry.SOUTHEAST) * 3 + 1;
-	}
-}
-
-function getCellFromPoint(pt)
-{
-  var mapCenterX = getMapWidth() / 2;
-  var mapCenterY = getMapHeight() / 2;
-
-  var iy = Math.floor((pt.y + CELL_ASCENT / 2) / CELL_HEIGHT + mapCenterY);
-  var ix = Math.floor((pt.x + CELL_WIDTH / 2 - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH + mapCenterX);
-  if (iy >= 0 && iy < getMapHeight()) {
-    if (ix >= 0 && ix < getMapWidth()) {
-      return mapData.G.getCell(iy, ix);
-    }
-  }
-  return null;
-}
-
 function updateWaypointSpritePosition(sprite)
 {
 	var pt = toCanvasCoords(mapData.G.getCellPoint(sprite.loc));
@@ -641,7 +596,7 @@ function onTouchStart(evt)
 		y: evt.clientY - p.top
 	};
 	var pt = fromCanvasCoords(screenPt);
-	var cellIdx = getCellFromPoint(pt);
+	var cellIdx = mapData.G.getCellFromPoint(pt);
 	if (cellIdx === null)
 		return;
 
@@ -697,7 +652,7 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 	}
 	else if (t == "rivers")
 	{
-		var edgeIdx = getEdgeFromPoint(oPt);
+		var edgeIdx = mapData.G.getEdgeFromPoint(oPt);
 		if (edgeIdx === null) {
 			return;
 		}
@@ -767,7 +722,7 @@ function onMouseMove(evt)
 
 	if (isDragging)
 	{
-		var cellIdx = getCellFromPoint(fromCanvasCoords(pt));
+		var cellIdx = mapData.G.getCellFromPoint(fromCanvasCoords(pt));
 		if (cellIdx === null) {
 			return;
 		}

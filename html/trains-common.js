@@ -135,6 +135,47 @@ Geometry.prototype.getCellPoint = function(cellIdx) {
 		};
 };
 
+Geometry.prototype.getEdgeFromPoint = function(pt) {
+
+  const mapCenterX = this.width / 2;
+  const mapCenterY = this.height / 2;
+
+  var iy = Math.floor((pt.y + CELL_ASCENT / 2) / CELL_HEIGHT + mapCenterY);
+  var ia = Math.floor((pt.x + CELL_WIDTH / 2) / (CELL_WIDTH/2) + mapCenterX * 2) - (1 - iy % 2);
+
+  if (iy < 0 || iy >= this.height) {
+    return null;
+  }
+
+  var ry = pt.y + CELL_ASCENT / 2 - (iy - mapCenterY) * CELL_HEIGHT;
+  if (ry < CELL_ASCENT) {
+    var col = Math.floor((ia+1) / 2);
+    return this.getCell(iy, col) * 3;
+  }
+  else if (ia % 2 == 0) {
+    var col = Math.floor(ia / 2);
+    return this.getAdjacentCell(this.getCell(iy, col), Geometry.SOUTHWEST) * 3 + 2;
+  }
+  else {
+    var col = Math.floor(ia / 2);
+    return this.getAdjacentCell(this.getCell(iy, col), Geometry.SOUTHEAST) * 3 + 1;
+  }
+};
+
+Geometry.prototype.getCellFromPoint = function(pt) {
+  const mapCenterX = this.width / 2;
+  const mapCenterY = this.height / 2;
+
+  var iy = Math.floor((pt.y + CELL_ASCENT / 2) / CELL_HEIGHT + mapCenterY);
+  var ix = Math.floor((pt.x + CELL_WIDTH / 2 - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH + mapCenterX);
+  if (iy >= 0 && iy < this.height) {
+    if (ix >= 0 && ix < this.width) {
+      return this.getCell(iy, ix);
+    }
+  }
+  return null;
+};
+
 /** @deprecated not used */
 Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2) {
 
