@@ -41,7 +41,11 @@ MapData.initialize = function(mapData) {
 };
 
 MapData.prototype.updateGeometry = function() {
-  this.G = new Geometry(this.terrain[0].length, this.terrain.length);
+  if (this.geometry == 'hex_vert') {
+    this.G = new HexVertGeometry(this.terrain[0].length, this.terrain.length);
+  } else {
+    this.G = new Geometry(this.terrain[0].length, this.terrain.length);
+  }
 };
 
 // dir: 0 == west, 1 == northwest, 2 == northeast,
@@ -164,6 +168,9 @@ Painter.prototype.drawTerrain = function() {
 
 			var cellIdx = mapData.G.getCell(y,x);
 			var pt = mapData.G.getCellPoint(cellIdx);
+			if (mapData.geometry == 'hex_vert') {
+				pt = {x: -pt.y, y: pt.x};
+			}
 
 			this.drawCell(pt, c, w, nw, ne);
 			this.drawRivers(pt, cellIdx);

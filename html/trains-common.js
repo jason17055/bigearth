@@ -126,13 +126,17 @@ Geometry.prototype.getCellPoint = function(cellIdx) {
   const mapCenterX = this.width / 2;
   const mapCenterY = this.height / 2;
 
-  const x = this.getCellColumn(cellIdx);
-  const y = this.getCellRow(cellIdx);
+  if (cellIdx >= 0) {
+    const x = this.getCellColumn(cellIdx);
+    const y = this.getCellRow(cellIdx);
 
 	return {
 		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * (x - mapCenterX),
 		y: CELL_HEIGHT * (y - mapCenterY)
 		};
+  } else {
+    console.log('getCellPoint called for cell ' + cellIdx);
+  }
 };
 
 Geometry.prototype.getEdgeFromPoint = function(pt) {
@@ -188,6 +192,32 @@ Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2) {
   var distCols = Math.abs(col2-col1);
   var diag = Math.floor(distRows / 2);
   return distRows + (distCols > diag ? distCols - diag : 0);
+};
+
+function HexVertGeometry(width, height) {
+  Geometry.call(this, width, height);
+}
+HexVertGeometry.prototype = Object.create(Geometry.prototype);
+HexVertGeometry.prototype.constructor = HexVertGeometry;
+
+HexVertGeometry.prototype.getCellPoint = function(cellIdx) {
+  var pt = Geometry.prototype.getCellPoint.call(this, cellIdx);
+  if (!pt) { return pt; }
+
+  return {
+      x: pt.y,
+      y: -pt.x,
+  };
+};
+
+HexVertGeometry.prototype.getCellFromPoint = function(pt) {
+  pt = {x: -pt.y, y: pt.x};
+  return Geometry.prototype.getCellFromPoint.call(this, pt);
+};
+
+HexVertGeometry.prototype.getEdgeFromPoint = function(pt) {
+  pt = {x: -pt.y, y: pt.x};
+  return Geometry.prototype.getEdgeFromPoint.call(this, pt);
 };
 
 function isCity(cellIdx)
