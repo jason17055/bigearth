@@ -132,14 +132,15 @@ Painter.prototype.drawCityDot = function(pt, cityId) {
   ctx.fill();
 };
 
-Painter.prototype.paint = function() {
-
+Painter.prototype.drawTerrain = function() {
   const ctx = this.ctx;
   const mapData = this.mapData;
 
   ctx.save();
-  ctx.translate(DISPLAY_SETTINGS.offsetX, DISPLAY_SETTINGS.offsetY);
-  ctx.scale(DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH, DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH);
+  try {
+    if (mapData.geometry == 'hex_vert') {
+      ctx.rotate(-Math.PI/2);
+    }
 
 	for (var y = 0; y < mapData.terrain.length; y++)
 	{
@@ -176,10 +177,27 @@ Painter.prototype.paint = function() {
 		}
 	}
 
-  ctx.fillStyle = "#333333";
-  ctx.font = DISPLAY_SETTINGS.zoomLevel >= 24 ?
-      "30px sans-serif" :
-      "40px sans-serif";
+  } finally {
+    ctx.restore();
+  }
+};
+
+Painter.prototype.paint = function() {
+
+  const ctx = this.ctx;
+  const mapData = this.mapData;
+
+  ctx.save();
+  try {
+    ctx.translate(DISPLAY_SETTINGS.offsetX, DISPLAY_SETTINGS.offsetY);
+    ctx.scale(DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH, DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH);
+
+    this.drawTerrain();
+
+    ctx.fillStyle = "#333333";
+    ctx.font = DISPLAY_SETTINGS.zoomLevel >= 24 ?
+        "30px sans-serif" :
+        "40px sans-serif";
 
 	for (var cityLoc in mapData.cities)
 	{
@@ -211,7 +229,9 @@ Painter.prototype.paint = function() {
 		}
 	}
 
-  ctx.restore();
+  } finally {
+    ctx.restore();
+  }
 };
 
 Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
