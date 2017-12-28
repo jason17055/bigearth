@@ -707,9 +707,6 @@ function getRadioButtonValue(radioObj)
 
 function onMouseDown_editTerrain(cellIdx, oPt)
 {
-	var r = mapData.G.getCellRow(cellIdx);
-	var col = mapData.G.getCellColumn(cellIdx);
-
 	var t = getRadioButtonValue(document.editMapForm.tool);
 	if (t == "city")
 	{
@@ -734,9 +731,7 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 		t == "mountain" ? "M" :
 		t == "sea" ? "w" :
 		" ";
-
-	var s = mapData.terrain[r];
-	mapData.terrain[r] = s.substr(0,col) + c + s.substr(col+1);
+	mapData.setTerrainAt(cellIdx, t);
 	repaint();
 }
 

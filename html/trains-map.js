@@ -57,6 +57,18 @@ MapData.prototype.hasTrackAtDir = function(cellIdx, dir, curPlayerId) {
 };
 
 /**
+ * @param c one of '.' (grass) 'M' (mountain) 'w' (sea) or ' ' (empty).
+ */
+MapData.prototype.setTerrainAt(cellIdx, c) {
+  var row = this.G.getCellRow(cellIdx);
+  var col = this.G.getCellColumn(cellIdx);
+
+  var s = this.terrain[row];
+  this.terrain[r] = s.substr(0,col) + c + s.substr(col+1);
+  return;
+};
+
+/**
  * @return 1 if own track is built anywhere here,
  *         2 if construction proposal has track here,
  *         3 if any other player has track here,
