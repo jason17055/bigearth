@@ -96,32 +96,6 @@ function repaint()
 	}
 }
 
-// dir: 0 == west, 1 == northwest, 2 == northeast,
-//      3 == east, 4 == southeast, 5 == southwest
-//
-function hasTrackAtDir(cellIdx, dir)
-{
-	var trackIdx = mapData.G.getTrackIndex(cellIdx, dir);
-	if (mapData.rails[trackIdx] && mapData.rails[trackIdx] == getPlayerId())
-		return 1;
-	else if (isBuilding && isBuilding.rails[trackIdx])
-		return 2;
-	else if (mapData.rails[trackIdx])
-		return 3;
-	else
-		return null;
-}
-
-function hasTrackAt(cellIdx)
-{
-	return hasTrackAtDir(cellIdx, 0) ||
-		hasTrackAtDir(cellIdx, 1) ||
-		hasTrackAtDir(cellIdx, 2) ||
-		hasTrackAtDir(cellIdx, 3) ||
-		hasTrackAtDir(cellIdx, 4) ||
-		hasTrackAtDir(cellIdx, 5);
-}
-
 function onResize()
 {
 	var canvas = document.getElementById('theCanvas');
@@ -698,7 +672,7 @@ function onTouchStart(evt)
 	}
 
 	var canBuild = false;
-	if (isCity(cellIdx) || hasTrackAt(cellIdx))
+	if (isCity(cellIdx) || mapData.hasTrackAt(cellIdx, getPlayerId()))
 		canBuild = true;
 
 	if (isBuilding && canBuild)

@@ -38,6 +38,39 @@ MapData.initialize = function(mapData) {
   return me;
 };
 
+// dir: 0 == west, 1 == northwest, 2 == northeast,
+//      3 == east, 4 == southeast, 5 == southwest
+//
+MapData.prototype.hasTrackAtDir = function(cellIdx, dir, curPlayerId) {
+	var trackIdx = this.G.getTrackIndex(cellIdx, dir);
+	if (this.rails[trackIdx] && this.rails[trackIdx] == curPlayerId) {
+		return 1;
+	}
+	// TODO- replace reference to isBuilding; make it a displaySetting.
+	else if (isBuilding && isBuilding.rails[trackIdx]) {
+		return 2;
+	} else if (this.rails[trackIdx]) {
+		return 3;
+	} else {
+		return null;
+	}
+};
+
+/**
+ * @return 1 if own track is built anywhere here,
+ *         2 if construction proposal has track here,
+ *         3 if any other player has track here,
+ *         null otherwise.
+ */
+MapData.prototype.hasTrackAt = function(cellIdx, curPlayerId) {
+	return hasTrackAtDir(cellIdx, 0, curPlayerId) ||
+		hasTrackAtDir(cellIdx, 1, curPlayerId) ||
+		hasTrackAtDir(cellIdx, 2, curPlayerId) ||
+		hasTrackAtDir(cellIdx, 3, curPlayerId) ||
+		hasTrackAtDir(cellIdx, 4, curPlayerId) ||
+		hasTrackAtDir(cellIdx, 5, curPlayerId);
+};
+
 function Painter(canvas, ctx, mapData, mapFeatures) {
   this.canvas = canvas;
   this.ctx = ctx;
@@ -302,7 +335,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
   const mapData = this.mapData;
 
 	var t;
-	if (t = hasTrackAtDir(cellIdx, 0)) //West
+	if (t = mapData.hasTrackAtDir(cellIdx, 0, getPlayerId())) //West
 	{
 		if (this.trackVisible(mapData.G.getTrackIndex(cellIdx, 0)))
 		{
@@ -312,7 +345,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 		ctx.restore();
 		}
 	}
-	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
+	if (t = mapData.hasTrackAtDir(cellIdx, 1, getPlayerId())) //Northwest
 	{
 		if (this.trackVisible(mapData.G.getTrackIndex(cellIdx, 1)))
 		{
@@ -323,7 +356,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 		ctx.restore();
 		}
 	}
-	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
+	if (t = mapData.hasTrackAtDir(cellIdx, 2, getPlayerId())) //Northeast
 	{
 		if (this.trackVisible(mapData.G.getTrackIndex(cellIdx, 2)))
 		{
