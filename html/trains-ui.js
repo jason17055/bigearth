@@ -85,47 +85,43 @@ function setPlayerId(pid)
 	}
 }
 
-function cityVisible(cityId)
-{
-	return !mapFeatures.filterCities ||
-		mapFeatures.filterCities[cityId];
-}
-
-function cityColor(cityId)
-{
-	if (mapFeatures.highlightCities
-		&& mapFeatures.highlightCities[cityId])
-	{
-		return "#ffff44";
-	}
-	else
-	{
-		return "#ff4444";
-	}
-}
-
-function trackVisible(trackId)
-{
-	return !mapFeatures.filterTrack ||
-		mapFeatures.filterTrack[trackId];
-}
-
-function Painter(canvas, ctx, mapData) {
+function Painter(canvas, ctx, mapData, mapFeatures) {
   this.canvas = canvas;
   this.ctx = ctx;
   this.mapData = mapData;
+  this.mapFeatures = mapFeatures;
 }
+
+Painter.prototype.cityVisible = function(cityId) {
+  return !this.mapFeatures.filterCities ||
+      this.mapFeatures.filterCities[cityId];
+}
+
+Painter.prototype.cityColor = function(cityId) {
+  if (this.mapFeatures.highlightCities
+      && this.mapFeatures.highlightCities[cityId]) {
+    return "#ffff44";
+  }
+  else {
+    return "#ff4444";
+  }
+};
+
+Painter.prototype.trackVisible = function(trackId) {
+  return !this.mapFeatures.filterTrack ||
+      this.mapFeatures.filterTrack[trackId];
+};
 
 // pt: the desired *center* point of the dot, in screen coordinates
 //
 Painter.prototype.drawCityDot = function(pt, cityId) {
   const ctx = this.ctx;
 
-	ctx.fillStyle = cityColor(cityId);
-	ctx.beginPath();
-	ctx.arc(pt.x, pt.y, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
-	ctx.closePath();
-	ctx.fill();
+  ctx.fillStyle = this.cityColor(cityId);
+  ctx.beginPath();
+  ctx.arc(pt.x, pt.y, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
 };
 
 Painter.prototype.paint = function() {
@@ -163,7 +159,7 @@ Painter.prototype.paint = function() {
 			this.drawCell(pt, c, w, nw, ne);
 			this.drawRivers(pt, cellIdx);
 
-			if (mapData.cities[cellIdx] && cityVisible(cellIdx))
+			if (mapData.cities[cellIdx] && this.cityVisible(cellIdx))
 			{
 				this.drawCityDot(pt, cellIdx);
 			}
@@ -179,7 +175,7 @@ Painter.prototype.paint = function() {
 
 	for (var cityLoc in mapData.cities)
 	{
-		if (cityVisible(cityLoc))
+		if (this.cityVisible(cityLoc))
 		{
 			var cityName = mapData.cities[cityLoc].name;
 			var p = getCellPoint(cityLoc);
@@ -215,7 +211,7 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 
 	var getColor = function(cc)
 	{
-		if (mapFeatures.hideTerrain)
+		if (this.mapFeatures.hideTerrain)
 		{
 			return cc == "w" ? "#1155ff" : "#ffffff";
 		}
@@ -246,7 +242,7 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 			);
 	}
 
-	if (c == "M" && terrainImages.mountain && !mapFeatures.hideTerrain
+	if (c == "M" && terrainImages.mountain && !this.mapFeatures.hideTerrain
 		&& DISPLAY_SETTINGS.zoomLevel >= 24)
 	{
 		var imageSize = CELL_WIDTH * .8;
@@ -353,7 +349,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	var t;
 	if (t = hasTrackAtDir(cellIdx, 0)) //West
 	{
-		if (trackVisible(GEOMETRY.getTrackIndex(cellIdx, 0)))
+		if (this.trackVisible(GEOMETRY.getTrackIndex(cellIdx, 0)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2, pt.y);
@@ -363,7 +359,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	}
 	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
 	{
-		if (trackVisible(GEOMETRY.getTrackIndex(cellIdx, 1)))
+		if (this.trackVisible(GEOMETRY.getTrackIndex(cellIdx, 1)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2 + CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
@@ -374,7 +370,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	}
 	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
 	{
-		if (trackVisible(GEOMETRY.getTrackIndex(cellIdx, 2)))
+		if (this.trackVisible(GEOMETRY.getTrackIndex(cellIdx, 2)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2 + 3 * CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
@@ -393,7 +389,7 @@ function repaint()
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
 	if (mapData) {
-		new Painter(canvas, ctx, mapData).paint();
+		new Painter(canvas, ctx, mapData, mapFeatures).paint();
 	}
 }
 
