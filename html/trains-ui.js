@@ -274,7 +274,6 @@ function onGameState(firstLoad)
 	if (serverState.map)
 	{
 		mapData = MapData.initialize(serverState.map);
-		updateGeometry();
 	}
 	if (mapData && serverState.rails)
 		mapData.rails = serverState.rails;
@@ -1982,12 +1981,8 @@ function cropTerrain(offsetx, offsety, cx, cy)
 	mapData.cities = newCities;
 	mapData.terrain = newTerrain;
 	mapData.rivers = newRivers;
-	updateGeometry();
+	mapData.updateGeometry();
 	repaint();
-}
-
-function updateGeometry() {
-  mapData.G = new Geometry(mapData.terrain[0].length, mapData.terrain.length);
 }
 
 function showEditMapPane()
@@ -1996,7 +1991,6 @@ function showEditMapPane()
 
   mapFeatures = {};
   mapData = new MapData();
-  updateGeometry();
   makeMoreRoomOnMap(10);
   zoomShowAll();
 
@@ -2284,9 +2278,7 @@ angular.module('trains', ['ngRoute'])
       }).then(
         function(httpResponse) {
           var newMap = httpResponse.data;
-          mapData = newMap;
-          mapData['rails'] = {};
-          updateGeometry();
+          mapData = MapData.initialize(newMap);
           zoomShowAll();
         },
         function(rejection) {

@@ -35,7 +35,12 @@ MapData.initialize = function(mapData) {
   me.terrain = mapData.terrain;
   me.rails = mapData.rails || {};
   me.rivers = mapData.rivers || {};
+  me.updateGeometry();
   return me;
+};
+
+MapData.prototype.updateGeometry = function() {
+  this.G = new Geometry(this.terrain[0].length, this.terrain.length);
 };
 
 // dir: 0 == west, 1 == northwest, 2 == northeast,
@@ -59,7 +64,7 @@ MapData.prototype.hasTrackAtDir = function(cellIdx, dir, curPlayerId) {
 /**
  * @param c one of '.' (grass) 'M' (mountain) 'w' (sea) or ' ' (empty).
  */
-MapData.prototype.setTerrainAt(cellIdx, c) {
+MapData.prototype.setTerrainAt = function(cellIdx, c) {
   var row = this.G.getCellRow(cellIdx);
   var col = this.G.getCellColumn(cellIdx);
 
