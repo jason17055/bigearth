@@ -6,6 +6,12 @@
 var CityInfo;
 
 function MapData() {
+  /** @type {string} */
+  this.geometry = 'hex_horz';
+
+  /** @type {Geometry} */
+  this.G = new Geometry(1, 1);
+
   /** @type {Array<string>} one str per row, each str one character per cell. */
   this.terrain = ['.'];
 
@@ -25,6 +31,7 @@ MapData.initialize = function(mapData) {
     return null;
   }
   let me = new MapData();
+  me.geometry = mapData.geometry || me.geometry;
   me.terrain = mapData.terrain;
   me.rails = mapData.rails || {};
   me.rivers = mapData.rivers || {};
@@ -99,7 +106,7 @@ Painter.prototype.paint = function() {
 				ne = n;
 			}
 
-			var cellIdx = GEOMETRY.getCell(y,x);
+			var cellIdx = mapData.G.getCell(y,x);
 			var pt = getCellPoint(cellIdx);
 
 			this.drawCell(pt, c, w, nw, ne);
@@ -292,11 +299,12 @@ Painter.prototype.drawRailsHelper = function(ctx, owner) {
 
 Painter.prototype.drawRails = function(pt, cellIdx) {
   const ctx = this.ctx;
+  const mapData = this.mapData;
 
 	var t;
 	if (t = hasTrackAtDir(cellIdx, 0)) //West
 	{
-		if (this.trackVisible(GEOMETRY.getTrackIndex(cellIdx, 0)))
+		if (this.trackVisible(mapData.G.getTrackIndex(cellIdx, 0)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2, pt.y);
@@ -306,7 +314,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	}
 	if (t = hasTrackAtDir(cellIdx, 1)) //Northwest
 	{
-		if (this.trackVisible(GEOMETRY.getTrackIndex(cellIdx, 1)))
+		if (this.trackVisible(mapData.G.getTrackIndex(cellIdx, 1)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2 + CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);
@@ -317,7 +325,7 @@ Painter.prototype.drawRails = function(pt, cellIdx) {
 	}
 	if (t = hasTrackAtDir(cellIdx, 2)) //Northeast
 	{
-		if (this.trackVisible(GEOMETRY.getTrackIndex(cellIdx, 2)))
+		if (this.trackVisible(mapData.G.getTrackIndex(cellIdx, 2)))
 		{
 		ctx.save();
 		ctx.translate(pt.x - CELL_WIDTH / 2 + 3 * CELL_WIDTH / 4, pt.y - CELL_ASCENT / 2 - CELL_DESCENT / 2);

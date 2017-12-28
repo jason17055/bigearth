@@ -22,7 +22,6 @@ var noRedraw = 0;
 //           \  /          20px
 //            \/          _
 
-var GEOMETRY = new Geometry(1, 1);
 var DISPLAY_SETTINGS = {
   zoomLevel: 64,
   offsetX: 0,
@@ -102,7 +101,7 @@ function repaint()
 //
 function hasTrackAtDir(cellIdx, dir)
 {
-	var trackIdx = GEOMETRY.getTrackIndex(cellIdx, dir);
+	var trackIdx = mapData.G.getTrackIndex(cellIdx, dir);
 	if (mapData.rails[trackIdx] && mapData.rails[trackIdx] == getPlayerId())
 		return 1;
 	else if (isBuilding && isBuilding.rails[trackIdx])
@@ -335,8 +334,8 @@ function getCellPoint(cellIdx)
   var mapCenterX = getMapWidth() / 2;
   var mapCenterY = getMapHeight() / 2;
 
-	var x = GEOMETRY.getCellColumn(cellIdx);
-	var y = GEOMETRY.getCellRow(cellIdx);
+	var x = mapData.G.getCellColumn(cellIdx);
+	var y = mapData.G.getCellRow(cellIdx);
 
 	return {
 		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * (x - mapCenterX),
@@ -374,17 +373,17 @@ function getEdgeFromPoint(pt) {
 	if (ry < CELL_ASCENT)
 	{
 		var col = Math.floor((ia+1) / 2);
-		return GEOMETRY.getCell(iy, col) * 3;
+		return mapData.G.getCell(iy, col) * 3;
 	}
 	else if (ia % 2 == 0)
 	{
 		var col = Math.floor(ia / 2);
-		return GEOMETRY.getAdjacentCell(GEOMETRY.getCell(iy, col), Geometry.SOUTHWEST) * 3 + 2;
+		return mapData.G.getAdjacentCell(mapData.G.getCell(iy, col), Geometry.SOUTHWEST) * 3 + 2;
 	}
 	else
 	{
 		var col = Math.floor(ia / 2);
-		return GEOMETRY.getAdjacentCell(GEOMETRY.getCell(iy, col), Geometry.SOUTHEAST) * 3 + 1;
+		return mapData.G.getAdjacentCell(mapData.G.getCell(iy, col), Geometry.SOUTHEAST) * 3 + 1;
 	}
 }
 
@@ -397,7 +396,7 @@ function getCellFromPoint(pt)
   var ix = Math.floor((pt.x + CELL_WIDTH / 2 - (iy % 2 == 0 ? CELL_WIDTH/2 : 0)) / CELL_WIDTH + mapCenterX);
   if (iy >= 0 && iy < getMapHeight()) {
     if (ix >= 0 && ix < getMapWidth()) {
-      return GEOMETRY.getCell(iy, ix);
+      return mapData.G.getCell(iy, ix);
     }
   }
   return null;
@@ -734,8 +733,8 @@ function getRadioButtonValue(radioObj)
 
 function onMouseDown_editTerrain(cellIdx, oPt)
 {
-	var r = GEOMETRY.getCellRow(cellIdx);
-	var col = GEOMETRY.getCellColumn(cellIdx);
+	var r = mapData.G.getCellRow(cellIdx);
+	var col = mapData.G.getCellColumn(cellIdx);
 
 	var t = getRadioButtonValue(document.editMapForm.tool);
 	if (t == "city")
@@ -826,7 +825,7 @@ function onMouseMove(evt)
 		if (cellIdx != isDragging.start
 			&& Math.abs(cellPt.x - pt.x) < 16
 			&& Math.abs(cellPt.y - pt.y) < 16
-			&& GEOMETRY.isCellAdjacent(isDragging.start, cellIdx))
+			&& mapData.G.isCellAdjacent(isDragging.start, cellIdx))
 		{
 			track_addSegment(isDragging.start, cellIdx);
 			isDragging.start = cellIdx;
@@ -866,32 +865,32 @@ function track_addSegment(fromIdx, toIdx)
 	// is this track already in the plan?
 	var cellIdx;
 	var dir;
-	if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.WEST))
+	if (fromIdx == mapData.G.getAdjacentCell(toIdx, Geometry.WEST))
 	{
 		cellIdx = toIdx;
 		dir = 0;
 	}
-	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.NORTHWEST))
+	else if (fromIdx == mapData.G.getAdjacentCell(toIdx, Geometry.NORTHWEST))
 	{
 		cellIdx = toIdx;
 		dir = 1;
 	}
-	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.NORTHEAST))
+	else if (fromIdx == mapData.G.getAdjacentCell(toIdx, Geometry.NORTHEAST))
 	{
 		cellIdx = toIdx;
 		dir = 2;
 	}
-	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.EAST))
+	else if (fromIdx == mapData.G.getAdjacentCell(toIdx, Geometry.EAST))
 	{
 		cellIdx = fromIdx;
 		dir = 0;
 	}
-	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.SOUTHEAST))
+	else if (fromIdx == mapData.G.getAdjacentCell(toIdx, Geometry.SOUTHEAST))
 	{
 		cellIdx = fromIdx;
 		dir = 1;
 	}
-	else if (fromIdx == GEOMETRY.getAdjacentCell(toIdx, Geometry.SOUTHWEST))
+	else if (fromIdx == mapData.G.getAdjacentCell(toIdx, Geometry.SOUTHWEST))
 	{
 		cellIdx = fromIdx;
 		dir = 2;
@@ -1048,11 +1047,11 @@ function zoomOut(basisPt)
 }
 
 function getMapWidth() {
-	return GEOMETRY.width;
+	return mapData.G.width;
 }
 
 function getMapHeight() {
-	return GEOMETRY.height;
+	return mapData.G.height;
 }
 
 function zoomShowAll()
@@ -1283,11 +1282,11 @@ function filterMapToReachable(train)
 
 		for (var dir = 0; dir < 6; dir++)
 		{
-			var ti = GEOMETRY.getTrackIndex(l, dir);
+			var ti = mapData.G.getTrackIndex(l, dir);
 			if (mapData.rails[ti])
 			{
 				reachableTrack[ti] = true;
-				var adjCellIdx = GEOMETRY.getAdjacentCell(l, dir);
+				var adjCellIdx = mapData.G.getAdjacentCell(l, dir);
 				if (adjCellIdx && !visited[adjCellIdx])
 				{
 					queue.push(adjCellIdx);
@@ -1896,10 +1895,10 @@ outerLoop:
 
 		for (var dir = 0; dir < 6; dir++)
 		{
-			var ti = GEOMETRY.getTrackIndex(l, dir);
+			var ti = mapData.G.getTrackIndex(l, dir);
 			if (mapData.rails[ti])
 			{
-				var adjCellIdx = GEOMETRY.getAdjacentCell(l, dir);
+				var adjCellIdx = mapData.G.getAdjacentCell(l, dir);
 				if (!visited[adjCellIdx])
 				{
 					backlinks[adjCellIdx] = l;
@@ -1973,8 +1972,8 @@ function cropTerrain(offsetx, offsety, cx, cy)
 
 	var convertCellIdx = function(cellIdx)
 	{
-		var row = GEOMETRY.getCellRow(cellIdx);
-		var col = GEOMETRY.getCellColumn(cellIdx);
+		var row = mapData.G.getCellRow(cellIdx);
+		var col = mapData.G.getCellColumn(cellIdx);
 
 		row -= offsety;
 		col -= offsetx;
@@ -2019,7 +2018,7 @@ function cropTerrain(offsetx, offsety, cx, cy)
 }
 
 function updateGeometry() {
-  GEOMETRY = new Geometry(mapData.terrain[0].length, mapData.terrain.length);
+  mapData.G = new Geometry(mapData.terrain[0].length, mapData.terrain.length);
 }
 
 function showEditMapPane()
@@ -2038,15 +2037,15 @@ function showEditMapPane()
 
 function makeMoreRoomOnMap(amt)
 {
-	var minX = GEOMETRY.width;
+	var minX = mapData.G.width;
 	var maxX = 0;
-	var minY = GEOMETRY.height;
+	var minY = mapData.G.height;
 	var maxY = 0;
 
-	var height = GEOMETRY.height;
+	var height = mapData.G.height;
 	for (var row = 0; row < height; row++)
 	{
-		for (var col = 0; col < GEOMETRY.width; col++)
+		for (var col = 0; col < mapData.G.width; col++)
 		{
 			var c = mapData.terrain[row].charAt(col);
 			if (c && c != " ")
