@@ -1,3 +1,36 @@
+/** @typedef {
+ *    name: {string}
+ *    offers: {Array<string>}
+ *  }
+ */
+var CityInfo;
+
+function MapData() {
+  /** @type {Array<string>} one str per row, each str one character per cell. */
+  this.terrain = ['.'];
+
+  /** @type {Object<int,string>} maps edge numbers to owners (player ids). */
+  this.rails = {};
+
+  /** @type {Object<int,bool>} indicates edges that have rivers. */
+  this.rivers = {};
+
+  /** @type {Object<int,CityInfo>} maps cell numbers to cities. */
+  this.cities = {};
+}
+
+MapData.initialize = function(mapData) {
+  if (!mapData.terrain) {
+    alert('Oops; map does not have terrain.');
+    return null;
+  }
+  let me = new MapData();
+  me.terrain = mapData.terrain;
+  me.rails = mapData.rails || {};
+  me.rivers = mapData.rivers || {};
+  return me;
+};
+
 function Painter(canvas, ctx, mapData, mapFeatures) {
   this.canvas = canvas;
   this.ctx = ctx;

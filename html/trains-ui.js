@@ -300,13 +300,7 @@ function onGameState(firstLoad)
 {
 	if (serverState.map)
 	{
-		mapData = serverState.map;
-		if (!mapData.rivers)
-			mapData.rivers = {};
-		if (!mapData.rails)
-			mapData.rails = {};
-		if (!mapData.terrain)
-			alert("Oops, map does not have terrain");
+		mapData = MapData.initialize(serverState.map);
 		updateGeometry();
 	}
 	if (mapData && serverState.rails)
@@ -2033,9 +2027,7 @@ function showEditMapPane()
 	stopEventsListener();
 
   mapFeatures = {};
-  mapData.terrain = ['.'];
-  mapData.cities = {};
-  mapData.rivers = {};
+  mapData = new MapData();
   updateGeometry();
   makeMoreRoomOnMap(10);
   zoomShowAll();
