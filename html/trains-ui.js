@@ -1849,117 +1849,18 @@ function spaces(l)
 	return x;
 }
 
-function cropTerrain(offsetx, offsety, cx, cy)
-{
-	var newTerrain = new Array();
-	for (var row = 0; row < cy; row++)
-	{
-		var s = "";
-		if (offsety + row >= 0 && offsety + row < mapData.terrain.length)
-		{
-			var col = offsetx;
-			if (col < 0)
-			{
-				s += spaces(-offsetx);
-				col = 0;
-			}
-			s += mapData.terrain[offsety+row].substr(col);
-			if (s.length < cx)
-				s += spaces(cx - s.length);
-			else
-				s = s.substr(0, cx);
-		}
-		else
-		{
-			s = spaces(cx);
-		}
-		newTerrain.push(s);
-	}
-
-	var convertCellIdx = function(cellIdx)
-	{
-		var row = mapData.G.getCellRow(cellIdx);
-		var col = mapData.G.getCellColumn(cellIdx);
-
-		row -= offsety;
-		col -= offsetx;
-
-		if (row >= 0 && row < cy
-			&& col >= 0 && col < cx)
-		{
-			return row * cx + col;
-		}
-		else
-		{
-			return -1;
-		}
-	};
-
-	var newCities = {};
-	for (var cityIdx in mapData.cities)
-	{
-		var newCityIdx = convertCellIdx(cityIdx);
-		if (newCityIdx >= 0)
-		{
-			newCities[newCityIdx] = mapData.cities[cityIdx];
-		}
-	}
-
-	var newRivers = {};
-	for (var edgeIdx in mapData.rivers)
-	{
-		var cellIdx = Math.floor(edgeIdx / 3);
-		var newCellIdx = convertCellIdx(cellIdx);
-		if (newCellIdx >= 0)
-		{
-			newRivers[newCellIdx * 3 + edgeIdx % 3] = mapData.rivers[edgeIdx];
-		}
-	}
-
-	mapData.cities = newCities;
-	mapData.terrain = newTerrain;
-	mapData.rivers = newRivers;
-	mapData.updateGeometry();
-	repaint();
-}
-
 function showEditMapPane()
 {
 	stopEventsListener();
 
   mapFeatures = {};
   mapData = new MapData();
-  makeMoreRoomOnMap(10);
+  mapData.makeMoreRoomOnMap(10);
+  repaint();
   zoomShowAll();
 
 	isEditing = {};
 	$('#editMapPane').fadeIn();
-}
-
-function makeMoreRoomOnMap(amt)
-{
-	var minX = mapData.G.width;
-	var maxX = 0;
-	var minY = mapData.G.height;
-	var maxY = 0;
-
-	var height = mapData.G.height;
-	for (var row = 0; row < height; row++)
-	{
-		for (var col = 0; col < mapData.G.width; col++)
-		{
-			var c = mapData.terrain[row].charAt(col);
-			if (c && c != " ")
-			{
-				if (col < minX) minX = col;
-				if (col > maxX) maxX = col;
-				if (row < minY) minY = row;
-				if (row > maxY) maxY = row;
-			}
-		}
-	}
-
-	cropTerrain(minX - amt, minY - amt, (maxX+1-minX) + 2*amt, (maxY+1-minY) + 2*amt);
 }
 
 function dismissEditMapPane()
@@ -1968,7 +1869,8 @@ function dismissEditMapPane()
 	$('#editMapPane').fadeOut();
 	$('#editCityPane').fadeOut();
 
-	makeMoreRoomOnMap(0);
+	mapData.makeMoreRoomOnMap(0);
+	repaint();
 	startEventsListener();
 }
 

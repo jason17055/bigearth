@@ -97,6 +97,103 @@ MapData.prototype.hasTrackAt = function(cellIdx, curPlayerId) {
 		this.hasTrackAtDir(cellIdx, 5, curPlayerId);
 };
 
+MapData.prototype.makeMoreRoomOnMap = function(amt) {
+	var minX = this.G.width;
+	var maxX = 0;
+	var minY = this.G.height;
+	var maxY = 0;
+
+	var height = this.G.height;
+	for (var row = 0; row < height; row++)
+	{
+		for (var col = 0; col < this.G.width; col++)
+		{
+			var c = this.terrain[row].charAt(col);
+			if (c && c != " ")
+			{
+				if (col < minX) minX = col;
+				if (col > maxX) maxX = col;
+				if (row < minY) minY = row;
+				if (row > maxY) maxY = row;
+			}
+		}
+	}
+
+	this.cropTerrain(minX - amt, minY - amt, (maxX+1-minX) + 2*amt, (maxY+1-minY) + 2*amt);
+};
+
+MapData.prototype.cropTerrain = function(offsetx, offsety, cx, cy) {
+	var newTerrain = new Array();
+	for (var row = 0; row < cy; row++)
+	{
+		var s = "";
+		if (offsety + row >= 0 && offsety + row < this.terrain.length)
+		{
+			var col = offsetx;
+			if (col < 0)
+			{
+				s += spaces(-offsetx);
+				col = 0;
+			}
+			s += this.terrain[offsety+row].substr(col);
+			if (s.length < cx)
+				s += spaces(cx - s.length);
+			else
+				s = s.substr(0, cx);
+		}
+		else
+		{
+			s = spaces(cx);
+		}
+		newTerrain.push(s);
+	}
+
+	var convertCellIdx = function(cellIdx)
+	{
+		var row = this.G.getCellRow(cellIdx);
+		var col = this.G.getCellColumn(cellIdx);
+
+		row -= offsety;
+		col -= offsetx;
+
+		if (row >= 0 && row < cy
+			&& col >= 0 && col < cx)
+		{
+			return row * cx + col;
+		}
+		else
+		{
+			return -1;
+		}
+	};
+
+	var newCities = {};
+	for (var cityIdx in this.cities)
+	{
+		var newCityIdx = convertCellIdx(cityIdx);
+		if (newCityIdx >= 0)
+		{
+			newCities[newCityIdx] = this.cities[cityIdx];
+		}
+	}
+
+	var newRivers = {};
+	for (var edgeIdx in this.rivers)
+	{
+		var cellIdx = Math.floor(edgeIdx / 3);
+		var newCellIdx = convertCellIdx(cellIdx);
+		if (newCellIdx >= 0)
+		{
+			newRivers[newCellIdx * 3 + edgeIdx % 3] = this.rivers[edgeIdx];
+		}
+	}
+
+	this.cities = newCities;
+	this.terrain = newTerrain;
+	this.rivers = newRivers;
+	this.updateGeometry();
+};
+
 function Painter(canvas, ctx, mapData, mapFeatures) {
   this.canvas = canvas;
   this.ctx = ctx;
