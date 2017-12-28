@@ -70,7 +70,7 @@ MapData.prototype.setTerrainAt = function(cellIdx, c) {
   var col = this.G.getCellColumn(cellIdx);
 
   var s = this.terrain[row];
-  this.terrain[r] = s.substr(0,col) + c + s.substr(col+1);
+  this.terrain[row] = s.substr(0,col) + c + s.substr(col+1);
   return;
 };
 
@@ -81,12 +81,12 @@ MapData.prototype.setTerrainAt = function(cellIdx, c) {
  *         null otherwise.
  */
 MapData.prototype.hasTrackAt = function(cellIdx, curPlayerId) {
-	return hasTrackAtDir(cellIdx, 0, curPlayerId) ||
-		hasTrackAtDir(cellIdx, 1, curPlayerId) ||
-		hasTrackAtDir(cellIdx, 2, curPlayerId) ||
-		hasTrackAtDir(cellIdx, 3, curPlayerId) ||
-		hasTrackAtDir(cellIdx, 4, curPlayerId) ||
-		hasTrackAtDir(cellIdx, 5, curPlayerId);
+	return this.hasTrackAtDir(cellIdx, 0, curPlayerId) ||
+		this.hasTrackAtDir(cellIdx, 1, curPlayerId) ||
+		this.hasTrackAtDir(cellIdx, 2, curPlayerId) ||
+		this.hasTrackAtDir(cellIdx, 3, curPlayerId) ||
+		this.hasTrackAtDir(cellIdx, 4, curPlayerId) ||
+		this.hasTrackAtDir(cellIdx, 5, curPlayerId);
 };
 
 function Painter(canvas, ctx, mapData, mapFeatures) {
