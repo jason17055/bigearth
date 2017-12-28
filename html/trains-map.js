@@ -69,6 +69,10 @@ MapData.prototype.setTerrainAt = function(cellIdx, c) {
   var row = this.G.getCellRow(cellIdx);
   var col = this.G.getCellColumn(cellIdx);
 
+  if (c.length != 1) {
+    throw 'setTerrainAt 2nd argument must be string of length 1';
+  }
+
   var s = this.terrain[row];
   this.terrain[row] = s.substr(0,col) + c + s.substr(col+1);
   return;

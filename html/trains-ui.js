@@ -730,7 +730,7 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 		t == "mountain" ? "M" :
 		t == "sea" ? "w" :
 		" ";
-	mapData.setTerrainAt(cellIdx, t);
+	mapData.setTerrainAt(cellIdx, c);
 	repaint();
 }
 
