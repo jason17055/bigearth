@@ -35,6 +35,7 @@ MapData.initialize = function(mapData) {
   me.terrain = mapData.terrain;
   me.rails = mapData.rails || {};
   me.rivers = mapData.rivers || {};
+  me.cities = mapData.cities || {};
   me.updateGeometry();
   return me;
 };
