@@ -163,7 +163,7 @@ Painter.prototype.drawTerrain = function() {
 			}
 
 			var cellIdx = mapData.G.getCell(y,x);
-			var pt = getCellPoint(cellIdx);
+			var pt = mapData.G.getCellPoint(cellIdx);
 
 			this.drawCell(pt, c, w, nw, ne);
 			this.drawRivers(pt, cellIdx);
@@ -204,7 +204,7 @@ Painter.prototype.paint = function() {
 		if (this.cityVisible(cityLoc))
 		{
 			var cityName = mapData.cities[cityLoc].name;
-			var p = getCellPoint(cityLoc);
+			var p = mapData.G.getCellPoint(cityLoc);
 			ctx.fillText(cityName,
 			p.x + Math.round(CELL_HEIGHT*.36)-2,
 			p.y + CELL_ASCENT / 2 - 5);

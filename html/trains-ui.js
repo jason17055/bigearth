@@ -299,23 +299,6 @@ function onGameState(firstLoad)
 		repaint();
 }
 
-/**
- * @return cell's center position in (unzoomed) display coordinates.
- */
-function getCellPoint(cellIdx)
-{
-  var mapCenterX = getMapWidth() / 2;
-  var mapCenterY = getMapHeight() / 2;
-
-	var x = mapData.G.getCellColumn(cellIdx);
-	var y = mapData.G.getCellRow(cellIdx);
-
-	return {
-		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * (x - mapCenterX),
-		y: CELL_HEIGHT * (y - mapCenterY)
-		};
-}
-
 function fromCanvasCoords(pt) {
   return {
       x: (pt.x - DISPLAY_SETTINGS.offsetX) / (DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH),
@@ -377,7 +360,7 @@ function getCellFromPoint(pt)
 
 function updateWaypointSpritePosition(sprite)
 {
-	var pt = toCanvasCoords(getCellPoint(sprite.loc));
+	var pt = toCanvasCoords(mapData.G.getCellPoint(sprite.loc));
 
 	var $t = sprite.el;
 	var p = $('#theCanvas').position();
@@ -389,13 +372,13 @@ function updateWaypointSpritePosition(sprite)
 
 function updateTrainSpritePosition(train)
 {
-	var pt = toCanvasCoords(getCellPoint(train.loc));
+	var pt = toCanvasCoords(mapData.G.getCellPoint(train.loc));
 
 	var elapsed = getGameTime() - train.lastUpdated;
 	var dist = elapsed * train.speed;
 	if (dist > 0 && train.route && train.route[0])
 	{
-		var pt1 = toCanvasCoords(getCellPoint(train.route[0]));
+		var pt1 = toCanvasCoords(mapData.G.getCellPoint(train.route[0]));
 		pt.x += (pt1.x - pt.x) * dist;
 		pt.y += (pt1.y - pt.y) * dist;
 	}
@@ -662,7 +645,7 @@ function onTouchStart(evt)
 	if (cellIdx === null)
 		return;
 
-	var cellP = toCanvasCoords(getCellPoint(cellIdx));
+	var cellP = toCanvasCoords(mapData.G.getCellPoint(cellIdx));
 
 	if (isCity(cellIdx) && isPlanning)
 	{
@@ -736,7 +719,7 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 
 function onMouseDown_build(cellIdx)
 {
-	var pt = toCanvasCoords(getCellPoint(cellIdx));
+	var pt = toCanvasCoords(mapData.G.getCellPoint(cellIdx));
 	var canvas = document.getElementById('theCanvas');
 	var ctx = canvas.getContext('2d');
 	ctx.beginPath();
@@ -788,7 +771,7 @@ function onMouseMove(evt)
 		if (cellIdx === null) {
 			return;
 		}
-		var cellPt = toCanvasCoords(getCellPoint(cellIdx));
+		var cellPt = toCanvasCoords(mapData.G.getCellPoint(cellIdx));
 
 		if (cellIdx != isDragging.start
 			&& Math.abs(cellPt.x - pt.x) < 16
@@ -883,8 +866,8 @@ function track_addSegment(fromIdx, toIdx)
 	var canvas = document.getElementById('theCanvas');
 	var ctx = canvas.getContext('2d');
 
-	var p0 = toCanvasCoords(getCellPoint(fromIdx));
-	var p1 = toCanvasCoords(getCellPoint(toIdx));
+	var p0 = toCanvasCoords(mapData.G.getCellPoint(fromIdx));
+	var p1 = toCanvasCoords(mapData.G.getCellPoint(toIdx));
 
 	ctx.save();
 	ctx.beginPath();
@@ -1042,7 +1025,7 @@ function centerMapOn(cellIdx) {
 
   var canvas = document.getElementById('theCanvas');
 
-  var pt = getCellPoint(cellIdx);
+  var pt = mapData.G.getCellPoint(cellIdx);
   DISPLAY_SETTINGS.offsetX = -pt.x * DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH + canvas.width / 2;
   DISPLAY_SETTINGS.offsetY = -pt.y * DISPLAY_SETTINGS.zoomLevel / CELL_WIDTH + canvas.height / 2;
 

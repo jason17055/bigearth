@@ -119,6 +119,22 @@ Geometry.prototype.getTrackIndex = function(cellIdx, dir) {
   }
 };
 
+/**
+ * @return cell's center position in (unzoomed) display coordinates.
+ */
+Geometry.prototype.getCellPoint = function(cellIdx) {
+  const mapCenterX = this.width / 2;
+  const mapCenterY = this.height / 2;
+
+  const x = this.getCellColumn(cellIdx);
+  const y = this.getCellRow(cellIdx);
+
+	return {
+		x: (y % 2 == 0 ? CELL_WIDTH / 2 : 0) + CELL_WIDTH * (x - mapCenterX),
+		y: CELL_HEIGHT * (y - mapCenterY)
+		};
+};
+
 /** @deprecated not used */
 Geometry.prototype.simpleDistance = function(cellIdx1, cellIdx2) {
 
