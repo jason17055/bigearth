@@ -222,10 +222,13 @@ Painter.prototype.cityVisible = function(cityId) {
       this.mapFeatures.filterCities[cityId];
 }
 
-Painter.prototype.cityColor = function(cityId) {
+Painter.prototype.cityColor = function(cityId, terrainChar) {
   if (this.mapFeatures.highlightCities
       && this.mapFeatures.highlightCities[cityId]) {
     return "#ffff44";
+  }
+  else if (terrainChar == 'c') {
+    return '#000';
   }
   else {
     return "#ff4444";
@@ -239,10 +242,10 @@ Painter.prototype.trackVisible = function(trackId) {
 
 // pt: the desired *center* point of the dot, in screen coordinates
 //
-Painter.prototype.drawCityDot = function(pt, cityId) {
+Painter.prototype.drawCityDot = function(pt, cityId, terrainChar) {
   const ctx = this.ctx;
 
-  ctx.fillStyle = this.cityColor(cityId);
+  ctx.fillStyle = this.cityColor(cityId, terrainChar);
   ctx.beginPath();
   ctx.arc(pt.x, pt.y, CELL_HEIGHT * .36, 0, Math.PI * 2, true);
   ctx.closePath();
@@ -290,7 +293,7 @@ Painter.prototype.drawTerrain = function() {
 
 			if (mapData.cities[cellIdx] && this.cityVisible(cellIdx))
 			{
-				this.drawCityDot(pt, cellIdx);
+				this.drawCityDot(pt, cellIdx, c);
 			} else if (DISPLAY_SETTINGS.showEditingDots) {
 				ctx.fillStyle = '#000';
 				ctx.fillRect(pt.x - 3, pt.y - 3, 6, 6);
@@ -370,6 +373,8 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 		return cc == "." ? "#99dd55" :
 			cc == "M" ? "#884400" :
 			cc == "w" ? "#1155ff" :
+			cc == 'A' ? '#bbe' :
+			cc == 'c' ? '#f44' :
 			"#ffffff";
 	};
 

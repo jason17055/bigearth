@@ -42,10 +42,12 @@
     <form name="editMapForm">
     <div style="float:left; padding: 2pt">
      <div><b>Terrain Tools</b></div>
-     <div><input type="radio" name="tool" value="grass" id="editTool_grass"><label for="editTool_grass">Grass</label></div>
-     <div><input type="radio" name="tool" value="mountain" id="editTool_mountain"><label for="editTool_mountain">Mountain</label></div>
-     <div><input type="radio" name="tool" value="sea" id="editTool_sea"><label for="editTool_sea">Sea</label></div>
-     <div><input type="radio" name="tool" value="erase" id="editTool_erase"><label for="editTool_erase">Erase</label></div>
+     <div><label><input type="radio" name="tool" value="grass">Grass</label></div>
+     <div><label><input type="radio" name="tool" value="mountain">Mountain</label></div>
+     <div><label><input type="radio" name="tool" value="alpine">Alpine</label></div>
+     <div><label><input type="radio" name="tool" value="sea">Sea</label></div>
+     <div><label><input type="radio" name="tool" value="urban">Urban Area</label></div>
+     <div><label><input type="radio" name="tool" value="erase">Erase</label></div>
     </div>
     <div style="float:left; padding: 2pt">
      <div><b>Misc Tools</b></div>

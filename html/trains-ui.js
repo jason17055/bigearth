@@ -668,6 +668,8 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 	var c = t == "grass" ? "." :
 		t == "mountain" ? "M" :
 		t == "sea" ? "w" :
+		t == 'alpine' ? 'A' :
+		t == 'urban' ? 'c' :
 		" ";
 	mapData.setTerrainAt(cellIdx, c);
 	repaint();
