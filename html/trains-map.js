@@ -121,6 +121,10 @@ MapData.prototype.makeMoreRoomOnMap = function(amt) {
 		}
 	}
 
+  if ((minY - amt) % 2 != 0) {
+    // Ensure that even rows remain even, and odd rows remain odd.
+    minY--;
+  }
 	this.cropTerrain(minX - amt, minY - amt, (maxX+1-minX) + 2*amt, (maxY+1-minY) + 2*amt);
 };
 
