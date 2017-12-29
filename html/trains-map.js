@@ -401,11 +401,19 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 	if (c == "M" && terrainImages.mountain && !this.mapFeatures.hideTerrain
 		&& DISPLAY_SETTINGS.zoomLevel >= 24)
 	{
+		ctx.save();
+		ctx.translate(pt.x, pt.y);
+		if (this.mapData.geometry == 'hex_vert') {
+			// We rotated -90 degrees; make sure to counter-rotate
+			// before stamping the mountain icon.
+			ctx.rotate(Math.PI/2);
+		}
 		var imageSize = CELL_WIDTH * .8;
 		ctx.drawImage(terrainImages.mountain,
-			pt.x - imageSize/2,
-			pt.y - imageSize/2,
+			-imageSize/2,
+			-imageSize/2,
 			imageSize, imageSize);
+		ctx.restore();
 	}
 };
 
@@ -415,7 +423,7 @@ Painter.prototype.drawRivers = function(pt, cellIdx) {
 
 	ctx.save();
 	ctx.strokeStyle = '#1155ff';
-	ctx.lineWidth = 3;
+	ctx.lineWidth = 5;
 
 	var drawRiverHelper = function()
 	{
