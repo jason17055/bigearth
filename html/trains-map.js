@@ -98,12 +98,14 @@ MapData.prototype.hasTrackAt = function(cellIdx, curPlayerId) {
 };
 
 MapData.prototype.makeMoreRoomOnMap = function(amt) {
+  const width = this.G.width;
+  const height = this.G.height;
+
 	var minX = this.G.width;
 	var maxX = 0;
 	var minY = this.G.height;
 	var maxY = 0;
 
-	var height = this.G.height;
 	for (var row = 0; row < height; row++)
 	{
 		for (var col = 0; col < this.G.width; col++)
@@ -123,6 +125,17 @@ MapData.prototype.makeMoreRoomOnMap = function(amt) {
 };
 
 MapData.prototype.cropTerrain = function(offsetx, offsety, cx, cy) {
+  function spaces(l) {
+	var x = "";
+	while (l > 10)
+	{
+		x += "          ";
+		l -= 10;
+	}
+	x += "          ".substr(0,l);
+	return x;
+  }
+
 	var newTerrain = new Array();
 	for (var row = 0; row < cy; row++)
 	{
@@ -148,8 +161,7 @@ MapData.prototype.cropTerrain = function(offsetx, offsety, cx, cy) {
 		newTerrain.push(s);
 	}
 
-	var convertCellIdx = function(cellIdx)
-	{
+	var convertCellIdx = (cellIdx) => {
 		var row = this.G.getCellRow(cellIdx);
 		var col = this.G.getCellColumn(cellIdx);
 
@@ -275,6 +287,9 @@ Painter.prototype.drawTerrain = function() {
 			if (mapData.cities[cellIdx] && this.cityVisible(cellIdx))
 			{
 				this.drawCityDot(pt, cellIdx);
+			} else if (DISPLAY_SETTINGS.showEditingDots) {
+				ctx.fillStyle = '#000';
+				ctx.fillRect(pt.x - 3, pt.y - 3, 6, 6);
 			}
 
 			this.drawRails(pt, cellIdx);

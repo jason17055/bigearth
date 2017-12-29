@@ -26,6 +26,7 @@ var DISPLAY_SETTINGS = {
   zoomLevel: 64,
   offsetX: 0,
   offsetY: 0,
+  showEditingDots: false,
 };
 const CELL_WIDTH = 64;
 const CELL_HEIGHT = 2*Math.round(CELL_WIDTH*(56/64)/2);
@@ -1837,22 +1838,11 @@ outerLoop:
 	}
 }
 
-function spaces(l)
-{
-	var x = "";
-	while (l > 10)
-	{
-		x += "          ";
-		l -= 10;
-	}
-	x += "          ".substr(0,l);
-	return x;
-}
-
 function showEditMapPane()
 {
 	stopEventsListener();
 
+  DISPLAY_SETTINGS.showEditingDots = true;
   mapFeatures = {};
   mapData = new MapData();
   mapData.makeMoreRoomOnMap(10);
@@ -1869,6 +1859,7 @@ function dismissEditMapPane()
 	$('#editMapPane').fadeOut();
 	$('#editCityPane').fadeOut();
 
+  DISPLAY_SETTINGS.showEditingDots = false;
 	mapData.makeMoreRoomOnMap(0);
 	repaint();
 	startEventsListener();
@@ -2119,6 +2110,7 @@ angular.module('trains', ['ngRoute'])
         function(httpResponse) {
           var newMap = httpResponse.data;
           mapData = MapData.initialize(newMap);
+          mapData.makeMoreRoomOnMap(10);
           zoomShowAll();
         },
         function(rejection) {
