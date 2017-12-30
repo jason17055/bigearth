@@ -339,11 +339,15 @@ function updateTrainSpritePosition(train)
 		pt.y += (pt1.y - pt.y) * dist;
 	}
 
+	var trainSize = Math.round(DISPLAY_SETTINGS.zoomLevel * 1.5);
 	var $t = train.el;
 	var origin_pt = $('#theCanvas').position();
 	$t.css({
-		left: (origin_pt.left + pt.x - 15) + "px",
-		top: (origin_pt.top + pt.y - 15) + "px"
+		left: (origin_pt.left + pt.x - (trainSize/2 - 1)) + "px",
+		top: (origin_pt.top + pt.y - (trainSize/2 - 1)) + "px",
+		width: trainSize + 'px',
+		height: trainSize + 'px',
+		'background-size': trainSize + 'px',
 		});
 }
 
@@ -547,10 +551,7 @@ function removeWaypointSprite(waypointId)
 
 function addTrainSprite(trainId, trainLoc)
 {
-	var $t = $('<div class="trainSprite">T</div>');
-	$t.css({
-		backgroundColor: "#ffff00"
-	});
+	var $t = $('<div class="trainSprite"></div>');
 	$('#contentArea').append($t);
 
 	var train = {
