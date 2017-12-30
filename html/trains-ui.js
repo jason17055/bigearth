@@ -718,6 +718,10 @@ function onTouchEnd(evt)
 function onMouseMove(evt)
 {
 	var p = $('#theCanvas').position();
+	if (!p) {
+		// No canvas.
+		return;
+	}
 	var pt = {
 		x: evt.clientX - p.left,
 		y: evt.clientY - p.top
