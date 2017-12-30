@@ -54,6 +54,7 @@ ALL_COMMODITIES = [
 class GameActions(ndb.Model):
   actions = ndb.StringProperty(repeated=True)
   events = ndb.StringProperty(repeated=True)
+  map_name = ndb.StringProperty()
   map_json = ndb.TextProperty()
   rails_json = ndb.TextProperty()
   players_json = ndb.TextProperty()
@@ -108,24 +109,56 @@ def InitializeGame(ent, map_data):
   ent.all_demands = all_demands
 
 
+class GamesHandler(webapp2.RequestHandler):
+  def get(self):
+    response = [];
+    for ent in GameActions.query().fetch():
+      response.append({
+        'name': ent.key.id(),
+        'mapName': ent.map_name,
+      })
+    self.response.headers['Content-Type'] = 'application/json'
+    self.response.write(json.dumps(response))
+
+  def post(self):
+    req = json.loads(self.request.body)
+    game_id = req['name']
+    gamestate_key = ndb.Key(GameActions, game_id)
+    try:
+      map_data = GetMap(req['map'])
+    except MapNotFound:
+      self.error(400)
+      self.response.write('%s: Map not found' % req['map'])
+      return
+
+    def _Create():
+      # TODO: complain if game already exists.
+      ent = GameActions(id=gamestate_key.id())
+      ent.map_name = req['map']
+      InitializeGame(ent, map_data)
+      ent.put()
+
+    ent = ndb.transaction(_Create)
+    response = {'status': 'ok'}
+    self.response.headers['Content-Type'] = 'application/json'
+    self.response.write(json.dumps(response))
+
+
 class GameStateHandler(webapp2.RequestHandler):
   def get(self):
     game_id = self.request.get('game')
     gamestate_key = ndb.Key(GameActions, game_id)
-    map_data = GetMap('nippon')
-    def _Fetch():
-      ent = gamestate_key.get()
-      if not ent:
-        ent = GameActions(id=gamestate_key.id())
-        InitializeGame(ent, map_data)
-        ent.put()
-      return ent
+
+    ent = gamestate_key.get()
+    if not ent:
+      self.error(404)
+      self.response.write('Game not found')
+      return
 
     def _MakeDemand(demand_str):
       city_id, resource_type, value = demand_str.split(':')
       return [int(city_id), resource_type, int(value)]
 
-    ent = ndb.transaction(_Fetch)
     response = {
         "rails": {},
         "map": json.loads(ent.map_json),
@@ -299,6 +332,7 @@ class LoginHandler(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([
+    ('/api/games', GamesHandler),
     ('/api/gamestate', GameStateHandler),
     ('/api/actions', ActionsHandler),
     ('/api/events', EventsHandler),

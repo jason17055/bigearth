@@ -1,0 +1,33 @@
+<h1>Trains Game</h1>
+<p>
+Welcome to the Trains Game.
+This is the lobby.
+</p>
+<h2>Current Games</h2>
+<table border="1">
+<tr>
+<th>Name</th>
+<th>Map</th>
+<th>Actions</th>
+</tr>
+<tr ng-repeat="g in c.gamesList">
+  <td>{{g.name}}</td>
+  <td>{{g.mapName || 'unknown'}}</td>
+  <td>
+    <button type="button">Watch</button>
+    <button type="button">Join</button>
+  </td>
+</tr>
+</table>
+<h2>Start a New Game</h2>
+<form method="post" ng-submit="c.newGameFormSubmitted()">
+<div>
+  <label>Name of game: <input type="text" name="name" ng-model="c.newGame.name"></label>
+</div>
+<div>
+  <label>Map: <input type="text" name="map" ng-model="c.newGame.map"></label>
+</div>
+<div>
+  <button type="submit">Go</button>
+</div>
+</form>

@@ -2078,10 +2078,50 @@ angular.module('trains', ['ngRoute'])
       },
     },
   })
+  .when('/lobby', {
+    controller: 'LobbyController',
+    controllerAs: 'c',
+    templateUrl: 'resources/lobby.ng',
+    resolve: {
+      'gamesList': function($http) {
+        return $http.get('/api/games').then(
+            httpResponse => httpResponse.data);
+      },
+    },
+  })
   .otherwise({
-    redirectTo: '/game/test'
+    redirectTo: '/lobby'
   });
   $locationProvider.html5Mode(false);
+})
+.controller('LobbyController', function($http, $location, gamesList) {
+  this.gamesList = gamesList;
+  this.newGame = {
+    name: '',
+    map: '',
+  };
+  this.newGameFormSubmitted = function() {
+    if (!this.newGame.name) {
+      alert('Please enter a name for the new game.');
+      return;
+    }
+    if (!this.newGame.map) {
+      alert('Please enter a map name.');
+      return;
+    }
+    let request = this.newGame;
+    $http.post('/api/games', JSON.stringify(request))
+      .then(httpResponse => {
+        $location.path('/game/' + escape(this.newGame.name));
+      }, httpError => {
+        if (httpError.status == 400) {
+          // Bad request; just show the user the error message.
+          alert(httpError.data);
+        } else {
+          alert('HTTP error ' + httpError.status);
+        }
+      });
+  };
 })
 .controller('MapEditorController', function($http, $location, $routeParams, mapDataRaw) {
 
