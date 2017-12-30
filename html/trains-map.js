@@ -210,6 +210,8 @@ MapData.prototype.cropTerrain = function(offsetx, offsety, cx, cy) {
 	this.updateGeometry();
 };
 
+const RESOURCE_ICON_SIZE = 32;
+
 function Painter(canvas, ctx, mapData, mapFeatures) {
   this.canvas = canvas;
   this.ctx = ctx;
@@ -344,8 +346,8 @@ Painter.prototype.paint = function() {
 					ctx.drawImage(resourceImages[resourceType],
 					xx,
 					p.y + CELL_ASCENT / 2,
-					16,16);
-					xx += 16;
+					RESOURCE_ICON_SIZE,RESOURCE_ICON_SIZE);
+					xx += RESOURCE_ICON_SIZE;
 				}
 				else
 				{
