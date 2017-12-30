@@ -14,8 +14,8 @@ This is the lobby.
   <td>{{g.name}}</td>
   <td>{{g.mapName || 'unknown'}}</td>
   <td>
-    <button type="button">Watch</button>
-    <button type="button">Join</button>
+    <button type="button" ng-click="c.watch(g)">Watch</button>
+    <button type="button" ng-click="c.join(g)">Join</button>
   </td>
 </tr>
 </table>

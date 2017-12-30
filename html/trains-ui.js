@@ -2104,6 +2104,12 @@ angular.module('trains', ['ngRoute'])
     name: '',
     map: '',
   };
+  this.join = function(game) {
+    $location.path('/game/' + escape(game.name));
+  };
+  this.watch = function(game) {
+    $location.path('/game/' + escape(game.name));
+  };
   this.newGameFormSubmitted = function() {
     if (!this.newGame.name) {
       alert('Please enter a name for the new game.');
