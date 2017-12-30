@@ -1840,33 +1840,6 @@ outerLoop:
 	}
 }
 
-function showEditMapPane()
-{
-	stopEventsListener();
-
-  DISPLAY_SETTINGS.showEditingDots = true;
-  mapFeatures = {};
-  mapData = new MapData();
-  mapData.makeMoreRoomOnMap(10);
-  repaint();
-  zoomShowAll();
-
-	isEditing = {};
-	$('#editMapPane').fadeIn();
-}
-
-function dismissEditMapPane()
-{
-	isEditing = null;
-	$('#editMapPane').fadeOut();
-	$('#editCityPane').fadeOut();
-
-  DISPLAY_SETTINGS.showEditingDots = false;
-	mapData.makeMoreRoomOnMap(0);
-	repaint();
-	startEventsListener();
-}
-
 function editmap_addCityResource()
 {
 	var cityId = $('#editCityPane').attr('selected-city');
@@ -2068,22 +2041,7 @@ function showPlayers()
 	popupDialog('gameRosterPane');
 }
 
-angular.module('trains', ['ngRoute'])
-
-.config(function($routeProvider, $locationProvider) {
-  $routeProvider
-  .when('/game/:game', {
-    controller: 'GameController',
-    controllerAs: 'c',
-    templateUrl: 'resources/game.ng'
-  })
-  .otherwise({
-    redirectTo: '/game/test'
-  });
-})
-.controller('GameController', function($http, $routeParams) {
-  this.gameId = $routeParams['game'];
-
+function canvasInitialization() {
   onResize();
   document.getElementById('theCanvas').addEventListener('mousedown', onMouseDown, false);
   $(document).mouseup(onMouseUp);
@@ -2094,44 +2052,104 @@ angular.module('trains', ['ngRoute'])
   document.getElementById('theCanvas').addEventListener('touchstart', onTouchStart_r, false);
   document.addEventListener('touchmove', onTouchMove_r, false);
   document.addEventListener('touchend', onTouchEnd_r, false);
-
-  fetchGameState($http, this.gameId);
   preloadImages();
+}
 
-  var lastMapName = null;
+angular.module('trains', ['ngRoute'])
+
+.config(function($routeProvider, $locationProvider) {
+  $routeProvider
+  .when('/game/:game', {
+    controller: 'GameController',
+    controllerAs: 'c',
+    templateUrl: 'resources/game.ng',
+  })
+  .when('/map/edit/:map', {
+    controller: 'MapEditorController',
+    controllerAs: 'c',
+    templateUrl: 'resources/game.ng',
+    resolve: {
+      'mapDataRaw': function($http, $route) {
+        return $http.get('/api/map', {
+          params: {'map': $route.current.params['map']},
+          responseType: 'json',
+        }).then(httpResponse => httpResponse.data,
+                httpError => null);
+      },
+    },
+  })
+  .otherwise({
+    redirectTo: '/game/test'
+  });
+  $locationProvider.html5Mode(false);
+})
+.controller('MapEditorController', function($http, $location, $routeParams, mapDataRaw) {
+
+  canvasInitialization();
+
+  DISPLAY_SETTINGS.showEditingDots = true;
+  mapFeatures = {};
+  if (mapDataRaw) {
+    mapData = MapData.initialize(mapDataRaw);
+  } else {
+    mapData = new MapData();
+  }
+  mapData.makeMoreRoomOnMap(10);
+  zoomShowAll();
+
+  this.isEditing = true;
+  isEditing = {};
+  $('#editMapPane').fadeIn();
+
+  var lastMapName = $routeParams['map'];
+  if (lastMapName == '_new') {
+    lastMapName = '';
+  }
   this.loadMap = function() {
     var mapName = window.prompt('Enter map name to load', lastMapName);
     if (mapName) {
-      lastMapName = mapName;
-      $http.get('/api/map', {
-        params: {
-          'map': mapName,
-        },
-        responseType: 'json',
-      }).then(
-        function(httpResponse) {
-          var newMap = httpResponse.data;
-          mapData = MapData.initialize(newMap);
-          mapData.makeMoreRoomOnMap(10);
-          zoomShowAll();
-        },
-        function(rejection) {
-          alert('Load failed.');
-        });
+      $location.path('/map/edit/' + escape(mapName));
     }
   };
   this.saveMap = function() {
     var mapName = window.prompt('Save map as', lastMapName);
     if (mapName) {
+      var mapRenamed = mapName != lastMapName;
       lastMapName = mapName;
       $http.put('/api/map', JSON.stringify(mapData), {
         params: {'map': mapName},
       }).then(
         function(httpResponse) {
           alert('success');
+          if (mapRenamed) {
+            $location.path('/map/edit/' + escape(mapName));
+          }
         });
     }
   };
+  this.dismissEditor = function() {
+    isEditing = null;
+    $('#editMapPane').fadeOut();
+    $('#editCityPane').fadeOut();
+
+    if (confirm('Create a new game with this map?')) {
+      // TODO
+      DISPLAY_SETTINGS.showEditingDots = false;
+      mapData.makeMoreRoomOnMap(0);
+      repaint();
+      startEventsListener();
+    } else {
+      $location.path('/');
+    }
+  };
+})
+.controller('GameController', function($http, $location, $routeParams) {
+  this.gameId = $routeParams['game'];
+
+  canvasInitialization();
+
+  fetchGameState($http, this.gameId);
+
   this.playerId = null;
   this.playerData = null;
   this.joinGame = function() {
@@ -2150,4 +2168,10 @@ angular.module('trains', ['ngRoute'])
         setPlayerId(this.playerId);
       });
   };
+
+  this.showEditMapPane = function() {
+    stopEventsListener();
+    $location.path('/map/edit/_new');
+  };
+
 });

@@ -3,20 +3,21 @@
 </div>
 <div id="buttonBar">
 <div style="padding:3pt">
-<button type="button" onclick="showPlayers()">Show Players</button>
-<button type="button" ng-click="c.joinGame()">Join Game</button>
+<span ng-if="!c.isEditing">
+  <button type="button" onclick="showPlayers()">Show Players</button>
+  <button type="button" ng-click="c.joinGame()">Join Game</button>
+</span>
 <span ng-if="c.playerId">
-<button type="button" onclick="showDemands()">Show Demands</button>
-<button type="button" onclick="beginBuilding()">Build Track</button>
-<button type="button" onclick="addLocomotive()">Add Locomotive</button>
+  <button type="button" onclick="showDemands()">Show Demands</button>
+  <button type="button" onclick="beginBuilding()">Build Track</button>
+  <button type="button" onclick="addLocomotive()">Add Locomotive</button>
 </span>
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
-<button type="button" onclick="showEditMapPane()">Edit Map</button>
+<button type="button" ng-if="!c.isEditing" ng-click="c.showEditMapPane()">Edit Map</button>
 <span ng-if="c.playerData">
 <span>Cash on hand: <span id="cashIndicator">{{c.playerData.money}}</span></span>
 </span>
-<span id="trainStartClock">Train movement</span>
 </div>
 </div>
 <div class="widget" id="editCityPane">
@@ -60,7 +61,7 @@
   <div class="widgetFooter">
     <button type="button" ng-click="c.loadMap()">Load</button>
     <button type="button" ng-click="c.saveMap()">Save</button>
-    <button type="button" onclick="dismissEditMapPane()">Close</button>
+    <button type="button" ng-click="c.dismissEditor()">Close</button>
   </div>
 </div>
 <div class="widget" id="demandsPane">
