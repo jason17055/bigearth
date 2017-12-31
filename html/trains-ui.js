@@ -180,24 +180,16 @@ function onGameEvent(evt)
 	}
 }
 
-function getEventsNow() {
-	stopEventsListener();
-	startEventsListener();
-}
-
-function stopEventsListener() {
-	if (SUBSCRIBER.timerId) {
-		clearTimeout(SUBSCRIBER.timerId);
-		SUBSCRIBER.timerId = 0;
-	}
-	SUBSCRIBER.currentFetch = null;
-}
-
 function EventsSubscriber() {
   this.timerId = 0;
   this.currentFetch = null;
   this.enabled = false;
 }
+
+EventsSubscriber.prototype.getEventsNow = function() {
+  this.stop();
+  this.start();
+};
 
 EventsSubscriber.prototype.start = function() {
 	var rdm = new Date().getTime();
@@ -254,13 +246,14 @@ EventsSubscriber.prototype.start = function() {
 };
 
 EventsSubscriber.prototype.stop = function() {
+	if (this.timerId) {
+		clearTimeout(this.timerId);
+		this.timerId = 0;
+	}
+	this.currentFetch = null;
 };
 
 var SUBSCRIBER = new EventsSubscriber();
-
-function startEventsListener() {
-	return SUBSCRIBER.start();
-}
 
 function onGameState(firstLoad)
 {
@@ -283,7 +276,7 @@ function onGameState(firstLoad)
 
 	if (!SUBSCRIBER.enabled)
 	{
-		startEventsListener();
+		SUBSCRIBER.start();
 	}
 
 	if (firstLoad)
@@ -1055,7 +1048,7 @@ function sendRequest(verb, data, success)
 	var onSuccess = function(data)
 	{
 		if (success) { success(data); }
-		getEventsNow();
+		SUBSCRIBER.getEventsNow();
 	};
 	var onError = function(xhr, status, errorThrown)
 	{
@@ -2239,7 +2232,7 @@ angular.module('trains', ['ngRoute'])
       DISPLAY_SETTINGS.showEditingDots = false;
       mapData.makeMoreRoomOnMap(0);
       repaint();
-      startEventsListener();
+      SUBSCRIBER.start();
     } else {
       $location.path('/');
     }
@@ -2273,7 +2266,7 @@ angular.module('trains', ['ngRoute'])
   }
 
   this.leaveGame = function() {
-    stopEventsListener();
+    SUBSCRIBER.stop();
     $location.path('/lobby');
     $location.search('seat', null);
   };
