@@ -180,7 +180,12 @@ function onGameEvent(evt)
 	}
 }
 
-function EventsSubscriber() {
+function EventsSubscriber($http, $timeout, gameId, gameState) {
+  this.$http = $http;
+  /** @type {string} */
+  this.gameId = gameId;
+  /** @type {GameState} */
+  this.gameState = gameState;
   this.timerId = 0;
   this.currentFetch = null;
   this.enabled = false;
@@ -192,57 +197,58 @@ EventsSubscriber.prototype.getEventsNow = function() {
 };
 
 EventsSubscriber.prototype.start = function() {
-	var rdm = new Date().getTime();
-	var gameId = serverState.gameId;
-	var errorCounter = 0;
-	this.timerId = 0;
 
-	var myFetch = {};
-	this.currentFetch = myFetch;
+  this.enabled = true;
+  this.errorCounter = 0;
+  this.timerId = 0;
+  this.fetchNextEvent();
+};
 
-	var fetchNextEvent;
-	var onSuccess = (data,status) =>
+EventsSubscriber.prototype.fetchNextEvent = function() {
+
+  const $http = this.$http;
+  const $timeout = this.$timeout;
+
+  const nonce = new Date().getTime();
+  const thisFetch = {};
+  this.currentFetch = thisFetch;
+
+	var onSuccess = httpResponse =>
 	{
-		if (this.currentFetch !== myFetch) {
+		if (this.currentFetch !== thisFetch) {
 			return;
 		}
 
-		errorCounter = 0;
+		this.errorCounter = 0;
 		let anyFound = false;
-		while (serverState.eventsSeen < data.length) {
+		while (serverState.eventsSeen < httpResponse.data.length) {
 			anyFound = true;
-			onGameEvent(data[serverState.eventsSeen++]);
+			onGameEvent(httpResponse.data[serverState.eventsSeen++]);
 		}
-		this.timerId = setTimeout(fetchNextEvent,
+		this.timerId = setTimeout(() => this.fetchNextEvent(),
 			anyFound ? 500 : 2500);
 	};
-	var onError = (xhr, status, errorThrown) =>
+	var onError = httpError =>
 	{
-		if (serverState != myFetch) {
+		if (this.currentFetch != thisFetch) {
 			return;
 		}
 
-		errorCounter++;
-		if (errorCounter < 3)
+		this.errorCounter++;
+		if (this.errorCounter < 3)
 		{
-			fetchNextEvent();
-			return;
+			return this.fetchNextEvent();
 		}
-		alert("fetchEvent error " + status + " " + errorThrown);
+		alert("fetchEvent error " + httpError.status + " " + httpError.data);
 	};
 
-	fetchNextEvent = function()
-	{
-		$.ajax({
-		url: "/api/events?game=" + escape(gameId) + "&r="+rdm,
-		success: onSuccess,
-		error: onError,
-		dataType: "json"
-		});
-	};
-
-	fetchNextEvent();
-	this.enabled = true;
+  $http.get('/api/events', {
+      params: {
+          'game': this.gameId,
+          'r': nonce,
+      },
+      responseType: 'json',
+  }).then(onSuccess, onError);
 };
 
 EventsSubscriber.prototype.stop = function() {
@@ -253,7 +259,7 @@ EventsSubscriber.prototype.stop = function() {
 	this.currentFetch = null;
 };
 
-var SUBSCRIBER = new EventsSubscriber();
+var SUBSCRIBER = null;
 
 function onGameState(firstLoad)
 {
@@ -272,11 +278,6 @@ function onGameState(firstLoad)
 	else
 	{
 		curPlayer.demands = new Array();
-	}
-
-	if (!SUBSCRIBER.enabled)
-	{
-		SUBSCRIBER.start();
 	}
 
 	if (firstLoad)
@@ -2229,16 +2230,12 @@ angular.module('trains', ['ngRoute'])
 
     if (confirm('Create a new game with this map?')) {
       // TODO
-      DISPLAY_SETTINGS.showEditingDots = false;
-      mapData.makeMoreRoomOnMap(0);
-      repaint();
-      SUBSCRIBER.start();
     } else {
       $location.path('/');
     }
   };
 })
-.controller('GameController', function($http, $location, $scope, $routeParams, gameData) {
+.controller('GameController', function($http, $location, $timeout, $scope, $routeParams, gameData) {
   this.gameId = $routeParams['game'];
 
   canvasInitialization();
@@ -2256,6 +2253,12 @@ angular.module('trains', ['ngRoute'])
     gameState.futureDemands = serverState.allDemands;
     onGameState(true);
   }
+
+  if (SUBSCRIBER) {
+    SUBSCRIBER.stop();
+  }
+  SUBSCRIBER = new EventsSubscriber($http, $timeout, this.gameId, gameState);
+  SUBSCRIBER.start();
 
   this.playerId = null;
   this.playerData = null;
