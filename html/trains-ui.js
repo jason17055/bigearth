@@ -2229,6 +2229,7 @@ angular.module('trains', ['ngRoute'])
   this.gameId = $routeParams['game'];
 
   canvasInitialization();
+  DISPLAY_SETTINGS.showEditingDots = false;
 
   // Handle game state.
   {
