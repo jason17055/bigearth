@@ -182,11 +182,13 @@ function onGameEvent(evt)
 
 function EventsSubscriber($http, $timeout, gameId, gameState) {
   this.$http = $http;
+  this.$timeout = $timeout;
+
   /** @type {string} */
   this.gameId = gameId;
   /** @type {GameState} */
   this.gameState = gameState;
-  this.timerId = 0;
+  this.timer = null;
   this.currentFetch = null;
   this.enabled = false;
 }
@@ -200,7 +202,6 @@ EventsSubscriber.prototype.start = function() {
 
   this.enabled = true;
   this.errorCounter = 0;
-  this.timerId = 0;
   this.fetchNextEvent();
 };
 
@@ -213,50 +214,52 @@ EventsSubscriber.prototype.fetchNextEvent = function() {
   const thisFetch = {};
   this.currentFetch = thisFetch;
 
-	var onSuccess = httpResponse =>
-	{
-		if (this.currentFetch !== thisFetch) {
-			return;
-		}
-
-		this.errorCounter = 0;
-		let anyFound = false;
-		while (serverState.eventsSeen < httpResponse.data.length) {
-			anyFound = true;
-			onGameEvent(httpResponse.data[serverState.eventsSeen++]);
-		}
-		this.timerId = setTimeout(() => this.fetchNextEvent(),
-			anyFound ? 500 : 2500);
-	};
-	var onError = httpError =>
-	{
-		if (this.currentFetch != thisFetch) {
-			return;
-		}
-
-		this.errorCounter++;
-		if (this.errorCounter < 3)
-		{
-			return this.fetchNextEvent();
-		}
-		alert("fetchEvent error " + httpError.status + " " + httpError.data);
-	};
-
   $http.get('/api/events', {
       params: {
           'game': this.gameId,
           'r': nonce,
       },
       responseType: 'json',
-  }).then(onSuccess, onError);
+  }).then(
+    httpResponse => {
+      if (this.currentFetch !== thisFetch) {
+        // Abandon this fetch. A newer one was issued.
+        return;
+      }
+
+      this.errorCounter = 0;
+      let anyFound = false;
+      while (serverState.eventsSeen < httpResponse.data.length) {
+        anyFound = true;
+        onGameEvent(httpResponse.data[serverState.eventsSeen++]);
+      }
+      this.timer = $timeout(
+          () => this.fetchNextEvent(),
+          anyFound ? 500 : 2500);
+    },
+    httpError => {
+      if (this.currentFetch !== thisFetch) {
+        // Abandon this fetch. A newer one was issued.
+        return;
+      }
+
+      this.errorCounter++;
+      if (this.errorCounter < 3) {
+        this.timer = $timeout(
+            () => this.fetchNextEvent(),
+            5000);
+      } else {
+        alert("fetchEvent error " + httpError.status + " " + httpError.data);
+      }
+    });
 };
 
 EventsSubscriber.prototype.stop = function() {
-	if (this.timerId) {
-		clearTimeout(this.timerId);
-		this.timerId = 0;
-	}
-	this.currentFetch = null;
+  if (this.timer) {
+    this.$http.cancel(this.timer);
+    this.timer = null;
+  }
+  this.currentFetch = null;
 };
 
 var SUBSCRIBER = null;
