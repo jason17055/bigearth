@@ -432,7 +432,7 @@ TrainAnimator.prototype.stepTrain = function(trainId, train) {
       console.log('route is ' + train.route.length + ' steps');
     } else {
       // No more waypoints. Stop the train.
-      train.running = false;
+      stopTrain(train);
       return;
     }
   }
@@ -574,72 +574,6 @@ function train_pickup(train, resource_type)
 
 	train_cargoChanged(train);
 	return;
-}
-
-// do whatever's next on the train's plan
-function train_next(train)
-{
-  return;
-
-	if (train.timer)
-		return;
-	if (!train.plan)
-	{
-		alert("unexpected: train has no plan");
-		return stopTrain(train);
-	}
-
-	var p = train.plan[0];
-	if (!p)
-	{
-		alert("unexpected: train has no plan for current location");
-		return stopTrain(train);
-	}
-
-	reloadPlan();
-
-	if (p.location == train.loc)
-	{
-		if (p.deliver && p.deliver.length)
-		{
-			train.timer = setTimeout(
-				function()
-				{
-					delete train.timer;
-					var resource_type = p.deliver.shift();
-					train_deliver(train, resource_type);
-					train_next(train);
-				}, 500);
-			return;
-		}
-		if (p.pickup && p.pickup.length)
-		{
-			train.timer = setTimeout(
-				function()
-				{
-					delete train.timer;
-					var resource_type = p.pickup.shift();
-					train_pickup(train, resource_type);
-					train_next(train);
-				}, 500);
-			return;
-		}
-
-		if (train.plan.length >= 2)
-		{
-			train.plan.shift();
-			train.curWaypoint = train.plan[0].id;
-			return train_next(train);
-		}
-		else
-		{
-			return stopTrain(train);
-		}
-	}
-
-	train.route = new Array();
-	findBestPath(train.loc, p.location, train.route);
-	//animateTrain(train);
 }
 
 function onTrainLocationChanged(train)
