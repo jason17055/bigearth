@@ -122,7 +122,6 @@ function getGameTime()
 		return 0;
 }
 
-var eventsListenerEnabled = false;
 var GAME_CONTROLLER = null;
 
 function onGameEvent(evt)
@@ -187,27 +186,32 @@ function getEventsNow() {
 }
 
 function stopEventsListener() {
-	if (serverState.timerId) {
-		clearTimeout(serverState.timerId);
-		serverState.timerId = 0;
+	if (SUBSCRIBER.timerId) {
+		clearTimeout(SUBSCRIBER.timerId);
+		SUBSCRIBER.timerId = 0;
 	}
-	serverState.currentFetch = null;
+	SUBSCRIBER.currentFetch = null;
 }
 
-function startEventsListener() {
+function EventsSubscriber() {
+  this.timerId = 0;
+  this.currentFetch = null;
+  this.enabled = false;
+}
 
+EventsSubscriber.prototype.start = function() {
 	var rdm = new Date().getTime();
 	var gameId = serverState.gameId;
 	var errorCounter = 0;
-	serverState.timerId = 0;
+	this.timerId = 0;
 
 	var myFetch = {};
-	serverState.currentFetch = myFetch;
+	this.currentFetch = myFetch;
 
 	var fetchNextEvent;
-	var onSuccess = function(data,status)
+	var onSuccess = (data,status) =>
 	{
-		if (serverState.currentFetch !== myFetch) {
+		if (this.currentFetch !== myFetch) {
 			return;
 		}
 
@@ -217,10 +221,10 @@ function startEventsListener() {
 			anyFound = true;
 			onGameEvent(data[serverState.eventsSeen++]);
 		}
-		serverState.timerId = setTimeout(fetchNextEvent,
+		this.timerId = setTimeout(fetchNextEvent,
 			anyFound ? 500 : 2500);
 	};
-	var onError = function(xhr, status, errorThrown)
+	var onError = (xhr, status, errorThrown) =>
 	{
 		if (serverState != myFetch) {
 			return;
@@ -246,7 +250,16 @@ function startEventsListener() {
 	};
 
 	fetchNextEvent();
-	eventsListenerEnabled = true;
+	this.enabled = true;
+};
+
+EventsSubscriber.prototype.stop = function() {
+};
+
+var SUBSCRIBER = new EventsSubscriber();
+
+function startEventsListener() {
+	return SUBSCRIBER.start();
 }
 
 function onGameState(firstLoad)
@@ -268,7 +281,7 @@ function onGameState(firstLoad)
 		curPlayer.demands = new Array();
 	}
 
-	if (!eventsListenerEnabled)
+	if (!SUBSCRIBER.enabled)
 	{
 		startEventsListener();
 	}
