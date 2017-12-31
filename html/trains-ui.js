@@ -538,6 +538,12 @@ function addWaypointSprite(waypointId, loc)
 	updateWaypointSpritePosition(sprite);
 }
 
+function removeAllWaypointSprites() {
+	for (let waypointId in waypointSprites) {
+		removeWaypointSprite(waypointId);
+	}
+}
+
 function removeWaypointSprite(waypointId)
 {
 	if (waypointSprites[waypointId])
@@ -1171,6 +1177,7 @@ function dismissPlan()
 
 	$('#planPane').fadeOut();
 	$('#waypointPane').fadeOut();
+	removeAllWaypointSprites();
 }
 
 function filterMapToReachable(train)
