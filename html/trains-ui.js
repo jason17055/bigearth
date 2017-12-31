@@ -442,7 +442,7 @@ TrainAnimator.prototype.stepTrain = function(trainId, train) {
     }
   }
 
-  let elapsed = getGameTime() - train.lastUpdated;
+  let elapsed = this.curTime - train.lastUpdated;
   let dist = elapsed * train.speed;
 
   while (dist >= 1.0 && train.route.length >= 1) {
@@ -472,7 +472,7 @@ TrainAnimator.prototype.stop = function() {
 TrainAnimator.prototype.updateSprite = function(train) {
 	var pt = toCanvasCoords(mapData.G.getCellPoint(train.loc));
 
-	var elapsed = getGameTime() - train.lastUpdated;
+	var elapsed = this.curTime - train.lastUpdated;
 	var dist = elapsed * train.speed;
 	if (dist >= 0 && train.route && train.route[0])
 	{
