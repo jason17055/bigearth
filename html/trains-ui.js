@@ -2259,6 +2259,7 @@ angular.module('trains', ['ngRoute'])
   }
   SUBSCRIBER = new EventsSubscriber($http, $timeout, this.gameId, gameState);
   SUBSCRIBER.start();
+  $scope.$on('$destroy', () => SUBSCRIBER.stop());
 
   this.playerId = null;
   this.playerData = null;
@@ -2269,7 +2270,6 @@ angular.module('trains', ['ngRoute'])
   }
 
   this.leaveGame = function() {
-    SUBSCRIBER.stop();
     $location.path('/lobby');
     $location.search('seat', null);
   };
