@@ -31,3 +31,8 @@ This is the lobby.
   <button type="submit">Go</button>
 </div>
 </form>
+
+<h2>Administrative</h2>
+<p>
+<a href="#!/map/edit/_new">Map Editor</a>
+</p>

@@ -2122,8 +2122,22 @@ angular.module('trains', ['ngRoute'])
     name: '',
     map: '',
   };
+
   this.join = function(game) {
-    $location.path('/game/' + escape(game.name));
+
+    var playerName = window.prompt('Enter player name');
+    if (!playerName) {
+      return;
+    }
+    var request = {
+      game: game.name,
+      name: playerName,
+    };
+    $http.post('/api/login', JSON.stringify(request))
+      .then(httpResponse => {
+        $location.path('/game/' + escape(game.name));
+        $location.search('seat', httpResponse.data.playerId);
+      });
   };
   this.watch = function(game) {
     $location.path('/game/' + escape(game.name));
@@ -2235,24 +2249,9 @@ angular.module('trains', ['ngRoute'])
     setPlayerId(this.playerId);
   }
 
-  this.joinGame = function() {
-    var playerName = window.prompt('Enter player name');
-    if (!playerName) {
-      return;
-    }
-    var request = {
-      game: this.gameId,
-      name: playerName,
-    };
-    $http.post('/api/login', JSON.stringify(request))
-      .then(httpResponse => {
-        $location.search('seat', httpResponse.data.playerId);
-      });
-  };
-
-  this.showEditMapPane = function() {
+  this.leaveGame = function() {
     stopEventsListener();
-    $location.path('/map/edit/_new');
+    $location.path('/lobby');
+    $location.search('seat', null);
   };
-
 });

@@ -4,19 +4,18 @@
 <div id="buttonBar">
 <div style="padding:3pt">
 <span ng-if="!c.isEditing">
+  <button type="button" ng-click="c.leaveGame()">Exit to Lobby</button>
   <button type="button" onclick="showPlayers()">Show Players</button>
-  <button type="button" ng-click="c.joinGame()">Join Game</button>
-</span>
-<span ng-if="c.playerId">
-  <button type="button" onclick="showDemands()">Show Demands</button>
-  <button type="button" onclick="beginBuilding()">Build Track</button>
-  <button type="button" onclick="addLocomotive()">Add Locomotive</button>
+  <span ng-if="c.playerId">
+    <button type="button" onclick="showDemands()">Show Demands</button>
+    <button type="button" onclick="beginBuilding()">Build Track</button>
+    <button type="button" onclick="addLocomotive()">Add Locomotive</button>
+  </span>
 </span>
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
-<button type="button" ng-if="!c.isEditing" ng-click="c.showEditMapPane()">Edit Map</button>
 <span ng-if="c.playerData">
-<span>Cash on hand: <span id="cashIndicator">{{c.playerData.money}}</span></span>
+  <span>Cash on hand: <span id="cashIndicator">{{c.playerData.money}}</span></span>
 </span>
 </div>
 </div>
