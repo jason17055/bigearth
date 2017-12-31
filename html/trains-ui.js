@@ -149,7 +149,7 @@ function onGameEvent(evt)
 		}
 		var t = gameState.trains[evt.trainId];
 		t.owner = evt.owner || '1';
-		t.plan = evt.plan;
+		gameState.updateTrainPlan(evt.trainId, evt.plan);
 		t.lastUpdated = evt.time;
 		t.running = evt.running;
 		if (evt.running) {
@@ -356,6 +356,7 @@ function train_cargoChanged(train)
 
 function train_deliver(train, resource_type)
 {
+	console.log('delivering ' + resource_type);
 	if (!train.cargo)
 		return;
 
@@ -393,6 +394,8 @@ function train_deliver(train, resource_type)
 
 function train_pickup(train, resource_type)
 {
+	console.log('picking up ' + resource_type);
+
 	if (!train.cargo)
 		train.cargo = new Array();
 	train.cargo.push(resource_type);

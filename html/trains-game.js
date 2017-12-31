@@ -65,3 +65,23 @@ GameState.prototype.nextDemand = function(pid) {
 GameState.prototype.hasTrain = function(trainId) {
   return trainId in this.trains;
 };
+
+GameState.prototype.updateTrainPlan = function(trainId, newPlan) {
+  let t = this.trains[trainId];
+  if (!t.plan) {
+    t.plan = newPlan;
+    return;
+  }
+  if (newPlan.length == 0) {
+    return;
+  }
+  let planStep = newPlan[0].id;
+  let start = t.plan.length;
+  while (start > 0 && t.plan[start-1].id >= planStep) {
+    start--;
+  }
+  t.plan.splice(start);
+  for (let step of newPlan) {
+    t.plan.push(step);
+  }
+};
