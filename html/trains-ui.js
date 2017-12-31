@@ -156,7 +156,7 @@ function onGameEvent(evt)
 		t.lastUpdated = evt.time;
 		t.running = evt.running;
 		if (evt.running) {
-			train_next(t);
+			TRAIN_ANIMATOR.start();
 		}
 	}
 	if (evt.playerMoney)
@@ -314,6 +314,24 @@ function updateWaypointSpritePosition(sprite)
 		top: (p.top + pt.y - $t.outerHeight()) + "px"
 		});
 }
+
+function TrainAnimator(gameState) {
+  this.gameState = gameState;
+}
+
+TrainAnimator.prototype.start = function() {
+  for (let trainId in this.gameState.trains) {
+    let t = this.gameState.trains[trainId];
+    train_next(t);
+  }
+};
+
+/** Suspends any active train animations.
+ */
+TrainAnimator.prototype.stop = function() {
+};
+
+var TRAIN_ANIMATOR = new TrainAnimator(gameState);
 
 function updateTrainSpritePosition(train)
 {
