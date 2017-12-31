@@ -15,7 +15,7 @@
 <button type="button" onclick="zoomIn()">Zoom In</button>
 <button type="button" onclick="zoomOut()">Zoom Out</button>
 <span ng-if="c.playerData">
-  <span>Cash on hand: <span id="cashIndicator">{{c.playerData.money}}</span></span>
+  <span>Cash on hand: $<span id="cashIndicator">{{c.playerData.money}}</span></span>
 </span>
 </div>
 </div>

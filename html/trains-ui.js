@@ -123,6 +123,7 @@ function getGameTime()
 }
 
 var eventsListenerEnabled = false;
+var GAME_CONTROLLER = null;
 
 function onGameEvent(evt)
 {
@@ -138,6 +139,9 @@ function onGameEvent(evt)
 		gameState.newPlayer(evt.playerId, p);
 		if (curPlayer.playerId == evt.playerId) {
 			curPlayer.demands = p.demands;
+		}
+		if (GAME_CONTROLLER) {
+			GAME_CONTROLLER.playerData = p;
 		}
 	}
 	if (evt.event == 'train') {
@@ -384,7 +388,7 @@ function train_deliver(train, resource_type)
 				p.demands.splice(i,1);
 				gameState.pastDemands.push(d);
 				gameState.nextDemand(train.owner);
-				break;
+				return;
 			}
 		}
 	}
@@ -1026,6 +1030,9 @@ function adjustPlayerCash(pid, delta) {
 	if (curPlayer.playerId == pid) {
 		curPlayer.money = gameState.players[pid].money;
 		$('#cashIndicator').text(curPlayer.money);
+	}
+	if (GAME_CONTROLLER) {
+		GAME_CONTROLLER.$scope.$apply();
 	}
 }
 
@@ -2225,11 +2232,13 @@ angular.module('trains', ['ngRoute'])
     }
   };
 })
-.controller('GameController', function($http, $location, $routeParams, gameData) {
+.controller('GameController', function($http, $location, $scope, $routeParams, gameData) {
   this.gameId = $routeParams['game'];
 
   canvasInitialization();
   DISPLAY_SETTINGS.showEditingDots = false;
+  GAME_CONTROLLER = this;
+  this.$scope = $scope;
 
   // Handle game state.
   {
