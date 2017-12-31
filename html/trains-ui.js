@@ -256,7 +256,7 @@ EventsSubscriber.prototype.fetchNextEvent = function() {
 
 EventsSubscriber.prototype.stop = function() {
   if (this.timer) {
-    this.$http.cancel(this.timer);
+    this.$timeout.cancel(this.timer);
     this.timer = null;
   }
   this.currentFetch = null;
