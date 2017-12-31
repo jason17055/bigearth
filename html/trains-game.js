@@ -25,6 +25,7 @@ function GameState() {
   //   revenue: int
   //   running: bool
   //   curWaypoint: int
+  //   orientationName: 'W', 'N', 'NNE', etc.
   // }.
   // Each Waypoint is {
   //   id: int, starting from 0

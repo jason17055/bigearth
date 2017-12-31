@@ -337,6 +337,25 @@ function updateTrainSpritePosition(train)
 		var pt1 = toCanvasCoords(mapData.G.getCellPoint(train.route[0]));
 		pt.x += (pt1.x - pt.x) * dist;
 		pt.y += (pt1.y - pt.y) * dist;
+		let angle = Math.atan2(pt1.y - pt.y, pt1.x - pt.x);
+		angle = Math.floor(angle / (Math.PI / 6) + 0.5);
+		train.orientationName =
+			angle == -5 ? 'WNW' :
+			angle == -4 ? 'NNW' :
+			angle == -3 ? 'N' :
+			angle == -2 ? 'NNE' :
+			angle == -1 ? 'ENE' :
+			angle == 0 ? 'E' :
+			angle == 1 ? 'ESE' :
+			angle == 2 ? 'SSE' :
+			angle == 3 ? 'S' :
+			angle == 4 ? 'SSW' :
+			angle == 5 ? 'WSW' :
+			'W';
+	} else {
+		if (!train.orientationName) {
+			train.orientationName = 'N';
+		}
 	}
 
 	var trainSize = Math.round(DISPLAY_SETTINGS.zoomLevel * 1.5);
@@ -348,6 +367,7 @@ function updateTrainSpritePosition(train)
 		width: trainSize + 'px',
 		height: trainSize + 'px',
 		'background-size': trainSize + 'px',
+		'background-image': 'url(resources/locomotive-' + train.orientationName + '.png)',
 		});
 }
 
