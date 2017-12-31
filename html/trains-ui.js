@@ -114,31 +114,6 @@ window.onresize = onResize;
 
 var serverState;
 var gameState = new GameState();
-function fetchGameState($http, gameId)
-{
-	var fetchBeginTime = new Date().getTime();
-
-	var onSuccess = function(httpResponse) {
-		var fetchEndTime = new Date().getTime();
-		serverState = httpResponse.data;
-		serverState.basisTime = fetchBeginTime +
-			Math.round((fetchEndTime - fetchBeginTime) / 2) -
-			1000 * serverState.serverTime;
-		serverState.eventsSeen = 0;
-		serverState.gameId = gameId;
-		gameState.futureDemands = serverState.allDemands;
-		onGameState(true);
-	};
-	var onError = function(err) {
-		//FIXME, report an error, I suppose
-	};
-
-	$http.get('/api/gamestate', {
-		params: {game: gameId},
-		responseType: 'json',
-	}).then(onSuccess, onError);
-}
-
 function getGameTime()
 {
 	if (serverState)
@@ -2088,6 +2063,18 @@ angular.module('trains', ['ngRoute'])
     controller: 'GameController',
     controllerAs: 'c',
     templateUrl: 'resources/game.ng',
+    resolve: {
+      'gameData': function($http, $route) {
+        const gameId = $route.current.params['game'];
+        const seat = $route.current.params['seat'];
+        return $http.get('/api/gamestate', {
+            params: {game: gameId},
+            responseType: 'json',
+        }).then(
+          httpResponse => httpResponse.data
+        );
+      },
+    },
   })
   .when('/map/edit/:map', {
     controller: 'MapEditorController',
@@ -2214,15 +2201,30 @@ angular.module('trains', ['ngRoute'])
     }
   };
 })
-.controller('GameController', function($http, $location, $routeParams) {
+.controller('GameController', function($http, $location, $routeParams, gameData) {
   this.gameId = $routeParams['game'];
 
   canvasInitialization();
 
-  fetchGameState($http, this.gameId);
+  // Handle game state.
+  {
+    let fetchEndTime = new Date().getTime();
+    serverState = gameData;
+    serverState.basisTime = fetchEndTime - 1000 * serverState.serverTime;
+    serverState.eventsSeen = 0;
+    serverState.gameId = $routeParams['game'];
+    gameState.futureDemands = serverState.allDemands;
+    onGameState(true);
+  }
 
   this.playerId = null;
   this.playerData = null;
+  if ($routeParams['seat']) {
+    this.playerId = $routeParams['seat'];
+    this.playerData = gameData.players[this.playerId];
+    setPlayerId(this.playerId);
+  }
+
   this.joinGame = function() {
     var playerName = window.prompt('Enter player name');
     if (!playerName) {
@@ -2234,9 +2236,7 @@ angular.module('trains', ['ngRoute'])
     };
     $http.post('/api/login', JSON.stringify(request))
       .then(httpResponse => {
-        this.playerId = httpResponse.data.playerId;
-        this.playerData = httpResponse.data.player;
-        setPlayerId(this.playerId);
+        $location.search('seat', httpResponse.data.playerId);
       });
   };
 
