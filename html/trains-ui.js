@@ -1041,9 +1041,6 @@ function adjustPlayerCash(pid, delta) {
 		curPlayer.money = gameState.players[pid].money;
 		$('#cashIndicator').text(curPlayer.money);
 	}
-	if (GAME_CONTROLLER) {
-		GAME_CONTROLLER.$scope.$apply();
-	}
 }
 
 function sendRequest(verb, data, success)
