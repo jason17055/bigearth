@@ -138,6 +138,7 @@ function onGameEvent(evt)
 		gameState.newPlayer(evt.playerId, p);
 		if (curPlayer.playerId == evt.playerId) {
 			curPlayer.demands = p.demands;
+			curPlayer.money = p.money;
 		}
 		if (GAME_CONTROLLER) {
 			GAME_CONTROLLER.playerData = p;
@@ -1128,6 +1129,7 @@ function commitBuilding()
 
 	if (money < 0)
 	{
+		console.log('you have ' + curPlayer.money);
 		alert("You do not have enough money.");
 		return;
 	}
