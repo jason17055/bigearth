@@ -145,16 +145,20 @@ function onGameEvent(evt)
 		}
 	}
 	if (evt.event == 'train') {
+		let t = null;
 		if (!gameState.hasTrain(evt.trainId)) {
 			if (!evt.spawnLocation) {
 				return;
 			}
-			createTrain(evt.trainId, evt.spawnLocation);
+			console.log('spawning train ' + evt.trainId);
+			t = createTrain(evt.trainId, evt.spawnLocation);
+			t.lastUpdated = evt.time;
+			t.owner = evt.owner || '1';
+		} else {
+			console.log('updating train ' + evt.trainId);
+			t = gameState.trains[evt.trainId];
 		}
-		var t = gameState.trains[evt.trainId];
-		t.owner = evt.owner || '1';
 		gameState.updateTrainPlan(evt.trainId, evt.plan);
-		t.lastUpdated = evt.time;
 		t.running = evt.running;
 		if (evt.running) {
 			TRAIN_ANIMATOR.start();
