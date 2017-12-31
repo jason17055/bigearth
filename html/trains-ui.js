@@ -317,30 +317,163 @@ function updateWaypointSpritePosition(sprite)
 
 function TrainAnimator(gameState) {
   this.gameState = gameState;
+  this.running = false;
 }
 
 TrainAnimator.prototype.start = function() {
+  if (this.running) {
+    return;
+  }
+
+  this.running = true;
+  this.step();
+};
+
+const NEVER = 1000000;
+const ASAP = 0.150;
+const DELIVER_TIME = 0.5;
+const PICKUP_TIME = 0.5;
+
+TrainAnimator.prototype.step = function() {
+  this.nextFrame = NEVER;
+  this.curTime = getGameTime();
   for (let trainId in this.gameState.trains) {
     let t = this.gameState.trains[trainId];
-    train_next(t);
+    this.stepTrain(trainId, this.gameState.trains[trainId]);
   }
+
+  if (this.nextFrame == NEVER) {
+    this.running = false;
+  } else {
+    window.setTimeout(() => this.step(), Math.ceil(this.nextFrame * 1000));
+  }
+};
+
+TrainAnimator.prototype.wakeUp = function(delay) {
+  if (delay < this.nextFrame) {
+    this.nextFrame = delay;
+  }
+};
+
+/**
+ * @return true if more work remains; false otherwise.
+ */
+TrainAnimator.prototype.processWaypoint = function(train, p) {
+
+  let elapsed = this.curTime - train.lastUpdated;
+	var cityName = mapData.cities[p.location].name;
+  console.log('at waypoint ' + cityName + '; ' + elapsed + ' s have elapsed');
+  while (p.deliver && p.deliver.length) {
+    if (elapsed < DELIVER_TIME) {
+      this.wakeUp(DELIVER_TIME - elapsed);
+      return true;
+    }
+    let resource_type = p.deliver.shift();
+    train_deliver(train, resource_type);
+    train.lastUpdated += DELIVER_TIME;
+    elapsed -= DELIVER_TIME;
+  }
+
+  while (p.pickup && p.pickup.length) {
+    if (elapsed < PICKUP_TIME) {
+      this.wakeUp(PICKUP_TIME - elapsed);
+      return true;
+    }
+    let resource_type = p.pickup.shift();
+    train_pickup(train, resource_type);
+    train.lastUpdated += PICKUP_TIME;
+    elapsed -= PICKUP_TIME;
+  }
+
+  return false;
+};
+
+function planPane_updateWaypointSelection() {
+	var oldSelection = $('#planPane').attr('selected-waypoint');
+	if (oldSelection != null)
+	{
+		if (oldSelection >= 1)
+		{
+			$('#planPane').attr('selected-waypoint', oldSelection-1);
+		}
+		else
+		{
+			$('#planPane').attr('selected-waypoint', "");
+			$('#waypointPane').fadeOut();
+		}
+	}
+}
+
+TrainAnimator.prototype.stepTrain = function(trainId, train) {
+
+  const DEFAULT_SPEED = 1000.0 / (12*150);
+
+  if (!train.running) {
+    return;
+  }
+
+  let p = train.plan[0];
+  if (p.location == train.loc && !train.speed) {
+    if (this.processWaypoint(train, p)) {
+      return;
+    }
+
+    if (train.plan.length >= 2) {
+      train.plan.shift();
+      p = train.plan[0];
+      train.curWaypoint = p.id;
+      planPane_updateWaypointSelection();
+
+      var cityName = mapData.cities[p.location].name;
+      console.log('setting course for ' + cityName);
+      train.speed = DEFAULT_SPEED;
+      train.route = [];
+      findBestPath(train.loc, p.location, train.route);
+      console.log('route is ' + train.route.length + ' steps');
+    } else {
+      // No more waypoints. Stop the train.
+      train.running = false;
+      return;
+    }
+  }
+
+  let elapsed = getGameTime() - train.lastUpdated;
+  let dist = elapsed * train.speed;
+
+  while (dist >= 1.0 && train.route.length >= 1) {
+    train.lastUpdated += 1.0 / train.speed;
+    train.loc = train.route.shift();
+    onTrainLocationChanged(train);
+    dist -= 1.0;
+  }
+
+  updateTrainSpritePosition(train);
+  if (train.route.length >= 1) {
+    this.nextFrame = ASAP;
+  }
+  else {
+    train.speed = 0;
+    this.nextFrame = ASAP;
+  }
+
 };
 
 /** Suspends any active train animations.
  */
 TrainAnimator.prototype.stop = function() {
+  this.running = false;
 };
 
-var TRAIN_ANIMATOR = new TrainAnimator(gameState);
-
-function updateTrainSpritePosition(train)
-{
+TrainAnimator.prototype.updateSprite = function(train) {
 	var pt = toCanvasCoords(mapData.G.getCellPoint(train.loc));
 
 	var elapsed = getGameTime() - train.lastUpdated;
 	var dist = elapsed * train.speed;
-	if (dist > 0 && train.route && train.route[0])
+	if (dist >= 0 && train.route && train.route[0])
 	{
+		if (dist > 1) {
+			dist = 1;
+		}
 		var pt1 = toCanvasCoords(mapData.G.getCellPoint(train.route[0]));
 		pt.x += (pt1.x - pt.x) * dist;
 		pt.y += (pt1.y - pt.y) * dist;
@@ -376,6 +509,13 @@ function updateTrainSpritePosition(train)
 		'background-size': trainSize + 'px',
 		'background-image': 'url(resources/locomotive-' + train.orientationName + '.png)',
 		});
+};
+
+var TRAIN_ANIMATOR = new TrainAnimator(gameState);
+
+function updateTrainSpritePosition(train)
+{
+  TRAIN_ANIMATOR.updateSprite(train);
 }
 
 function train_cargoChanged(train)
@@ -439,6 +579,8 @@ function train_pickup(train, resource_type)
 // do whatever's next on the train's plan
 function train_next(train)
 {
+  return;
+
 	if (train.timer)
 		return;
 	if (!train.plan)
@@ -487,19 +629,6 @@ function train_next(train)
 		{
 			train.plan.shift();
 			train.curWaypoint = train.plan[0].id;
-			var oldSelection = $('#planPane').attr('selected-waypoint');
-			if (oldSelection != null)
-			{
-				if (oldSelection >= 1)
-				{
-					$('#planPane').attr('selected-waypoint', oldSelection-1);
-				}
-				else
-				{
-					$('#planPane').attr('selected-waypoint', "");
-					$('#waypointPane').fadeOut();
-				}
-			}
 			return train_next(train);
 		}
 		else
@@ -510,7 +639,7 @@ function train_next(train)
 
 	train.route = new Array();
 	findBestPath(train.loc, p.location, train.route);
-	animateTrain(train);
+	//animateTrain(train);
 }
 
 function onTrainLocationChanged(train)
@@ -518,37 +647,6 @@ function onTrainLocationChanged(train)
 	$('#planPane tr[waypoint-number=0] .waypointEta').text(
 		train.route && train.route.length > 0 ? train.route.length
 		: "");
-}
-
-function animateTrain(train)
-{
-	if (!('speed' in train)) {
-		train.speed = 1000.0/(12*150);
-	}
-
-	var elapsed = getGameTime() - train.lastUpdated;
-	var dist = elapsed * train.speed;
-
-	while (dist >= 1.0 && train.route.length >= 1) {
-		train.lastUpdated += 1.0 / train.speed;
-		train.loc = train.route.shift();
-		onTrainLocationChanged(train);
-		dist -= 1.0;
-	}
-
-	updateTrainSpritePosition(train);
-	if (train.route.length >= 1)
-	{
-		train.timer =
-		setTimeout(function() { animateTrain(train) }, 150);
-	}
-	else
-	{
-		delete train.timer;
-
-		if (train.running)
-			return train_next(train);
-	}
 }
 
 var waypointSprites = {};
