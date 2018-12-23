@@ -2291,7 +2291,7 @@ angular.module('trains', ['ngRoute'])
     }
   };
 })
-.controller('GameController', function($http, $location, $timeout, $scope, $routeParams, gameData) {
+.controller('GameController', function($http, $location, $timeout, $scope, $routeParams, $window, gameData) {
   this.gameId = $routeParams['game'];
 
   canvasInitialization();
@@ -2324,6 +2324,22 @@ angular.module('trains', ['ngRoute'])
     this.playerData = gameData.players[this.playerId];
     setPlayerId(this.playerId);
   }
+
+  this.joinGame = function() {
+    var playerName = window.prompt('Enter player name');
+    if (!playerName) {
+      return;
+    }
+    var request = {
+      game: game.name,
+      name: playerName,
+    };
+    $http.post('/api/login', JSON.stringify(request))
+      .then(httpResponse => {
+        $location.path('/game/' + escape(game.name));
+        $location.search('seat', httpResponse.data.playerId);
+      });
+  };
 
   this.leaveGame = function() {
     $location.path('/lobby');

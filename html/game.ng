@@ -181,7 +181,7 @@
   </table>
   </div>
   <div class="widgetFooter">
-    <button type="button" onclick="joinGame()">New Player</button>
+    <button type="button" ng-if="!c.playerId" ng-click="c.joinGame()">Join Game</button>
     <button type="button" onclick="dismissCurrentDialog()">Dismiss</button>
   </div>
 </div>
