@@ -164,6 +164,9 @@ function onGameEvent(evt)
 			t = gameState.trains[evt.trainId];
 		}
 		gameState.updateTrainPlan(evt.trainId, evt.plan);
+                if (!t.running) {
+			t.lastUpdated = Math.max(t.lastUpdated, evt.time);
+                }
 		t.running = evt.running;
 		if (evt.running) {
 			TRAIN_ANIMATOR.start();
