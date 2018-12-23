@@ -114,13 +114,6 @@ window.onresize = onResize;
 
 var serverState;
 var gameState = new GameState();
-function getGameTime()
-{
-	if (serverState)
-		return (new Date().getTime() - serverState.basisTime) / 1000.0;
-	else
-		return 0;
-}
 
 var GAME_CONTROLLER = null;
 
@@ -341,7 +334,7 @@ const PICKUP_TIME = 0.5;
 
 TrainAnimator.prototype.step = function() {
   this.nextFrame = NEVER;
-  this.curTime = getGameTime();
+  this.curTime = this.gameState.getGameTime();
   for (let trainId in this.gameState.trains) {
     let t = this.gameState.trains[trainId];
     this.stepTrain(trainId, this.gameState.trains[trainId]);
@@ -2306,6 +2299,7 @@ angular.module('trains', ['ngRoute'])
     serverState.basisTime = fetchEndTime - 1000 * serverState.serverTime;
     serverState.eventsSeen = 0;
     serverState.gameId = $routeParams['game'];
+    gameState.localStartTime = serverState.basisTime;
     gameState.futureDemands = serverState.allDemands;
     onGameState(true);
   }
@@ -2348,5 +2342,6 @@ angular.module('trains', ['ngRoute'])
 
   this.debug = function() {
     console.log('Debug initiated.');
+    console.log('Game time is ' + gameState.getGameTime());
   };
 });

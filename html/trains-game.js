@@ -1,6 +1,9 @@
 const INITIAL_DEMAND_COUNT = 12;
 
 function GameState() {
+  // When the game was started (milliseconds since the epoch).
+  this.localStartTime = 0;
+
   // List of demands not yet in play.
   // Each demand is [cityId, resourceType, payOut].
   this.futureDemands = [];
@@ -84,4 +87,8 @@ GameState.prototype.updateTrainPlan = function(trainId, newPlan) {
   for (let step of newPlan) {
     t.plan.push(step);
   }
+};
+
+GameState.prototype.getGameTime = function() {
+  return (new Date().getTime() - this.localStartTime) / 1000.0;
 };
