@@ -1,3 +1,30 @@
+=== Action Requests ===
+
+{
+  "action": "build",
+  "player": "1",
+  "cost": 12,
+  "rails": "1001 1002 1004",
+}
+
+{
+  "action": "startTrain",
+  "trainId": "1.1",
+  "owner": "1",
+  "plan": [...],
+  "running": true,
+  "spawnLocation": "42", // only if train is brand new
+}
+
+TrainPlan entries are:
+{
+  "id": 1,
+  "location": "42",
+  "deliver": ["tourists"],
+  "pickup": ["coal", "imports"],
+}
+
+
 === Events ===
 
 New player
@@ -5,7 +32,7 @@ New player
 
 {
   "event": "join",
-  "time": game time of update,
+  "time": 5.25,   // seconds since start of game
   "playerId": "1",
   "playerData": { ... },
 }
@@ -15,8 +42,14 @@ Track changes
 
 {
   "event": "track-built",
-  "rails": { ... },
-  "playerMoney": 0,
+  "rails": {
+    "7538": "1",   // rail location --> seat id
+    ...
+  },
+  "playerMoney": {
+    "1": 42,       // seat id --> new balance
+    ...
+  },
 }
 
 Train updates
@@ -24,7 +57,7 @@ Train updates
 
 {
   "event": "train",
-  "time": game time of update,
+  "time": 5.26,   // seconds since start of game
   "plan": { ... },
   "trainId": "1.1",
   "owner": "1",    // player id

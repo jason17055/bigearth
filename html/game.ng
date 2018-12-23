@@ -17,6 +17,7 @@
 <span ng-if="c.playerData">
   <span>Cash on hand: $<span id="cashIndicator">{{c.playerData.money}}</span></span>
 </span>
+<button type="button" ng-click="c.debug()">Debug</button>
 </div>
 </div>
 <div class="widget" id="editCityPane">

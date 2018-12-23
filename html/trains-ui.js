@@ -126,11 +126,23 @@ var GAME_CONTROLLER = null;
 
 function onGameEvent(evt)
 {
-	if (evt.rails)
-	{
+  console.log('processing event ' + JSON.stringify(evt));
+	if (evt.event == 'track-built') {
 		for (var i in evt.rails)
 		{
 			mapData.rails[i] = evt.rails[i];
+		}
+		if (evt.playerMoney)
+		{
+			for (var pid in evt.playerMoney)
+			{
+				var p = gameState.players[pid];
+				if (p)
+				{
+					var newBalance = evt.playerMoney[pid];
+					p.money = newBalance;
+				}
+			}
 		}
 	}
 	if (evt.event == 'join') {
@@ -162,18 +174,6 @@ function onGameEvent(evt)
 		t.running = evt.running;
 		if (evt.running) {
 			TRAIN_ANIMATOR.start();
-		}
-	}
-	if (evt.playerMoney)
-	{
-		for (var pid in evt.playerMoney)
-		{
-			var p = gameState.players[pid];
-			if (p)
-			{
-				var newBalance = evt.playerMoney[pid];
-				p.money = newBalance;
-			}
 		}
 	}
 
@@ -2344,5 +2344,9 @@ angular.module('trains', ['ngRoute'])
   this.leaveGame = function() {
     $location.path('/lobby');
     $location.search('seat', null);
+  };
+
+  this.debug = function() {
+    console.log('Debug initiated.');
   };
 });
