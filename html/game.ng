@@ -9,7 +9,7 @@
   <span ng-if="c.playerId">
     <button type="button" onclick="showDemands()">Show Demands</button>
     <button type="button" onclick="beginBuilding()">Build Track</button>
-    <button type="button" onclick="addLocomotive()">Add Locomotive</button>
+    <button type="button" ng-click="c.addLocomotive()">Add Locomotive</button>
   </span>
 </span>
 <button type="button" onclick="zoomIn()">Zoom In</button>
@@ -87,7 +87,7 @@
   </div>
 </div>
 <div class="widget" id="planPane">
-  <div class="widgetHeader">Train <span class="train-id">1</span></div>
+  <div class="widgetHeader">Train {{c.selectedTrain.trainId}}</div>
   <div class="widgetContent">
   <div id="brandNewInstructions">Click a city to set this locomotive's starting point.</div>
   <div class="train-income">Income: <span class="income-ind"></span></div>

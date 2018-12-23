@@ -1179,17 +1179,6 @@ function onTrainClicked(train)
 	showPlan(train.trainId, train);
 }
 
-function addLocomotive()
-{
-	var trainId = curPlayer.playerId + '.1';
-	if (gameState.hasTrain(trainId)) {
-		showPlan(trainId, gameState.trains[trainId]);
-	} else {
-		// New train
-		showPlan(trainId, null);
-	}
-}
-
 function createTrain(trainId, location) {
 	gameState.trains[trainId] = addTrainSprite(trainId, location);
 	return gameState.trains[trainId];
@@ -1199,6 +1188,11 @@ function showPlan(trainId, train)
 {
 	if (isPlanning && isPlanning.train == train)
 		return;
+
+  GAME_CONTROLLER.selectedTrain = {
+    trainId: trainId,
+    train: train,
+  };
 
 	isPlanning = {
 		trainId: trainId,
@@ -2322,6 +2316,7 @@ angular.module('trains', ['ngRoute'])
     setPlayerId(this.playerId);
   }
 
+  this.selectedTrain = null;
   this.joinGame = function() {
     var playerName = window.prompt('Enter player name');
     if (!playerName) {
@@ -2347,4 +2342,15 @@ angular.module('trains', ['ngRoute'])
     console.log('Debug initiated.');
     console.log('Game time is ' + gameState.getGameTime());
   };
+
+  this.addLocomotive = function() {
+    var trainId = this.playerId + '.1';
+    if (gameState.hasTrain(trainId)) {
+      showPlan(trainId, gameState.trains[trainId]);
+    } else {
+      // New train
+      showPlan(trainId, null);
+    }
+  };
+
 });
