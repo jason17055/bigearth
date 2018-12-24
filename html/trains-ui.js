@@ -1184,7 +1184,8 @@ function fixWidgetDimensions($widget)
 
 function onTrainClicked(train)
 {
-	showPlan(train.trainId, train);
+	dismissCurrentDialog(() =>
+		showPlan(train.trainId, train));
 }
 
 function createTrain(trainId, location) {
@@ -2084,6 +2085,8 @@ function dismissCurrentDialog(andThen)
 		var $widget = $(document.getElementById(curDialog));
 		curDialog = null;
 		$widget.fadeOut(400, andThen);
+	} else if (andThen) {
+		andThen();
 	}
 }
 
@@ -2354,10 +2357,12 @@ angular.module('trains', ['ngRoute'])
   this.addLocomotive = function() {
     var trainId = this.playerId + '.1';
     if (gameState.hasTrain(trainId)) {
-      showPlan(trainId, gameState.trains[trainId]);
+      dismissCurrentDialog(() =>
+          showPlan(trainId, gameState.trains[trainId]));
     } else {
       // New train
-      showPlan(trainId, null);
+      dismissCurrentDialog(() =>
+          showPlan(trainId, null));
     }
   };
 
