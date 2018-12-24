@@ -29,6 +29,8 @@ function GameState() {
   //   running: bool
   //   curWaypoint: int
   //   orientationName: 'W', 'N', 'NNE', etc.
+  //   delivered: int number goods delivered current waypoint
+  //   received: int number goods picked up current waypoint
   // }.
   // Each Waypoint is {
   //   id: int, starting from 0

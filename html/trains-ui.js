@@ -364,29 +364,35 @@ TrainAnimator.prototype.processWaypoint = function(train, p) {
   let elapsed = this.curTime - train.lastUpdated;
 	var cityName = mapData.cities[p.location].name;
   console.log('at waypoint ' + cityName + '; ' + elapsed + ' s have elapsed');
-  while (p.deliver && p.deliver.length) {
+  while (p.deliver && train.delivered < p.deliver.length) {
     if (elapsed < DELIVER_TIME) {
       this.wakeUp(DELIVER_TIME - elapsed);
       return true;
     }
-    let resource_type = p.deliver.shift();
+    let resource_type = p.deliver[train.delivered++];
     train_deliver(train, resource_type);
     train.lastUpdated += DELIVER_TIME;
     elapsed -= DELIVER_TIME;
   }
 
-  while (p.pickup && p.pickup.length) {
+  while (p.pickup && train.received < p.pickup.length) {
     if (elapsed < PICKUP_TIME) {
       this.wakeUp(PICKUP_TIME - elapsed);
       return true;
     }
-    let resource_type = p.pickup.shift();
+    let resource_type = p.pickup[train.received++];
     train_pickup(train, resource_type);
     train.lastUpdated += PICKUP_TIME;
     elapsed -= PICKUP_TIME;
   }
 
   return false;
+};
+
+TrainAnimator.prototype.finishWaypoint = function(train) {
+  train.delivered = 0;
+  train.received = 0;
+  train.plan.shift();
 };
 
 function planPane_updateWaypointSelection() {
@@ -420,7 +426,7 @@ TrainAnimator.prototype.stepTrain = function(trainId, train) {
     }
 
     if (train.plan.length >= 2) {
-      train.plan.shift();
+      this.finishWaypoint(train);
       p = train.plan[0];
       train.curWaypoint = p.id;
       planPane_updateWaypointSelection();
@@ -630,6 +636,8 @@ function addTrainSprite(trainId, trainLoc)
 		plan: new Array(),
 		route: new Array(),
 		revenue: 0,
+		delivered: 0,
+		received: 0,
 		};
 	updateTrainSpritePosition(train);
 	updateTrainSpriteSensitivity(train);
