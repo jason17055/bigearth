@@ -1847,34 +1847,6 @@ function showDemands()
 	popupDialog('demandsPane');
 }
 
-function startTrainBtn()
-{
-	var train = isPlanning && isPlanning.train;
-	if (!train)
-		return;
-	if (train.timer)
-		return;
-
-	var req = {
-            trainId: train.trainId,
-	    owner: curPlayer.playerId,
-            plan: train.plan,
-            running: true,
-        };
-	if (train.brandNew) {
-		req.spawnLocation = train.loc;
-	}
-	sendRequest('startTrain', req);
-}
-
-function stopTrainBtn()
-{
-	if (isPlanning && isPlanning.train)
-	{
-		return stopTrain(isPlanning.train);
-	}
-}
-
 function stopTrain(train)
 {
 	var nextLoc = train.route[0];
@@ -2391,4 +2363,28 @@ angular.module('trains', ['ngRoute'])
     }
   };
 
+  this.startTrainBtn = function() {
+    var train = isPlanning && isPlanning.train;
+    if (!train)
+      return;
+    if (train.timer)
+      return;
+
+    var req = {
+        trainId: train.trainId,
+        owner: curPlayer.playerId,
+        plan: train.plan,
+        running: true,
+    };
+    if (train.brandNew) {
+      req.spawnLocation = train.loc;
+    }
+    sendRequest('startTrain', req);
+  };
+
+  this.stopTrainBtn = function() {
+    if (isPlanning && isPlanning.train) {
+      return stopTrain(isPlanning.train);
+    }
+  };
 });

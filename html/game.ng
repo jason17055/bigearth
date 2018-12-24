@@ -111,8 +111,8 @@
   </table>
   </div>
   <div class="widgetFooter">
-    <button type="button" id="startTrain_btn" onclick="startTrainBtn()">Go!</button>
-    <button type="button" id="stopTrain_btn" style="display:none" onclick="stopTrainBtn()">Stop</button>
+    <button type="button" id="startTrain_btn" ng-click="c.startTrainBtn()">Go!</button>
+    <button type="button" id="stopTrain_btn" style="display:none" ng-click="c.stopTrainBtn()">Stop</button>
     <button type="button" onclick="dismissPlan()">Dismiss</button>
   </div>
 </div>
