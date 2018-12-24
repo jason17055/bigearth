@@ -1664,54 +1664,6 @@ function reloadWaypoint(waypoint)
 	}
 }
 
-function selectDemand($row)
-{
-	var oldDemand = $('#demandsPane').attr('selected-demand');
-	if (oldDemand)
-	{
-		$('.aDemand[demand-index='+oldDemand+']').removeClass('selected');
-	}
-
-	$row.addClass('selected');
-	$('#demandsPane').attr('selected-demand', $row.attr('demand-index'));
-
-	// show only cities that have this resource
-	var filteredCities = {};
-	mapFeatures.highlightCities = {};
-
-	var demand = curPlayer.demands[$row.attr('demand-index')-1];
-	if (demand)
-	{
-		filteredCities[demand[0]] = true;
-		mapFeatures.highlightCities[demand[0]] = true;
-		for (var i in mapData.cities)
-		{
-			var city = mapData.cities[i];
-			var foundResource = false;
-			for (var j in city.offers)
-			{
-				if (city.offers[j] == demand[1])
-					foundResource = true;
-			}
-			if (foundResource)
-				filteredCities[i] = true;
-		}
-	}
-
-	mapFeatures.filterCities = filteredCities;
-
-	noRedraw++;
-	centerMapOn(demand[0]);
-	setZoomLevel(12);
-	noRedraw--;
-
-	if (!noRedraw)
-	{
-		repaint();
-		updateAllSpritePositions();
-	}
-}
-
 function reloadPlan()
 {
 	$('#trainCargo').empty();
@@ -1818,32 +1770,6 @@ function reloadPlan()
 function showDemands()
 {
 	dismissPlan();
-	$('#demandsPane .insertedRow').remove();
-	var count = 0;
-	for (var i in curPlayer.demands)
-	{
-		count++;
-
-		var demand = curPlayer.demands[i];
-		var $row = $('#demandsPaneTableTemplate').clone();
-		$row.attr('demand-index', parseInt(i) + 1);
-		$row.addClass('insertedRow');
-		$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
-		$('img', $row).attr('src', 'resource_icons/' + demand[1] + '.png');
-		$('img', $row).attr('alt', demand[1]);
-		$('.cityName', $row).text(mapData.cities[demand[0]].name);
-		$('.amount', $row).text(demand[2]);
-		$('#demandsPane table').append($row);
-		$row.hover(
-			function() { $(this).addClass('hover'); },
-			function() { $(this).removeClass('hover'); }
-			);
-		$row.click(
-			function() { selectDemand($(this)); }
-			);
-		$row.show();
-	}
-
 	popupDialog('demandsPane');
 }
 
@@ -2368,4 +2294,45 @@ angular.module('trains', ['ngRoute'])
   };
 
   $scope.gameState = gameState;
+  this.getCurrentPlayer = function() {
+    return curPlayer;
+  };
+  this.getCityName = function(cityId) {
+    return mapData.cities[cityId].name;
+  };
+
+  this.selectedDemand = null;
+  this.selectDemand = function(demand) {
+    this.selectedDemand = demand;
+
+    // Show only cities that have this resource.
+    var filteredCities = {};
+    mapFeatures.highlightCities = {};
+
+    filteredCities[demand[0]] = true;
+    mapFeatures.highlightCities[demand[0]] = true;
+    for (var i in mapData.cities) {
+      var city = mapData.cities[i];
+      var foundResource = false;
+      for (var j in city.offers) {
+        if (city.offers[j] == demand[1]) {
+          foundResource = true;
+        }
+      }
+      if (foundResource)
+        filteredCities[i] = true;
+    }
+
+    mapFeatures.filterCities = filteredCities;
+
+    noRedraw++;
+    centerMapOn(demand[0]);
+    setZoomLevel(12);
+    noRedraw--;
+
+    if (!noRedraw) {
+      repaint();
+      updateAllSpritePositions();
+    }
+  };
 });

@@ -68,9 +68,14 @@
   <div class="widgetHeader">Current Demands</div>
   <div class="widgetContent">
   <table border="0" cellspacing="0">
-    <tr class="aDemand" id="demandsPaneTableTemplate" style="display:none"><td><img src=""></td>
-        <td width="100%"><span class="cityName">Erie</span></td>
-        <td align="right">$<span class="amount">10</span></td></tr>
+    <tr class="aDemand"
+        ng-repeat="demand in c.getCurrentPlayer().demands"
+        ng-class="{selected: demand==c.selectedDemand}"
+        ng-click="c.selectDemand(demand)">
+      <td><img ng-src="resource_icons/{{demand[1]}}.png" alt="{{demand[1]}}"></td>
+      <td width="100%"><span class="cityName">{{c.getCityName(demand[0])}}</span></td>
+      <td align="right">$<span class="amount">{{demand[2]}}</span></td>
+    </tr>
   </table>
   </div>
   <div class="widgetFooter"><button type="button" onclick="dismissCurrentDialog()">Dismiss</button></div>
