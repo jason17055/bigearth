@@ -2088,33 +2088,6 @@ function dismissCurrentDialog(andThen)
 
 function showPlayers()
 {
-	$('#gameRosterPane .insertedRow').remove();
-	if (serverState)
-	{
-		for (var pid in gameState.players)
-		{
-			var p = gameState.players[pid];
-
-			var $row = $('#gameRosterPaneTableTemplate').clone();
-			$row.addClass('insertedRow');
-			$('.playerId', $row).text(pid);
-			$('.playerName', $row).text(p.identity || 'Anonymous');
-			with({ pid: pid })
-			{
-				$('button.playAsBtn', $row).click(function() {
-					dismissCurrentDialog();
-					setPlayerId(pid);
-					});
-			}
-			if (pid == getPlayerId())
-			{
-				$('.playAsBtn', $row).hide();
-			}
-			$('#gameRosterPane table').append($row);
-			$row.show();
-		}
-	}
-
 	popupDialog('gameRosterPane');
 }
 
@@ -2387,4 +2360,12 @@ angular.module('trains', ['ngRoute'])
       return stopTrain(isPlanning.train);
     }
   };
+
+  this.switchSeat = function(pid) {
+    dismissCurrentDialog();
+    setPlayerId(pid);
+    $location.search('seat', pid);
+  };
+
+  $scope.gameState = gameState;
 });
