@@ -900,19 +900,27 @@ function track_addSegment(fromIdx, toIdx)
 	}
 	else
 	{
-		return;
+		return false;
 	}
 	var trackIdx = cellIdx * 3 + dir + 1;
 
-	// check if this track is already build
-	if (mapData.rails[trackIdx])
-		return;
+	// Check if this track is already built.
+	if (mapData.rails[trackIdx]) {
+		// Cannot build on top of own or someone else's track.
+		return false;
+	}
 
-	// check if this track is already in the plan
+	// Check if this track is already in the plan.
 	if (isBuilding.rails[trackIdx] && isBuilding.curSegmentCount == 0)
 	{
 		// start erasing
 		isBuilding.erasing = true;
+	}
+
+	let trackTerrain = mapData.getTrackTerrain(trackIdx);
+	if (!(trackTerrain in gameState.trackCosts)) {
+		// Cannot build here.
+		return false;
 	}
 
 	var canvas = document.getElementById('theCanvas');
@@ -951,10 +959,12 @@ function updateBuildingCost()
 		return;
 
 	var cost = 0;
-	for (var i in isBuilding.rails)
+	for (let trackIdx in isBuilding.rails)
 	{
-		var trackIdx = isBuilding.rails[i];
-		cost += 1;
+                let trackTerrain = mapData.getTrackTerrain(trackIdx);
+		if (trackTerrain in gameState.trackCosts) {
+			cost += gameState.trackCosts[trackTerrain];
+		}
 	}
 
 	$('#buildTrackCost').text(cost);
@@ -2323,6 +2333,7 @@ angular.module('trains', ['ngRoute'])
     serverState.gameId = $routeParams['game'];
     gameState.localStartTime = serverState.basisTime;
     gameState.futureDemands = serverState.allDemands;
+    gameState.trackCosts = serverState.trackCosts || {};
     onGameState(true);
   }
 

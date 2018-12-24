@@ -50,6 +50,15 @@ ALL_COMMODITIES = [
     "wine",
     "wood",
 ];
+TRACK_COSTS = {
+    '.': 1,
+    'M': 2,
+    'A': 3,
+    'c': 3,
+    './.': 3,
+    '.M': 2,
+};
+
 
 class GameActions(ndb.Model):
   actions = ndb.StringProperty(repeated=True)
@@ -166,6 +175,7 @@ class GameStateHandler(webapp2.RequestHandler):
         "allServerResourceTypes": ALL_COMMODITIES,
         'serverTime': time.time() - (ent.start_time or 0),
         'allDemands': [_MakeDemand(x) for x in ent.all_demands],
+        'trackCosts': TRACK_COSTS,
     }
     self.response.headers['Content-Type'] = 'application/json'
     self.response.write(json.dumps(response))

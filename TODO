@@ -11,7 +11,6 @@ User interface improvements
   needed to show all source cities and the destination.
 
 Game play improvements:
-- Have track cost vary based on terrain.
 - Have demands provide more reward for harder-to-achieve deliveries.
 - Have demands expire somehow.
 - Idea: have completed demands come back in future games (or later in the same

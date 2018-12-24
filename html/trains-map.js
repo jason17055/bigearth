@@ -82,6 +82,35 @@ MapData.prototype.setTerrainAt = function(cellIdx, c) {
   return;
 };
 
+MapData.prototype.getTerrainAt = function(cellIdx) {
+  let row = this.G.getCellRow(cellIdx);
+  let col = this.G.getCellColumn(cellIdx);
+  let s = this.terrain[row];
+  if (s) {
+    return s.substr(col, 1);
+  } else {
+    return ' ';
+  }
+};
+
+MapData.prototype.hasRiverAt = function(edgeIdx) {
+  return edgeIdx in this.rivers;
+};
+
+MapData.prototype.getTrackTerrain = function(trackIdx) {
+  let edgeIdx = trackIdx - 1;
+  let trackInfo = this.G.decodeEdge(edgeIdx);
+  let terrain1 = this.getTerrainAt(trackInfo.cell1);
+  let terrain2 = this.getTerrainAt(trackInfo.cell2);
+  let hasRiver = this.hasRiverAt(edgeIdx);
+  return (
+      hasRiver && terrain1 < terrain2 ? terrain1 + '/' + terrain2 :
+      hasRiver ? terrain2 + '/' + terrain1 :
+      terrain1 == terrain2 ? terrain1 :
+      terrain1 < terrain2 ? terrain1 + terrain2 :
+      terrain2 + terrain1);
+};
+
 /**
  * @return 1 if own track is built anywhere here,
  *         2 if construction proposal has track here,

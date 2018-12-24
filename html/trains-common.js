@@ -115,8 +115,29 @@ Geometry.prototype.getTrackIndex = function(cellIdx, dir) {
     return this.getTrackIndex(this.getAdjacentCell(cellIdx, Geometry.SOUTHWEST), 2);
   }
   else {
-    return cellIdx * 3 + (dir + 1);
+    return cellIdx * 3 + dir + 1;
   }
+};
+
+/**
+ * Returns information about the specified edge.
+ * Track indexes are just Edge indexes plus one.
+ * @return struct with 'cell1', 'cell2', and 'dir' properties.
+ */
+Geometry.prototype.decodeEdge = function(edgeIdx) {
+  let dir = edgeIdx % 3;
+  let cell1 = Math.floor(edgeIdx / 3);
+  let cell2 = this.getAdjacentCell(cell1, dir);
+  return {
+    cell1: cell1,
+    cell2: cell2,
+    dir: dir,
+    //For debugging:
+    //cell1_row: this.getCellRow(cell1),
+    //cell2_row: this.getCellRow(cell2),
+    //cell1_col: this.getCellColumn(cell1),
+    //cell2_col: this.getCellColumn(cell2),
+  };
 };
 
 /**
