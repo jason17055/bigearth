@@ -349,7 +349,7 @@ TrainAnimator.prototype.start = function() {
 };
 
 const NEVER = 1000000;
-const ASAP = 0.150;
+const ASAP = 0.001;
 const DELIVER_TIME = 0.5;
 const PICKUP_TIME = 0.5;
 
