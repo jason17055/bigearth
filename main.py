@@ -202,7 +202,8 @@ def ProcessGameAction(game_ent, action_req):
     event = {
       'event': 'track-built',
       'rails': changes,
-      'playerMoney': {},
+      'owner': action_req['player'],
+      'cost': action_req['cost'],
     }
     game_ent.events.append(json.dumps(event))
   elif action_req['action'] == 'startTrain':

@@ -125,16 +125,10 @@ function onGameEvent(evt)
 		{
 			mapData.rails[i] = evt.rails[i];
 		}
-		if (evt.playerMoney)
-		{
-			for (var pid in evt.playerMoney)
-			{
-				var p = gameState.players[pid];
-				if (p)
-				{
-					var newBalance = evt.playerMoney[pid];
-					p.money = newBalance;
-				}
+		if (evt.owner && evt.cost) {
+			let p = gameState.players[evt.owner];
+			if (p) {
+				p.money -= evt.cost;
 			}
 		}
 	}

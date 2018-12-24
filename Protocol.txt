@@ -42,14 +42,12 @@ Track changes
 
 {
   "event": "track-built",
+  "owner": "1",    // seat id
   "rails": {
     "7538": "1",   // rail location --> seat id
     ...
   },
-  "playerMoney": {
-    "1": 42,       // seat id --> new balance
-    ...
-  },
+  "cost": 12,
 }
 
 Train updates
