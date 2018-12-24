@@ -1,0 +1,21 @@
+User interface improvements
+- Track building UX should change so that as you click and hold the mouse, the
+  UI will recalculate the shortest route to where you dragged to, and only place
+  the tracks when you release the button.
+- Allow Current Demands to stay on the screen while placing track or moving the
+  train.
+- Move Show Players dialog to left side, and allow it to stay on the screen
+  (appearing above Current Demands) even while Current Demands and other UI
+  elements are on the screen.
+- When zooming out to show a selected demand, don't zoom out any further than
+  needed to show all source cities and the destination.
+
+Game play improvements:
+- Have track cost vary based on terrain.
+- Have demands provide more reward for harder-to-achieve deliveries.
+- Have demands expire somehow.
+- Idea: have completed demands come back in future games (or later in the same
+  game) with smaller rewards, and have expired demands come back in future games
+  with larger rewards.
+- Have using other player's track cost money. Avoid using other player's track
+  if possible when routing trains.
