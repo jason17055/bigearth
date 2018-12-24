@@ -321,6 +321,24 @@ function TrainAnimator(gameState) {
   this.running = false;
 }
 
+TrainAnimator.prototype.showAllTrains = function() {
+  for (let trainId in gameState.trains) {
+    let $t = gameState.trains[trainId].el;
+    $t.css({display: ""});
+  }
+};
+
+TrainAnimator.prototype.hideOtherTrains = function(showTrainId) {
+  for (let trainId in gameState.trains) {
+    let $t = gameState.trains[trainId].el;
+    if (trainId != showTrainId) {
+      $t.css({display: "none"});
+    } else {
+      $t.css({display: ""});
+    }
+  }
+};
+
 TrainAnimator.prototype.start = function() {
   if (this.running) {
     return;
@@ -1225,6 +1243,7 @@ function showPlan(trainId, train)
 
 	var $widget = $('#planPane');
 	fixWidgetDimensions($widget);
+	TRAIN_ANIMATOR.hideOtherTrains(trainId);
 }
 
 function dismissPlan()
@@ -1247,6 +1266,7 @@ function dismissPlan()
 	$('#planPane').fadeOut();
 	$('#waypointPane').fadeOut();
 	removeAllWaypointSprites();
+	TRAIN_ANIMATOR.showAllTrains();
 }
 
 function filterMapToReachable(train)
