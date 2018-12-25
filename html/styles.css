@@ -1,0 +1,104 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+#contentArea {
+	position: absolute;
+	overflow: hidden;
+}
+#buttonBar {
+	width: 100%;
+	bottom: 0;
+	position: absolute;
+}
+.waypointSprite {
+	position: absolute;
+	text-align: center;
+	font-family: ariel, sans-serif;
+	font-size: 14pt;
+	text-height: 26px;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	cursor: default;
+	background-color: white;
+	border: 1px solid black;
+}
+.trainSprite {
+	position: absolute;
+	text-align: center;
+	font-family: ariel, sans-serif;
+	font-size: 14pt;
+	text-height: 30px;
+	width: 256px;
+	height: 256px;
+	line-height: 30px;
+	cursor: default;
+	background-image: url("resources/locomotive-W.png");
+}
+.widget {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	width: 220px;
+	height: 220px;
+	border: 1px solid black;
+	color: black;
+	background-color: white;
+	display: none;
+}
+#waypointPane {
+	height: 300px;
+}
+#demandsPane {
+	height: 230px;
+	left: 10px;
+	right: auto;
+}
+#editMapPane {
+	height: 300px;
+}
+.widgetContent {
+	overflow: auto;
+}
+.widgetHeader {
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+	background-color: #000066;
+	color: white;
+	font-size: 12pt;
+	font-family: ariel, sans-serif;
+	line-height: 16pt;
+}
+.widgetFooter {
+	width: 100%;
+	text-align: center;
+	background-color: #666666;
+	color: black;
+	position: absolute;
+	bottom: 0;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.aDemand {
+	cursor: default;
+}
+.aDemand:hover {
+	background-color: #88ffff;
+	color: black;
+}
+.aDemand.selected, .aWaypoint.selected {
+	background-color: #aaaaff;
+	color: black;
+}
+.aManifest td {
+	padding-left: 1em; font-size: 10pt;
+}
+#offersList {
+	border: 1px solid black;
+	margin-left: 3pt;
+	margin-right: 3pt;
+	padding-left: 2pt;
+	padding-right: 2pt;
+}
