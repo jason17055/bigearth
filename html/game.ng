@@ -95,8 +95,10 @@
   <div class="widgetHeader">Train {{c.selectedTrain.trainId}}</div>
   <div class="widgetContent">
   <div id="brandNewInstructions">Click a city to set this locomotive's starting point.</div>
-  <div class="train-income">Income: <span class="income-ind"></span></div>
-  <div id="trainCargo"></div>
+  <div class="train-income">Income: {{c.selectedTrain.train.revenue}}</div>
+  <div id="trainCargo">
+    <img ng-repeat="com in c.selectedTrain.train.cargo" ng-src="resource_icons/{{com}}.png">
+  </div>
   <table border="0" cellspacing="0">
     <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
         <td class="waypointNumber" align="center"></td>

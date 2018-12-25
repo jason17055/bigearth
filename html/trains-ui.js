@@ -1666,7 +1666,6 @@ function reloadWaypoint(waypoint)
 
 function reloadPlan()
 {
-	$('#trainCargo').empty();
 	$('#planPane .train-income').hide();
 	$('#planPane .insertedRow').remove();
 
@@ -1676,21 +1675,6 @@ function reloadPlan()
 
 	$('#planPane .train-id').text(train.trainId);
 	$('#planPane .train-income').show();
-	$('#planPane .income-ind').text(train.revenue);
-
-	//
-	// train cargo
-	//
-	if (train.cargo && train.cargo.length)
-	{
-		for (var i in train.cargo)
-		{
-			var c = train.cargo[i];
-			var $el = $('<img>');
-			$el.attr('src', 'resource_icons/'+c+'.png');
-			$('#trainCargo').append($el);
-		}
-	}
 
 	//
 	// train waypoints
