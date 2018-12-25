@@ -1462,135 +1462,11 @@ function getTrainManifestAtWaypoint(train, targetWaypoint)
 
 function reloadWaypoint(waypoint)
 {
-	$('#waypointPane .insertedRow').remove();
-
 	var keepHere = getTrainManifestAtWaypoint(null, waypoint);
-	if (keepHere.length > 0)
-	{
-		for (var i in keepHere)
-		{
-			var resource_type = keepHere[i];
-			var $row = $('#keepTemplate').clone();
+        GAME_CONTROLLER.selectedWaypoint_keepHere = keepHere;
 
-			$row.addClass('insertedRow');
-			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
-			$('.resource_name', $row).text(resource_type);
-
-			var wantedPlaces = new Array();
-			var deliverReward = 0;
-			for (var j in curPlayer.demands)
-			{
-				var dem = curPlayer.demands[j];
-				if (dem[1] == resource_type)
-				{
-					wantedPlaces.push(mapData.cities[dem[0]].name);
-					if (dem[0] == waypoint.location)
-					{
-						deliverReward = dem[2];
-					}
-				}
-			}
-			$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
-				"Wanted in " + wantedPlaces.join(', ') :
-				"");
-
-			if (deliverReward > 0)
-			{
-				$('button', $row).text("Deliver for $" + deliverReward);
-			}
-			else
-			{
-				$('button', $row).text("Abandon here");
-			}
-
-			$('#keepTemplate').before($row);
-			$row.show();
-
-			with({ resource_type: resource_type })
-			{
-				$('button', $row).click(function() {
-					if (!waypoint.deliver)
-						waypoint.deliver = new Array();
-					waypoint.deliver.push(resource_type);
-					reloadWaypoint(waypoint);
-					reloadPlan();
-					});
-			}
-		}
-	}
-
-	var pickupHere = waypoint.pickup;
-	if (pickupHere && pickupHere.length > 0)
-	{
-		for (var i in pickupHere)
-		{
-			var resource_type = pickupHere[i];
-			var $row = $('#pickupTemplate').clone();
-
-			$row.addClass('insertedRow');
-
-
-			$('#pickupTemplate').before($row);
-			$row.show();
-
-			with({ index: i })
-			{
-				$('button', $row).click(function() {
-					waypoint.pickup.splice(index,1);
-					reloadWaypoint(waypoint);
-					reloadPlan();
-					});
-			}
-		}
-	}
-	
 	var availableHere = mapData.cities[waypoint.location].offers;
-	if (availableHere && availableHere.length > 0)
-	{
-		$('#availableHeader').show();
-		for (var i in availableHere)
-		{
-			var resource_type = availableHere[i];
-			var $row = $('#availableTemplate').clone();
-	
-			$row.addClass('insertedRow');
-			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
-			$('.resource_name', $row).text(resource_type);
-
-			var wantedPlaces = new Array();
-			for (var j in curPlayer.demands)
-			{
-				var dem = curPlayer.demands[j];
-				if (dem[1] == resource_type)
-				{
-					wantedPlaces.push(mapData.cities[dem[0]].name);
-				}
-			}
-			$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
-				"Wanted in " + wantedPlaces.join(', ') :
-				"");
-
-			$('#availableTemplate').before($row);
-			$row.show();
-
-			with({ resource_type: resource_type })
-			{
-				$('button', $row).click(function() {
-					if (!waypoint.pickup)
-					{
-						waypoint.pickup = new Array();
-					}
-					waypoint.pickup.push(resource_type);
-					reloadWaypoint(waypoint);
-					reloadPlan();
-					});
-			}
-		}
-	}
-	else
-	{
-		$('#availableHeader').hide();
-	}
+        GAME_CONTROLLER.selectedWaypoint_availableHere = availableHere;
 }
 
 function reloadPlan()
@@ -2269,6 +2145,14 @@ angular.module('trains', ['ngRoute'])
     }
     return wantedPlaces.join(', ');
   };
+  this.addDeliveryToWaypoint = function(waypoint, resourceType) {
+    if (!waypoint.deliver) {
+      waypoint.deliver = new Array();
+    }
+    waypoint.deliver.push(resourceType);
+    reloadWaypoint(waypoint);
+    reloadPlan();
+  };
   this.dropDeliveryFromWaypoint = function(waypoint, resourceType, index) {
     waypoint.deliver.splice(index,1);
     reloadWaypoint(waypoint);
@@ -2276,6 +2160,14 @@ angular.module('trains', ['ngRoute'])
   };
   this.dropPickupFromWaypoint = function(waypoint, resourceType, index) {
     waypoint.pickup.splice(index,1);
+    reloadWaypoint(waypoint);
+    reloadPlan();
+  };
+  this.addPickupToWaypoint = function(waypoint, resourceType) {
+    if (!waypoint.pickup) {
+      waypoint.pickup = new Array();
+    }
+    waypoint.pickup.push(resourceType);
     reloadWaypoint(waypoint);
     reloadPlan();
   };
