@@ -124,7 +124,7 @@
   </div>
 </div>
 <div class="widget" id="waypointPane">
-  <div class="widgetHeader">City</div>
+  <div class="widgetHeader">{{c.getCityName(c.selectedWaypoint.location)}}</div>
   <div class="widgetContent">
      <table width="100%">
      <tr id="deliverHeader"><td colspan="2">You are delivering:</td></tr>

@@ -1401,9 +1401,7 @@ function selectWaypoint(newSelection)
 
 	var waypoint = isPlanning.train.plan[newSelection];
 
-	var cityName = mapData.cities[waypoint.location].name;
-	$('#waypointPane .widgetHeader').text(cityName);
-
+	GAME_CONTROLLER.selectedWaypoint = waypoint;
 	reloadWaypoint(waypoint);
 	$('#waypointPane .drop-waypoint-btn').toggle(newSelection != 0);
 
@@ -2208,6 +2206,7 @@ angular.module('trains', ['ngRoute'])
   }
 
   this.selectedTrain = null;
+  this.selectedWaypoint = null;
   this.joinGame = function() {
     var playerName = window.prompt('Enter player name');
     if (!playerName) {
