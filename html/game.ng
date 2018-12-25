@@ -124,21 +124,23 @@
   </div>
 </div>
 <div class="widget" id="waypointPane">
-  <div class="widgetHeader">{{c.getCityName(c.selectedWaypoint.location)}}</div>
+  <div class="widgetHeader"><span ng-if="c.selectedWaypoint">{{c.getCityName(c.selectedWaypoint.location)}}</span></div>
   <div class="widgetContent">
      <table width="100%">
-     <tr id="deliverHeader"><td colspan="2">You are delivering:</td></tr>
-     <tr id="deliverTemplate" style="display:none">
+     <tr id="deliverHeader" ng-if="c.selectedWaypoint.deliver.length"><td colspan="2">You are delivering:</td></tr>
+     <tr ng-repeat="m in c.selectedWaypoint.deliver">
        <td valign="top" align="center">
-          <div><img class="resource_icon" src=""></div>
-          <div><small class="resource_name">resource</small></div>
+          <div><img class="resource_icon" ng-src="resource_icons/{{m}}.png"></div>
+          <div><small class="resource_name">{{m}}</small></div>
        </td>
        <td align="left" valign="bottom">
-             <div><small class="wantedInfo"></small></div>
-            <span style="float:right"><button type="button">Don't Deliver</button></span>
+         <div><small class="wantedInfo">Deliver for ${{c.getDeliveryReward(c.selectedWaypoint.deliver, m)}}</small></div>
+         <span style="float:right">
+           <button type="button" ng-click="c.dropDeliveryFromWaypoint(c.selectedWaypoint, m, $index)">Don't Deliver</button>
+         </span>
        </td>
      </tr>
-     <tr id="keepHeader"><td colspan="2">You will have:</td></tr>
+     <tr id="keepHeader" ng-if="c.selectedWaypoint.keepHere.length"><td colspan="2">You will have:</td></tr>
      <tr id="keepTemplate" style="display:none">
        <td valign="top" align="center">
           <div><img class="resource_icon" src="resource_icons/plastics.png"></div>
@@ -149,15 +151,17 @@
             <span style="float:right"><button type="button">Deliver for $10</button></span>
        </td>
      </tr>
-     <tr id="pickupHeader"><td colspan="2">You will pick up:</td></tr>
-     <tr id="pickupTemplate" style="display:none">
+     <tr id="pickupHeader" ng-if="c.selectedWaypoint.pickup.length"><td colspan="2">You will pick up:</td></tr>
+     <tr ng-repeat="m in c.selectedWaypoint.pickup">
        <td valign="top" align="center">
-          <div><img class="resource_icon" src="resource_icons/steel.png"></div>
-          <div><small class="resource_name">steel</small></div>
+          <div><img class="resource_icon" ng-src="resource_icons/{{m}}.png"></div>
+          <div><small class="resource_name">{{m}}</small></div>
        </td>
        <td align="left" valign="bottom">
-             <div><small class="wantedInfo">Wanted in Scranton</small></div>
-            <span style="float:right"><button type="button">Don't Pick Up</button></span>
+         <div><small class="wantedInfo">Wanted in {{c.getWantedPlaces(m)}}</small></div>
+         <span style="float:right">
+           <button type="button" ng-click="c.dropPickupFromWaypoint(c.selectedWaypoint, m, $index)">Don't Pick Up</button>
+         </span>
        </td>
      </tr>
      <tr id="availableHeader"><td colspan="2">Available here:</td></tr>

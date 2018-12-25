@@ -1464,55 +1464,9 @@ function reloadWaypoint(waypoint)
 {
 	$('#waypointPane .insertedRow').remove();
 
-	var deliverHere = waypoint.deliver;
-	if (deliverHere && deliverHere.length > 0)
-	{
-		$('#deliverHeader').show();
-		for (var i in deliverHere)
-		{
-			var resource_type = deliverHere[i];
-			var $row = $('#deliverTemplate').clone();
-
-			$row.addClass('insertedRow');
-			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
-			$('.resource_name', $row).text(resource_type);
-
-			var deliverReward = 0;
-			for (var j in curPlayer.demands)
-			{
-				var dem = curPlayer.demands[j];
-				if (dem[1] == resource_type)
-				{
-					if (dem[0] == waypoint.location)
-					{
-						deliverReward = dem[2];
-					}
-				}
-			}
-			$('.wantedInfo', $row).text("Deliver for $" + deliverReward);
-
-			$('#deliverTemplate').before($row);
-			$row.show();
-
-			with({ index: i })
-			{
-				$('button', $row).click(function() {
-					waypoint.deliver.splice(index,1);
-					reloadWaypoint(waypoint);
-					reloadPlan();
-					});
-			}
-		}
-	}
-	else
-	{
-		$('#deliverHeader').hide();
-	}
-
 	var keepHere = getTrainManifestAtWaypoint(null, waypoint);
 	if (keepHere.length > 0)
 	{
-		$('#keepHeader').show();
 		for (var i in keepHere)
 		{
 			var resource_type = keepHere[i];
@@ -1564,36 +1518,17 @@ function reloadWaypoint(waypoint)
 			}
 		}
 	}
-	else
-	{
-		$('#keepHeader').hide();
-	}
 
 	var pickupHere = waypoint.pickup;
 	if (pickupHere && pickupHere.length > 0)
 	{
-		$('#pickupHeader').show();
 		for (var i in pickupHere)
 		{
 			var resource_type = pickupHere[i];
 			var $row = $('#pickupTemplate').clone();
 
 			$row.addClass('insertedRow');
-			$('img.resource_icon', $row).attr('src', 'resource_icons/' + resource_type + '.png');
-			$('.resource_name', $row).text(resource_type);
 
-			var wantedPlaces = new Array();
-			for (var j in curPlayer.demands)
-			{
-				var dem = curPlayer.demands[j];
-				if (dem[1] == resource_type)
-				{
-					wantedPlaces.push(mapData.cities[dem[0]].name);
-				}
-			}
-			$('.wantedInfo', $row).text(wantedPlaces.length > 0 ?
-				"Wanted in " + wantedPlaces.join(', ') :
-				"");
 
 			$('#pickupTemplate').before($row);
 			$row.show();
@@ -1607,10 +1542,6 @@ function reloadWaypoint(waypoint)
 					});
 			}
 		}
-	}
-	else
-	{
-		$('#pickupHeader').hide();
 	}
 	
 	var availableHere = mapData.cities[waypoint.location].offers;
@@ -2317,5 +2248,35 @@ angular.module('trains', ['ngRoute'])
       repaint();
       updateAllSpritePositions();
     }
+  };
+  this.getDeliveryReward = function(waypoint, resource_type) {
+    var deliverReward = 0;
+    for (let dem of curPlayer.demands) {
+      if (dem[1] == resource_type) {
+        if (dem[0] == waypoint.location) {
+          deliverReward = dem[2];
+        }
+      }
+    }
+    return deliverReward;
+  };
+  this.getWantedPlaces = function(resourceType) {
+    var wantedPlaces = [];
+    for (let dem of curPlayer.demands) {
+      if (dem[1] == resourceType) {
+        wantedPlaces.push(this.getCityName(dem[0]));
+      }
+    }
+    return wantedPlaces.join(', ');
+  };
+  this.dropDeliveryFromWaypoint = function(waypoint, resourceType, index) {
+    waypoint.deliver.splice(index,1);
+    reloadWaypoint(waypoint);
+    reloadPlan();
+  };
+  this.dropPickupFromWaypoint = function(waypoint, resourceType, index) {
+    waypoint.pickup.splice(index,1);
+    reloadWaypoint(waypoint);
+    reloadPlan();
   };
 });
