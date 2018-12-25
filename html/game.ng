@@ -100,20 +100,26 @@
     <img ng-repeat="com in c.selectedTrain.train.cargo" ng-src="resource_icons/{{com}}.png">
   </div>
   <table border="0" cellspacing="0">
-    <tr class="aWaypoint" id="aWaypointTemplate" style="display:none">
-        <td class="waypointNumber" align="center"></td>
-        <td class="waypointCity" width="100%">Erie</td>
-        <td class="waypointEta" align="right"></td>
+    <tr class="aWaypoint" ng-repeat-start="waypoint in c.selectedTrain.train.plan" ng-click="c.selectWaypoint($index)"
+        ng-class="{selected: c.selectedWaypoint == waypoint}">
+      <td class="waypointNumber" align="center">
+        {{$index == 0 && c.selectedTrain.train.location == waypoint.location ? 'At' :
+          c.selectedTrain.train.location == c.selectedTrain.train.plan[0].location ? $index :
+          $index + 1}}
+      </td>
+      <td class="waypointCity" width="100%">{{c.getCityName(waypoint.location)}}</td>
+      <td class="waypointEta" align="right">
+        {{$index == 0 && waypoint.location == c.selectedTrain.train.location ? '' :
+          $index == 0 && c.selectedTrain.train.route.length > 0 ? c.selectedTrain.train.route.length :
+          waypoint.distanceHint}}
+      </td>
     </tr>
-    <tr class="aManifest" id="aManifestTemplate" style="display:none">
-        <td></td>
-        <td colspan="2">
-           <div class="deliverSummary"></div>
-           <div class="pickupSummary"></div>
-        </td>
-    </tr>
-    <tr id="aManifestControl" style="display:none">
-        <td align="center" colspan="3"><button type="button">Pick Up</button</td>
+    <tr class="aManifest" ng-repeat-end ng-show="waypoint.pickup || waypoint.deliver">
+      <td></td>
+      <td colspan="2">
+        <div class="deliverSummary" ng-if="waypoint.deliver.length">Deliver {{waypoint.deliver.join(', ')}}</div>
+        <div class="pickupSummary" ng-if="waypoint.pickup.length">Pick up {{waypoint.pickup.join(', ')}}</div>
+      </td>
     </tr>
   </table>
   </div>

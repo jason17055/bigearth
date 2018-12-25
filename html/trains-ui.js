@@ -1471,21 +1471,13 @@ function reloadWaypoint(waypoint)
 
 function reloadPlan()
 {
-	$('#planPane .train-income').hide();
-	$('#planPane .insertedRow').remove();
-
 	var train = isPlanning && isPlanning.train;
 	if (!train)
 		return;
 
-	$('#planPane .train-id').text(train.trainId);
-	$('#planPane .train-income').show();
-
 	//
 	// train waypoints
 	//
-	var selWaypoint = $('#planPane').attr('selected-waypoint');
-	var count = 0;
 	var atFirstWaypoint = train.plan[0] && train.loc == train.plan[0].location;
 	var usedSprites = {};
 	for (var waypointNumber in train.plan)
@@ -1497,54 +1489,10 @@ function reloadPlan()
 			parseInt(waypointNumber)+1
 			;
 
-		count++;
-
-		var $row = $('#aWaypointTemplate').clone();
-		$row.attr('waypoint-number', waypointNumber);
-		$row.addClass('insertedRow');
-		$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
-		if (selWaypoint != null && selWaypoint == waypointNumber)
-		{
-			$row.addClass('selected');
-		}
-		$('.waypointNumber', $row).text(waypointLabel);
-		$('.waypointCity', $row).text(
-			mapData.cities[p.location].name
-			);
-		$('.waypointEta', $row).text(
-			waypointNumber == 0 && p.location == train.loc ? "" :
-			waypointNumber == 0 && train.route.length > 0 ? train.route.length :
-			p.distanceHint);
-
-		var onClick;
-		with ({ waypointNumber: waypointNumber })
-		{
-			onClick = function() { selectWaypoint(waypointNumber); };
-		}
-		$row.click(onClick);
-		$row.show();
-		$('#planPane table').append($row);
-
 		if (p.location != train.loc)
 		{
 			usedSprites[waypointLabel] = true;
 			addWaypointSprite(waypointLabel, p.location);
-		}
-
-		if ((p.pickup && p.pickup.length > 0)
-			|| (p.deliver && p.deliver.length > 0))
-		{
-			var $row = $('#aManifestTemplate').clone();
-			$row.attr('waypoint-number', waypointNumber);
-			$row.addClass('insertedRow');
-			$row.addClass(count % 2 == 0 ? 'evenRow' : 'oddRow');
-			$('.pickupSummary', $row).text(p.pickup && p.pickup.length > 0
-				? "Pick up " + p.pickup.join(', ') : "");
-			$('.deliverSummary', $row).text(p.deliver && p.deliver.length > 0 ?
-				"Deliver " + p.deliver.join(', ') : "");
-			$row.click(onClick);
-			$row.show();
-			$('#planPane table').append($row);
 		}
 	}
 	for (var waypointLabel in waypointSprites)
@@ -2088,7 +2036,11 @@ angular.module('trains', ['ngRoute'])
     return curPlayer;
   };
   this.getCityName = function(cityId) {
-    return mapData.cities[cityId].name;
+    if (cityId in mapData.cities) {
+      return mapData.cities[cityId].name;
+    } else {
+      return cityId;
+    }
   };
 
   this.selectedDemand = null;
@@ -2170,5 +2122,9 @@ angular.module('trains', ['ngRoute'])
     waypoint.pickup.push(resourceType);
     reloadWaypoint(waypoint);
     reloadPlan();
+  };
+
+  this.selectWaypoint = function(waypointIndex) {
+    selectWaypoint(waypointIndex);
   };
 });
