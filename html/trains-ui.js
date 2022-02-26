@@ -755,9 +755,10 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 		return;
 	}
 
-	var c = t == "grass" ? "." :
-		t == "mountain" ? "M" :
-		t == "sea" ? "w" :
+	var c = t == 'grass' ? '.' :
+		t == 'desert' ? 'd' :
+		t == 'mountain' ? 'M' :
+		t == 'sea' ? 'w' :
 		t == 'alpine' ? 'A' :
 		t == 'urban' ? 'c' :
 		" ";

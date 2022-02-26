@@ -402,6 +402,7 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 		}
 
 		return cc == "." ? "#99dd55" :
+			cc == "d" ? "#f8f8cc" :
 			cc == "M" ? "#884400" :
 			cc == "w" ? "#1155ff" :
 			cc == 'A' ? '#bbe' :

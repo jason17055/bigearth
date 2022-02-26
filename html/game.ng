@@ -44,6 +44,7 @@
     <div style="float:left; padding: 2pt">
      <div><b>Terrain Tools</b></div>
      <div><label><input type="radio" name="tool" value="grass">Grass</label></div>
+     <div><label><input type="radio" name="tool" value="desert">Desert</label></div>
      <div><label><input type="radio" name="tool" value="mountain">Mountain</label></div>
      <div><label><input type="radio" name="tool" value="alpine">Alpine</label></div>
      <div><label><input type="radio" name="tool" value="sea">Sea</label></div>
