@@ -7,5 +7,5 @@ To load maps included with the distribution:
 cd maps
 for f in *.txt; do
   curl -X PUT -H "Content-Type: application/json" --data-binary @$f \
-      "http://localhost:8080/api/map?map=${f%.txt}
+      "http://localhost:8080/api/map?map=${f%.txt}"
 done
