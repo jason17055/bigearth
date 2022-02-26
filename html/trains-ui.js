@@ -1968,12 +1968,12 @@ angular.module('trains', ['ngRoute'])
       return;
     }
     var request = {
-      game: game.name,
+      game: this.gameId,
       name: playerName,
     };
     $http.post('/api/login', JSON.stringify(request))
       .then(httpResponse => {
-        $location.path('/game/' + escape(game.name));
+        $location.path('/game/' + escape(this.gameId));
         $location.search('seat', httpResponse.data.playerId);
       });
   };
