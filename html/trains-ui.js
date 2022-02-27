@@ -741,16 +741,17 @@ function onMouseDown_editTerrain(cellIdx, oPt)
 		showEditCityPane(cellIdx);
 		return;
 	}
-	else if (t == "rivers")
+	else if (t == "rivers" || t == 'dryRivers')
 	{
 		var edgeIdx = mapData.G.getEdgeFromPoint(oPt);
 		if (edgeIdx === null) {
 			return;
 		}
-		if (mapData.rivers[edgeIdx])
+		if (mapData.rivers[edgeIdx]) {
 			delete mapData.rivers[edgeIdx];
-		else
-			mapData.rivers[edgeIdx] = 1;
+		} else {
+			mapData.rivers[edgeIdx] = (t == 'dryRivers' ? 2 : 1);
+		}
 		repaint();
 		return;
 	}

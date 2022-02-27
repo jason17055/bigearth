@@ -18,7 +18,9 @@ function MapData() {
   /** @type {Object<int,string>} maps edge numbers to owners (player ids). */
   this.rails = {};
 
-  /** @type {Object<int,bool>} indicates edges that have rivers. */
+  /** @type {Object<int,number>} indicates edges that have rivers.
+   * 1 == ordinary river; 2 == dry river.
+   */
   this.rivers = {};
 
   /** @type {Object<int,CityInfo>} maps cell numbers to cities. */
@@ -403,7 +405,7 @@ Painter.prototype.drawCell = function(pt, c, w, nw, ne) {
 
 		return cc == "." ? "#99dd55" :
 			cc == "d" ? "#f8f8cc" :
-			cc == "M" ? "#884400" :
+			cc == "M" ? "#885533" :
 			cc == "w" ? "#1155ff" :
 			cc == 'A' ? '#bbe' :
 			cc == 'c' ? '#f44' :
@@ -457,8 +459,11 @@ Painter.prototype.drawRivers = function(pt, cellIdx) {
 	ctx.strokeStyle = '#1155ff';
 	ctx.lineWidth = 5;
 
-	var drawRiverHelper = function()
+	var drawRiverHelper = function(riverTypeNum)
 	{
+		ctx.strokeStyle =
+			riverTypeNum == 2 ? '#aa6622' :
+			'#1155ff';
 		ctx.beginPath();
 		ctx.moveTo(0, -CELL_ASCENT / 2);
 		ctx.lineTo(0, CELL_ASCENT / 2);

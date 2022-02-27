@@ -55,6 +55,7 @@
      <div><b>Misc Tools</b></div>
      <div><input type="radio" name="tool" value="hand" id="editTool_hand" checked="checked"><label for="editTool_hand">Hand</label></div>
      <div><input type="radio" name="tool" value="rivers" id="editTool_rivers"><label for="editTool_rivers">Rivers</label></div>
+     <div><input type="radio" name="tool" value="dryRivers" id="editTool_dryRivers"><label for="editTool_dryRivers">Dry Rivers</label></div>
      <div><input type="radio" name="tool" value="city" id="editTool_city"><label for="editTool_city">City</label></div>
     </div>
     </form>
